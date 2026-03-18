@@ -1,0 +1,33 @@
+# .github/workflows/ci.yml
+# Repo : EazyVTC_Mobile
+name: CI — EasyVTC Mobile (Expo)
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  test-mobile:
+    name:  Mobile Expo — Lint + TypeScript
+    runs-on: ubuntu-latest
+
+    steps:
+      - name:  Checkout
+        uses: actions/checkout@v4
+
+      - name:  Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name:  Install dependencies
+        run: npm ci
+
+      - name:  Lint
+        run: npm run lint
+
+      - name:  TypeScript check
+        run: npx tsc --noEmit
