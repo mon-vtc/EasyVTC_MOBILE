@@ -53,14 +53,14 @@ const styles = StyleSheet.create({
 
   // Variants
   primary: {
-    backgroundColor: Colors.bordeaux,
-    shadowColor: Colors.bordeaux,
+    backgroundColor: Colors.bordeauxLight,
+    shadowColor: Colors.bordeauxLight,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
-  outline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: Colors.bordeaux },
+  outline: { backgroundColor: 'transparent', borderWidth: 2, borderColor: Colors.border },
   ghost:   { backgroundColor: 'transparent' },
 
   // Sizes
@@ -71,6 +71,6 @@ const styles = StyleSheet.create({
   // Labels
   label:          { fontSize: Fonts.size.md, fontWeight: '700', letterSpacing: 0.3 },
   label_primary:  { color: Colors.white },
-  label_outline:  { color: Colors.bordeaux },
-  label_ghost:    { color: Colors.bordeaux },
+  label_outline:  { color: Colors.bordeauxLight },
+  label_ghost:    { color: Colors.bordeauxLight },
 });

@@ -65,11 +65,19 @@ export type AuthStackParamList = {
   ForgotPassword:  undefined;
 };
 
-export type ClientDrawerParamList = {
+// export type ClientDrawerParamList = {
+//   ClientHome:          undefined;
+//   MyReservations:      undefined;
+//   CreateReservation:   undefined;
+//   ReservationDetails:  { reservationId: string };
+//   ClientProfile:       undefined;
+// };
+
+export type ClientTabParamList = {
   ClientHome:          undefined;
   MyReservations:      undefined;
   CreateReservation:   undefined;
-  ReservationDetails:  { reservationId: string };
+  Messages:            undefined;
   ClientProfile:       undefined;
 };
 

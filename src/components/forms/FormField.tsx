@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, type TextInputProps } from 'react-native';
+import {
+  View, Text, TextInput,
+  StyleSheet, TouchableOpacity,
+  type TextInputProps,
+} from 'react-native';
 import { Controller, type Control, FieldValues, Path } from 'react-hook-form';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 
+type IconName = keyof typeof Ionicons.glyphMap;
+
 interface FormFieldProps<T extends FieldValues> extends Omit<TextInputProps, 'ref'> {
-  control:         Control<T>;
-  name:            Path<T>;
-  label?:          string;
-  error?:          string;
-  placeholder?:    string;
+  control:          Control<T>;
+  name:             Path<T>;
+  label?:           string;
+  error?:           string;
+  placeholder?:     string;
   secureTextEntry?: boolean;
-  showToggle?:     boolean;
+  showToggle?:      boolean;
+  icon?:            IconName;
 }
 
 export function FormField<T extends FieldValues>({
@@ -21,6 +29,7 @@ export function FormField<T extends FieldValues>({
   placeholder,
   secureTextEntry = false,
   showToggle = false,
+  icon,
   ...props
 }: FormFieldProps<T>) {
   const [isSecure, setIsSecure] = useState(secureTextEntry);
@@ -28,28 +37,50 @@ export function FormField<T extends FieldValues>({
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={styles.inputWrapper}>
+
+      <View style={[styles.inputWrapper, error ? styles.inputWrapperError : null]}>
+
+        {icon && (
+          <Ionicons
+            name={icon}
+            size={20}
+            color={Colors.iconPrimary}
+            style={styles.iconLeft}
+          />
+        )}
+
         <Controller
           control={control}
           name={name}
           render={({ field: { onChange, value } }) => (
             <TextInput
-              style={[styles.input, error && styles.inputError]}
+              style={styles.input}
               onChangeText={onChange}
               value={value}
               placeholder={placeholder}
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={Colors.textPlaceholder}
               secureTextEntry={isSecure}
+              autoCapitalize="none"
               {...props}
             />
           )}
         />
+
         {showToggle && secureTextEntry && (
-          <TouchableOpacity onPress={() => setIsSecure(!isSecure)} style={styles.toggleBtn}>
-            <Text style={styles.toggleText}>{isSecure ? '👁️' : '👁️‍🗨️'}</Text>
+          <TouchableOpacity
+            onPress={() => setIsSecure(!isSecure)}
+            style={styles.toggleBtn}
+          >
+            <Ionicons
+              name={isSecure ? 'eye-off-outline' : 'eye-outline'}
+              size={20}
+              color={Colors.iconPrimary}
+            />
           </TouchableOpacity>
         )}
+
       </View>
+
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
@@ -59,42 +90,48 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: Spacing.md,
   },
+
   label: {
-    fontSize: Fonts.size.sm,
-    fontWeight: '600',
-    color: Colors.textPrimary,
+    fontSize:     Fonts.size.sm,
+    fontWeight:   '600',
+    color:        Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
+
   inputWrapper: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection:     'row',
+    alignItems:        'center',
+    borderWidth:       Colors.borderWith,
+    borderColor:       Colors.border,
+    borderRadius:      Radius.md,
+    backgroundColor:   Colors.placeHolder,
+    paddingHorizontal: Spacing.sm,
   },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    fontSize: Fonts.size.md,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.surface,
-  },
-  inputError: {
+
+  inputWrapperError: {
     borderColor: Colors.error,
   },
-  error: {
-    fontSize: Fonts.size.xs,
-    color: Colors.error,
-    marginTop: Spacing.xs,
+
+  iconLeft: {
+    marginRight: Spacing.sm,
   },
+
+  input: {
+    flex:            1,
+    paddingVertical: Spacing.sm,
+    fontSize:        Fonts.size.md,
+    color:           Colors.textPrimary,
+  },
+  
+
   toggleBtn: {
-    position: 'absolute',
-    right: Spacing.sm,
-    padding: Spacing.sm,
+    marginLeft: Spacing.sm,
+    padding:    Spacing.xs,
   },
-  toggleText: {
-    fontSize: 18,
+
+  error: {
+    fontSize:   Fonts.size.xs,
+    color:      Colors.error,
+    marginTop:  Spacing.xs,
   },
 });
