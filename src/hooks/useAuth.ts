@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/auth.store';
 export function useAuth() {
   return useAuthStore((s) => ({
     user:           s.user,
+    localAvatarUri: s.localAvatarUri,
     isLoading:      s.isLoading,
     isHydrated:     s.isHydrated,
     isAuthenticated: !!s.user,
@@ -13,9 +14,13 @@ export function useAuth() {
     isManager:      s.user?.role === 'manager',
     error:          s.error,
     login:          s.login,
+    loginWithGoogle: s.loginWithGoogle,
     register:       s.register,
     logout:         s.logout,
+    changePassword:  s.changePassword,
     forgotPassword: s.forgotPassword,
     clearError:     s.clearError,
+    updateProfile:  s.updateProfile,
+    uploadAvatar:   s.uploadAvatar,
   }));
 }

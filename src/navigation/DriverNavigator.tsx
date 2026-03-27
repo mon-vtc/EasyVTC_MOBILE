@@ -1,59 +1,134 @@
 import React from 'react';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import DrawerContent             from './DrawerContent';
-import { Colors }                from '../theme/colors';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { createDrawerNavigator, DrawerNavigationOptions } from '@react-navigation/drawer';
+import { AppIcon } from '../components/common/AppIcon';
+import DrawerContent from './DrawerContent';
+import { Colors } from '../theme/colors';
 
-// Screens — placeholders Sprint 4+
 import DriverHomeScreen         from '../screens/driver/DriverHomeScreen';
 import DriverTripsScreen        from '../screens/driver/DriverTripsScreen';
 import DriverDocumentsScreen    from '../screens/driver/DriverDocumentsScreen';
 import DriverAvailabilityScreen from '../screens/driver/DriverAvailabilityScreen';
 import DriverProfileScreen      from '../screens/driver/DriverProfileScreen';
+
 import type { DriverDrawerParamList } from '../types/auth.types';
+
+import { Logo }                  from  '../constants/logo';
 
 const Drawer = createDrawerNavigator<DriverDrawerParamList>();
 
-const drawerScreenOptions = {
-  headerStyle:            { backgroundColor: Colors.bordeaux },
-  headerTintColor:        Colors.white,
-  headerTitleStyle:       { fontWeight: '700' as const, fontSize: 18 },
-  drawerStyle:            { backgroundColor: Colors.surface, width: 280 },
-  drawerActiveTintColor:  Colors.bordeaux,
+const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions => ({
+
+  headerStyle: { 
+    backgroundColor: Colors.bordeaux, 
+    height: 100,
+    elevation: 0, 
+    shadowOpacity: 0
+  },
+  headerTintColor: Colors.white,
+  headerTitleAlign: 'center',
+
+  headerTitle: () => (
+    <Image 
+      source={Logo.LogoEasyVTC} 
+      style={{ width: 40, height: 40, resizeMode: 'contain' }} 
+    />
+  ),
+
+  // --- Bouton Menu à Gauche ---
+  headerLeft: () => (
+    <TouchableOpacity 
+      onPress={() => navigation.toggleDrawer()} 
+      style={{ marginLeft: 20 }}
+    >
+      <AppIcon name="menu-outline" size={28} color={Colors.white} />
+    </TouchableOpacity>
+  ),
+
+  // --- Bouton Notification à Droite ---
+  headerRight: () => (
+    <TouchableOpacity 
+      onPress={() => console.log('Notifications cliquées')} 
+      style={{ marginRight: 20 }}
+    >
+      <AppIcon name="notifications-outline" size={24} color={Colors.white} />
+    </TouchableOpacity>
+  ),
+
+  // --- Style du volet latéral (Drawer) ---
+  drawerStyle: { backgroundColor: Colors.surface, width: 280 },
+  drawerActiveTintColor: Colors.bordeaux,
   drawerInactiveTintColor: Colors.textSecondary,
   drawerActiveBackgroundColor: Colors.overlayLight,
-};
+});
+
+/** Composant pour les labels du menu latéral (Icone + Texte) */
+function DrawerLabel({ icon, label }: { icon: React.ComponentProps<typeof AppIcon>['name']; label: string }) {
+  return (
+    <View style={styles.labelRow}>
+      <AppIcon name={icon} size={20} color={Colors.bordeauxDark} />
+      <Text style={styles.labelText}>{label}</Text>
+    </View>
+  );
+}
 
 export default function DriverNavigator() {
   return (
     <Drawer.Navigator
       drawerContent={(props) => <DrawerContent {...props} />}
-      screenOptions={drawerScreenOptions}
+      screenOptions={getDrawerScreenOptions}
     >
       <Drawer.Screen
         name="DriverHome"
         component={DriverHomeScreen}
-        options={{ title: 'Mes courses', drawerLabel: '🚗  Mes courses' }}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="home-outline" label="Accueil" />,
+        }}
       />
-      <Drawer.Screen
-        name="DriverTrips"
-        component={DriverTripsScreen}
-        options={{ title: 'Historique', drawerLabel: '📊  Historique' }}
-      />
-      <Drawer.Screen
-        name="DriverDocuments"
-        component={DriverDocumentsScreen}
-        options={{ title: 'Mes documents', drawerLabel: '📄  Mes documents' }}
-      />
-      <Drawer.Screen
-        name="DriverAvailability"
-        component={DriverAvailabilityScreen}
-        options={{ title: 'Disponibilité', drawerLabel: '🟢  Disponibilité' }}
-      />
+
       <Drawer.Screen
         name="DriverProfile"
         component={DriverProfileScreen}
-        options={{ title: 'Mon profil', drawerLabel: '👤  Mon profil' }}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="person-outline" label="Mon compte" />,
+        }}
+      />
+
+      <Drawer.Screen
+        name="DriverDocuments"
+        component={DriverDocumentsScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="document-text-outline" label="Documents" />,
+        }}
+      />
+
+      <Drawer.Screen
+        name="DriverTrips"
+        component={DriverTripsScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="calendar-outline" label="Planning" />,
+        }}
+      />
+
+      <Drawer.Screen
+        name="DriverAvailability"
+        component={DriverAvailabilityScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="cash-outline" label="Revenus" />,
+        }}
       />
     </Drawer.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  labelText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+  },
+});

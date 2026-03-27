@@ -11,6 +11,7 @@ import MessagesScreen          from '../screens/client/MessagesScreen';
 import ClientProfileScreen     from '../screens/client/ClientProfileScreen';
 import type { ClientTabParamList }  from '../types/auth.types';
 
+
 const Tab = createBottomTabNavigator<ClientTabParamList>();
 
 // ── Bouton FAB central ──────────────────────────────────────────

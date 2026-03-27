@@ -42,6 +42,15 @@ export const Colors = {
   warning:       '#D97706',
   warningLight:  '#FEF3C7',
 
+  // Validation status
+  rejectedBackground: '#f5e2e2',
+  validatedBackground: '#E8F5E9',
+
+  // Connectivite
+  online : '#4CAF50',
+  offline : '#C0392B',
+
+
   // Overlay
   overlay:       'rgba(74, 28, 28, 0.6)',
   overlayLight:  'rgba(74, 28, 28, 0.1)',

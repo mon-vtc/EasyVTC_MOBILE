@@ -6,6 +6,7 @@ import { useAuthStore }        from '../store/auth.store';
 import AuthNavigator           from './AuthNavigator';
 import ClientNavigator         from './ClientNavigator';
 import DriverNavigator         from './DriverNavigator';
+import AdminNavigator          from './AdminNavigator';
 import { Colors }              from '../theme/colors';
 
 export default function AppNavigator() {
@@ -28,11 +29,16 @@ export default function AppNavigator() {
   const renderNavigator = () => {
     if (!user) return <AuthNavigator />;
     if (user.role === 'driver') return <DriverNavigator />;
+    else if (user.role === 'admin') return <AdminNavigator />; // admin → driver nav pour l'instant
     return <ClientNavigator />; // client | admin | manager → client nav pour l'instant
   };
 
+
+  // Ajouter cette ligne comme attribut de la balise NavigationContainer pour un meilleur debug
+  // onStateChange={(state) => console.log('Nouvel État de Navigation:', JSON.stringify(state, null, 2))}
   return (
-    <NavigationContainer>
+    <NavigationContainer
+    >
       {renderNavigator()}
     </NavigationContainer>
   );

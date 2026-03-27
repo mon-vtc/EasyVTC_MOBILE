@@ -1,27 +1,34 @@
 import { create } from 'zustand';
 import { authApi }        from '../services/api/auth.api';
+import { userApi }        from '../services/api/user.api'
 import { authStorage as secureStorage }  from '../services/auth/auth-storage';
-import type { AuthUser, LoginPayload, RegisterPayload } from '../types/auth.types';
+import type { AuthUser, LoginPayload, RegisterPayload, UpdateProfilePayload } from '../types';
 
 interface AuthState {
-  user:         AuthUser | null;
-  accessToken:  string | null;
-  refreshToken: string | null;
-  isLoading:    boolean;
-  isHydrated:   boolean;
-  error:        string | null;
+  user:           AuthUser  | null;
+  localAvatarUri: string | null;
+  accessToken:    string    | null;
+  refreshToken:   string    | null;
+  isLoading:      boolean;
+  isHydrated:     boolean;
+  error:          string    | null;
 
   // Actions
-  hydrate:        () => Promise<void>;
-  login:          (payload: LoginPayload)    => Promise<void>;
-  register:       (payload: RegisterPayload) => Promise<void>;
-  logout:         () => Promise<void>;
-  forgotPassword: (email: string)            => Promise<void>;
-  clearError:     () => void;
+  hydrate:        ()                          => Promise<void>;
+  login:          (payload: LoginPayload)     => Promise<void>;
+  loginWithGoogle: (token: string)             => Promise<void>;
+  register:       (payload: RegisterPayload)  => Promise<void>;
+  logout:         ()                          => Promise<void>;
+  changePassword:  (currentPassword: string, newPassword: string, confirmPassword: string) => Promise<void>;
+  forgotPassword: (email: string)             => Promise<void>;
+  updateProfile: (payload: UpdateProfilePayload) => Promise<void>;
+  uploadAvatar:   (formData: FormData, pendingImage?: string)          => Promise<void>;
+  clearError:     ()                          => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user:         null,
+  localAvatarUri: null,
   accessToken:  null,
   refreshToken: null,
   isLoading:    false,
@@ -97,12 +104,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  // ── Login with Google ─────────────────────────────────────────────────
+  loginWithGoogle: async (token) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await authApi.google(token);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de connexion avec Google');
+      const { user, access_token, refresh_token } = res.data;
+      await secureStorage.setTokens(access_token, refresh_token);
+      set({ user, accessToken: access_token, refreshToken: refresh_token, isLoading: false });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      throw err;
+    }
+  },
+
   // ── Logout ──────────────────────────────────────────────────────────────
   logout: async () => {
     const { accessToken } = get();
     try { if (accessToken) await authApi.logout(accessToken); } catch (_) {}
     await secureStorage.clearTokens();
     set({ user: null, accessToken: null, refreshToken: null, error: null });
+    
   },
 
   // ── Forgot Password ─────────────────────────────────────────────────────
@@ -111,6 +134,81 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await authApi.forgotPassword(email);
       set({ isLoading: false });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      throw err;
+    }
+  },
+
+  // ── Reset Password  ─────────────────────────
+  changePassword: async (currentPassword, newPassword, confirmPassword) => {
+    set({ isLoading: true, error: null });
+    const { accessToken } = get();
+    try {
+
+      if (!accessToken) throw new Error('Utilisateur non authentifié');
+      
+      
+      const res = await authApi.changePassword( currentPassword, newPassword, confirmPassword, accessToken);
+
+      if (!res.ok) throw new Error(res.message ?? 'Mot de passe actuel incorrect');
+
+      set({ isLoading: false });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      throw err; 
+    }
+  },
+
+  updateProfile: async (payload) => {
+    set({ isLoading: true, error: null });
+    const { accessToken, user } = get();
+    try {
+      if (!accessToken) throw new Error('Utilisateur non authentifié');
+
+      const res = await userApi.updateMe(accessToken, payload);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la mise à jour');
+
+      const updatedUser: AuthUser = {
+        ...res.data,
+        // Le backend retourne AuthUser de base — on réinjecte les champs driver si présents
+        ...(user?.role === 'driver' && {
+          vtc_license: (user as any).vtc_license,
+          iban: (payload as any).iban ?? (user as any).iban,
+          vehicle: {
+            ...(user as any).vehicle,
+            ...(payload as any).vehicle_model && { model: (payload as any).vehicle_model },
+            ...(payload as any).vehicle_color && { color: (payload as any).vehicle_color },
+            ...(payload as any).vehicle_brand && { brand: (payload as any).vehicle_brand },
+          },
+        }),
+      };
+
+      set({ user: updatedUser, isLoading: false });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      throw err;
+    }
+  },
+
+  uploadAvatar: async (formData: FormData, localUri?: string) => {
+    set({ isLoading: true, error: null });
+    const { accessToken } = get();  
+    try {
+      if (!accessToken) throw new Error('Utilisateur non authentifié');
+      
+      const res = await authApi.uploadAvatar(formData, accessToken);
+      
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de l\'upload de l\'avatar');
+
+      // Optionnel : mettre à jour le contexte avec la nouvelle URL retournée
+      const updatedUser = { ...get().user } as AuthUser;
+
+      console.log(updatedUser);
+
+      if (localUri) set({ user: updatedUser, localAvatarUri: localUri, isLoading: false });
+      else  set({ user: updatedUser, isLoading: false });
+
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
       throw err;

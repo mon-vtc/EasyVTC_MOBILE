@@ -134,7 +134,7 @@ export default function LoginScreen({ navigation }: Props) {
                 <View style={styles.line} />
               </View>
 
-              <TouchableOpacity style={styles.googleButton}>
+              <TouchableOpacity style={styles.googleButton} >
                 <Image 
                   source={Logo.LogoGoogle} 
                   style={styles.googleIcon} 
