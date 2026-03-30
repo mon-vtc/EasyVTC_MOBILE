@@ -7,7 +7,6 @@ import { useForm }                     from 'react-hook-form';
 import { zodResolver }                 from '@hookform/resolvers/zod';
 import { z }                           from 'zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons }                    from '@expo/vector-icons';
 
 import { FormField } from '../../components/forms/FormField';
 import { AppButton } from '../../components/common/AppButton';
@@ -24,12 +23,10 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
 export default function ForgotPasswordScreen({ navigation }: Props) {
   const { forgotPassword, isLoading, error, clearError } = useAuth();
-  const [sent, setSent]           = useState(false);
+  const [sent, setSent] = useState(false);
   const [sentEmail, setSentEmail] = useState('');
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  const { control, handleSubmit } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
     clearError();
@@ -37,23 +34,20 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
       await forgotPassword(data.email.trim().toLowerCase());
       setSentEmail(data.email.trim().toLowerCase());
       setSent(true);
-    } catch (_) {
-      if (__DEV__) console.error('ForgotPassword error:', _);
-    }
+    } catch (_) {}
   };
 
-  // ── Écran confirmation ────────────────────────────────────────
+  // ── Écran de confirmation ────────────────────────────────────────────────
   if (sent) {
     return (
       <View style={styles.flex}>
-        <View style={styles.topBar}>
+        <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color={Colors.bordeaux} />
+            <Text style={styles.backText}>← Retour à la connexion</Text>
           </TouchableOpacity>
         </View>
-
         <View style={styles.successContainer}>
-          <Ionicons name="mail-open-outline" size={72} color={Colors.bordeaux} style={{ marginBottom: Spacing.lg }} />
+          <Text style={styles.successEmoji}>📬</Text>
           <Text style={styles.successTitle}>Email envoyé !</Text>
           <Text style={styles.successText}>
             Si l'adresse{' '}
@@ -61,46 +55,36 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
             est associée à un compte, vous recevrez un lien de réinitialisation dans quelques minutes.
           </Text>
           <Text style={styles.successHint}>Vérifiez aussi vos spams.</Text>
-
           <AppButton
             label="Retour à la connexion"
             onPress={() => navigation.navigate('Login')}
             size="lg"
-            style={{ marginTop: Spacing.xl }}
+            style={styles.backBtn2}
           />
         </View>
       </View>
     );
   }
 
-  // ── Formulaire ────────────────────────────────────────────────
+  // ── Formulaire ────────────────────────────────────────────────────────────
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Flèche retour */}
-        <View style={styles.topBar}>
+    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
+        <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color={Colors.bordeaux} />
+            <Text style={styles.backText}>← Retour</Text>
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>Mot de passe oublié</Text>
+          <Text style={styles.headerSub}>Réinitialisez votre mot de passe</Text>
         </View>
 
-        {/* Titre */}
-        <View style={styles.titleBlock}>
-          <Text style={styles.title}>Mot de passe oublié ?</Text>
+        <View style={styles.card}>
+          <Text style={styles.lockIcon}>🔐</Text>
+          <Text style={styles.title}>Réinitialisation</Text>
           <Text style={styles.description}>
-            Entrez votre email pour recevoir un lien de réinitialisation.
+            Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
           </Text>
-        </View>
-
-        {/* Formulaire */}
-        <View style={styles.formBlock}>
 
           {error && (
             <View style={styles.errorBanner}>
@@ -111,33 +95,25 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           <FormField<FormData>
             name="email"
             control={control}
-            label="E-mail"
+            label="Adresse email"
             placeholder="votre@email.com"
-            icon="mail-outline"
             keyboardType="email-address"
-            editable={!isLoading}
-            error={errors.email?.message}
           />
 
-          <AppButton
-            label={isLoading ? 'Envoi...' : 'Envoyer le lien'}
-            onPress={handleSubmit(onSubmit)}
-            disabled={isLoading}
-            size="lg"
-            style={styles.button}
-          />
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>
+              ⏱️ Le lien de réinitialisation est valide <Text style={{ fontWeight: '700' }}>1 heure</Text>.
+            </Text>
+          </View>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Login')}
-            style={styles.loginLink}
-            disabled={isLoading}
-          >
+          <AppButton label="Envoyer le lien" onPress={handleSubmit(onSubmit)} loading={isLoading} size="lg" />
+
+          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.loginLink}>
             <Text style={styles.loginText}>
-              Vous souvenez-vous du mot de passe ?{' \t\t'}
+              Vous souvenez du mot de passe ?{' '}
               <Text style={styles.loginBold}>Se connecter</Text>
             </Text>
           </TouchableOpacity>
-
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -145,72 +121,57 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  flex:   { flex: 1, backgroundColor: Colors.surface },
+  flex:   { flex: 1, backgroundColor: Colors.background },
   scroll: { flexGrow: 1, paddingBottom: Spacing.xl },
 
-  // Barre du haut avec flèche
-  topBar: {
-    paddingTop:        Spacing.xl * 2,
-    paddingHorizontal: Spacing.lg,
-    marginBottom:      Spacing.lg,
+  header: {
+    backgroundColor: Colors.bordeaux,
+    paddingTop: 56, paddingBottom: Spacing.xl, paddingHorizontal: Spacing.lg,
+    borderBottomLeftRadius: 32, borderBottomRightRadius: 32,
   },
-  backBtn: {
-    width:         40,
-    height:        40,
-    borderRadius:  20,
-    alignItems:    'center',
-    justifyContent:'center',
-    backgroundColor: Colors.beigeLight ?? '#F5F0EE',
-  },
+  backBtn:     { marginBottom: Spacing.md },
+  backText:    { color: Colors.beigeLight, fontSize: Fonts.size.md },
+  headerTitle: { color: Colors.white, fontSize: Fonts.size.xxl, fontWeight: '800' },
+  headerSub:   { color: Colors.beigeLight, fontSize: Fonts.size.sm, marginTop: Spacing.xs },
 
-  // Bloc titre
-  titleBlock: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom:      Spacing.xl,
+  card: {
+    backgroundColor: Colors.surface, marginHorizontal: Spacing.md, marginTop: -Spacing.lg,
+    borderRadius: Radius.lg, padding: Spacing.lg,
+    shadowColor: Colors.bordeaux, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12, shadowRadius: 16, elevation: 6,
+    alignItems: 'center',
   },
-  title: {
-    fontSize:     Fonts.size.xxl,
-    fontWeight:   '800',
-    color:        Colors.bordeaux,
-    lineHeight:   Fonts.size.xxl * 1.2,
-    marginBottom: Spacing.md,
-  },
-  description: {
-    color:      Colors.textCallToAction,
-    fontSize:   Fonts.size.md,
-    lineHeight: 22,
-  },
-
-  // Bloc formulaire
-  formBlock: {
-    paddingHorizontal: Spacing.lg,
-  },
+  lockIcon:    { fontSize: 52, marginBottom: Spacing.md, marginTop: Spacing.sm },
+  title:       { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.bordeaux, marginBottom: Spacing.sm },
+  description: { color: Colors.textSecondary, fontSize: Fonts.size.md, lineHeight: 22, textAlign: 'center', marginBottom: Spacing.lg, alignSelf: 'stretch' },
 
   errorBanner: {
-    backgroundColor: Colors.errorLight,
-    borderRadius:    Radius.sm,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.error,
-    padding:         Spacing.md,
-    marginBottom:    Spacing.md,
+    backgroundColor: Colors.errorLight, borderRadius: Radius.sm,
+    borderLeftWidth: 3, borderLeftColor: Colors.error,
+    padding: Spacing.md, marginBottom: Spacing.md, alignSelf: 'stretch',
   },
   errorText: { color: Colors.error, fontSize: Fonts.size.sm },
 
-  button: { marginTop: Spacing.sm },
+  infoBox: {
+    backgroundColor: Colors.warningLight, borderRadius: Radius.sm,
+    borderLeftWidth: 3, borderLeftColor: Colors.warning,
+    padding: Spacing.md, marginBottom: Spacing.lg, alignSelf: 'stretch',
+  },
+  infoText:  { color: Colors.warning, fontSize: Fonts.size.sm },
 
-  loginLink: { alignItems: 'center', marginTop: Spacing.xl },
-  loginText: { color: Colors.textCallToAction, fontSize: Fonts.size.md },
+  loginLink: { alignItems: 'center', marginTop: Spacing.md },
+  loginText: { color: Colors.textSecondary, fontSize: Fonts.size.md },
   loginBold: { color: Colors.bordeaux, fontWeight: '700' },
 
-  // ── Confirmation ──────────────────────────────────────────────
+  // ── Confirmation ──────────────────────────────────────────────────────────
   successContainer: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-    padding:        Spacing.xl,
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    padding: Spacing.xl,
   },
-  successTitle:   { fontSize: Fonts.size.xxl, fontWeight: '800', color: Colors.bordeaux, marginBottom: Spacing.md },
-  successText:    { color: Colors.textCallToAction, fontSize: Fonts.size.md, lineHeight: 22, textAlign: 'center', marginBottom: Spacing.sm },
-  emailHighlight: { color: Colors.bordeaux, fontWeight: '700' },
-  successHint:    { color: Colors.textMuted, fontSize: Fonts.size.sm, marginTop: Spacing.xs },
+  successEmoji:    { fontSize: 72, marginBottom: Spacing.lg },
+  successTitle:    { fontSize: Fonts.size.xxl, fontWeight: '800', color: Colors.bordeaux, marginBottom: Spacing.md },
+  successText:     { color: Colors.textSecondary, fontSize: Fonts.size.md, lineHeight: 22, textAlign: 'center', marginBottom: Spacing.sm },
+  emailHighlight:  { color: Colors.bordeaux, fontWeight: '700' },
+  successHint:     { color: Colors.textMuted, fontSize: Fonts.size.sm, marginBottom: Spacing.xl },
+  backBtn2:        { width: '100%' },
 });

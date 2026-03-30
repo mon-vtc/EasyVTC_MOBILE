@@ -1,87 +1,41 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  View, Text, Image, StyleSheet, ScrollView,
+  View, Text, StyleSheet, ScrollView,
   TouchableOpacity, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { useForm, useWatch }           from 'react-hook-form';
+import { useForm }                     from 'react-hook-form';
 import { zodResolver }                 from '@hookform/resolvers/zod';
 import { z }                           from 'zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { LinearGradient }              from 'expo-linear-gradient';
-import { Ionicons }                    from '@expo/vector-icons';
 
 import { FormField }   from '../../components/forms/FormField';
 import { AppButton }   from '../../components/common/AppButton';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuth }     from '../../hooks/useAuth';
 import type { AuthStackParamList } from '../../types/auth.types';
-import { Logo } from '../../constants/logo';
 
 const schema = z.object({
-  first_name: z.string().min(2, 'Prénom trop court'),
-  last_name:  z.string().min(2, 'Nom trop court'),
-  email:      z.string().email('Email invalide'),
-  phone:      z.string().regex(/^\+?[1-9]\d{7,14}$/, 'Numéro invalide'),
-  password:   z.string()
-                .min(8,      'Min. 8 caractères')
-                .regex(/[A-Z]/, 'Une lettre majuscule requise')
-                .regex(/[0-9]/, 'Un chiffre requis'),
+  first_name:       z.string().min(2, 'Prénom trop court'),
+  last_name:        z.string().min(2, 'Nom trop court'),
+  email:            z.string().email('Email invalide'),
+  phone:            z.string().regex(/^\+?[1-9]\d{7,14}$/, 'Numéro invalide (ex: +33612345678)'),
+  password:         z.string().min(8, 'Min. 8 caractères')
+                      .regex(/[A-Z]/, 'Une majuscule requise')
+                      .regex(/[0-9]/, 'Un chiffre requis'),
+  confirm_password: z.string(),
+}).refine((d) => d.password === d.confirm_password, {
+  message: 'Les mots de passe ne correspondent pas',
+  path: ['confirm_password'],
 });
 type FormData = z.infer<typeof schema>;
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'RegisterDriver'>;
 
-// ── Règles checklist mot de passe ──────────────────────────────
-const PASSWORD_RULES = [
-  { label: 'Au moins 8 caractères',  test: (v: string) => v.length >= 8 },
-  { label: 'Une lettre majuscule',   test: (v: string) => /[A-Z]/.test(v) },
-  { label: 'Un chiffre',             test: (v: string) => /[0-9]/.test(v) },
-];
-
-function PasswordStrength({ value }: { value: string }) {
-  return (
-    <View style={strengthStyles.wrapper}>
-      {PASSWORD_RULES.map((rule) => {
-        const ok = rule.test(value ?? '');
-        return (
-          <View key={rule.label} style={strengthStyles.row}>
-            <Ionicons
-              name={ok ? 'checkmark-circle' : 'ellipse-outline'}
-              size={16}
-              color={ok ? Colors.bordeauxLight   : Colors.textMuted}
-            />
-            <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>
-              {rule.label}
-            </Text>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
-const strengthStyles = StyleSheet.create({
-  wrapper: { marginTop: -Spacing.xs, marginBottom: Spacing.md },
-  row:     { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  text:    { marginLeft: Spacing.xs, fontSize: Fonts.size.sm, color: Colors.textCallToAction, opacity: 0.8 },
-  textOk:  { color: Colors.bordeauxLight},
-});
-
-// ── Screen ─────────────────────────────────────────────────────
 export default function RegisterDriverScreen({ navigation }: Props) {
-  const [cguAccepted, setCguAccepted] = useState(false);
   const { register, isLoading, error, clearError } = useAuth();
-
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { password: '' },
-  });
-
-  // Watch pour la checklist live
-  const passwordValue = useWatch({ control, name: 'password', defaultValue: '' });
+  const { control, handleSubmit } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
-    if (!cguAccepted) return;
     clearError();
     try {
       await register({
@@ -94,247 +48,134 @@ export default function RegisterDriverScreen({ navigation }: Props) {
         accept_terms: true,
         rgpd_consent: true,
       });
-    } catch (_) {
-      if (__DEV__) console.error('Register error:', _);
-    }
+    } catch (_) {}
   };
 
   return (
-    <LinearGradient
-      colors={['#1A0505', '#3D1515', '#602C2D']}
-      start={{ x: 0, y: 1 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.flex}
-    >
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* ── Header ── */}
-          <View style={styles.header}>
-            <View style={styles.logoShadow}>
-              <Image source={Logo.LogoEasyVTC} style={styles.logo} />
-            </View>
-            <Text style={styles.title}>Créer un compte</Text>
-            <Text style={styles.subtitle}>Rejoignez notre communauté premium</Text>
+    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
+        {/* ── Header ── */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Text style={styles.backText}>← Retour</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Devenir chauffeur</Text>
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleText}>🚗 Chauffeur VTC</Text>
+          </View>
+        </View>
+
+        <View style={styles.card}>
+
+          {/* Info documents */}
+          <View style={styles.infoBanner}>
+            <Text style={styles.infoTitle}>📋 Documents requis après inscription</Text>
+            <Text style={styles.infoText}>
+              Permis de conduire · Carte VTC · Assurance professionnelle · KBIS / Justificatif d'activité
+            </Text>
           </View>
 
-          {/* ── Card ── */}
-          <View style={styles.card}>
-            <LinearGradient
-              colors={[Colors.bordeauxLight, '#FF6B6B', Colors.bordeauxLight]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.cardTopLine}
-            />
-
-            <View style={styles.cardContent}>
-
-              {error && (
-                <View style={styles.errorBanner}>
-                  <Text style={styles.errorText}>⚠️ {error}</Text>
-                </View>
-              )}
-
-              {/* Prénom / Nom */}
-              <View style={styles.row}>
-                <View style={styles.half}>
-                  <FormField<FormData>
-                    name="first_name"
-                    control={control}
-                    label="Prénom *"
-                    placeholder="Jean"
-                    icon="person-outline"
-                    autoCapitalize="words"
-                    editable={!isLoading}
-                    error={errors.first_name?.message}
-                  />
-                </View>
-                <View style={[styles.half, { marginLeft: Spacing.sm }]}>
-                  <FormField<FormData>
-                    name="last_name"
-                    control={control}
-                    label="Nom *"
-                    placeholder="Dupont"
-                    icon="person-outline"
-                    autoCapitalize="words"
-                    editable={!isLoading}
-                    error={errors.last_name?.message}
-                  />
-                </View>
-              </View>
-
-              <FormField<FormData>
-                name="phone"
-                control={control}
-                label="Téléphone *"
-                placeholder="+33 6 12 34 56 78"
-                icon="call-outline"
-                keyboardType="phone-pad"
-                editable={!isLoading}
-                error={errors.phone?.message}
-              />
-
-              <FormField<FormData>
-                name="email"
-                control={control}
-                label="E-mail *"
-                placeholder="jean.dupont@email.com"
-                icon="mail-outline"
-                keyboardType="email-address"
-                editable={!isLoading}
-                error={errors.email?.message}
-              />
-
-              <FormField<FormData>
-                name="password"
-                control={control}
-                label="Mot de passe *"
-                placeholder="••••••••"
-                icon="lock-closed-outline"
-                secureTextEntry
-                showToggle
-                editable={!isLoading}
-                error={errors.password?.message}
-              />
-
-              {/* Checklist live */}
-              <PasswordStrength value={passwordValue} />
-
-              {/* CGU checkbox */}
-              <TouchableOpacity
-                style={styles.cguRow}
-                onPress={() => setCguAccepted(!cguAccepted)}
-                disabled={isLoading}
-              >
-                <Ionicons
-                  name={cguAccepted ? 'checkbox' : 'square-outline'}
-                  size={20}
-                  color={cguAccepted ? Colors.bordeaux : Colors.textMuted}
-                />
-                <Text style={styles.cguText}>
-                  CGU — J'accepte les{' '}
-                  <Text style={styles.cguLink}>conditions d'utilisation</Text>
-                  {' '}et la{' '}
-                  <Text style={styles.cguLink}>politique de confidentialité</Text>
-                </Text>
-              </TouchableOpacity>
-
-              <AppButton
-                label={isLoading ? 'Création...' : 'Créer mon compte'}
-                onPress={handleSubmit(onSubmit)}
-                disabled={isLoading || !cguAccepted}
-                size="lg"
-                style={styles.button}
-              />
-
-              {/* Séparateur Google */}
-              <View style={styles.separatorContainer}>
-                <View style={styles.line} />
-                <Text style={styles.separatorText}>Ou continuer avec</Text>
-                <View style={styles.line} />
-              </View>
-
-              <TouchableOpacity style={styles.googleButton}>
-                <Image source={Logo.LogoGoogle} style={styles.googleIcon} />
-                <Text style={styles.googleText}>Continuer avec Google</Text>
-              </TouchableOpacity>
-
+          {error && (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>⚠️ {error}</Text>
             </View>
+          )}
 
-            {/* Lien login */}
-            <View style={styles.registration}>
-              <Text style={styles.loginText}>Déjà un compte ?</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')} disabled={isLoading}>
-                <Text style={styles.loginBold}> Se connecter</Text>
-              </TouchableOpacity>
+          <View style={styles.row}>
+            <View style={styles.half}>
+              <FormField<FormData> name="first_name" control={control} label="Prénom"  placeholder="Jean"   autoCapitalize="words" />
             </View>
-
+            <View style={[styles.half, { marginLeft: Spacing.sm }]}>
+              <FormField<FormData> name="last_name"  control={control} label="Nom"     placeholder="Dupont" autoCapitalize="words" />
+            </View>
           </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>© 2026 EasyVTC. Tous droits réservés.</Text>
+          <FormField<FormData> name="email"            control={control} label="Email"                    placeholder="votre@email.com"             keyboardType="email-address" />
+          <FormField<FormData> name="phone"            control={control} label="Téléphone"                placeholder="+33 6 12 34 56 78"           keyboardType="phone-pad" />
+          <FormField<FormData> name="password"         control={control} label="Mot de passe"             placeholder="Min. 8 car., 1 maj., 1 chiffre" secureTextEntry showToggle />
+          <FormField<FormData> name="confirm_password" control={control} label="Confirmer le mot de passe" placeholder="••••••••"                    secureTextEntry showToggle />
+
+          <View style={styles.termsBox}>
+            <Text style={styles.termsText}>
+              En créant votre compte, vous acceptez nos{' '}
+              <Text style={styles.termsLink}>CGU</Text> et notre{' '}
+              <Text style={styles.termsLink}>Politique de confidentialité (RGPD)</Text>.{'\n'}
+              Votre compte sera activé après validation de vos documents par l'administrateur.
+            </Text>
           </View>
 
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </LinearGradient>
+          <AppButton label="Créer mon compte chauffeur" onPress={handleSubmit(onSubmit)} loading={isLoading} size="lg" />
+
+          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.loginLink}>
+            <Text style={styles.loginText}>
+              Déjà un compte ? <Text style={styles.loginBold}>Se connecter</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.paymentNote}>
+          💳 Paiement directement au chauffeur · Espèces ou CB
+        </Text>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex:   { flex: 1 },
-  scroll: { flexGrow: 1, paddingVertical: Spacing.xl },
+  flex:   { flex: 1, backgroundColor: Colors.background },
+  scroll: { flexGrow: 1, paddingBottom: Spacing.xl },
 
-  // Header
-  header:   { alignItems: 'center', marginBottom: Spacing.xl, marginTop: Spacing.lg },
-  logo:     { width: 80, height: 80, marginBottom: Spacing.sm, resizeMode: 'contain' },
-  logoShadow: {
-    // iOS
-    shadowColor: 'white', 
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,   
-    shadowRadius: 20,
-    // Android
-    elevation: 40,      
-      
-    borderRadius: 40,
-    marginBottom: Spacing.md,
+  header: {
+    backgroundColor: Colors.bordeaux,
+    paddingTop: 56, paddingBottom: Spacing.xl, paddingHorizontal: Spacing.lg,
+    borderBottomLeftRadius: 32, borderBottomRightRadius: 32,
   },
-  title:    { fontSize: Fonts.size.xl, fontWeight: '800', color: '#FFF', marginBottom: Spacing.xs },
-  subtitle: { fontSize: Fonts.size.md, color: Colors.surface, opacity: 0.5, textAlign: 'center', paddingHorizontal: Spacing.xl },
+  backBtn:     { marginBottom: Spacing.md },
+  backText:    { color: Colors.beigeLight, fontSize: Fonts.size.md },
+  headerTitle: { color: Colors.white, fontSize: Fonts.size.xxl, fontWeight: '800' },
+  roleBadge: {
+    backgroundColor: Colors.beige, borderRadius: Radius.full,
+    paddingVertical: 4, paddingHorizontal: Spacing.sm,
+    alignSelf: 'flex-start', marginTop: Spacing.sm,
+  },
+  roleText: { color: Colors.bordeauxDark, fontSize: Fonts.size.sm, fontWeight: '700' },
 
-  // Card
   card: {
-    backgroundColor: Colors.surface, marginHorizontal: Spacing.lg,
-    borderRadius: Radius.lg, overflow: 'hidden', elevation: 5,
+    backgroundColor: Colors.surface, marginHorizontal: Spacing.md, marginTop: -Spacing.lg,
+    borderRadius: Radius.lg, padding: Spacing.lg,
+    shadowColor: Colors.bordeaux, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12, shadowRadius: 16, elevation: 6,
   },
-  cardTopLine: { height: 6, width: '100%', marginTop: Spacing.xxs },
-  cardContent: { padding: Spacing.lg },
 
-  // Erreur
-  errorBanner: { backgroundColor: Colors.errorLight, borderRadius: Radius.sm, borderLeftWidth: 3, borderLeftColor: Colors.error, padding: Spacing.md, marginBottom: Spacing.md },
-  errorText:   { color: Colors.error, fontSize: Fonts.size.sm },
+  infoBanner: {
+    backgroundColor: Colors.beigeLight, borderRadius: Radius.sm,
+    borderLeftWidth: 4, borderLeftColor: Colors.beige,
+    padding: Spacing.md, marginBottom: Spacing.lg,
+  },
+  infoTitle: { color: Colors.bordeaux, fontWeight: '700', fontSize: Fonts.size.sm, marginBottom: Spacing.xs },
+  infoText:  { color: Colors.textSecondary, fontSize: Fonts.size.sm, lineHeight: 20 },
 
-  // Champs
+  errorBanner: {
+    backgroundColor: Colors.errorLight, borderRadius: Radius.sm,
+    borderLeftWidth: 3, borderLeftColor: Colors.error,
+    padding: Spacing.md, marginBottom: Spacing.md,
+  },
+  errorText: { color: Colors.error, fontSize: Fonts.size.sm },
+
   row:  { flexDirection: 'row' },
   half: { flex: 1 },
 
-  // CGU
-  cguRow:  { flexDirection: 'row', alignItems: 'flex-start', marginBottom: Spacing.lg, gap: Spacing.sm },
-  cguText: { flex: 1, fontSize: Fonts.size.sm, color: Colors.textSecondary, lineHeight: 20 },
-  cguLink: { color: Colors.bordeaux, fontWeight: '600' },
+  termsBox: { backgroundColor: Colors.beigeLight, borderRadius: Radius.sm, padding: Spacing.md, marginBottom: Spacing.lg },
+  termsText:{ color: Colors.textSecondary, fontSize: Fonts.size.sm, lineHeight: 20 },
+  termsLink:{ color: Colors.bordeaux, fontWeight: '600' },
 
-  button: { marginBottom: Spacing.sm },
+  loginLink: { alignItems: 'center', marginTop: Spacing.md },
+  loginText: { color: Colors.textSecondary, fontSize: Fonts.size.md },
+  loginBold: { color: Colors.bordeaux, fontWeight: '700' },
 
-  // Séparateur
-  separatorContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: Spacing.lg },
-  line:               { flex: 1, height: 1, backgroundColor: '#E0E0E0' },
-  separatorText:      { marginHorizontal: Spacing.md, color: Colors.textCallToAction, fontSize: Fonts.size.sm },
-
-  // Google
-  googleButton: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    borderWidth: Colors.borderWith, borderColor: Colors.border,
-    borderRadius: Radius.lg, paddingVertical: Spacing.md, backgroundColor: '#FFF',
+  paymentNote: {
+    textAlign: 'center', color: Colors.textMuted,
+    fontSize: Fonts.size.xs, marginTop: Spacing.lg, paddingHorizontal: Spacing.lg,
   },
-  googleIcon: { width: 20, height: 20, marginRight: Spacing.md },
-  googleText: { fontWeight: '600', color: '#333' },
-
-  // Footer card
-  registration: {
-    flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
-    marginVertical: Spacing.xl,
-  },
-  loginText: { color: Colors.textCallToAction, fontSize: Fonts.size.md },
-  loginBold: { color: Colors.bordeauxLight, fontWeight: 'bold', fontSize: Fonts.size.md },
-
-  // Footer page
-  footer:     { flexDirection: 'row', justifyContent: 'center', marginTop: Spacing.lg, marginBottom: Spacing.xl },
-  footerText: { color: Colors.surface, opacity: 0.5, fontSize: Fonts.size.sm },
 });

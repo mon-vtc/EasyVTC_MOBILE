@@ -1,6 +1,6 @@
-import type { ApiResponse } from '../types';
+import type { ApiResponse } from '../types/auth.types';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 // ── Client HTTP de base ───────────────────────────────────────────────────────
 async function request<T>(
@@ -8,12 +8,8 @@ async function request<T>(
   options: RequestInit = {},
   token?: string
 ): Promise<ApiResponse<T>> {
-  const isFormData = options.body instanceof FormData;
-
   const headers: Record<string, string> = {
-
-    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-
+    'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
 
@@ -29,21 +25,8 @@ async function request<T>(
 }
 
 export const api = {
-  get: <T>(url: string, token?: string) => 
-    request<T>(url, { method: 'GET' }, token),
-
-  post: <T>(url: string, body: unknown, token?: string) => 
-    request<T>(url, { 
-      method: 'POST', 
-      body: body instanceof FormData ? body : JSON.stringify(body) 
-    }, token),
-
-  patch: <T>(url: string, body: unknown, token?: string) => 
-    request<T>(url, { 
-      method: 'PATCH', 
-      body: body instanceof FormData ? body : JSON.stringify(body) 
-    }, token),
-
-  delete: <T>(url: string, token?: string) => 
-    request<T>(url, { method: 'DELETE' }, token),
+  get:    <T>(url: string, token?: string)                  => request<T>(url, { method: 'GET' }, token),
+  post:   <T>(url: string, body: unknown, token?: string)   => request<T>(url, { method: 'POST',  body: JSON.stringify(body) }, token),
+  patch:  <T>(url: string, body: unknown, token?: string)   => request<T>(url, { method: 'PATCH', body: JSON.stringify(body) }, token),
+  delete: <T>(url: string, token?: string)                  => request<T>(url, { method: 'DELETE' }, token),
 };

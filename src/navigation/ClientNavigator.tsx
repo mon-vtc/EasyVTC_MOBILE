@@ -1,117 +1,53 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons }                 from '@expo/vector-icons';
-import { Colors, Radius, Spacing }  from '../theme/colors';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import DrawerContent             from './DrawerContent';
+import { Colors }                from '../theme/colors';
 
+// Screens — placeholders Sprint 3
 import ClientHomeScreen        from '../screens/client/ClientHomeScreen';
 import MyReservationsScreen    from '../screens/client/MyReservationsScreen';
 import CreateReservationScreen from '../screens/client/CreateReservationScreen';
-import MessagesScreen          from '../screens/client/MessagesScreen';
 import ClientProfileScreen     from '../screens/client/ClientProfileScreen';
-import type { ClientTabParamList }  from '../types/auth.types';
+import type { ClientDrawerParamList } from '../types/auth.types';
 
+const Drawer = createDrawerNavigator<ClientDrawerParamList>();
 
-const Tab = createBottomTabNavigator<ClientTabParamList>();
+const drawerScreenOptions = {
+  headerStyle:            { backgroundColor: Colors.bordeaux },
+  headerTintColor:        Colors.white,
+  headerTitleStyle:       { fontWeight: '700' as const, fontSize: 18 },
+  drawerStyle:            { backgroundColor: Colors.surface, width: 280 },
+  drawerActiveTintColor:  Colors.bordeaux,
+  drawerInactiveTintColor: Colors.textSecondary,
+  drawerActiveBackgroundColor: Colors.overlayLight,
+};
 
-// ── Bouton FAB central ──────────────────────────────────────────
-function FABButton({ onPress }: { onPress: (e?: any) => void }) {
-  return (
-    <TouchableOpacity style={fabStyles.btn} onPress={onPress} activeOpacity={0.85}>
-      <Ionicons name="add" size={28} color={Colors.white} />
-    </TouchableOpacity>
-  );
-}
-
-const fabStyles = StyleSheet.create({
-  btn: {
-    width:           60, height: 60,
-    borderRadius:    30,
-    backgroundColor: Colors.bordeaux,
-    alignItems:      'center',
-    justifyContent:  'center',
-    marginBottom:    Platform.OS === 'ios' ? 16 : 24,
-    shadowColor:     Colors.bordeaux,
-    shadowOffset:    { width: 0, height: 4 },
-    shadowOpacity:   0.4,
-    shadowRadius:    8,
-    elevation:       8,
-  },
-});
-
-// ── Navigator ───────────────────────────────────────────────────
 export default function ClientNavigator() {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarShowLabel: true,
-        tabBarActiveTintColor:   Colors.bordeauxDark,
-        tabBarInactiveTintColor: Colors.textMuted,
-        tabBarStyle: {
-          backgroundColor:  Colors.surface,
-          borderTopWidth:   1,
-          borderTopColor:   Colors.border,
-          height:           Platform.OS === 'ios' ? 84 : 84,
-          paddingBottom:    Platform.OS === 'ios' ? 24 : 8,
-          paddingTop:       8,
-        },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-      })}
+    <Drawer.Navigator
+      drawerContent={(props) => <DrawerContent {...props} />}
+      screenOptions={drawerScreenOptions}
     >
-      <Tab.Screen
+      <Drawer.Screen
         name="ClientHome"
         component={ClientHomeScreen}
-        options={{
-          tabBarLabel: 'Accueil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
-          ),
-        }}
+        options={{ title: 'Accueil', drawerLabel: '🏠  Accueil' }}
       />
-      <Tab.Screen
+      <Drawer.Screen
         name="MyReservations"
         component={MyReservationsScreen}
-        options={{
-          tabBarLabel: 'Courses',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list-outline" size={size} color={color} />
-          ),
-        }}
+        options={{ title: 'Mes réservations', drawerLabel: '📋  Mes réservations' }}
       />
-
-      {/* FAB central */}
-      <Tab.Screen
+      <Drawer.Screen
         name="CreateReservation"
         component={CreateReservationScreen}
-        options={{
-          tabBarLabel: '',
-          tabBarButton: (props) => (
-            <FABButton onPress={props.onPress!} />
-          ),
-        }}
+        options={{ title: 'Nouvelle réservation', drawerLabel: '➕  Nouvelle réservation' }}
       />
-
-      <Tab.Screen
-        name="Messages"
-        component={MessagesScreen}
-        options={{
-          tabBarLabel: 'Messages',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubble-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
+      <Drawer.Screen
         name="ClientProfile"
         component={ClientProfileScreen}
-        options={{
-          tabBarLabel: 'Profil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
-        }}
+        options={{ title: 'Mon profil', drawerLabel: '👤  Mon profil' }}
       />
-    </Tab.Navigator>
+    </Drawer.Navigator>
   );
 }
