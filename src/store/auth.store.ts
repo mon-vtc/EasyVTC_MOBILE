@@ -4,6 +4,27 @@ import { userApi }        from '../services/api/user.api'
 import { authStorage as secureStorage }  from '../services/auth/auth-storage';
 import type { AuthUser, LoginPayload, RegisterPayload, UpdateProfilePayload } from '../types';
 
+// ── Utilitaire : aplatir la réponse API → AuthUser/DriverUser ──
+function mapApiUser(raw: any): AuthUser {
+  if (raw?.role !== 'driver') return raw;
+
+  return {
+    // Champs racine
+    ...raw,
+    // Champs driver aplatis depuis raw.driver
+    driverStatus: raw.driver?.status        ?? 'pending',
+    vehicle_type: raw.driver?.vehicle_type  ?? null,
+    siret:        raw.driver?.siret         ?? null,
+    zone:         raw.driver?.zone          ?? null,
+    iban:         raw.driver?.iban          ?? null,
+    vtc_license:  raw.driver?.vtc_license   ?? null,
+    tva_rate:     raw.driver?.tva_rate      ?? 0,
+    is_online:    raw.driver?.is_online     ?? false,
+    // Véhicule actif
+    vehicle:      raw.vehicle               ?? null,
+  };
+}
+
 interface AuthState {
   user:           AuthUser  | null;
   localAvatarUri: string | null;
@@ -35,74 +56,82 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isHydrated:   false,
   error:        null,
 
-  // ── Hydratation au démarrage de l'app ──────────────────────────────────
-  hydrate: async () => {
-    try {
-      const accessToken  = await secureStorage.getAccessToken();
-      const refreshToken = await secureStorage.getRefreshToken();
+  // ── Login ───────────────────────────────────────────────────────
+login: async (payload) => {
+  set({ isLoading: true, error: null });
+  try {
+    const res = await authApi.login(payload);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de connexion');
+    const { user, access_token, refresh_token } = res.data;
+    await secureStorage.setTokens(access_token, refresh_token);
+    set({
+      user: mapApiUser(user),   // ← fix ici
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      isLoading: false,
+    });
+  } catch (err: unknown) {
+    set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+    throw err;
+  }
+},
 
-      if (accessToken) {
-        // Vérifier que le token est encore valide
-        const res = await authApi.me(accessToken);
-        if (res.ok && res.data) {
-          set({ user: res.data, accessToken, refreshToken, isHydrated: true });
-          return;
-        }
+// ── Hydrate ─────────────────────────────────────────────────────
+hydrate: async () => {
+  try {
+    const accessToken  = await secureStorage.getAccessToken();
+    const refreshToken = await secureStorage.getRefreshToken();
 
-        // Token expiré → tenter le refresh
-        if (refreshToken) {
-          const refreshRes = await authApi.refresh(refreshToken);
-          if (refreshRes.ok && refreshRes.data) {
-            const { access_token, refresh_token } = refreshRes.data;
-            await secureStorage.setTokens(access_token, refresh_token);
-            const meRes = await authApi.me(access_token);
-            if (meRes.ok && meRes.data) {
-              set({
-                user: meRes.data,
-                accessToken: access_token,
-                refreshToken: refresh_token,
-                isHydrated: true,
-              });
-              return;
-            }
+    if (accessToken) {
+      const res = await authApi.me(accessToken);
+      if (res.ok && res.data) {
+        set({ user: mapApiUser(res.data), accessToken, refreshToken, isHydrated: true }); // ← fix
+        return;
+      }
+
+      if (refreshToken) {
+        const refreshRes = await authApi.refresh(refreshToken);
+        if (refreshRes.ok && refreshRes.data) {
+          const { access_token, refresh_token } = refreshRes.data;
+          await secureStorage.setTokens(access_token, refresh_token);
+          const meRes = await authApi.me(access_token);
+          if (meRes.ok && meRes.data) {
+            set({
+              user: mapApiUser(meRes.data),   // ← fix
+              accessToken: access_token,
+              refreshToken: refresh_token,
+              isHydrated: true,
+            });
+            return;
           }
         }
       }
-    } catch (_) {}
-
-    await secureStorage.clearTokens();
-    set({ user: null, accessToken: null, refreshToken: null, isHydrated: true });
-  },
-
-  // ── Login ───────────────────────────────────────────────────────────────
-  login: async (payload) => {
-    set({ isLoading: true, error: null });
-    try {
-      const res = await authApi.login(payload);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de connexion');
-      const { user, access_token, refresh_token } = res.data;
-      await secureStorage.setTokens(access_token, refresh_token);
-      set({ user, accessToken: access_token, refreshToken: refresh_token, isLoading: false });
-    } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
-      throw err;
     }
-  },
+  } catch (_) {}
 
-  // ── Register ────────────────────────────────────────────────────────────
-  register: async (payload) => {
-    set({ isLoading: true, error: null });
-    try {
-      const res = await authApi.register(payload);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la création du compte');
-      const { user, access_token, refresh_token } = res.data;
-      await secureStorage.setTokens(access_token, refresh_token);
-      set({ user, accessToken: access_token, refreshToken: refresh_token, isLoading: false });
-    } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
-      throw err;
-    }
-  },
+  await secureStorage.clearTokens();
+  set({ user: null, accessToken: null, refreshToken: null, isHydrated: true });
+},
+
+// ── Register ────────────────────────────────────────────────────
+register: async (payload) => {
+  set({ isLoading: true, error: null });
+  try {
+    const res = await authApi.register(payload);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la création du compte');
+    const { user, access_token, refresh_token } = res.data;
+    await secureStorage.setTokens(access_token, refresh_token);
+    set({
+      user: mapApiUser(user),   // ← fix
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      isLoading: false,
+    });
+  } catch (err: unknown) {
+    set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+    throw err;
+  }
+},
 
   // ── Login with Google ─────────────────────────────────────────────────
   loginWithGoogle: async (token) => {
