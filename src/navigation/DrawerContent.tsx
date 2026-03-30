@@ -1,6 +1,6 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Alert,
+  View, Text, Image, StyleSheet, TouchableOpacity, Alert,
 } from 'react-native';
 import {
   DrawerContentScrollView,
@@ -9,9 +9,10 @@ import {
 } from '@react-navigation/drawer';
 import { useAuth } from '../hooks/useAuth';
 import { Colors, Fonts, Spacing, Radius } from '../theme/colors';
+import { AppIcon } from '../components/common/AppIcon';
 
 export default function DrawerContent(props: DrawerContentComponentProps) {
-  const { user, logout } = useAuth();
+  const { user, logout , localAvatarUri} = useAuth();
 
   const handleLogout = () => {
     Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
@@ -21,26 +22,35 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
   };
 
   const roleLabel: Record<string, string> = {
-    client:  '🧳 Client',
-    driver:  '🚗 Chauffeur',
-    admin:   '🔑 Administrateur',
-    manager: '📋 Gestionnaire',
+    client:  'Client',
+    driver:  'Chauffeur',
+    admin:   'Administrateur',
+    manager: 'Gestionnaire',
   };
-
-  const initials = `${user?.first_name?.[0] ?? ''}${user?.last_name?.[0] ?? ''}`.toUpperCase();
 
   return (
     <View style={styles.container}>
+      
       {/* ── Profil header ── */}
       <View style={styles.header}>
+
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initials}</Text>
+          <View style={styles.avatarMiniature}>
+            {(localAvatarUri ?? user?.profile_photo_url) ? (
+              <Image
+                source={{ uri: localAvatarUri ?? user?.profile_photo_url ?? undefined }}
+                style={styles.avatarImage}
+              />
+            ) : (
+              <AppIcon name="person-outline" color={styles.avatarText.color} size={32} />
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.name}>{user?.first_name} {user?.last_name}</Text>
+            <Text style={styles.badgeText}>{roleLabel[user?.role ?? 'client']} VTC</Text>
+          </View>
         </View>
-        <Text style={styles.name}>{user?.first_name} {user?.last_name}</Text>
-        <Text style={styles.email}>{user?.email}</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{roleLabel[user?.role ?? 'client']}</Text>
-        </View>
+
       </View>
 
       {/* ── Items menu ── */}
@@ -56,10 +66,9 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
       <View style={styles.footer}>
         <View style={styles.divider} />
         <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-          <Text style={styles.logoutIcon}>🚪</Text>
+          <Text style={styles.logoutIcon}><AppIcon name="log-out-outline" color={styles.logoutIcon.color} /></Text>
           <Text style={styles.logoutText}>Se déconnecter</Text>
         </TouchableOpacity>
-        <Text style={styles.version}>EasyVTC v1.0.0</Text>
       </View>
     </View>
   );
@@ -71,27 +80,28 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: Colors.bordeaux,
     padding: Spacing.lg, paddingTop: Spacing.xxl,
-    borderBottomRightRadius: 24, alignItems: 'center',
+    alignItems: 'center',
   },
   avatar: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: Colors.beige, alignItems: 'center', justifyContent: 'center',
-    marginBottom: Spacing.sm, borderWidth: 3, borderColor: Colors.beigeLight,
+    flexDirection: 'row', alignItems: 'center', 
   },
-  avatarText: { color: Colors.bordeauxDark, fontSize: Fonts.size.xl, fontWeight: '800' },
+
+  avatarMiniature: {width: 72, height: 72, borderRadius: 36, marginRight: Spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center',
+  },
+
+  avatarImage: {width: 72, height: 72, borderRadius: 36},
+  
+  avatarText: { color: Colors.placeHolder, fontSize: Fonts.size.xl, fontWeight: '800' },
   name:       { color: Colors.white, fontSize: Fonts.size.lg, fontWeight: '700' },
-  email:      { color: Colors.beigeLight, fontSize: Fonts.size.sm, marginTop: Spacing.xs },
-  badge: {
-    backgroundColor: Colors.beige, borderRadius: Radius.full,
-    paddingVertical: 3, paddingHorizontal: Spacing.sm, marginTop: Spacing.sm,
-  },
-  badgeText: { color: Colors.bordeauxDark, fontSize: Fonts.size.xs, fontWeight: '700' },
+  
+  badgeText: {  color: Colors.placeHolder, opacity: 0.8, marginTop:Spacing.xs },
 
   menu:    { paddingTop: Spacing.sm },
-  footer:  { padding: Spacing.lg, paddingBottom: Spacing.xl },
+  footer:  { padding: Spacing.lg, paddingBottom: Spacing.lg },
   divider: { height: 1, backgroundColor: Colors.border, marginBottom: Spacing.md },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.sm },
-  logoutIcon:{ fontSize: 20, marginRight: Spacing.sm },
+  logoutIcon:{ fontSize: 20, marginRight: Spacing.sm, color: Colors.error },
   logoutText:{ color: Colors.error, fontSize: Fonts.size.md, fontWeight: '600' },
   version:   { color: Colors.textMuted, fontSize: Fonts.size.xs, textAlign: 'center', marginTop: Spacing.md },
 });
