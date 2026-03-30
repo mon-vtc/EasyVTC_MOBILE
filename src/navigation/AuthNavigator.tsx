@@ -14,8 +14,8 @@ export default function AuthNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <Stack.Screen name="Login"          component={LoginScreen} />
       <Stack.Screen name="RegisterClient" component={RegisterClientScreen} />
-      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="RegisterDriver" component={RegisterDriverScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </Stack.Navigator>
   );
 }

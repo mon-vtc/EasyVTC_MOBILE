@@ -12,8 +12,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.EazyVTC"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -22,19 +21,13 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.EazyVTC"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "983978ef-6a7b-428d-92a6-ae5f8dc773ac"
-      }
-    }
+    ]
   }
 }
