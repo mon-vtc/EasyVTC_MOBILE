@@ -5,11 +5,6 @@
 //    GET    /drivers/documents/:id      → détail
 //    POST   /drivers/documents          → upload (FormData, champ "doc_type")
 //    DELETE /drivers/documents/:id      → suppression
-//
-//  ⚠️  Corrections par rapport à la version précédente :
-//    - Route corrigée : /drivers/me/documents → /drivers/documents
-//    - deleteDocument : api.patch → api.delete (méthode HTTP DELETE)
-//    - Le champ FormData doit être "doc_type" (pas "type")
 // ─────────────────────────────────────────────────────────────
 import { api } from '../../lib/api';
 import type {
@@ -35,7 +30,7 @@ export const documentApi = {
     api.post<DocumentUploadResponse>('/drivers/documents', formData, token),
 
   // DELETE /drivers/documents/:id
-  //   ⚠️ Seuls les documents pending ou rejected peuvent être supprimés
+  //   Seuls les documents pending ou rejected peuvent être supprimés
   deleteDocument: (token: string, documentId: string) =>
     api.delete<null>(`/drivers/documents/${documentId}`, token),
 };
