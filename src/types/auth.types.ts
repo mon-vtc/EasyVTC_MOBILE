@@ -3,6 +3,7 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 // ── Rôles & Statuts ─────────────────────────────────────────────
 export type UserRole   = 'client' | 'driver' | 'admin' | 'manager';
 export type UserStatus = 'active' | 'inactive' | 'locked';
+export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended';
 
 // ── Entité de base ───────────────────────────────────────────────
 export interface AuthUser {
@@ -77,5 +78,5 @@ export type AdminDrawerParamList = {
   AdminUsers:        undefined;
   AdminAvailability: undefined;
   AdminReviews:      undefined;
-  
+  AdminPricing:      undefined;
 };

@@ -11,8 +11,8 @@ export type { LoginPayload, RegisterPayload,
               RegisterClientPayload, RegisterDriverPayload,
               ChangePasswordPayload, UpdateProfilePayload,
               UpdateClientProfilePayload,
-              UpdateDriverProfilePayload,
-              UpdateAdminProfilePayload,
+              // UpdateDriverProfilePayload,
+              // UpdateAdminProfilePayload,
               UpdateUserStatusPayload }                   from './payload.types';
 
 export type { ApiResponse, AuthResponseData,

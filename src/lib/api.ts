@@ -1,6 +1,6 @@
 import type { ApiResponse } from '../types';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.118:4000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // ── Client HTTP de base ───────────────────────────────────────────────────────
 async function request<T>(

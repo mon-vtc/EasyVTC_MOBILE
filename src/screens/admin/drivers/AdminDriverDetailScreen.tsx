@@ -63,7 +63,7 @@ function TabInformations({ driver }: { driver: DriverUser }) {
           ].map(row => (
             <View key={row.label} style={tabStyles.infoRow}>
               <Text style={tabStyles.infoLabel}>{row.label}</Text>
-              <Text style={tabStyles.infoValue}>{row.value}</Text>
+              {/* <Text style={tabStyles.infoValue}>{row.value}</Text> */}
             </View>
           ))}
         </View>

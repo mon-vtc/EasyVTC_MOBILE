@@ -12,6 +12,7 @@ import AdminDocumentsScreen      from '../screens/admin/AdminDocumentsScreen';
 import AdminProfileScreen        from '../screens/admin/AdminProfileScreen';
 import AdminDriversScreen        from '../screens/admin/drivers/AdminDriversScreen';
 import AdminDriverDetailScreen   from '../screens/admin/drivers/AdminDriverDetailScreen';
+import AdminPricingScreen   from '../screens/admin/AdminPricingScreen';
 
 
 import type {
@@ -120,6 +121,15 @@ export default function AdminNavigator() {
         component={AdminDocumentsStack} 
         options={{ 
           drawerLabel: () => <DrawerLabel icon="document-text-outline" label="Documents" />,
+          headerShown: false, 
+        }}
+      />
+
+      <Drawer.Screen
+        name="AdminPricing"
+        component={AdminPricingScreen} 
+        options={{ 
+          drawerLabel: () => <DrawerLabel icon="pricetag-outline" label="Tarification" />,
           headerShown: false, 
         }}
       />
