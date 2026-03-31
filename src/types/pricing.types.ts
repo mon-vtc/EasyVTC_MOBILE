@@ -99,6 +99,15 @@ export interface PricingConfig {
 // DTOs — Mise à jour (PATCH)
 // ══════════════════════════════════════════════════════════════════════════════
 
+export interface CreatePricingGridDto {
+  country:       PricingCountry;
+  base_price:    number;
+  price_per_km:  number;
+  price_per_min: number;
+  minimum_price: number;
+  currency:      string;
+}
+
 export interface UpdatePricingGridDto {
   base_price?:    number;
   price_per_km?:  number;
@@ -107,10 +116,24 @@ export interface UpdatePricingGridDto {
   is_active?:     boolean;
 }
 
+export interface CreatePricingCommissionDto {
+  country:             PricingCountry;
+  currency:            string;
+  commission_rate:     number;
+  commission_vat_rate: number;
+}
+
 export interface UpdatePricingCommissionDto {
   commission_rate?:     number;
   commission_vat_rate?: number;
   is_active?:           boolean;
+}
+
+export interface CreatePricingSupplementDto {
+  country:      PricingCountry;
+  currency:     string;
+  airport_fee:  number;
+  night_rate:   number;
 }
 
 export interface UpdatePricingSupplementDto {

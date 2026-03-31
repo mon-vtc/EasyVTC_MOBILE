@@ -69,16 +69,16 @@ export function usePricing() {
   }, [_setCountry]);
 
   // // ── Valeurs initiales du formulaire depuis la config chargée ─────────────
-  // const getInitialFormValues = useCallback((): PricingFormValues => ({
-  //   base_price:          String(config?.grid.base_price          ?? ''),
-  //   price_per_km:        String(config?.grid.price_per_km        ?? ''),
-  //   price_per_min:       String(config?.grid.price_per_min       ?? ''),
-  //   minimum_price:       String(config?.grid.minimum_price       ?? ''),
-  //   commission_rate:     String(config?.commission.commission_rate     ?? ''),
-  //   commission_vat_rate: String(config?.commission.commission_vat_rate ?? ''),
-  //   airport_fee:         String(config?.supplement.airport_fee   ?? ''),
-  //   night_rate:          String(config?.supplement.night_rate    ?? ''),
-  // }), [config]);
+  const getInitialFormValues = useCallback((): PricingFormValues => ({
+    base_price:          String(config?.grid.base_price          ?? ''),
+    price_per_km:        String(config?.grid.price_per_km        ?? ''),
+    price_per_min:       String(config?.grid.price_per_min       ?? ''),
+    minimum_price:       String(config?.grid.minimum_price       ?? ''),
+    commission_rate:     String(config?.commission.commission_rate     ?? ''),
+    commission_vat_rate: String(config?.commission.commission_vat_rate ?? ''),
+    airport_fee:         String(config?.supplement.airport_fee   ?? ''),
+    night_rate:          String(config?.supplement.night_rate    ?? ''),
+  }), [config]);
 
   // ── Calcul dynamique de l'exemple ────────────────────────────────────────
   const computeExample = useCallback((values: PricingFormValues): PricingExample => {

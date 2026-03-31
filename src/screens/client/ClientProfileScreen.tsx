@@ -302,7 +302,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
               <Ionicons name="lock-closed-outline" size={20} color={Colors.textPrimary} />
               <Text style={styles.actionLabel}>Changer le mot de passe</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+            <Ionicons name="chevron-forward" size={18} color={Colors.textPrimary} />
           </TouchableOpacity>
 
           <View style={styles.divider} />
@@ -484,9 +484,7 @@ const styles = StyleSheet.create({
   formSection:          { paddingHorizontal: Spacing.lg },
   formSectionContainer: {
     backgroundColor: Colors.surface,
-    borderRadius:    Radius.md,
-    borderWidth:     1,
-    borderColor:     Colors.border,
+    borderRadius:    Radius.md,elevation: 2, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
     padding:         Spacing.md,
   },
 
@@ -495,8 +493,7 @@ const styles = StyleSheet.create({
   sectionContainer: {
     backgroundColor: Colors.surface,
     borderRadius:    Radius.md,
-    borderWidth:     1,
-    borderColor:     Colors.border,
+    elevation: 2, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
     padding:         Spacing.md,
   },
   prefRow: {
@@ -514,8 +511,7 @@ const styles = StyleSheet.create({
     marginHorizontal:  Spacing.lg,
     backgroundColor:   Colors.surface,
     borderRadius:      Radius.md,
-    borderWidth:       1,
-    borderColor:       Colors.border,
+    elevation: 2, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
     paddingHorizontal: Spacing.md,
   },
   actionRow: {

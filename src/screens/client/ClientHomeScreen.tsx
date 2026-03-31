@@ -106,8 +106,7 @@ const cardStyles = StyleSheet.create({
     borderRadius:    Radius.md,
     padding:         Spacing.md,
     marginBottom:    Spacing.sm,
-    borderWidth:     1,
-    borderColor:     Colors.border,
+    elevation: 2, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }
   },
   topRow: {
     flexDirection:  'row',
@@ -158,7 +157,12 @@ export default function ClientHomeScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
         >
           {/* ── Header bordeaux ── */}
-          <View style={styles.header}>
+          <LinearGradient 
+                  colors={[Colors.bordeaux, Colors.bordeauxLight]} 
+                  start={{ x: 0, y: 0 }} 
+                  end={{ x: 1, y: 1 }}
+                  style={styles.header}>
+
             <View style={styles.headerTop}>
               <View style={styles.headerGreet}>
                 <Text style={styles.greeting}>Bonjour {firstName} 👋</Text>
@@ -187,7 +191,7 @@ export default function ClientHomeScreen({ navigation }: Props) {
               <Ionicons name="add-circle-outline" size={20} color={Colors.bordeaux} />
               <Text style={styles.newRideBtnText}>Nouvelle réservation</Text>
             </TouchableOpacity>
-          </View>
+          </LinearGradient>
 
           {/* ── Quick Actions ── */}
           <View style={styles.section}>
@@ -328,15 +332,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop:      Spacing.sm,
   },
-  quickAction: { alignItems: 'center', gap: Spacing.xs, backgroundColor: Colors.surface, padding: Spacing.sm, borderRadius: Radius.md, flex: 1, marginHorizontal: Spacing.xs },
+  quickAction: { alignItems: 'center', gap: Spacing.xs, backgroundColor: Colors.surface, padding: Spacing.sm, borderRadius: Radius.md, flex: 1, marginHorizontal: Spacing.xs, elevation: 2, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }},
   quickActionIcon: {
     width:          56, height: 56,
     borderRadius:   28,
     backgroundColor: Colors.iconBg,
     alignItems:     'center',
-    justifyContent: 'center',
-    borderWidth:    1,
-    borderColor:    Colors.border,
+    justifyContent: 'center'
   },
   quickActionLabel: {
     fontSize: Fonts.size.xs,

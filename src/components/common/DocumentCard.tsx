@@ -109,12 +109,11 @@ export const DocumentCard = ({
 
 const cardStyles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
+    backgroundColor: 'white',
     borderRadius:    Radius.md,
     padding:         Spacing.md,
     marginBottom:    Spacing.md,
-    borderWidth:     1,
-    borderColor:     Colors.border,
+    elevation: 2, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }
   },
   header: {
     flexDirection: 'row',

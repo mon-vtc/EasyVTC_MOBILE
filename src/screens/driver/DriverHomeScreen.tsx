@@ -1,38 +1,549 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Fonts, Spacing } from '../../theme/colors';
-import { useAuth } from '../../hooks/useAuth';
+// ══════════════════════════════════════════════════════════════════════════════
+// SCREEN — DriverHomeScreen
+// Sprint 3 — EasyVTC
+// ══════════════════════════════════════════════════════════════════════════════
 
-export default function DriverHomeScreen() {
-  const { user } = useAuth();
+import React, { useState, useCallback, useEffect } from 'react';
+import {
+  View, Text, ScrollView, Switch, StyleSheet,
+  ActivityIndicator, Alert, TouchableOpacity,
+} from 'react-native';
+import { useDriver }   from '../../hooks/useDriver';
+import { AppIcon }     from '../../components/common/AppIcon';
+import { Colors }      from '../../theme/colors';
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TYPES LOCAUX
+// ══════════════════════════════════════════════════════════════════════════════
+
+interface DayStats {
+  rides:    number;
+  revenue:  number;
+  rating:   number;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SOUS-COMPOSANTS
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Carte statut + toggle ─────────────────────────────────────────────────────
+function StatusCard({
+  isOnline,
+  isToggling,
+  driverStatus,
+  onToggle,
+}: {
+  isOnline:     boolean;
+  isToggling:   boolean;
+  driverStatus: string | null;
+  onToggle:     (v: boolean) => void;
+}) {
+  const canGoOnline = driverStatus === 'active';
+
   return (
-    <View style={styles.container}>
-      <Text style={{ fontSize: 52 }}>🛣️</Text>
-      <Text style={styles.title}>Bonjour, {user?.first_name} !</Text>
-      <Text style={styles.sprint}>Vos courses attribuées apparaîtront ici dès le Sprint 4</Text>
+    <View style={sc.card}>
+      <View style={sc.row}>
+        <View>
+          <Text style={sc.title}>Statut</Text>
+          <Text style={[sc.subtitle, isOnline && sc.subtitleOnline]}>
+            {isOnline ? 'Vous êtes disponible' : 'Vous êtes hors ligne'}
+          </Text>
+        </View>
+        {isToggling
+          ? <ActivityIndicator color={Colors.bordeaux} />
+          : (
+            <Switch
+              value={isOnline}
+              onValueChange={onToggle}
+              disabled={!canGoOnline && !isOnline}
+              trackColor={{ false: '#D1D5DB', true: '#34D399' }}
+              thumbColor={Colors.white}
+              ios_backgroundColor="#D1D5DB"
+            />
+          )
+        }
+      </View>
+
+      {/* Message contextuel */}
+      {isOnline && (
+        <View style={sc.infoBox}>
+          <AppIcon name="checkmark-circle" size={18} color="#10B981" />
+          <Text style={sc.infoText}>
+            Vous recevrez les courses qui vous sont attribuées
+          </Text>
+        </View>
+      )}
+
+      {!isOnline && !canGoOnline && (
+        <View style={[sc.infoBox, sc.infoBoxWarn]}>
+          <AppIcon name="warning-outline" size={18} color="#F59E0B" />
+          <Text style={[sc.infoText, sc.infoTextWarn]}>
+            Votre profil doit être validé pour passer en ligne
+          </Text>
+        </View>
+      )}
+
+      {!isOnline && canGoOnline && (
+        <View style={[sc.infoBox, sc.infoBoxGrey]}>
+          <AppIcon name="moon-outline" size={18} color={Colors.textSecondary} />
+          <Text style={[sc.infoText, sc.infoTextGrey]}>
+            Activez le statut pour recevoir des courses
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
 
+// ── Statistiques du jour ──────────────────────────────────────────────────────
+function StatsCard({ stats }: { stats: DayStats }) {
+  return (
+    <View style={st.card}>
+      <Text style={st.title}>Statistiques du jour</Text>
+      <View style={st.row}>
+        <View style={st.stat}>
+          <Text style={st.value}>{stats.rides}</Text>
+          <Text style={st.label}>Courses</Text>
+        </View>
+        <View style={st.divider} />
+        <View style={st.stat}>
+          <Text style={st.value}>{stats.revenue}€</Text>
+          <Text style={st.label}>Revenus</Text>
+        </View>
+        <View style={st.divider} />
+        <View style={st.stat}>
+          <Text style={st.value}>{stats.rating.toFixed(1)}</Text>
+          <Text style={st.label}>Note</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ── Course attribuée ──────────────────────────────────────────────────────────
+interface RideCardProps {
+  id:          string;
+  ref_number:  string;
+  client_name: string;
+  client_phone:string;
+  origin:      string;
+  destination: string;
+  date:        string;
+  time:        string;
+  price:       number;
+  status:      string;
+  onDetails:   (id: string) => void;
+}
+
+function RideCard({
+  id, ref_number, client_name, client_phone,
+  origin, destination, date, time, price, status, onDetails,
+}: RideCardProps) {
+  return (
+    <View style={rc.card}>
+      {/* En-tête référence + badge */}
+      <View style={rc.header}>
+        <Text style={rc.ref}>{ref_number}</Text>
+        <View style={[rc.badge, rc[`badge_${status}` as keyof typeof rc] as any]}>
+          <Text style={rc.badgeText}>{STATUS_LABELS[status] ?? status}</Text>
+        </View>
+      </View>
+
+      {/* Client */}
+      <View style={rc.infoRow}>
+        <AppIcon name="person-outline" size={16} color={Colors.textSecondary} />
+        <View style={rc.infoTexts}>
+          <Text style={rc.infoMain}>{client_name}</Text>
+          <Text style={rc.infoSub}>{client_phone}</Text>
+        </View>
+      </View>
+
+      {/* Départ */}
+      <View style={rc.infoRow}>
+        <AppIcon name="location-outline" size={16} color={Colors.bordeaux} />
+        <View style={rc.infoTexts}>
+          <Text style={rc.infoLabel}>Départ</Text>
+          <Text style={rc.infoMain}>{origin}</Text>
+        </View>
+      </View>
+
+      {/* Destination */}
+      <View style={rc.infoRow}>
+        <AppIcon name="navigate-outline" size={16} color="#10B981" />
+        <View style={rc.infoTexts}>
+          <Text style={rc.infoLabel}>Destination</Text>
+          <Text style={rc.infoMain}>{destination}</Text>
+        </View>
+      </View>
+
+      {/* Date + heure */}
+      <View style={rc.dateRow}>
+        <View style={rc.dateItem}>
+          <AppIcon name="calendar-outline" size={14} color={Colors.textSecondary} />
+          <Text style={rc.dateText}>{date}</Text>
+        </View>
+        <View style={rc.dateItem}>
+          <AppIcon name="time-outline" size={14} color={Colors.textSecondary} />
+          <Text style={rc.dateText}>{time}</Text>
+        </View>
+      </View>
+
+      {/* Prix + bouton */}
+      <View style={rc.footer}>
+        <Text style={rc.price}>{price} €</Text>
+        <TouchableOpacity
+          style={rc.detailBtn}
+          onPress={() => onDetails(id)}
+          activeOpacity={0.85}
+        >
+          <Text style={rc.detailBtnText}>Voir les détails</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  assigned:   'Attribuée',
+  pending:    'En attente',
+  in_progress:'En cours',
+  completed:  'Terminée',
+  cancelled:  'Annulée',
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ÉCRAN PRINCIPAL
+// ══════════════════════════════════════════════════════════════════════════════
+
+export default function DriverHomeScreen({ navigation }: any) {
+  const { user, isOnline, status, setOnlineStatus, isLoading } = useDriver();
+
+  const [isToggling, setIsToggling]   = useState(false);
+  // Stats mockées — à remplacer par un hook dédié quand l'API stats sera disponible
+  const [stats] = useState<DayStats>({ rides: 3, revenue: 185, rating: 4.8 });
+  // Courses mockées — à remplacer par useRides() quand le module sera disponible
+  const [rides] = useState([
+    {
+      id:           '1',
+      ref_number:   'BC-2025-00145',
+      client_name:  'Marie Dubois',
+      client_phone: '+33 6 45 67 89 01',
+      origin:       'Massy, 91300',
+      destination:  'Aéroport Paris-Orly',
+      date:         '15 janvier 2026',
+      time:         '14h30',
+      price:        65,
+      status:       'assigned',
+    },
+  ]);
+
+  // ── Toggle disponibilité ──────────────────────────────────────────────────
+  const handleToggle = useCallback(async (value: boolean) => {
+    if (value && status !== 'active') {
+      Alert.alert(
+        'Profil non validé',
+        'Votre profil chauffeur doit être validé par un administrateur avant de pouvoir passer en ligne.',
+        [{ text: 'Compris', style: 'default' }],
+      );
+      return;
+    }
+
+    setIsToggling(true);
+    try {
+      await setOnlineStatus(value);
+    } catch (err: any) {
+      Alert.alert('Erreur', err?.message ?? 'Impossible de changer le statut.');
+    } finally {
+      setIsToggling(false);
+    }
+  }, [status, setOnlineStatus]);
+
+  const handleRideDetails = useCallback((id: string) => {
+    navigation?.navigate('RideDetail', { rideId: id });
+  }, [navigation]);
+
+  // ── Rendu ─────────────────────────────────────────────────────────────────
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* ── Statut ─────────────────────────────────────────── */}
+      <StatusCard
+        isOnline={isOnline}
+        isToggling={isToggling}
+        driverStatus={status}
+        onToggle={handleToggle}
+      />
+
+      {/* ── Stats du jour ──────────────────────────────────── */}
+      <StatsCard stats={stats} />
+
+      {/* ── Courses attribuées ─────────────────────────────── */}
+      <Text style={styles.sectionTitle}>Courses attribuées</Text>
+
+      {rides.length === 0 ? (
+        <View style={styles.empty}>
+          <AppIcon name="car-outline" size={40} color={Colors.textSecondary} />
+          <Text style={styles.emptyText}>Aucune course attribuée pour l'instant</Text>
+        </View>
+      ) : (
+        rides.map(ride => (
+          <RideCard
+            key={ride.id}
+            {...ride}
+            onDetails={handleRideDetails}
+          />
+        ))
+      )}
+
+      <View style={{ height: 32 }} />
+    </ScrollView>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STYLES
+// ══════════════════════════════════════════════════════════════════════════════
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background ?? '#F5F5F5',
+  },
+  content: {
+    padding: 16,
+    gap: 16,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginTop: 4,
+  },
+  empty: {
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.background,
-    padding: Spacing.xl,
-    gap: Spacing.sm,
+    paddingVertical: 40,
+    gap: 12,
   },
-  title: {
-    fontSize: Fonts.size.xl,
-    fontWeight: '800',
-    color: Colors.bordeaux,
-    textAlign: 'center',
-  },
-  sprint: {
-    fontSize: Fonts.size.md,
-    color: Colors.textMuted,
-    marginTop: Spacing.sm,
+  emptyText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
     textAlign: 'center',
   },
 });
+
+// ── StatusCard ────────────────────────────────────────────────────────────────
+const sc = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.white ?? '#fff',
+    borderRadius: 14,
+    padding: 16,
+    gap: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  subtitleOnline: {
+    color: '#10B981',
+    fontWeight: '500',
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#ECFDF5',
+    borderRadius: 8,
+    padding: 10,
+  },
+  infoBoxWarn: {
+    backgroundColor: '#FFFBEB',
+  },
+  infoBoxGrey: {
+    backgroundColor: Colors.surface ?? '#F9FAFB',
+  },
+  infoText: {
+    fontSize: 13,
+    color: '#065F46',
+    flex: 1,
+    lineHeight: 18,
+  },
+  infoTextWarn: {
+    color: '#92400E',
+  },
+  infoTextGrey: {
+    color: Colors.textSecondary,
+  },
+});
+
+// ── StatsCard ─────────────────────────────────────────────────────────────────
+const st = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.bordeaux,
+    borderRadius: 14,
+    padding: 20,
+    gap: 16,
+  },
+  title: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  value: {
+    color: Colors.white,
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  label: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  divider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+});
+
+// ── RideCard ──────────────────────────────────────────────────────────────────
+const rc = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.white ?? '#fff',
+    borderRadius: 14,
+    padding: 16,
+    gap: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  ref: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    letterSpacing: 0.3,
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+    backgroundColor: '#E5E7EB',
+  },
+  badge_assigned: {
+    backgroundColor: '#DBEAFE',
+  },
+  badge_pending: {
+    backgroundColor: '#FEF3C7',
+  },
+  badge_in_progress: {
+    backgroundColor: '#D1FAE5',
+  },
+  badge_completed: {
+    backgroundColor: '#F3F4F6',
+  },
+  badge_cancelled: {
+    backgroundColor: '#FEE2E2',
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  infoTexts: {
+    flex: 1,
+    gap: 1,
+  },
+  infoLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  infoMain: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.textPrimary,
+  },
+  infoSub: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 2,
+  },
+  dateItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  dateText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border ?? '#F3F4F6',
+  },
+  price: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  detailBtn: {
+    backgroundColor: Colors.bordeaux,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  detailBtnText: {
+    color: Colors.white,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+} as any);
