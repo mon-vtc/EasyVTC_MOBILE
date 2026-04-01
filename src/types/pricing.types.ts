@@ -91,13 +91,22 @@ export interface PricingFlatRate {
 export interface PricingConfig {
   country:     PricingCountry;
   grid:        PricingGrid;
-  commission:  PricingCommission;
-  supplement:  PricingSupplement;
+  // commission:  PricingCommission;
+  // supplement:  PricingSupplement;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // DTOs — Mise à jour (PATCH)
 // ══════════════════════════════════════════════════════════════════════════════
+
+export interface CreatePricingGridDto {
+  country:       PricingCountry;
+  base_price:    number;
+  price_per_km:  number;
+  price_per_min: number;
+  minimum_price: number;
+  currency:      string;
+}
 
 export interface UpdatePricingGridDto {
   base_price?:    number;
@@ -107,10 +116,24 @@ export interface UpdatePricingGridDto {
   is_active?:     boolean;
 }
 
+export interface CreatePricingCommissionDto {
+  country:             PricingCountry;
+  currency:            string;
+  // commission_rate:     number;
+  // commission_vat_rate: number;
+}
+
 export interface UpdatePricingCommissionDto {
-  commission_rate?:     number;
-  commission_vat_rate?: number;
+  // commission_rate?:     number;
+  // commission_vat_rate?: number;
   is_active?:           boolean;
+}
+
+export interface CreatePricingSupplementDto {
+  country:      PricingCountry;
+  currency:     string;
+  airport_fee:  number;
+  night_rate:   number;
 }
 
 export interface UpdatePricingSupplementDto {
@@ -122,8 +145,8 @@ export interface UpdatePricingSupplementDto {
 // ── Payload global pour l'écran admin (un seul save) ─────────────────────────
 export interface SavePricingConfigDto {
   grid:        UpdatePricingGridDto;
-  commission:  UpdatePricingCommissionDto;
-  supplement:  UpdatePricingSupplementDto;
+  // commission:  UpdatePricingCommissionDto;
+  // supplement:  UpdatePricingSupplementDto;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -181,10 +204,10 @@ export interface PricingFormValues {
   price_per_km:        string;
   price_per_min:       string;
   minimum_price:       string;
-  commission_rate:     string;
-  commission_vat_rate: string;
-  airport_fee:         string;
-  night_rate:          string;
+  // commission_rate:     string;
+  // commission_vat_rate: string;
+  // airport_fee:         string;
+  // night_rate:          string;
 }
 
 // Exemple de calcul affiché dynamiquement

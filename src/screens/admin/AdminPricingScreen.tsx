@@ -11,9 +11,10 @@ import {
 import { useNavigation }       from '@react-navigation/native';
 import { usePricing }          from '../../hooks/usePricing';
 import type { PricingCountry, PricingFormValues, PricingExample } from '../../types/pricing.types';
-import { Colors }              from '../../theme/colors';
 import { Logo }                from '../../constants/logo';
 import { AppIcon }             from '../../components/common/AppIcon';
+import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SOUS-COMPOSANTS
@@ -46,7 +47,7 @@ function CountrySelector({
 }) {
   const countries: { key: PricingCountry; label: string }[] = [
     { key: 'france',  label: 'France' },
-    { key: 'senegal', label: 'Sénégal' },
+    // { key: 'senegal', label: 'Sénégal' },
   ];
   return (
     <View style={cs.row}>
@@ -57,6 +58,7 @@ function CountrySelector({
           onPress={() => onChange(c.key)}
           activeOpacity={0.8}
         >
+
           <Text style={[cs.tabText, active === c.key && cs.tabTextActive]}>
             {c.label}
           </Text>
@@ -180,10 +182,10 @@ export default function AdminPricingScreen() {
     price_per_km:        '',
     price_per_min:       '',
     minimum_price:       '',
-    commission_rate:     '',
-    commission_vat_rate: '',
-    airport_fee:         '',
-    night_rate:          '',
+    // commission_rate:     '',
+    // commission_vat_rate: '',
+    // airport_fee:         '',
+    // night_rate:          '',
   });
 
   // ── Hydratation depuis la config chargée ─────────────────────────────────
@@ -283,7 +285,7 @@ export default function AdminPricingScreen() {
         </Section>
 
         {/* ── Commissions ──────────────────────────────────────────────── */}
-        <Section
+        {/* <Section
           title="Commissions EasyVTC"
           subtitle="Montant facturé au chauffeur pour le service plateforme"
         >
@@ -300,10 +302,10 @@ export default function AdminPricingScreen() {
             onChange={set('commission_vat_rate')}
           />
           <Text style={styles.hint}>Base de calcul : sur le montant HT de la course</Text>
-        </Section>
+        </Section> */}
 
         {/* ── Suppléments ──────────────────────────────────────────────── */}
-        <Section title="Suppléments">
+        {/* <Section title="Suppléments">
           <PricingField
             label="Supplément aéroport"
             value={form.airport_fee}
@@ -316,22 +318,26 @@ export default function AdminPricingScreen() {
             unit="%"
             onChange={set('night_rate')}
           />
-        </Section>
+        </Section> */}
 
         {/* ── Exemple de calcul ─────────────────────────────────────────── */}
-        <View style={styles.exampleCard}>
+        <LinearGradient 
+                  colors={[Colors.bordeaux, Colors.bordeauxLight]} 
+                  start={{ x: 0, y: 0 }} 
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.flex, styles.exampleCard]}>
           <Text style={styles.exampleTitle}>Exemple de calcul</Text>
 
           <ExampleRow
-            label={`Prise en charge`}
+            label={`\t\tPrise en charge`}
             value={fmt(parseFloat(form.base_price || '0'), currencySymbol)}
           />
           <ExampleRow
-            label={`${example.distance_km} km × ${form.price_per_km || '0'} ${currencySymbol}`}
+            label={`\t\t${example.distance_km} km × ${form.price_per_km || '0'} ${currencySymbol}`}
             value={fmt(example.km_cost, currencySymbol)}
           />
           <ExampleRow
-            label={`${example.duration_min} min × ${form.price_per_min || '0'} ${currencySymbol}`}
+            label={`\t\t${example.duration_min} min × ${form.price_per_min || '0'} ${currencySymbol}`}
             value={fmt(example.min_cost, currencySymbol)}
           />
 
@@ -341,59 +347,76 @@ export default function AdminPricingScreen() {
             bold
             separator
           />
-          {activeCountry === 'france' && (
+
+          {/* {activeCountry === 'france' && (
             <ExampleRow
-              label="TVA (20%)"
-              value={`– ${fmt(example.vat_20, currencySymbol)}`}
+              label={`\t\tTVA (20%)`}
+              value={`+ ${fmt(example.vat_20, currencySymbol)}`}
             />
           )}
           <ExampleRow
             label="Total TTC"
             value={fmt(example.total_ttc, currencySymbol)}
             bold
-          />
+          /> */}
 
-          <ExampleRow
-            label={`Commission EasyVTC\nCommission (${form.commission_rate || 0}% du HT) — ${fmt(example.commission_ht, currencySymbol)}`}
+          {/* <ExampleRow
+            label={`Commission EasyVTC`}
+            bold
             value=""
             separator
+          /> */}
+          {/* <ExampleRow
+            label={`\t\tCommission (${form.commission_rate || 0}% du HT)`}
+            value={`+ ${fmt(example.commission_ht, currencySymbol)}`}
           />
           <ExampleRow
-            label={`TVA commission (${form.commission_vat_rate || 0}%)`}
-            value={`– ${fmt(example.commission_vat, currencySymbol)}`}
-          />
-          <ExampleRow
+            label={`\t\tTVA commission (${form.commission_vat_rate || 0}%)`}
+            value={`+ ${fmt(example.commission_vat, currencySymbol)}`}
+            
+          /> */}
+          {/* <ExampleRow
             label="Total commission TTC"
-            value={`– ${fmt(example.commission_ttc, currencySymbol)}`}
+            value={`+ ${fmt(example.commission_ttc, currencySymbol)}`}
             bold
-          />
+          /> */}
 
           <ExampleRow
-            label="Net chauffeur (après commission)"
+            // label={`\n\t\t\t\t\t\t\t\tNet chauffeur (après commission)\n`}
+            label={`\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tNet chauffeur \n`}
             value=""
             bold
             separator
           />
           <ExampleRow
-            label={`Montant versé au chauffeur (TTC – commission TTC)\n(${fmt(example.total_ttc, currencySymbol)} – ${fmt(example.commission_ttc, currencySymbol)})`}
+            // label={`\tMontant versé au chauffeur (TTC – commission TTC)\n(${fmt(example.total_ttc, currencySymbol)} – ${fmt(example.commission_ttc, currencySymbol)})`}
+            label={`\tMontant versé au chauffeur`}
             value={fmt(example.net_driver, currencySymbol)}
             bold
-            color={Colors.success ?? '#10B981'}
+            color={Colors.white}
           />
-        </View>
+        </LinearGradient>
 
         {/* ── Bouton sauvegarde ─────────────────────────────────────────── */}
-        <TouchableOpacity
-          style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
-          onPress={handleSave}
-          disabled={isSaving}
-          activeOpacity={0.85}
+        <LinearGradient 
+                  colors={[Colors.bordeaux, Colors.bordeauxLight]} 
+                  start={{ x: 0, y: 0 }} 
+                  end={{ x: 1, y: 1 }}
+                  style={styles.flex}
         >
-          {isSaving
-            ? <ActivityIndicator color={Colors.white} />
-            : <Text style={styles.saveBtnText}>Enregistrer les modifications</Text>
-          }
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
+              onPress={handleSave}
+              disabled={isSaving}
+              activeOpacity={0.85}
+            >
+                    {isSaving
+                        ? <ActivityIndicator color={Colors.white} />
+                        : <Text style={styles.saveBtnText}>Enregistrer les modifications</Text>
+                    }
+
+            </TouchableOpacity>
+        </LinearGradient>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -407,6 +430,7 @@ export default function AdminPricingScreen() {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const styles = StyleSheet.create({
+  flex:   {flex: 1, backgroundColor: Colors.background, borderRadius: Radius.lg },
   container: {
     flex: 1,
     backgroundColor: Colors.background ?? '#F5F5F5',
@@ -444,11 +468,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   saveBtn: {
-    backgroundColor: Colors.bordeaux,
-    borderRadius: 10,
-    paddingVertical: 16,
+    paddingVertical : Spacing.lg,
     alignItems: 'center',
-    marginTop: 8,
   },
   saveBtnDisabled: {
     opacity: 0.6,
@@ -481,7 +502,7 @@ const cs = StyleSheet.create({
     borderRadius: 8,
   },
   tabActive: {
-    backgroundColor: Colors.bordeaux,
+    backgroundColor: Colors.bordeauxLight,
   },
   tabText: {
     fontSize: 14,

@@ -326,7 +326,8 @@ const s = StyleSheet.create({
     paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
     backgroundColor: Colors.white ?? '#fff',
     borderBottomWidth: 1, borderBottomColor: Colors.border,
-    marginHorizontal: Spacing.md
+    marginHorizontal: Spacing.md,
+    elevation: 2, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }
   },
   progressTrack: {
     flex: 1, height: 8, backgroundColor: '#EDE0DF',
@@ -345,7 +346,8 @@ const s = StyleSheet.create({
     backgroundColor: Colors.white ?? '#fff',
     borderBottomWidth: 1, borderBottomColor: Colors.border,
     borderBottomRightRadius : Radius.lg, borderBottomLeftRadius : Radius.lg,
-    marginHorizontal: Spacing.md
+    marginHorizontal: Spacing.md,
+    elevation: 2, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }
   },
 
   scroll:        { flex: 1 },

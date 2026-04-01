@@ -78,5 +78,6 @@ export type AdminDrawerParamList = {
   AdminUsers:        undefined;
   AdminAvailability: undefined;
   AdminReviews:      undefined;
-  AdminPricing:      undefined;
+  BaseGrid:          undefined;
+  FlatRates:         undefined;
 };

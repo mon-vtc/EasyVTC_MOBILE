@@ -7,13 +7,13 @@ import DrawerContent   from './DrawerContent';
 import { Colors }      from '../theme/colors';
 import { Logo }        from '../constants/logo';
 
-import AdminHomeScreen           from '../screens/admin/AdminHomeScreen';
-import AdminDocumentsScreen      from '../screens/admin/AdminDocumentsScreen';
-import AdminProfileScreen        from '../screens/admin/AdminProfileScreen';
-import AdminDriversScreen        from '../screens/admin/drivers/AdminDriversScreen';
-import AdminDriverDetailScreen   from '../screens/admin/drivers/AdminDriverDetailScreen';
-import AdminPricingScreen   from '../screens/admin/AdminPricingScreen';
-
+import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
+import AdminDocumentsScreen from '../screens/admin/AdminDocumentsScreen';
+import AdminProfileScreen from '../screens/admin/AdminProfileScreen';
+import AdminDriversScreen from '../screens/admin/drivers/AdminDriversScreen';
+import AdminDriverDetailScreen from '../screens/admin/drivers/AdminDriverDetailScreen';
+import AdminPricingScreen from '../screens/admin/AdminPricingScreen';
+import AdminFlatRatesScreen from '../screens/admin/AdminFlatRatesScreen';
 
 import type {
   AdminDrawerParamList,
@@ -54,6 +54,7 @@ function AdminDocumentsStack() {
     </DocumentsStack.Navigator>
   );
 }
+
 
 
 // ── Drawer ──────────────────────────────────────────────────────
@@ -126,11 +127,20 @@ export default function AdminNavigator() {
       />
 
       <Drawer.Screen
-        name="AdminPricing"
-        component={AdminPricingScreen} 
-        options={{ 
-          drawerLabel: () => <DrawerLabel icon="pricetag-outline" label="Tarification" />,
-          headerShown: false, 
+        name="BaseGrid"
+        component={AdminPricingScreen}
+        options={{
+          drawerItemStyle: { display: 'none' }, // Masqué de la liste principale
+          headerShown: false,
+        }}
+      />
+
+      <Drawer.Screen
+        name="FlatRates"
+        component={AdminFlatRatesScreen}
+        options={{
+          drawerItemStyle: { display: 'none' }, // Masqué de la liste principale
+          headerShown: false,
         }}
       />
 
