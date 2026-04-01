@@ -74,10 +74,10 @@ export function usePricing() {
     price_per_km:        String(config?.grid.price_per_km        ?? ''),
     price_per_min:       String(config?.grid.price_per_min       ?? ''),
     minimum_price:       String(config?.grid.minimum_price       ?? ''),
-    commission_rate:     String(config?.commission.commission_rate     ?? ''),
-    commission_vat_rate: String(config?.commission.commission_vat_rate ?? ''),
-    airport_fee:         String(config?.supplement.airport_fee   ?? ''),
-    night_rate:          String(config?.supplement.night_rate    ?? ''),
+    // commission_rate:     String(config?.commission.commission_rate     ?? ''),
+    // commission_vat_rate: String(config?.commission.commission_vat_rate ?? ''),
+    // airport_fee:         String(config?.supplement.airport_fee   ?? ''),
+    // night_rate:          String(config?.supplement.night_rate    ?? ''),
   }), [config]);
 
   // ── Calcul dynamique de l'exemple ────────────────────────────────────────
@@ -85,8 +85,8 @@ export function usePricing() {
     const basePx      = toNum(values.base_price);
     const pxKm        = toNum(values.price_per_km);
     const pxMin       = toNum(values.price_per_min);
-    const commRate    = toNum(values.commission_rate);
-    const commVat     = toNum(values.commission_vat_rate);
+    // const commRate    = toNum(values.commission_rate);
+    // const commVat     = toNum(values.commission_vat_rate);
 
     const currency    = PRICING_COUNTRY_CURRENCIES[activeCountry];
     const symbol      = PRICING_CURRENCY_SYMBOLS[currency] ?? currency;
@@ -96,13 +96,17 @@ export function usePricing() {
     const subtotal_ht = round2(basePx + km_cost + min_cost);
 
     // TVA 20% sur le HT course (France uniquement, Sénégal pas de TVA)
-    const vatRate     = activeCountry === 'france' ? 0.20 : 0;
+    // const vatRate     = activeCountry === 'france' ? 0.20 : 0;
+    const vatRate     =  0;
     const vat_20      = round2(subtotal_ht * vatRate);
     const total_ttc   = round2(subtotal_ht + vat_20);
 
     // Commission : calculée sur le HT
-    const commission_ht  = round2(subtotal_ht * (commRate  / 100));
-    const commission_vat = round2(commission_ht * (commVat / 100));
+    // const commission_ht  = round2(subtotal_ht * (commRate  / 100));
+    // const commission_vat = round2(commission_ht * (commVat / 100));
+
+    const commission_ht  = round2(subtotal_ht * (0  / 100));
+    const commission_vat = round2(commission_ht * (0 / 100));
     const commission_ttc = round2(commission_ht + commission_vat);
 
     const net_driver = round2(total_ttc - commission_ttc);
@@ -132,14 +136,14 @@ export function usePricing() {
         price_per_min: toNum(values.price_per_min),
         minimum_price: toNum(values.minimum_price),
       },
-      commission: {
-        commission_rate:     toNum(values.commission_rate),
-        commission_vat_rate: toNum(values.commission_vat_rate),
-      },
-      supplement: {
-        airport_fee: toNum(values.airport_fee),
-        night_rate:  toNum(values.night_rate),
-      },
+      // commission: {
+      //   commission_rate:     toNum(values.commission_rate),
+      //   commission_vat_rate: toNum(values.commission_vat_rate),
+      // },
+      // supplement: {
+      //   airport_fee: toNum(values.airport_fee),
+      //   night_rate:  toNum(values.night_rate),
+      // },
     };
     await _saveConfig(accessToken!, activeCountry, dto);
   }, [accessToken, activeCountry, _saveConfig]);

@@ -50,14 +50,23 @@ export const usePricingStore = create<PricingState>((set, get) => ({
   fetchConfig: async (token, country) => {
     set({ isLoading: true, error: null });
     try {
-      const [gridRes, commRes, suppRes] = await Promise.all([
+    //   const [gridRes, commRes, suppRes] = await Promise.all([
+    //     pricingApi.getActiveGrid(country),
+    //     pricingApi.getActiveCommission(token, country),
+    //     pricingApi.getActiveSupplement(token, country),
+    //   ]);
+      const [gridRes] = await Promise.all([
         pricingApi.getActiveGrid(country),
-        pricingApi.getActiveCommission(token, country),
-        pricingApi.getActiveSupplement(token, country),
       ]);
 
       // Si aucune des 3 ressources n'existe encore → formulaire vierge, pas d'erreur
-      const noneExist = !gridRes.ok && !commRes.ok && !suppRes.ok;
+    //   const noneExist = !gridRes.ok && !commRes.ok && !suppRes.ok;
+    //   if (noneExist) {
+    //     set({ config: null, isLoading: false });
+    //     return;
+    //   }
+
+      const noneExist = !gridRes.ok;
       if (noneExist) {
         set({ config: null, isLoading: false });
         return;
@@ -65,15 +74,15 @@ export const usePricingStore = create<PricingState>((set, get) => ({
 
       // Si certaines existent mais pas d'autres → erreur partielle réelle
       if (!gridRes.ok || !gridRes.data) throw new Error(gridRes.message ?? 'Grille introuvable');
-      if (!commRes.ok || !commRes.data) throw new Error(commRes.message ?? 'Commission introuvable');
-      if (!suppRes.ok || !suppRes.data) throw new Error(suppRes.message ?? 'Suppléments introuvables');
+    //   if (!commRes.ok || !commRes.data) throw new Error(commRes.message ?? 'Commission introuvable');
+    //   if (!suppRes.ok || !suppRes.data) throw new Error(suppRes.message ?? 'Suppléments introuvables');
 
       set({
         config: {
           country,
           grid:       gridRes.data,
-          commission: commRes.data,
-          supplement: suppRes.data,
+        //   commission: commRes.data,
+        //   supplement: suppRes.data,
         },
         isLoading: false,
       });
@@ -94,7 +103,9 @@ export const usePricingStore = create<PricingState>((set, get) => ({
 
       if (!config) {
         // ── Première création : POST sur les 3 ressources ──────────────────
-        [gridRes, commRes, suppRes] = await Promise.all([
+
+        // [gridRes, commRes, suppRes] = await Promise.all([
+        [gridRes] = await Promise.all([
           pricingApi.createGrid(token, {
             country,
             currency,
@@ -103,38 +114,60 @@ export const usePricingStore = create<PricingState>((set, get) => ({
             price_per_min: dto.grid.price_per_min ?? 0,
             minimum_price: dto.grid.minimum_price ?? 0,
           }),
-          pricingApi.createCommission(token, {
-            country,
-            currency,
-            commission_rate:     dto.commission.commission_rate     ?? 0,
-            commission_vat_rate: dto.commission.commission_vat_rate ?? 0,
-          }),
-          pricingApi.createSupplement(token, {
-            country,
-            currency,
-            airport_fee: dto.supplement.airport_fee ?? 0,
-            night_rate:  dto.supplement.night_rate  ?? 0,
-          }),
+        //   pricingApi.createCommission(token, {
+        //     country,
+        //     currency,
+        //     commission_rate:     dto.commission.commission_rate     ?? 0,
+        //     commission_vat_rate: dto.commission.commission_vat_rate ?? 0,
+        //   }),
+        //   pricingApi.createSupplement(token, {
+        //     country,
+        //     currency,
+        //     airport_fee: dto.supplement.airport_fee ?? 0,
+        //     night_rate:  dto.supplement.night_rate  ?? 0,
+        //   }),
         ]);
       } else {
+    //     // ── Mise à jour : PATCH sur les IDs existants ──────────────────────
+    //     [gridRes, commRes, suppRes] = await Promise.all([
+    //       pricingApi.updateGrid(token, config.grid.id, dto.grid),
+    //       pricingApi.updateCommission(token, config.commission.id, dto.commission),
+    //       pricingApi.updateSupplement(token, config.supplement.id, dto.supplement),
+    //     ]);
+    //   }
+
+    //   if (!gridRes.ok || !gridRes.data) throw new Error(gridRes.message ?? 'Erreur grille');
+    //   if (!commRes.ok || !commRes.data) throw new Error(commRes.message ?? 'Erreur commission');
+    //   if (!suppRes.ok || !suppRes.data) throw new Error(suppRes.message ?? 'Erreur suppléments');
+
+    //   set({
+    //     config: {
+    //       country,
+    //       grid:       gridRes.data,
+    //       commission: commRes.data,
+    //       supplement: suppRes.data,
+    //     },
+    //     isSaving: false,
+
+
         // ── Mise à jour : PATCH sur les IDs existants ──────────────────────
-        [gridRes, commRes, suppRes] = await Promise.all([
+        [gridRes] = await Promise.all([
           pricingApi.updateGrid(token, config.grid.id, dto.grid),
-          pricingApi.updateCommission(token, config.commission.id, dto.commission),
-          pricingApi.updateSupplement(token, config.supplement.id, dto.supplement),
+        //   pricingApi.updateCommission(token, config.commission.id, dto.commission),
+        //   pricingApi.updateSupplement(token, config.supplement.id, dto.supplement),
         ]);
       }
 
       if (!gridRes.ok || !gridRes.data) throw new Error(gridRes.message ?? 'Erreur grille');
-      if (!commRes.ok || !commRes.data) throw new Error(commRes.message ?? 'Erreur commission');
-      if (!suppRes.ok || !suppRes.data) throw new Error(suppRes.message ?? 'Erreur suppléments');
+    //   if (!commRes.ok || !commRes.data) throw new Error(commRes.message ?? 'Erreur commission');
+    //   if (!suppRes.ok || !suppRes.data) throw new Error(suppRes.message ?? 'Erreur suppléments');
 
       set({
         config: {
           country,
           grid:       gridRes.data,
-          commission: commRes.data,
-          supplement: suppRes.data,
+        //   commission: commRes.data,
+        //   supplement: suppRes.data,
         },
         isSaving: false,
       });
