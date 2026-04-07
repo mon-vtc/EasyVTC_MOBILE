@@ -15,6 +15,7 @@ export interface AuthResponseData extends AuthTokens {
 
 export interface AvatarUploadResponseData {
   profile_photo_url: string;
+  message?: string;
 }
 
 // ── Réponses Admin ──────────────────────────────────────────────

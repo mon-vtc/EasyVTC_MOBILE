@@ -63,11 +63,19 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           <Text style={styles.successHint}>Vérifiez aussi vos spams.</Text>
 
           <AppButton
-            label="Retour à la connexion"
-            onPress={() => navigation.navigate('Login')}
+            label="Saisir mon nouveau mot de passe"
+            onPress={() => navigation.navigate('ResetPassword', { email: sentEmail })}
             size="lg"
             style={{ marginTop: Spacing.xl }}
           />
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Login')}
+            style={{ marginTop: Spacing.lg, alignItems: 'center' }}
+          >
+            <Text style={styles.loginText}>
+              Retour à la <Text style={styles.loginBold}>connexion</Text>
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     );

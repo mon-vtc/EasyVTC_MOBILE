@@ -12,8 +12,9 @@ export interface AuthUser {
   role:              UserRole;
   first_name:        string;
   last_name:         string;
-  phone:             string;
+  phone:             string | null;
   profile_photo_url: string | null;
+  device_token:      string | null;
   status:            UserStatus;
   status_reason:     string | null;
   status_changed_at: string | null;
@@ -23,6 +24,9 @@ export interface AuthUser {
   deleted_at:        string | null;
   created_at:        string;
   updated_at:        string;
+  // Profil chauffeur (présent dans la réponse API si role === 'driver')
+  driver?:   import('./user.types').DriverProfile | null;
+  vehicle?:  import('./user.types').Vehicle | null;
 }
 
 // ── Tokens ───────────────────────────────────────────────────────
@@ -38,6 +42,7 @@ export type AuthStackParamList = {
   RegisterClient: undefined;
   RegisterDriver: undefined;
   ForgotPassword: undefined;
+  ResetPassword:  { email?: string };
 };
 
 export type ClientTabParamList = {
