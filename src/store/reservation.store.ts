@@ -1,6 +1,7 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // STORE — Réservations (Zustand)
 // Sprint 3 — EasyVTC
+// Aligné avec le backend (champs DTO, filtres, actions chauffeur)
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { create } from 'zustand';
@@ -15,74 +16,93 @@ import type {
   GeoPoint,
   VehicleType,
   VehicleTypeOption,
-} from '../types/reservation.types';
-import { BOOKING_INITIAL_STATE } from '../types/reservation.types';
+  AvailableDriverDto,
+} from '../types/reservations.types';
+import { BOOKING_INITIAL_STATE } from '../types/reservations.types';
 
 interface ReservationState {
   // ── Liste ──────────────────────────────────────────────────────────────────
-  reservations:  Reservation[];
-  total:         number;
-  page:          number;
-  totalPages:    number;
+  reservations: Reservation[];
+  total:        number;
+  page:         number;
+  totalPages:   number;
 
   // ── Détail / course active ─────────────────────────────────────────────────
-  selected:      Reservation | null;
-  activeRide:    Reservation | null;
+  selected:   Reservation | null;  currentReservation: Reservation | null;
+  myReservations: Reservation[];  activeRide: Reservation | null;
 
-  // ── Types de véhicule ─────────────────────────────────────────────────────
-  vehicleTypes:  VehicleTypeOption[];
+  // ── Types de véhicule ──────────────────────────────────────────────────────
+  vehicleTypes: VehicleTypeOption[];
 
   // ── Formulaire de réservation (multi-étapes) ───────────────────────────────
-  booking:       BookingFormState;
+  booking: BookingFormState;
 
   // ── UI ─────────────────────────────────────────────────────────────────────
-  isLoading:     boolean;
-  isSubmitting:  boolean;
+  isLoading:       boolean;
+  isSubmitting:    boolean;
   isFetchingPrice: boolean;
-  error:         string | null;
+  error:           string | null;
 
   // ── Actions liste ──────────────────────────────────────────────────────────
-  fetchMine:       (token: string, filters?: ReservationListFilters) => Promise<void>;
-  fetchAll:        (token: string, filters?: ReservationListFilters) => Promise<void>;
-  fetchById:       (token: string, id: string)                       => Promise<void>;
-  fetchDriverActive:(token: string)                                  => Promise<void>;
-  cancel:          (token: string, id: string, reason?: string)      => Promise<void>;
+  fetchMine:             (token: string, filters?: ReservationListFilters) => Promise<void>;
+  fetchDriverReservations:(token: string, filters?: ReservationListFilters) => Promise<void>;
+  fetchAll:              (token: string, filters?: ReservationListFilters) => Promise<void>;
+  fetchById:             (token: string, id: string)                       => Promise<void>;
+  fetchDriverActive:     (token: string)                                   => Promise<void>;
+  fetchAvailableDrivers: (token: string)                                   => Promise<AvailableDriverDto[]>;
+  cancel:            (token: string, id: string, reason?: string)      => Promise<void>;
 
   // ── Actions chauffeur ──────────────────────────────────────────────────────
-  arrive:   (token: string, id: string) => Promise<void>;
-  start:    (token: string, id: string) => Promise<void>;
-  complete: (token: string, id: string, distKm?: number, durMin?: number) => Promise<void>;
+  arrive: (token: string, id: string) => Promise<void>;
+  start:  (token: string, id: string) => Promise<void>;
+  complete: (
+    token:                string,
+    id:                   string,
+    actual_distance_km?:  number,
+    actual_duration_min?: number,
+    driver_notes?:        string,
+    price_adjusted?:      number,
+  ) => Promise<void>;
 
   // ── Actions admin ──────────────────────────────────────────────────────────
   assign: (token: string, id: string, driverId: string) => Promise<void>;
 
   // ── Formulaire booking ─────────────────────────────────────────────────────
   fetchVehicleTypes: (token: string, country?: string) => Promise<void>;
-  setBookingStep:    (step: BookingStep)               => void;
-  setOrigin:         (point: GeoPoint | null)          => void;
-  setDestination:    (point: GeoPoint | null)          => void;
-  setVehicleType:    (type: VehicleType)               => void;
-  setDate:           (date: string)                    => void;
-  setTime:           (time: string)                    => void;
-  setPassengers:     (n: number)                       => void;
-  setLuggage:        (n: number)                       => void;
+  setBookingStep:    (step: BookingStep)                => void;
+  setOrigin:         (point: GeoPoint | null)           => void;
+  setDestination:    (point: GeoPoint | null)           => void;
+  setVehicleType:    (type: VehicleType)                => void;
+  setDate:           (date: string)                     => void;
+  setTime:           (time: string)                     => void;
+  setPassengers:     (n: number)                        => void;
+  setLuggage:        (n: number)                        => void;
   setEstimate:       (price: number, distKm: number, durMin: number) => void;
-  setComment:        (text: string)                    => void;
-  submitBooking:     (token: string, country: string)  => Promise<Reservation>;
-  resetBooking:      ()                                => void;
+  setComment:        (text: string)                     => void;
+  setFlatRateId:     (id: string | null)                => void;
 
-  clearError:  () => void;
+  /**
+   * Soumet la réservation au backend.
+   * Construit le DTO avec les noms de champs attendus par le serveur :
+   *   pickup_address / dest_address / nb_passengers / distance_km / duration_min
+   */
+  submitBooking: (token: string, country: string) => Promise<Reservation>;
+  resetBooking:  ()                               => void;
+
+  clearError:    () => void;
   clearSelected: () => void;
 }
 
 export const useReservationStore = create<ReservationState>((set, get) => ({
-  reservations:    [],
-  total:           0,
-  page:            1,
-  totalPages:      1,
-  selected:        null,
-  activeRide:      null,
-  vehicleTypes:    [],
+  reservations:      [],
+  myReservations:    [],
+  currentReservation:null,
+  total:             0,
+  page:              1,
+  totalPages:        1,
+  selected:          null,
+  activeRide:        null,
+  vehicleTypes:      [],
   booking:         { ...BOOKING_INITIAL_STATE },
   isLoading:       false,
   isSubmitting:    false,
@@ -97,6 +117,26 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
       set({
         reservations: res.data.reservations,
+        myReservations: res.data.reservations,
+        total:        res.data.total,
+        page:         res.data.page,
+        totalPages:   res.data.total_pages,
+        isLoading:    false,
+      });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      throw err;
+    }
+  },
+
+  fetchDriverReservations: async (token, filters) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await reservationApi.getDriverReservations(token, filters);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
+      set({
+        reservations: res.data.reservations,
+        myReservations: res.data.reservations,
         total:        res.data.total,
         page:         res.data.page,
         totalPages:   res.data.total_pages,
@@ -133,7 +173,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     try {
       const res = await reservationApi.getById(token, id);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Réservation introuvable');
-      set({ selected: res.data, isLoading: false });
+      set({ selected: res.data, currentReservation: res.data, isLoading: false });
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
       throw err;
@@ -171,7 +211,12 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
 
   // ── Actions chauffeur ──────────────────────────────────────────────────────
   arrive: async (token, id) => {
-    await reservationApi.arrive(token, id);
+    try {
+      await reservationApi.arrive(token, id);
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue' });
+      throw err;
+    }
   },
 
   start: async (token, id) => {
@@ -186,11 +231,17 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     }
   },
 
-  complete: async (token, id, distKm, durMin) => {
+  complete: async (token, id, actual_distance_km, actual_duration_min, driver_notes, price_adjusted) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await reservationApi.complete(token, id, distKm, durMin);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur completion');
+      const res = await reservationApi.complete(
+        token, id,
+        actual_distance_km,
+        actual_duration_min,
+        driver_notes,
+        price_adjusted,
+      );
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur complétion');
       set({ activeRide: null, isLoading: false });
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
@@ -199,6 +250,12 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   },
 
   // ── Assignation admin ──────────────────────────────────────────────────────
+  fetchAvailableDrivers: async (token) => {
+    const res = await reservationApi.getAvailableDrivers(token);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur chargement chauffeurs');
+    return res.data;
+  },
+
   assign: async (token, id, driverId) => {
     set({ isLoading: true, error: null });
     try {
@@ -227,43 +284,78 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     }
   },
 
-  // ── Formulaire multi-étapes ────────────────────────────────────────────────
-  setBookingStep:  (step)       => set(s => ({ booking: { ...s.booking, step } })),
-  setOrigin:       (origin)     => set(s => ({ booking: { ...s.booking, origin } })),
-  setDestination:  (destination)=> set(s => ({ booking: { ...s.booking, destination } })),
-  setVehicleType:  (vehicle_type) => set(s => ({ booking: { ...s.booking, vehicle_type } })),
-  setDate:         (date)       => set(s => ({ booking: { ...s.booking, date } })),
-  setTime:         (time)       => set(s => ({ booking: { ...s.booking, time } })),
-  setPassengers:   (passengers) => set(s => ({ booking: { ...s.booking, passengers } })),
-  setLuggage:      (luggage)    => set(s => ({ booking: { ...s.booking, luggage } })),
-  setComment:      (comment)    => set(s => ({ booking: { ...s.booking, comment } })),
-  setEstimate:     (estimated_price, distance_km, duration_min) =>
+  // ── Setters formulaire ─────────────────────────────────────────────────────
+  setBookingStep:  (step)          => set(s => ({ booking: { ...s.booking, step } })),
+  setOrigin:       (origin)        => set(s => ({ booking: { ...s.booking, origin } })),
+  setDestination:  (destination)   => set(s => ({ booking: { ...s.booking, destination } })),
+  setVehicleType:  (vehicle_type)  => set(s => ({ booking: { ...s.booking, vehicle_type } })),
+  setDate:         (date)          => set(s => ({ booking: { ...s.booking, date } })),
+  setTime:         (time)          => set(s => ({ booking: { ...s.booking, time } })),
+  setPassengers:   (nb_passengers)    => set(s => ({ booking: { ...s.booking, nb_passengers } })),
+  setLuggage:      (luggage)       => set(s => ({ booking: { ...s.booking, luggage } })),
+  setComment:      (comment)       => set(s => ({ booking: { ...s.booking, comment } })),
+  setFlatRateId:   (flat_rate_id)  => set(s => ({ booking: { ...s.booking, flat_rate_id } })),
+  setEstimate: (estimated_price, distance_km, duration_min) =>
     set(s => ({ booking: { ...s.booking, estimated_price, distance_km, duration_min } })),
 
   // ── Soumission finale ──────────────────────────────────────────────────────
+  /**
+   * Construit le DTO avec les noms de champs du backend :
+   *   - pickup_address  (≠ origin_address)
+   *   - dest_address    (≠ destination_address)
+   *   - nb_passengers   (≠ passengers)
+   *   - distance_km / duration_min transmis pour le calcul de prix serveur
+   *   - flat_rate_id si une tarification forfaitaire est sélectionnée
+   *
+   * Le champ 'luggage' est conservé en local uniquement (non supporté backend).
+   */
   submitBooking: async (token, country) => {
     const { booking } = get();
-    if (!booking.origin || !booking.destination || !booking.vehicle_type || !booking.date || !booking.time) {
+
+    if (
+      !booking.origin       ||
+      !booking.destination  ||
+      !booking.vehicle_type ||
+      !booking.date         ||
+      !booking.time
+    ) {
       throw new Error('Formulaire incomplet');
     }
 
     set({ isSubmitting: true, error: null });
-    try {
-      const scheduledAt = new Date(`${booking.date}T${booking.time}:00`).toISOString();
 
+    try {
+      const scheduled_at = new Date(`${booking.date}T${booking.time}:00`).toISOString();
+
+      // DTO aligné champ par champ avec CreateReservationDto backend
       const dto: CreateReservationDto = {
-        country:             country as any,
-        origin_address:      booking.origin.address,
-        origin_lat:          booking.origin.latitude,
-        origin_lng:          booking.origin.longitude,
-        destination_address: booking.destination.address,
-        destination_lat:     booking.destination.latitude,
-        destination_lng:     booking.destination.longitude,
-        scheduled_at:        scheduledAt,
-        passengers:          booking.passengers,
-        luggage:             booking.luggage,
-        vehicle_type:        booking.vehicle_type,
-        comment:             booking.comment || undefined,
+        // Trajet — noms backend
+        pickup_address: booking.origin.address,
+        pickup_lat:     booking.origin.latitude,
+        pickup_lng:     booking.origin.longitude,
+        dest_address:   booking.destination.address,
+        dest_lat:       booking.destination.latitude,
+        dest_lng:       booking.destination.longitude,
+
+        // Véhicule & pays
+        vehicle_type: booking.vehicle_type,
+        country:      country as any,
+
+        // Horaire
+        scheduled_at,
+
+        // Passagers — nom backend
+        nb_passengers: booking.nb_passengers,
+
+        // Métriques estimées (permettent au backend de calculer le prix)
+        ...(booking.distance_km  != null && { distance_km:  booking.distance_km }),
+        ...(booking.duration_min != null && { duration_min: booking.duration_min }),
+
+        // Tarification forfaitaire
+        ...(booking.flat_rate_id && { flat_rate_id: booking.flat_rate_id }),
+
+        // Commentaire optionnel
+        ...(booking.comment.trim() && { comment: booking.comment.trim() }),
       };
 
       const res = await reservationApi.create(token, dto);

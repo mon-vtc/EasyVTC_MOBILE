@@ -1,23 +1,38 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { createDrawerNavigator, DrawerNavigationOptions } from '@react-navigation/drawer';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppIcon } from '../components/common/AppIcon';
 import DrawerContent from './DrawerContent';
 import { Colors } from '../theme/colors';
 
 import DriverHomeScreen         from '../screens/driver/DriverHomeScreen';
+import DriverReservationsScreen from '../screens/driver/DriverReservationsScreen';
+import DriverReservationScreen  from '../screens/driver/DriverReservationScreen';
 import DriverTripsScreen        from '../screens/driver/DriverTripsScreen';
 import DriverDocumentsScreen    from '../screens/driver/DriverDocumentsScreen';
 import DriverAvailabilityScreen from '../screens/driver/DriverAvailabilityScreen';
 import DriverProfileScreen      from '../screens/driver/DriverProfileScreen';
 
-import type { DriverDrawerParamList } from '../types/auth.types';
+import type { DriverDrawerParamList, DriverReservationsStackParamList } from '../types/auth.types';
 
 import { Logo }                  from  '../constants/logo';
+
+const DriverReservationsStack = createNativeStackNavigator<DriverReservationsStackParamList>();
+
+function DriverReservationsStackScreen() {
+  return (
+    <DriverReservationsStack.Navigator screenOptions={{ headerShown: false }}>
+      <DriverReservationsStack.Screen name="DriverReservationsList" component={DriverReservationsScreen} />
+      <DriverReservationsStack.Screen name="DriverReservationDetail" component={DriverReservationScreen} />
+    </DriverReservationsStack.Navigator>
+  );
+}
 
 const Drawer = createDrawerNavigator<DriverDrawerParamList>();
 
 const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions => ({
+
 
   headerStyle: { 
     backgroundColor: Colors.bordeaux, 
@@ -83,6 +98,15 @@ export default function DriverNavigator() {
         component={DriverHomeScreen}
         options={{
           drawerLabel: () => <DrawerLabel icon="home-outline" label="Accueil" />,
+        }}
+      />
+
+      <Drawer.Screen
+        name="DriverReservations"
+        component={DriverReservationsStackScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="car-outline" label="Mes courses" />,
+          headerShown: false,
         }}
       />
 
