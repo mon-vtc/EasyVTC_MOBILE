@@ -20,19 +20,41 @@ import { LinearGradient } from 'expo-linear-gradient';
 // SOUS-COMPOSANTS
 // ══════════════════════════════════════════════════════════════════════════════
 
-// ── Header bordeaux (maquette) ────────────────────────────────────────────────
-function PricingHeader() {
+// ── Header bordeaux avec crayon / annulation ──────────────────────────────────
+function PricingHeader({
+  isEditing,
+  onToggleEdit,
+}: {
+  isEditing: boolean;
+  onToggleEdit: () => void;
+}) {
   const navigation = useNavigation();
   return (
     <View style={hdr.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={hdr.back} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={hdr.back}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
         <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
       </TouchableOpacity>
+
       <View style={hdr.center}>
         <Image source={Logo.LogoEasyVTC} style={hdr.logo} resizeMode="contain" />
       </View>
-      {/* Espace droit symétrique pour centrer le logo */}
-      <View style={hdr.placeholder} />
+
+      {/* Crayon ou annulation */}
+      <TouchableOpacity
+        onPress={onToggleEdit}
+        style={hdr.action}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <AppIcon
+          name={isEditing ? 'close-outline' : 'create-outline'}
+          size={24}
+          color={Colors.white}
+        />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -41,9 +63,11 @@ function PricingHeader() {
 function CountrySelector({
   active,
   onChange,
+  disabled,
 }: {
   active: PricingCountry;
   onChange: (c: PricingCountry) => void;
+  disabled?: boolean;
 }) {
   const countries: { key: PricingCountry; label: string }[] = [
     { key: 'france',  label: 'France' },
@@ -55,10 +79,9 @@ function CountrySelector({
         <TouchableOpacity
           key={c.key}
           style={[cs.tab, active === c.key && cs.tabActive]}
-          onPress={() => onChange(c.key)}
-          activeOpacity={0.8}
+          onPress={() => !disabled && onChange(c.key)}
+          activeOpacity={disabled ? 1 : 0.8}
         >
-
           <Text style={[cs.tabText, active === c.key && cs.tabTextActive]}>
             {c.label}
           </Text>
@@ -74,23 +97,26 @@ function PricingField({
   value,
   unit,
   onChange,
+  editable,
 }: {
   label: string;
   value: string;
   unit: string;
   onChange: (v: string) => void;
+  editable: boolean;
 }) {
   return (
     <View style={pf.container}>
       <Text style={pf.label}>{label}</Text>
-      <View style={pf.inputRow}>
+      <View style={[pf.inputRow, !editable && pf.inputRowDisabled]}>
         <TextInput
-          style={pf.input}
+          style={[pf.input, !editable && pf.inputDisabled]}
           value={value}
           onChangeText={onChange}
           keyboardType="decimal-pad"
           placeholder="0.00"
           placeholderTextColor={Colors.textSecondary}
+          editable={editable}
         />
         <View style={pf.unitBox}>
           <Text style={pf.unit}>{unit}</Text>
@@ -176,6 +202,9 @@ export default function AdminPricingScreen() {
     computeExample,
   } = usePricing();
 
+  // ── Mode édition ─────────────────────────────────────────────────────────
+  const [isEditing, setIsEditing] = useState(false);
+
   // ── État local du formulaire ─────────────────────────────────────────────
   const [form, setForm] = useState<PricingFormValues>({
     base_price:          '',
@@ -188,9 +217,16 @@ export default function AdminPricingScreen() {
     // night_rate:          '',
   });
 
+  // Snapshot pour annulation
+  const [savedForm, setSavedForm] = useState<PricingFormValues>(form);
+
   // ── Hydratation depuis la config chargée ─────────────────────────────────
   useEffect(() => {
-    if (config) setForm(getInitialFormValues());
+    if (config) {
+      const initial = getInitialFormValues();
+      setForm(initial);
+      setSavedForm(initial);
+    }
   }, [config]);
 
   // ── Exemple de calcul dynamique ──────────────────────────────────────────
@@ -203,12 +239,39 @@ export default function AdminPricingScreen() {
 
   const handleCountryChange = (country: PricingCountry) => {
     setCountry(country);
+    setIsEditing(false);
     // form sera hydraté par le useEffect quand config change
+  };
+
+  // Bascule crayon / annulation
+  const handleToggleEdit = () => {
+    if (isEditing) {
+      // Annulation : on restaure le snapshot
+      Alert.alert(
+        'Annuler les modifications',
+        'Les modifications non enregistrées seront perdues.',
+        [
+          { text: 'Continuer', style: 'cancel' },
+          {
+            text: 'Annuler',
+            style: 'destructive',
+            onPress: () => {
+              setForm(savedForm);
+              setIsEditing(false);
+            },
+          },
+        ]
+      );
+    } else {
+      setIsEditing(true);
+    }
   };
 
   const handleSave = async () => {
     try {
       await saveConfig(form);
+      setSavedForm(form);
+      setIsEditing(false);
       Alert.alert('Enregistré', 'La configuration tarifaire a été mise à jour.');
     } catch {
       // L'erreur est déjà dans le store
@@ -226,7 +289,7 @@ export default function AdminPricingScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}>
-        <PricingHeader />
+        <PricingHeader isEditing={false} onToggleEdit={() => {}} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.bordeaux} />
           <Text style={styles.loadingText}>Chargement des tarifs…</Text>
@@ -241,185 +304,208 @@ export default function AdminPricingScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}>
-      <PricingHeader />
+      <PricingHeader isEditing={isEditing} onToggleEdit={handleToggleEdit} />
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-
-        {/* ── Sélecteur de pays ────────────────────────────────────────── */}
-        <CountrySelector active={activeCountry} onChange={handleCountryChange} />
-
-        {/* ── Tarifs de base ───────────────────────────────────────────── */}
-        <Section title="Tarifs de base">
-          <PricingField
-            label="Prix de prise en charge"
-            value={form.base_price}
-            unit={currencySymbol}
-            onChange={set('base_price')}
-          />
-          <PricingField
-            label="Prix par kilomètre"
-            value={form.price_per_km}
-            unit={currencySymbol}
-            onChange={set('price_per_km')}
-          />
-          <PricingField
-            label="Prix par minute"
-            value={form.price_per_min}
-            unit={currencySymbol}
-            onChange={set('price_per_min')}
-          />
-          <PricingField
-            label="Prix minimum de course"
-            value={form.minimum_price}
-            unit={currencySymbol}
-            onChange={set('minimum_price')}
-          />
-        </Section>
-
-        {/* ── Commissions ──────────────────────────────────────────────── */}
-        {/* <Section
-          title="Commissions EasyVTC"
-          subtitle="Montant facturé au chauffeur pour le service plateforme"
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <PricingField
-            label="Taux de commission"
-            value={form.commission_rate}
-            unit="%"
-            onChange={set('commission_rate')}
-          />
-          <PricingField
-            label="TVA sur commission"
-            value={form.commission_vat_rate}
-            unit="%"
-            onChange={set('commission_vat_rate')}
-          />
-          <Text style={styles.hint}>Base de calcul : sur le montant HT de la course</Text>
-        </Section> */}
-
-        {/* ── Suppléments ──────────────────────────────────────────────── */}
-        {/* <Section title="Suppléments">
-          <PricingField
-            label="Supplément aéroport"
-            value={form.airport_fee}
-            unit={currencySymbol}
-            onChange={set('airport_fee')}
-          />
-          <PricingField
-            label="Supplément nocturne (19h-7h)"
-            value={form.night_rate}
-            unit="%"
-            onChange={set('night_rate')}
-          />
-        </Section> */}
-
-        {/* ── Exemple de calcul ─────────────────────────────────────────── */}
-        <LinearGradient 
-                  colors={[Colors.bordeaux, Colors.bordeauxLight]} 
-                  start={{ x: 0, y: 0 }} 
-                  end={{ x: 1, y: 1 }}
-                  style={[styles.flex, styles.exampleCard]}>
-          <Text style={styles.exampleTitle}>Exemple de calcul</Text>
-
-          <ExampleRow
-            label={`\t\tPrise en charge`}
-            value={fmt(parseFloat(form.base_price || '0'), currencySymbol)}
-          />
-          <ExampleRow
-            label={`\t\t${example.distance_km} km × ${form.price_per_km || '0'} ${currencySymbol}`}
-            value={fmt(example.km_cost, currencySymbol)}
-          />
-          <ExampleRow
-            label={`\t\t${example.duration_min} min × ${form.price_per_min || '0'} ${currencySymbol}`}
-            value={fmt(example.min_cost, currencySymbol)}
-          />
-
-          <ExampleRow
-            label="Total"
-            value={fmt(example.subtotal_ht, currencySymbol)}
-            bold
-            separator
-          />
-
-          {/* {activeCountry === 'france' && (
-            <ExampleRow
-              label={`\t\tTVA (20%)`}
-              value={`+ ${fmt(example.vat_20, currencySymbol)}`}
-            />
+          {/* ── Bannière mode lecture ────────────────────────────────────── */}
+          {!isEditing && (
+            <View style={styles.readonlyBanner}>
+              <AppIcon name="lock-closed-outline" size={14} color={Colors.textSecondary} />
+              <Text style={styles.readonlyText}>
+                Appuyez sur le crayon pour modifier la grille tarifaire
+              </Text>
+            </View>
           )}
-          <ExampleRow
-            label="Total TTC"
-            value={fmt(example.total_ttc, currencySymbol)}
-            bold
-          /> */}
 
-          {/* <ExampleRow
-            label={`Commission EasyVTC`}
-            bold
-            value=""
-            separator
-          /> */}
-          {/* <ExampleRow
-            label={`\t\tCommission (${form.commission_rate || 0}% du HT)`}
-            value={`+ ${fmt(example.commission_ht, currencySymbol)}`}
+          {/* ── Sélecteur de pays ────────────────────────────────────────── */}
+          <CountrySelector
+            active={activeCountry}
+            onChange={handleCountryChange}
+            disabled={isEditing}
           />
-          <ExampleRow
-            label={`\t\tTVA commission (${form.commission_vat_rate || 0}%)`}
-            value={`+ ${fmt(example.commission_vat, currencySymbol)}`}
-            
-          /> */}
-          {/* <ExampleRow
-            label="Total commission TTC"
-            value={`+ ${fmt(example.commission_ttc, currencySymbol)}`}
-            bold
-          /> */}
 
-          <ExampleRow
-            // label={`\n\t\t\t\t\t\t\t\tNet chauffeur (après commission)\n`}
-            label={`\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tNet chauffeur \n`}
-            value=""
-            bold
-            separator
-          />
-          <ExampleRow
-            // label={`\tMontant versé au chauffeur (TTC – commission TTC)\n(${fmt(example.total_ttc, currencySymbol)} – ${fmt(example.commission_ttc, currencySymbol)})`}
-            label={`\tMontant versé au chauffeur`}
-            value={fmt(example.net_driver, currencySymbol)}
-            bold
-            color={Colors.white}
-          />
-        </LinearGradient>
+          {/* ── Tarifs de base ───────────────────────────────────────────── */}
+          <Section title="Tarifs de base">
+            <PricingField
+              label="Prix de prise en charge"
+              value={form.base_price}
+              unit={currencySymbol}
+              onChange={set('base_price')}
+              editable={isEditing}
+            />
+            <PricingField
+              label="Prix par kilomètre"
+              value={form.price_per_km}
+              unit={currencySymbol}
+              onChange={set('price_per_km')}
+              editable={isEditing}
+            />
+            <PricingField
+              label="Prix par minute"
+              value={form.price_per_min}
+              unit={currencySymbol}
+              onChange={set('price_per_min')}
+              editable={isEditing}
+            />
+            <PricingField
+              label="Prix minimum de course"
+              value={form.minimum_price}
+              unit={currencySymbol}
+              onChange={set('minimum_price')}
+              editable={isEditing}
+            />
+          </Section>
 
-        {/* ── Bouton sauvegarde ─────────────────────────────────────────── */}
-        <LinearGradient 
-                  colors={[Colors.bordeaux, Colors.bordeauxLight]} 
-                  start={{ x: 0, y: 0 }} 
-                  end={{ x: 1, y: 1 }}
-                  style={styles.flex}
-        >
-            <TouchableOpacity
-              style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
-              onPress={handleSave}
-              disabled={isSaving}
-              activeOpacity={0.85}
+          {/* ── Commissions ──────────────────────────────────────────────── */}
+          {/* <Section
+            title="Commissions EasyVTC"
+            subtitle="Montant facturé au chauffeur pour le service plateforme"
+          >
+            <PricingField
+              label="Taux de commission"
+              value={form.commission_rate}
+              unit="%"
+              onChange={set('commission_rate')}
+              editable={isEditing}
+            />
+            <PricingField
+              label="TVA sur commission"
+              value={form.commission_vat_rate}
+              unit="%"
+              onChange={set('commission_vat_rate')}
+              editable={isEditing}
+            />
+            <Text style={styles.hint}>Base de calcul : sur le montant HT de la course</Text>
+          </Section> */}
+
+          {/* ── Suppléments ──────────────────────────────────────────────── */}
+          {/* <Section title="Suppléments">
+            <PricingField
+              label="Supplément aéroport"
+              value={form.airport_fee}
+              unit={currencySymbol}
+              onChange={set('airport_fee')}
+              editable={isEditing}
+            />
+            <PricingField
+              label="Supplément nocturne (19h-7h)"
+              value={form.night_rate}
+              unit="%"
+              onChange={set('night_rate')}
+              editable={isEditing}
+            />
+          </Section> */}
+
+          {/* ── Exemple de calcul ─────────────────────────────────────────── */}
+          <LinearGradient
+            colors={[Colors.bordeaux, Colors.bordeauxLight]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.flex, styles.exampleCard]}
+          >
+            <Text style={styles.exampleTitle}>Exemple de calcul</Text>
+
+            <ExampleRow
+              label={`\t\tPrise en charge`}
+              value={fmt(parseFloat(form.base_price || '0'), currencySymbol)}
+            />
+            <ExampleRow
+              label={`\t\t${example.distance_km} km × ${form.price_per_km || '0'} ${currencySymbol}`}
+              value={fmt(example.km_cost, currencySymbol)}
+            />
+            <ExampleRow
+              label={`\t\t${example.duration_min} min × ${form.price_per_min || '0'} ${currencySymbol}`}
+              value={fmt(example.min_cost, currencySymbol)}
+            />
+
+            <ExampleRow
+              label="Total"
+              value={fmt(example.subtotal_ht, currencySymbol)}
+              bold
+              separator
+            />
+
+            {/* {activeCountry === 'france' && (
+              <ExampleRow
+                label={`\t\tTVA (20%)`}
+                value={`+ ${fmt(example.vat_20, currencySymbol)}`}
+              />
+            )}
+            <ExampleRow
+              label="Total TTC"
+              value={fmt(example.total_ttc, currencySymbol)}
+              bold
+            /> */}
+
+            {/* <ExampleRow
+              label={`Commission EasyVTC`}
+              bold
+              value=""
+              separator
+            /> */}
+            {/* <ExampleRow
+              label={`\t\tCommission (${form.commission_rate || 0}% du HT)`}
+              value={`+ ${fmt(example.commission_ht, currencySymbol)}`}
+            />
+            <ExampleRow
+              label={`\t\tTVA commission (${form.commission_vat_rate || 0}%)`}
+              value={`+ ${fmt(example.commission_vat, currencySymbol)}`}
+            /> */}
+            {/* <ExampleRow
+              label="Total commission TTC"
+              value={`+ ${fmt(example.commission_ttc, currencySymbol)}`}
+              bold
+            /> */}
+
+            <ExampleRow
+              // label={`\n\t\t\t\t\t\t\t\tNet chauffeur (après commission)\n`}
+              label={`\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tNet chauffeur \n`}
+              value=""
+              bold
+              separator
+            />
+            <ExampleRow
+              // label={`\tMontant versé au chauffeur (TTC – commission TTC)\n(${fmt(example.total_ttc, currencySymbol)} – ${fmt(example.commission_ttc, currencySymbol)})`}
+              label={`\tMontant versé au chauffeur`}
+              value={fmt(example.net_driver, currencySymbol)}
+              bold
+              color={Colors.white}
+            />
+          </LinearGradient>
+
+          {/* ── Bouton sauvegarde — visible uniquement en mode édition ─────── */}
+          {isEditing && (
+            <LinearGradient
+              colors={[Colors.bordeaux, Colors.bordeauxLight]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.flex}
             >
-                    {isSaving
-                        ? <ActivityIndicator color={Colors.white} />
-                        : <Text style={styles.saveBtnText}>Enregistrer les modifications</Text>
-                    }
+              <TouchableOpacity
+                style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
+                onPress={handleSave}
+                disabled={isSaving}
+                activeOpacity={0.85}
+              >
+                {isSaving
+                  ? <ActivityIndicator color={Colors.white} />
+                  : <Text style={styles.saveBtnText}>Enregistrer les modifications</Text>
+                }
+              </TouchableOpacity>
+            </LinearGradient>
+          )}
 
-            </TouchableOpacity>
-        </LinearGradient>
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -430,7 +516,7 @@ export default function AdminPricingScreen() {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const styles = StyleSheet.create({
-  flex:   {flex: 1, backgroundColor: Colors.background, borderRadius: Radius.lg },
+  flex:   { flex: 1, backgroundColor: Colors.background, borderRadius: Radius.lg },
   container: {
     flex: 1,
     backgroundColor: Colors.background ?? '#F5F5F5',
@@ -455,6 +541,22 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontStyle: 'italic',
   },
+  readonlyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.surface ?? '#fff',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.bordeaux,
+  },
+  readonlyText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
   exampleCard: {
     backgroundColor: Colors.bordeaux,
     borderRadius: 12,
@@ -468,7 +570,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   saveBtn: {
-    paddingVertical : Spacing.lg,
+    paddingVertical: Spacing.lg,
     alignItems: 'center',
   },
   saveBtnDisabled: {
@@ -533,12 +635,19 @@ const pf = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: Colors.white ?? '#fff',
   },
+  inputRowDisabled: {
+    backgroundColor: Colors.surface ?? '#F9FAFB',
+    borderColor: Colors.border ?? '#E5E7EB',
+  },
   input: {
     flex: 1,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
     color: Colors.textPrimary,
+  },
+  inputDisabled: {
+    color: Colors.textSecondary,
   },
   unitBox: {
     paddingHorizontal: 14,
@@ -642,11 +751,9 @@ const hdr = StyleSheet.create({
     width: 32,
     height: 32,
   },
-  title: {
-    color: Colors.white,
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+  action: {
+    width: 40,
+    alignItems: 'flex-end',
   },
   placeholder: {
     width: 40,

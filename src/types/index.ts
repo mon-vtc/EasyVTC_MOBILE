@@ -26,3 +26,6 @@ export type {
   DocumentUploadResponse,
 } from './document.types';
 
+export type {
+  AvailableDriverDto
+} from './reservations.types';

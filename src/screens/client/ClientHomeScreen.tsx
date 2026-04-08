@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, StatusBar, Platform,
@@ -6,11 +6,23 @@ import {
 import { Ionicons }  from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuth }   from '../../hooks/useAuth';
+import { useReservation } from '../../hooks/useReservation';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { ClientTabParamList }   from '../../types/auth.types';
 import { LinearGradient } from 'expo-linear-gradient';
 
 type Props = BottomTabScreenProps<ClientTabParamList, 'ClientHome'>;
+
+type Ride = {
+  id: string;
+  status: string;
+  price: string;
+  date: string;
+  from: string;
+  to: string;
+  driver: string;
+  vehicle: string;
+};
 
 // ── Données mock ────────────────────────────────────────────────
 const QUICK_ACTIONS = [
@@ -20,48 +32,11 @@ const QUICK_ACTIONS = [
   { icon: 'headset-outline',      label: 'Support'    },
 ] as const;
 
-type RideStatus = 'confirmed' | 'pending';
-
-const UPCOMING_RIDES: {
-  id: string;
-  status: RideStatus;
-  price: string;
-  date: string;
-  from: string;
-  to: string;
-  driver: string;
-  vehicle: string;
-}[] = [
-  {
-    id: '1',
-    status:  'confirmed',
-    price:   '28.60€',
-    date:    '12 janvier 2026 à 14:30',
-    from:    'Massy, 91300',
-    to:      'Aéroport Paris-Orly',
-    driver:  'Mohamed Diallo',
-    vehicle: 'Berline',
-  },
-  {
-    id: '2',
-    status:  'pending',
-    price:   '35.00€',
-    date:    '15 janvier 2026 à 09:00',
-    from:    'Paris 12e',
-    to:      'Gare de Lyon',
-    driver:  'Khadim Ndiaye',
-    vehicle: 'Van',
-  },
-];
-
-const STATUS_CONFIG: Record<RideStatus, { label: string; bg: string; color: string }> = {
-  confirmed: { label: 'Confirmée',  bg: '#E8F5E9', color: '#2E7D32' },
-  pending:   { label: 'En attente', bg: '#FFF8E1', color: '#F57F17' },
-};
-
 // ── Composants ──────────────────────────────────────────────────
-function RideCard({ ride }: { ride: typeof UPCOMING_RIDES[0] }) {
-  const status = STATUS_CONFIG[ride.status];
+function RideCard({ ride }: { ride: Ride }) {
+  const status = ride.status === 'confirmed' 
+    ? { label: 'Confirmée', bg: Colors.successLight, color: Colors.success }
+    : { label: 'En attente', bg: Colors.warningLight, color: Colors.warning };
   return (
     <View style={cardStyles.wrapper}>
       {/* Status + Prix */}
@@ -139,7 +114,38 @@ const cardStyles = StyleSheet.create({
 // ── Screen ──────────────────────────────────────────────────────
 export default function ClientHomeScreen({ navigation }: Props) {
   const { user } = useAuth();
+  const { reservations, fetchMine } = useReservation();
   const firstName = user?.first_name ?? 'Marie';
+
+  useEffect(() => {
+    fetchMine(); // Load all reservations once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const upcomingRides = useMemo(() => {
+    const now = new Date();
+    return reservations
+      .filter(r => new Date(r.scheduled_at) > now && ['pending', 'assigned'].includes(r.status))
+      .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+      .slice(0, 2)
+      .map(r => ({
+        id: r.id,
+        status: r.status === 'assigned' ? 'confirmed' : 'pending',
+        price: `${(r.price_final || r.price_estimated).toFixed(2)}€`,
+        date: new Date(r.scheduled_at).toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }) + ' à ' + new Date(r.scheduled_at).toLocaleTimeString('fr-FR', {
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        from: r.pickup_address,
+        to: r.dest_address,
+        driver: r.driver ? `${r.driver.user.first_name} ${r.driver.user.last_name}` : 'Non assigné',
+        vehicle: r.vehicle_type || '—',
+      }));
+  }, [reservations]);
 
   return (
     <LinearGradient 
@@ -216,7 +222,7 @@ export default function ClientHomeScreen({ navigation }: Props) {
               </TouchableOpacity>
             </View>
 
-            {UPCOMING_RIDES.map((ride) => (
+            {upcomingRides.map((ride) => (
               <RideCard key={ride.id} ride={ride} />
             ))}
           </View>
