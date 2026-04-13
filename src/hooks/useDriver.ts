@@ -4,9 +4,9 @@ import { useAuth }        from './useAuth';
 import { useAuthStore }   from '../store/auth.store';
 import { driverApi }      from '../services/api/drivers.api';
 import { vehicleApi }     from '../services/api/vehicle.api';
-import type { DriverUser, Vehicle, VehicleType }       from '../types/user.types';
-import type { UpdateUserMePayload, UpdateDriverMePayload } from '../types/payload.types';
-import type { CreateVehiclePayload, UpdateVehiclePayload } from '../services/api/vehicle.api';
+import type { DriverUser, Vehicle }                                    from '../types/user.types';
+import type { UpdateUserMePayload, UpdateDriverMePayload }             from '../types/payload.types';
+import type { CreateVehiclePayload, UpdateVehiclePayload }             from '../services/api/vehicle.api';
 
 export function useDriver() {
   const auth        = useAuth();
@@ -34,7 +34,6 @@ export function useDriver() {
   ) => {
     const calls: Promise<any>[] = [];
     console.log(driverPayload);
-    
     if (Object.keys(userPayload).length > 0)   calls.push(auth.updateProfile(userPayload));
     if (Object.keys(driverPayload).length > 0) calls.push(driverApi.updateMe(token(), driverPayload));
     await Promise.all(calls);
@@ -72,8 +71,15 @@ export function useDriver() {
   }, [accessToken]);
 
   // ── Online status ───────────────────────────────────────────
+  // FIX : après l'appel API réussi, on patche `user.is_online` directement
+  // dans le store Zustand. Sans ce patch, le store conserve l'ancienne valeur
+  // et tous les composants abonnés (Switch, StatusCard…) ne se re-rendent pas.
   const setOnlineStatus = useCallback(async (is_online: boolean) => {
     await driverApi.setOnlineStatus(token(), is_online);
+
+    useAuthStore.setState(state => ({
+      user: state.user ? { ...state.user, is_online } : state.user,
+    }));
   }, [accessToken]);
 
   return {

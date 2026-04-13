@@ -1,7 +1,10 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // HOOK — useReservation
 // Sprint 3 — EasyVTC
-// Réservé aux clients pour le flow de réservation
+// Pays : France (€)
+// Recalcul d'estimation déclenché à chaque modification d'origine,
+// destination, type de véhicule ou nombre de passagers,
+// sans stale closure grâce aux refs.
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { useCallback, useEffect, useRef } from 'react';
@@ -15,20 +18,20 @@ import type {
   VehicleType,
   BookingStep,
   Reservation,
-} from '../types/reservation.types';
-import type { PricingCountry }            from '../types/pricing.types';
+  ReservationListFilters,
+} from '../types/reservations.types';
+import type { PricingCountry } from '../types/pricing.types';
 
-// ── Pays par défaut (à adapter depuis le profil utilisateur si disponible) ────
-const DEFAULT_COUNTRY: PricingCountry = 'france';
+const COUNTRY: PricingCountry = 'france';
 
 export function useReservation() {
-  const { isClient, user } = useAuth();
-  const accessToken        = useAuthStore(s => s.accessToken);
+  const accessToken = useAuthStore(s => s.accessToken);
 
-  if (!isClient) {
-    throw new Error('useReservation() ne peut être utilisé que par un client.');
+  if (!accessToken) {
+    throw new Error('useReservation() ne peut être utilisé que par un utilisateur authentifié.');
   }
 
+  // ── Sélecteurs store ───────────────────────────────────────────────────────
   const booking          = useReservationStore(s => s.booking);
   const vehicleTypes     = useReservationStore(s => s.vehicleTypes);
   const reservations     = useReservationStore(s => s.reservations);
@@ -40,8 +43,16 @@ export function useReservation() {
 
   const _fetchVehicleTypes = useReservationStore(s => s.fetchVehicleTypes);
   const _fetchMine         = useReservationStore(s => s.fetchMine);
+  const _fetchDriverReservations = useReservationStore(s => s.fetchDriverReservations);
+  const _fetchAll          = useReservationStore(s => s.fetchAll);
   const _fetchById         = useReservationStore(s => s.fetchById);
+  const _fetchDriverActive = useReservationStore(s => s.fetchDriverActive);
+  const _fetchAvailableDrivers = useReservationStore(s => s.fetchAvailableDrivers);
   const _cancel            = useReservationStore(s => s.cancel);
+  const _arrive            = useReservationStore(s => s.arrive);
+  const _start             = useReservationStore(s => s.start);
+  const _complete          = useReservationStore(s => s.complete);
+  const _assign            = useReservationStore(s => s.assign);
   const _submitBooking     = useReservationStore(s => s.submitBooking);
   const _resetBooking      = useReservationStore(s => s.resetBooking);
   const _setStep           = useReservationStore(s => s.setBookingStep);
@@ -56,16 +67,23 @@ export function useReservation() {
   const _setEstimate       = useReservationStore(s => s.setEstimate);
   const clearError         = useReservationStore(s => s.clearError);
 
+  // ── Refs pour éviter les stale closures ────────────────────────────────────
+  // Reflètent toujours les valeurs courantes sans recréer les callbacks.
+  const bookingRef       = useRef(booking);
+  const accessTokenRef   = useRef(accessToken);
   const priceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => { bookingRef.current = booking; },         [booking]);
+  useEffect(() => { accessTokenRef.current = accessToken; }, [accessToken]);
 
   // ── Chargement initial des types de véhicule ──────────────────────────────
   useEffect(() => {
     if (accessToken && vehicleTypes.length === 0) {
-      _fetchVehicleTypes(accessToken, DEFAULT_COUNTRY);
+      _fetchVehicleTypes(accessToken, COUNTRY);
     }
   }, [accessToken]);
 
-  // ── Géolocalisation : obtenir la position actuelle ────────────────────────
+  // ── Géolocalisation ────────────────────────────────────────────────────────
   const getCurrentLocation = useCallback(async (): Promise<GeoPoint | null> => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -75,7 +93,6 @@ export function useReservation() {
         accuracy: Location.Accuracy.High,
       });
 
-      // Géocodage inverse pour obtenir l'adresse lisible
       const [place] = await Location.reverseGeocodeAsync({
         latitude:  location.coords.latitude,
         longitude: location.coords.longitude,
@@ -123,94 +140,141 @@ export function useReservation() {
   }, []);
 
   // ── Calcul du prix estimé (debounced 500ms) ───────────────────────────────
-  // Appelé automatiquement quand origin + destination + vehicle_type sont définis
-  const fetchEstimate = useCallback(async (
-    origin:       GeoPoint,
-    destination:  GeoPoint,
-    vehicleType:  VehicleType,
+  /**
+   * Reçoit les paramètres explicitement (pas de lecture depuis booking)
+   * pour éviter tout stale closure. Peut être appelé autant de fois que
+   * nécessaire — le debounce absorbe les appels rapides.
+   *
+   * Formule Haversine pour la distance, puis POST vers pricingApi.estimate()
+   * avec country='france'. Le résultat est stocké dans le store via setEstimate().
+   */
+  const fetchEstimate = useCallback((
+    origin:        GeoPoint,
+    destination:   GeoPoint,
+    _vehicleType:  VehicleType,
+    _nbPassengers: number,
   ) => {
-    if (!accessToken) return;
+    const token = accessTokenRef.current;
+    if (!token) return;
 
     if (priceDebounceRef.current) clearTimeout(priceDebounceRef.current);
 
     priceDebounceRef.current = setTimeout(async () => {
       useReservationStore.setState({ isFetchingPrice: true });
       try {
-        // Distance approximative (Haversine) pour l'estimation
-        const R        = 6371;
-        const dLat     = ((destination.latitude  - origin.latitude)  * Math.PI) / 180;
-        const dLon     = ((destination.longitude - origin.longitude) * Math.PI) / 180;
-        const a        = Math.sin(dLat / 2) ** 2
-          + Math.cos(origin.latitude * Math.PI / 180)
-          * Math.cos(destination.latitude * Math.PI / 180)
-          * Math.sin(dLon / 2) ** 2;
+        const R    = 6371;
+        const dLat = ((destination.latitude  - origin.latitude)  * Math.PI) / 180;
+        const dLon = ((destination.longitude - origin.longitude) * Math.PI) / 180;
+        const a    =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(origin.latitude      * Math.PI / 180) *
+          Math.cos(destination.latitude * Math.PI / 180) *
+          Math.sin(dLon / 2) ** 2;
         const distance_km  = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
-        const duration_min = Math.round(distance_km * 1.8); // estimation 1.8 min/km en ville
+        const duration_min = Math.round(distance_km * 1.8); // ~1.8 min/km en milieu urbain
 
-        const res = await pricingApi.estimate(accessToken, {
-          country:      DEFAULT_COUNTRY,
+        const res = await pricingApi.estimate(token, {
+          country:       COUNTRY,
           distance_km,
           duration_min,
+          nb_passengers: _nbPassengers,
         });
+        // vehicle_type:  _vehicleType,
 
         if (res.ok && res.data) {
-          _setEstimate(res.data.final_price, distance_km, duration_min);
+          // Écriture atomique directe dans le store — contourne tout
+          // problème de merge partiel dans _setEstimate et garantit
+          // que estimated_price est bien la valeur de cette réponse précise.
+          useReservationStore.setState(state => ({
+            booking: {
+              ...state.booking,
+              estimated_price: res.data!.final_price,
+              distance_km,
+              duration_min,
+            },
+          }));
         }
       } finally {
         useReservationStore.setState({ isFetchingPrice: false });
       }
     }, 500);
-  }, [accessToken, _setEstimate]);
+  }, []); // stable — lit les valeurs fraîches via accessTokenRef et écrit directement dans le store
 
-  // ── Setters enrichis ──────────────────────────────────────────────────────
+  // ── Setters enrichis ───────────────────────────────────────────────────────
+  /**
+   * Chaque setter lit bookingRef.current pour obtenir les autres champs à jour,
+   * évitant ainsi que fetchEstimate soit appelé avec des valeurs périmées.
+   * La valeur fraîche du champ modifié est toujours passée directement en
+   * paramètre (pas depuis bookingRef) car setState est asynchrone — le ref
+   * n'est pas encore mis à jour au moment de l'appel.
+   *
+   * Le recalcul se déclenche systématiquement si les 3 critères géographiques
+   * sont présents, même en cas de re-saisie d'un champ déjà rempli.
+   */
+
   const setOrigin = useCallback((point: GeoPoint | null) => {
     _setOrigin(point);
-    if (point && booking.destination && booking.vehicle_type) {
-      fetchEstimate(point, booking.destination, booking.vehicle_type);
+    const { destination, vehicle_type, nb_passengers } = bookingRef.current;
+    if (point && destination && vehicle_type) {
+      fetchEstimate(point, destination, vehicle_type, nb_passengers);
     }
-  }, [_setOrigin, booking.destination, booking.vehicle_type, fetchEstimate]);
+  }, [_setOrigin, fetchEstimate]);
 
   const setDestination = useCallback((point: GeoPoint | null) => {
     _setDestination(point);
-    if (point && booking.origin && booking.vehicle_type) {
-      fetchEstimate(booking.origin, point, booking.vehicle_type);
+    const { origin, vehicle_type, nb_passengers } = bookingRef.current;
+    if (point && origin && vehicle_type) {
+      fetchEstimate(origin, point, vehicle_type, nb_passengers);
     }
-  }, [_setDestination, booking.origin, booking.vehicle_type, fetchEstimate]);
+  }, [_setDestination, fetchEstimate]);
 
   const setVehicleType = useCallback((type: VehicleType) => {
     _setVehicleType(type);
-    if (booking.origin && booking.destination) {
-      fetchEstimate(booking.origin, booking.destination, type);
+    const { origin, destination, nb_passengers } = bookingRef.current;
+    if (origin && destination) {
+      fetchEstimate(origin, destination, type, nb_passengers);
     }
-  }, [_setVehicleType, booking.origin, booking.destination, fetchEstimate]);
+  }, [_setVehicleType, fetchEstimate]);
 
-  // ── Navigation entre étapes avec validation ───────────────────────────────
-  const goToStep = useCallback((step: BookingStep) => {
-    _setStep(step);
-  }, [_setStep]);
+  /**
+   * Déclenche un recalcul si origine + destination + véhicule sont présents.
+   * `count` est passé directement à fetchEstimate (valeur fraîche) car
+   * bookingRef.current.nb_passengers n'est pas encore mis à jour au moment
+   * où setState (_setPassengers) est traité de manière asynchrone.
+   */
+  const setPassengers = useCallback((count: number) => {
+    _setPassengers(count);
+    const { origin, destination, vehicle_type } = bookingRef.current;
+    if (origin && destination && vehicle_type) {
+      fetchEstimate(origin, destination, vehicle_type, count);
+    }
+  }, [_setPassengers, fetchEstimate]);
+
+  // ── Navigation étapes ──────────────────────────────────────────────────────
+  const goToStep = useCallback((step: BookingStep) => _setStep(step), [_setStep]);
 
   const nextStep = useCallback(() => {
-    const next = Math.min(booking.step + 1, 3) as BookingStep;
+    const next = Math.min(bookingRef.current.step + 1, 3) as BookingStep;
     _setStep(next);
-  }, [booking.step, _setStep]);
+  }, [_setStep]);
 
   const prevStep = useCallback(() => {
-    const prev = Math.max(booking.step - 1, 1) as BookingStep;
+    const prev = Math.max(bookingRef.current.step - 1, 1) as BookingStep;
     _setStep(prev);
-  }, [booking.step, _setStep]);
+  }, [_setStep]);
 
-  // ── Validation par étape ──────────────────────────────────────────────────
+  // ── Validation ─────────────────────────────────────────────────────────────
   const isStep1Valid = !!(booking.origin && booking.destination && booking.vehicle_type);
-  const isStep2Valid = !!(booking.date && booking.time && booking.passengers >= 1);
+  const isStep2Valid = !!(booking.date && booking.time && booking.nb_passengers >= 1);
   const isStep3Valid = isStep1Valid && isStep2Valid;
 
-  // ── Soumission finale ──────────────────────────────────────────────────────
+  // ── Soumission ─────────────────────────────────────────────────────────────
   const submitBooking = useCallback(async (): Promise<Reservation> => {
-    return _submitBooking(accessToken!, DEFAULT_COUNTRY);
-  }, [accessToken, _submitBooking]);
+    return _submitBooking(accessTokenRef.current!, COUNTRY);
+  }, [_submitBooking]);
 
   return {
-    // ── État formulaire ────────────────────────────────────────────────────
+    // État formulaire
     booking,
     vehicleTypes,
     isLoading,
@@ -219,43 +283,58 @@ export function useReservation() {
     error,
     clearError,
 
-    // ── Validations ────────────────────────────────────────────────────────
+    // Validations
     isStep1Valid,
     isStep2Valid,
     isStep3Valid,
 
-    // ── Navigation étapes ──────────────────────────────────────────────────
+    // Navigation
     goToStep,
     nextStep,
     prevStep,
 
-    // ── Setters étape 1 ────────────────────────────────────────────────────
+    // Recalcul manuel (ex : transition étape 2 → 3 sans modification des champs)
+    fetchEstimate,  // exposé pour forcer le recalcul à la transition étape 2→3
+
+    // Setters étape 1 (enrichis — déclenchent fetchEstimate)
     setOrigin,
     setDestination,
     setVehicleType,
 
-    // ── Setters étape 2 ────────────────────────────────────────────────────
+    // Setters étape 2
     setDate:       _setDate,
     setTime:       _setTime,
-    setPassengers: _setPassengers,
+    setPassengers,          // enrichi — déclenche fetchEstimate
     setLuggage:    _setLuggage,
 
-    // ── Setters étape 3 ────────────────────────────────────────────────────
+    // Setters étape 3
     setComment: _setComment,
 
-    // ── Géolocalisation ────────────────────────────────────────────────────
+    // Géolocalisation
     getCurrentLocation,
     geocodeAddress,
 
-    // ── Soumission ─────────────────────────────────────────────────────────
+    // Soumission
     submitBooking,
     resetBooking: _resetBooking,
 
-    // ── Mes réservations ───────────────────────────────────────────────────
+    // Mes réservations
     reservations,
     selected,
-    fetchMine:  (filters?: any) => _fetchMine(accessToken!, filters),
-    fetchById:  (id: string)    => _fetchById(accessToken!, id),
-    cancel:     (id: string, reason?: string) => _cancel(accessToken!, id, reason),
+    fetchMine:             useCallback((filters?: ReservationListFilters) => _fetchMine(accessTokenRef.current!, filters), []),
+    fetchDriverReservations: useCallback((filters?: ReservationListFilters) => _fetchDriverReservations(accessTokenRef.current!, filters), []),
+    fetchAll:              useCallback((filters?: ReservationListFilters) => _fetchAll(accessTokenRef.current!, filters), []),
+    fetchById:             useCallback((id: string)                       => _fetchById(accessTokenRef.current!, id), []),
+    fetchDriverActive:     useCallback(()                               => _fetchDriverActive(accessTokenRef.current!), []),
+    fetchDriverUserActive: useCallback(() => _fetchAvailableDrivers(accessTokenRef.current!), []),
+
+    // Actions fournisseurs
+    cancel:   useCallback((id: string, reason?: string)                                                             => _cancel(accessTokenRef.current!, id, reason), []),
+    arrive:   useCallback((id: string)                                                                               => _arrive(accessTokenRef.current!, id), []),
+    start:    useCallback((id: string)                                                                               => _start(accessTokenRef.current!, id), []),
+    complete: useCallback((id: string, actual_distance_km?: number, actual_duration_min?: number, driver_notes?: string, price_adjusted?: number) =>
+      _complete(accessTokenRef.current!, id, actual_distance_km, actual_duration_min, driver_notes, price_adjusted), []),
+    assign:   useCallback((id: string, driverId: string)                                                            => _assign(accessTokenRef.current!, id, driverId), []),
+
   };
 }

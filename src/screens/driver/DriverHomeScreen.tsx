@@ -56,7 +56,7 @@ function StatusCard({
               value={isOnline}
               onValueChange={onToggle}
               disabled={!canGoOnline && !isOnline}
-              trackColor={{ false: '#D1D5DB', true: '#34D399' }}
+              trackColor={{ false: '#D1D5DB', true: Colors.bordeauxLight }}
               thumbColor={Colors.white}
               ios_backgroundColor="#D1D5DB"
             />
@@ -363,14 +363,14 @@ const sc = StyleSheet.create({
     marginTop: 2,
   },
   subtitleOnline: {
-    color: '#10B981',
+    color: Colors.bordeauxLight,
     fontWeight: '500',
   },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: Colors.validatedBackground,
     borderRadius: 8,
     padding: 10,
   },

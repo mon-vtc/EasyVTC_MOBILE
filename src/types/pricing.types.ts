@@ -80,6 +80,7 @@ export interface PricingFlatRate {
   origin_label:        string;
   destination_label:   string;
   price:               number;
+  pickup_surcharge?:   number; // Supplément par passager supplémentaire
   currency:            string;
   is_active:           boolean;
   created_at:          string;
@@ -158,6 +159,7 @@ export interface PriceEstimateDto {
   distance_km?:  number;
   duration_min?: number;
   flat_rate_id?: string;
+  nb_passengers?: number;
   is_airport?:   boolean;
   is_night?:     boolean;
 }
@@ -176,6 +178,9 @@ export interface PriceBreakdown {
   night_supplement?:   number;
   flat_rate_id?:       string;
   flat_rate_label?:    string;
+  nb_passengers?: number;
+  pickup_surcharge_per_person?: number;
+  pickup_surcharge_total?: number;
 }
 
 export interface PriceEstimateResult {

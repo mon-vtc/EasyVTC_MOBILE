@@ -1,358 +1,383 @@
-// screens/client/ReservationDetailsScreen.tsx
-import React, { useEffect, useState } from 'react';
+// ══════════════════════════════════════════════════════════════════════════════
+// SCREEN — ReservationDetailsScreen
+// Sprint 3 — EasyVTC
+// Affiché après submitBooking() réussi.
+// Reçoit { reservationId } en route params, charge la réservation depuis
+// le store (déjà insérée par submitBooking) ou via fetchById en fallback.
+// ══════════════════════════════════════════════════════════════════════════════
+
+import React, { useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, ActivityIndicator, Alert, Platform,
+  View, Text, ScrollView, TouchableOpacity,
+  StyleSheet, Animated, Platform, Easing,
 } from 'react-native';
-import { Ionicons }       from '@expo/vector-icons';
-import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
-import { useAuthStore }   from '../../store/auth.store';
+import {
+  useNavigation, useRoute,
+  type RouteProp, type NavigationProp,
+} from '@react-navigation/native';
+import { AppIcon }             from '../../components/common/AppIcon';
+import { Colors }              from '../../theme/colors';
 import { useReservationStore } from '../../store/reservation.store';
-import { reservationApi } from '../../services/api/reservation.api';
-import type { BottomTabScreenProps }  from '@react-navigation/bottom-tabs';
-import type { ClientTabParamList }    from '../../types/auth.types';
-import type { Reservation }           from '../../types/reservation.types';
-import { RESERVATION_STATUS_LABELS, RESERVATION_STATUS_COLORS } from '../../types/reservation.types';
+import { useAuthStore }        from '../../store/auth.store';
+import type { ClientStackParamList } from '../../types/auth.types';
 
-type Props = BottomTabScreenProps<ClientTabParamList, 'ReservationDetails'>;
+// ── Types navigation typés ──────────────────────────────────────────────────
+type ConfirmationNav   = NavigationProp<ClientStackParamList, 'ReservationDetails'>;
+type ConfirmationRoute = RouteProp<ClientStackParamList, 'ReservationDetails'>;
 
-function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
-  return (
-    <View style={s.infoRow}>
-      <Ionicons name={icon as any} size={17} color={Colors.bordeaux} style={s.infoIcon} />
-      <View style={s.infoTexts}>
-        <Text style={s.infoLabel}>{label}</Text>
-        <Text style={s.infoValue}>{value}</Text>
-      </View>
-    </View>
-  );
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function formatPrice(price: number | null | undefined): string {
+  if (price == null) return '—';
+  return `${price.toFixed(0)} €`;
+}
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+function getVehicleLabel(type: string | undefined): string {
+  const labels: Record<string, string> = { standard: 'Berline Standard', berline: 'Berline', van: 'Van / Minibus' };
+  return labels[type ?? ''] ?? type ?? '—';
 }
 
-const VEHICLE_LABELS: Record<string, string> = {
-  standard: 'Standard',
-  berline:  'Berline',
-  van:      'Van',
-};
-
-export default function ReservationDetailsScreen({ route, navigation }: Props) {
-  const { reservationId } = route.params;
-  const token   = useAuthStore(s => s.accessToken) ?? '';
-  const { cancel } = useReservationStore();
-
-  const [reservation, setReservation] = useState<Reservation | null>(null);
-  const [loading,     setLoading]     = useState(true);
-  const [cancelling,  setCancelling]  = useState(false);
-  const [error,       setError]       = useState<string | null>(null);
+// ══════════════════════════════════════════════════════════════════════════════
+// ANIMATED CHECK
+// ══════════════════════════════════════════════════════════════════════════════
+function AnimatedCheck() {
+  const scale = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+  const ring1 = useRef(new Animated.Value(0)).current;
+  const ring2 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await reservationApi.getById(token, reservationId);
-        if (res.ok && res.data) setReservation(res.data);
-        else setError(res.message ?? 'Impossible de charger la réservation');
-      } catch {
-        setError('Erreur de chargement');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [reservationId, token]);
+    Animated.sequence([
+      Animated.delay(200),
+      Animated.parallel([
+        Animated.spring(scale,   { toValue: 1, tension: 60, friction: 6, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      ]),
+      Animated.delay(100),
+      Animated.parallel([
+        Animated.timing(ring1, { toValue: 1, duration: 600, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+        Animated.timing(ring2, { toValue: 1, duration: 800, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+      ]),
+    ]).start();
+  }, []);
 
-  const handleCancel = () => {
-    if (!reservation) return;
-    Alert.alert(
-      'Annuler la réservation',
-      `Voulez-vous annuler la course ${reservation.ref_number} ?`,
-      [
-        { text: 'Non', style: 'cancel' },
-        {
-          text: 'Oui, annuler',
-          style: 'destructive',
-          onPress: async () => {
-            setCancelling(true);
-            try {
-              await cancel(token, reservation.id);
-              // Recharger
-              const res = await reservationApi.getById(token, reservationId);
-              if (res.ok && res.data) setReservation(res.data);
-            } catch (e: any) {
-              Alert.alert('Erreur', e?.message ?? "Impossible d'annuler");
-            } finally {
-              setCancelling(false);
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  if (loading) {
-    return (
-      <View style={s.center}>
-        <ActivityIndicator size="large" color={Colors.bordeaux} />
-      </View>
-    );
-  }
-
-  if (error || !reservation) {
-    return (
-      <View style={s.center}>
-        <Ionicons name="alert-circle-outline" size={48} color={Colors.error} />
-        <Text style={s.errorText}>{error ?? 'Réservation introuvable'}</Text>
-        <TouchableOpacity style={s.btnPrimary} onPress={() => navigation.goBack()}>
-          <Text style={s.btnPrimaryText}>Retour</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  const scheduled = new Date(reservation.scheduled_at);
-  const dateStr = scheduled.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const timeStr = scheduled.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-  const statusColor = RESERVATION_STATUS_COLORS[reservation.status];
-  const canCancel = reservation.status === 'pending' || reservation.status === 'assigned';
+  const ringStyle = (anim: Animated.Value, maxScale: number) => ({
+    transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [1, maxScale] }) }],
+    opacity:   anim.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0.6, 0.3, 0] }),
+  });
 
   return (
-    <View style={s.container}>
-      {/* Header */}
-      <View style={s.header}>
-        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={s.headerTitle}>Détails</Text>
-        <View style={{ width: 36 }} />
-      </View>
-
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-
-        {/* Référence + Statut */}
-        <View style={s.refCard}>
-          <Text style={s.refLabel}>Référence</Text>
-          <Text style={s.refValue}>{reservation.ref_number}</Text>
-          <View style={[s.statusBadge, { backgroundColor: statusColor + '22' }]}>
-            <View style={[s.statusDot, { backgroundColor: statusColor }]} />
-            <Text style={[s.statusText, { color: statusColor }]}>
-              {RESERVATION_STATUS_LABELS[reservation.status]}
-            </Text>
-          </View>
-        </View>
-
-        {/* Trajet */}
-        <View style={s.card}>
-          <Text style={s.cardTitle}>Trajet</Text>
-          <View style={s.routeBlock}>
-            <View style={s.routeRow}>
-              <View style={[s.routeDot, { backgroundColor: '#10B981' }]} />
-              <View style={s.routeTexts}>
-                <Text style={s.routeLabel}>Départ</Text>
-                <Text style={s.routeValue}>{reservation.origin_address}</Text>
-              </View>
-            </View>
-            <View style={s.routeConnector} />
-            <View style={s.routeRow}>
-              <View style={[s.routeDot, { backgroundColor: Colors.bordeaux }]} />
-              <View style={s.routeTexts}>
-                <Text style={s.routeLabel}>Destination</Text>
-                <Text style={s.routeValue}>{reservation.destination_address}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Infos course */}
-        <View style={s.card}>
-          <Text style={s.cardTitle}>Informations</Text>
-          <InfoRow icon="calendar-outline"  label="Date"        value={dateStr} />
-          <InfoRow icon="time-outline"       label="Heure"       value={timeStr} />
-          <InfoRow icon="car-outline"        label="Véhicule"    value={VEHICLE_LABELS[reservation.vehicle_type] ?? reservation.vehicle_type} />
-          <InfoRow icon="people-outline"     label="Passagers"   value={String(reservation.passengers)} />
-          <InfoRow icon="briefcase-outline"  label="Bagages"     value={String(reservation.luggage)} />
-          {reservation.distance_km > 0 && (
-            <InfoRow icon="map-outline"      label="Distance"    value={`${reservation.distance_km.toFixed(1)} km`} />
-          )}
-          {reservation.estimated_price != null && (
-            <InfoRow
-              icon="pricetag-outline"
-              label="Prix estimé"
-              value={`${reservation.estimated_price.toFixed(2)} ${reservation.currency ?? '€'}`}
-            />
-          )}
-          {reservation.final_price != null && (
-            <InfoRow
-              icon="cash-outline"
-              label="Prix final"
-              value={`${reservation.final_price.toFixed(2)} ${reservation.currency ?? '€'}`}
-            />
-          )}
-          {reservation.comment && (
-            <InfoRow icon="chatbubble-outline" label="Commentaire" value={reservation.comment} />
-          )}
-        </View>
-
-        {/* Chauffeur assigné */}
-        {reservation.driver && (
-          <View style={s.card}>
-            <Text style={s.cardTitle}>Chauffeur</Text>
-            <View style={s.driverRow}>
-              <View style={s.driverAvatar}>
-                <Ionicons name="person" size={24} color={Colors.bordeaux} />
-              </View>
-              <View style={s.driverInfo}>
-                <Text style={s.driverName}>
-                  {reservation.driver.first_name} {reservation.driver.last_name}
-                </Text>
-                {reservation.driver.phone && (
-                  <Text style={s.driverPhone}>{reservation.driver.phone}</Text>
-                )}
-                {reservation.driver.vehicle && (
-                  <Text style={s.driverVehicle}>
-                    {reservation.driver.vehicle.brand} {reservation.driver.vehicle.model} · {reservation.driver.vehicle.color} · {reservation.driver.vehicle.plate}
-                  </Text>
-                )}
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Info paiement */}
-        <View style={s.paymentNote}>
-          <Ionicons name="information-circle-outline" size={18} color={Colors.bordeaux} />
-          <Text style={s.paymentText}>
-            Paiement hors application — espèces ou CB directement au chauffeur en fin de course.
-          </Text>
-        </View>
-
-        {/* Annulation */}
-        {reservation.cancelled_at && reservation.cancellation_reason && (
-          <View style={s.cancelledNote}>
-            <Ionicons name="close-circle-outline" size={18} color="#EF4444" />
-            <View style={{ flex: 1 }}>
-              <Text style={s.cancelledTitle}>Réservation annulée</Text>
-              <Text style={s.cancelledReason}>{reservation.cancellation_reason}</Text>
-            </View>
-          </View>
-        )}
-
-      </ScrollView>
-
-      {/* Footer */}
-      {canCancel && (
-        <View style={s.footer}>
-          <TouchableOpacity
-            style={[s.cancelBtn, cancelling && { opacity: 0.6 }]}
-            onPress={handleCancel}
-            disabled={cancelling}
-          >
-            {cancelling
-              ? <ActivityIndicator size="small" color="#EF4444" />
-              : <Text style={s.cancelBtnText}>Annuler la réservation</Text>
-            }
-          </TouchableOpacity>
-        </View>
-      )}
+    <View style={check.container}>
+      <Animated.View style={[check.ring, ringStyle(ring2, 2.6)]} />
+      <Animated.View style={[check.ring, ringStyle(ring1, 1.9)]} />
+      <Animated.View style={[check.circle, { transform: [{ scale }], opacity }]}>
+        <AppIcon name="checkmark" size={38} color={Colors.white} />
+      </Animated.View>
     </View>
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  scroll:    { padding: Spacing.md, paddingBottom: Spacing.xxl },
-  center:    { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, gap: Spacing.md },
-  errorText: { fontSize: Fonts.size.md, color: Colors.error, textAlign: 'center' },
+// ══════════════════════════════════════════════════════════════════════════════
+// ROW DÉTAIL
+// ══════════════════════════════════════════════════════════════════════════════
+function DetailRow({ icon, label, value, delay = 0 }: { icon: string; label: string; value: string; delay?: number }) {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(anim, { toValue: 1, duration: 400, delay: 600 + delay, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+  }, []);
+  return (
+    <Animated.View style={[row.container, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }]}>
+      <View style={row.iconWrap}>
+        <AppIcon name={icon} size={15} color={Colors.bordeaux} />
+      </View>
+      <View style={row.texts}>
+        <Text style={row.label}>{label}</Text>
+        <Text style={row.value}>{value}</Text>
+      </View>
+    </Animated.View>
+  );
+}
 
-  // Header
-  header: {
+// ══════════════════════════════════════════════════════════════════════════════
+// NEXT STEP
+// ══════════════════════════════════════════════════════════════════════════════
+function NextStep({ icon, text, delay }: { icon: string; text: string; delay: number }) {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(anim, { toValue: 1, duration: 350, delay: 1000 + delay, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+  }, []);
+  return (
+    <Animated.View style={[ns.row, { opacity: anim, transform: [{ translateX: anim.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] }) }] }]}>
+      <View style={ns.dot}>
+        <AppIcon name={icon} size={13} color={Colors.bordeaux} />
+      </View>
+      <Text style={ns.text}>{text}</Text>
+    </Animated.View>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ÉCRAN PRINCIPAL
+// ══════════════════════════════════════════════════════════════════════════════
+export default function ReservationDetailsScreen() {
+  const nav   = useNavigation<ConfirmationNav>();
+  const route = useRoute<ConfirmationRoute>();
+
+  const reservationId = route.params?.reservationId;
+
+  if (!reservationId) {
+    return <View style={styles.root}><Text style={styles.subtitle}>ID de réservation manquant.</Text></View>;
+  }
+
+  const accessToken  = useAuthStore(s => s.accessToken);
+  const reservations = useReservationStore(s => s.reservations);
+  const fetchById    = useReservationStore(s => s.fetchById);
+
+  const reservation = reservations.find(r => r.id === reservationId) ?? null;
+
+  useEffect(() => {
+    if (!reservation && accessToken) fetchById(accessToken, reservationId);
+  }, [reservationId, reservation, accessToken, fetchById]);
+
+  // ── Animations page ────────────────────────────────────────────────────────
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const cardAnim   = useRef(new Animated.Value(0)).current;
+  const priceAnim  = useRef(new Animated.Value(0)).current;
+  const ctaAnim    = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.stagger(150, [
+      Animated.timing(headerAnim, { toValue: 1, duration: 500, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(cardAnim,   { toValue: 1, duration: 450, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(priceAnim,  { toValue: 1, duration: 400, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(ctaAnim,    { toValue: 1, duration: 400, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const slideUp = (anim: Animated.Value, offset = 20) => ({
+    opacity:   anim,
+    transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [offset, 0] }) }],
+  });
+
+  const r = reservation;
+
+  return (
+    <View style={styles.root}>
+      {/* Fond bordeaux arrondi en haut */}
+      <View style={styles.bgAccent} />
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} bounces={false}>
+
+        {/* ── Header ── */}
+        <Animated.View style={[styles.header, slideUp(headerAnim, 30)]}>
+          <AnimatedCheck />
+          <Text style={styles.title}>Réservation envoyée !</Text>
+          <Text style={styles.subtitle}>Votre demande est en cours de{'\n'}validation par notre équipe</Text>
+        </Animated.View>
+
+        {/* ── Badge N° réservation ── */}
+        {r?.id && (
+          <Animated.View style={[styles.refBadge, slideUp(headerAnim)]}>
+            <Text style={styles.refLabel}>N° de réservation</Text>
+            <Text style={styles.refValue} numberOfLines={1} ellipsizeMode="middle">{r.id}</Text>
+          </Animated.View>
+        )}
+
+        {/* ── Carte trajet ── */}
+        <Animated.View style={[styles.card, slideUp(cardAnim)]}>
+          <Text style={styles.cardTitle}>Détails du trajet</Text>
+
+          <View style={styles.routeBlock}>
+            <View style={styles.routeRow}>
+              <View style={[styles.routeDot, { backgroundColor: '#10B981' }]} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.routeTag}>Départ</Text>
+                <Text style={styles.routeAddr}>{r?.pickup_address ?? '—'}</Text>
+              </View>
+            </View>
+            <View style={styles.routeLine} />
+            <View style={styles.routeRow}>
+              <View style={[styles.routeDot, { backgroundColor: Colors.bordeaux }]} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.routeTag}>Destination</Text>
+                <Text style={styles.routeAddr}>{r?.dest_address ?? '—'}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <DetailRow icon="calendar-outline"      label="Date"      value={r?.scheduled_at ? formatDate(r.scheduled_at) : '—'} delay={0}   />
+          <DetailRow icon="time-outline"          label="Heure"     value={r?.scheduled_at ? formatTime(r.scheduled_at) : '—'} delay={60}  />
+          <DetailRow icon="car-outline"           label="Véhicule"  value={getVehicleLabel(r?.vehicle_type)}                    delay={120} />
+          <DetailRow
+            icon="person-outline"
+            label="Passagers"
+            value={r?.nb_passengers != null ? `${r.nb_passengers} passager${r.nb_passengers > 1 ? 's' : ''}` : '—'}
+            delay={180}
+          />
+          {r?.driver ? (
+            <DetailRow icon="shield-checkmark-outline" label="Chauffeur" value={`${r.driver?.user?.first_name} ${r.driver?.user?.last_name}`} delay={240} />
+          ) : (
+            <DetailRow icon="person-circle-outline"    label="Chauffeur" value="En attente d'attribution"                       delay={240} />
+          )}
+        </Animated.View>
+
+        {/* ── Prix estimé ── */}
+        <Animated.View style={[styles.priceCard, slideUp(priceAnim)]}>
+          <View>
+            <Text style={styles.priceLabel}>Prix estimé</Text>
+            <Text style={styles.priceNote}>Paiement directement auprès du chauffeur</Text>
+          </View>
+          <Text style={styles.priceValue}>{formatPrice(r?.price_estimated)}</Text>
+        </Animated.View>
+
+        {/* ── Prochaines étapes ── */}
+        <Animated.View style={[styles.nextCard, slideUp(priceAnim)]}>
+          <View style={styles.nextHeader}>
+            <AppIcon name="information-circle-outline" size={16} color={Colors.bordeaux} />
+            <Text style={styles.nextTitle}>Prochaines étapes</Text>
+          </View>
+          <NextStep icon="checkmark-circle-outline" text="Validation de votre réservation par notre équipe"  delay={0}   />
+          <NextStep icon="car-outline"              text="Attribution d'un chauffeur disponible"              delay={80}  />
+          <NextStep icon="mail-outline"             text="Notification de confirmation avec les détails"      delay={160} />
+          <NextStep icon="notifications-outline"   text="Rappel 1h avant le départ"                          delay={240} />
+        </Animated.View>
+
+        {/* ── CTAs ── */}
+        <Animated.View style={[styles.ctas, slideUp(ctaAnim)]}>
+          <TouchableOpacity
+            style={styles.btnPrimary}
+            activeOpacity={0.85}
+            onPress={() => nav.navigate('CreateReservation')}
+          >
+            <AppIcon name="document-text-outline" size={18} color={Colors.white} />
+            <Text style={styles.btnPrimaryText}>Voir le bon de commande</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.btnSecondary}
+            activeOpacity={0.85}
+            onPress={() => nav.navigate('ClientTabs', { screen: 'MyReservations' })}
+          >
+            <Text style={styles.btnSecondaryText}>Voir mes réservations</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.btnGhost}
+            activeOpacity={0.75}
+            onPress={() => nav.navigate('CreateReservation')}
+          >
+            <Text style={styles.btnGhostText}>Nouvelle réservation</Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+      </ScrollView>
+    </View>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STYLES
+// ══════════════════════════════════════════════════════════════════════════════
+const BORDEAUX = Colors.bordeaux      ?? '#7B1F2E';
+const WHITE    = Colors.white         ?? '#FFFFFF';
+const BG       = Colors.background    ?? '#F7F5F3';
+const TEXT_P   = Colors.textPrimary   ?? '#1A1A1A';
+const TEXT_S   = Colors.textSecondary ?? '#6B7280';
+const BORDER   = Colors.border        ?? '#E5E7EB';
+
+const styles = StyleSheet.create({
+  root:     { flex: 1, backgroundColor: BG },
+  bgAccent: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 300,
+    backgroundColor: BORDEAUX,
+    borderBottomLeftRadius: 48, borderBottomRightRadius: 48,
+  },
+  scroll: { paddingTop: Platform.OS === 'ios' ? 60 : 44, paddingBottom: 48, paddingHorizontal: 20 },
+
+  header:   { alignItems: 'center', marginBottom: 20 },
+  title:    { fontSize: 26, fontWeight: '800', color: WHITE, marginTop: 20, letterSpacing: -0.5 },
+  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 8, textAlign: 'center', lineHeight: 20 },
+
+  refBadge: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl,
-    paddingHorizontal: Spacing.md, paddingBottom: Spacing.md,
-    backgroundColor: Colors.bordeaux,
-    borderBottomLeftRadius: Radius.xl, borderBottomRightRadius: Radius.xl,
+    backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10,
+    paddingHorizontal: 16, paddingVertical: 10, marginBottom: 16,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
   },
-  backBtn:     { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)' },
-  headerTitle: { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.white },
+  refLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
+  refValue: { flexShrink: 1, fontSize: 14, color: WHITE, fontWeight: '700', letterSpacing: 0.5, textAlign: 'right' },
 
-  // Référence
-  refCard: {
-    backgroundColor: Colors.surface, borderRadius: Radius.md,
-    borderWidth: 1, borderColor: Colors.border,
-    padding: Spacing.md, alignItems: 'center', marginBottom: Spacing.md, marginTop: Spacing.md,
-  },
-  refLabel:    { fontSize: Fonts.size.xs, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
-  refValue:    { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.bordeaux, marginVertical: 4 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: Radius.full, paddingHorizontal: Spacing.md, paddingVertical: 4 },
-  statusDot:   { width: 6, height: 6, borderRadius: 3 },
-  statusText:  { fontSize: Fonts.size.sm, fontWeight: '600' },
-
-  // Carte
   card: {
-    backgroundColor: Colors.surface, borderRadius: Radius.md,
-    borderWidth: 1, borderColor: Colors.border,
-    padding: Spacing.md, marginBottom: Spacing.md,
+    backgroundColor: WHITE, borderRadius: 18, padding: 20, marginBottom: 12,
+    shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3,
   },
-  cardTitle: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.md },
+  cardTitle:  { fontSize: 15, fontWeight: '700', color: TEXT_P, marginBottom: 16 },
+  routeBlock: { gap: 0 },
+  routeRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  routeDot:   { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
+  routeLine:  { width: 1, height: 14, backgroundColor: BORDER, marginLeft: 4, marginVertical: 3 },
+  routeTag:   { fontSize: 10, color: TEXT_S, textTransform: 'uppercase', letterSpacing: 0.5 },
+  routeAddr:  { fontSize: 14, fontWeight: '500', color: TEXT_P, marginTop: 2, lineHeight: 20 },
+  divider:    { height: 1, backgroundColor: '#F3F4F6', marginVertical: 16 },
 
-  // Trajet
-  routeBlock:     { gap: 0 },
-  routeRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
-  routeDot:       { width: 10, height: 10, borderRadius: 5, marginTop: 4, flexShrink: 0 },
-  routeTexts:     { flex: 1 },
-  routeLabel:     { fontSize: Fonts.size.xs, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 },
-  routeValue:     { fontSize: Fonts.size.sm, fontWeight: '500', color: Colors.textPrimary, marginTop: 1 },
-  routeConnector: { width: 1, height: 14, backgroundColor: Colors.border, marginLeft: 4, marginVertical: 3 },
-
-  // Info rows
-  infoRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm, marginBottom: Spacing.sm },
-  infoIcon:  { marginTop: 2 },
-  infoTexts: { flex: 1 },
-  infoLabel: { fontSize: Fonts.size.xs, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 },
-  infoValue: { fontSize: Fonts.size.sm, fontWeight: '500', color: Colors.textPrimary, marginTop: 1 },
-
-  // Chauffeur
-  driverRow:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  driverAvatar: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: Colors.overlayLight,
-    alignItems: 'center', justifyContent: 'center',
+  priceCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: BORDEAUX, borderRadius: 16, padding: 20, marginBottom: 12,
+    shadowColor: BORDEAUX, shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4,
   },
-  driverInfo:   { flex: 1 },
-  driverName:   { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
-  driverPhone:  { fontSize: Fonts.size.sm, color: Colors.textMuted, marginTop: 2 },
-  driverVehicle:{ fontSize: Fonts.size.xs, color: Colors.textMuted, marginTop: 2 },
+  priceLabel: { fontSize: 15, fontWeight: '600', color: WHITE },
+  priceNote:  { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 3, maxWidth: 180 },
+  priceValue: { fontSize: 32, fontWeight: '900', color: WHITE, letterSpacing: -1 },
 
-  // Paiement
-  paymentNote: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm,
-    backgroundColor: Colors.overlayLight, borderRadius: Radius.md,
-    padding: Spacing.md, marginBottom: Spacing.md,
+  nextCard: {
+    backgroundColor: '#FDF4F4', borderRadius: 16, padding: 18, marginBottom: 24,
+    borderWidth: 1, borderColor: '#F5DDE0',
   },
-  paymentText: { flex: 1, fontSize: Fonts.size.sm, color: Colors.bordeaux, lineHeight: 18 },
+  nextHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
+  nextTitle:  { fontSize: 13, fontWeight: '700', color: BORDEAUX },
 
-  // Annulation
-  cancelledNote: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm,
-    backgroundColor: '#FEF2F2', borderRadius: Radius.md,
-    padding: Spacing.md, marginBottom: Spacing.md,
-    borderWidth: 1, borderColor: '#FECACA',
-  },
-  cancelledTitle:  { fontSize: Fonts.size.sm, fontWeight: '700', color: '#EF4444' },
-  cancelledReason: { fontSize: Fonts.size.xs, color: '#B91C1C', marginTop: 2 },
-
-  // Footer
-  footer: {
-    padding: Spacing.md, paddingBottom: Platform.OS === 'ios' ? 32 : Spacing.md,
-    backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.border,
-  },
-  cancelBtn: {
-    height: 50, borderRadius: Radius.md,
-    borderWidth: 1.5, borderColor: '#EF4444',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  cancelBtnText: { color: '#EF4444', fontSize: Fonts.size.md, fontWeight: '700' },
-
+  ctas:           { gap: 10 },
   btnPrimary: {
-    paddingHorizontal: Spacing.xl, height: 48, borderRadius: Radius.md,
-    backgroundColor: Colors.bordeaux, alignItems: 'center', justifyContent: 'center',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: BORDEAUX, borderRadius: 14, height: 52,
+    shadowColor: BORDEAUX, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3,
   },
-  btnPrimaryText: { color: Colors.white, fontSize: Fonts.size.md, fontWeight: '700' },
+  btnPrimaryText:   { color: WHITE, fontSize: 15, fontWeight: '700' },
+  btnSecondary: {
+    alignItems: 'center', justifyContent: 'center', height: 52,
+    borderRadius: 14, borderWidth: 1.5, borderColor: BORDEAUX, backgroundColor: WHITE,
+  },
+  btnSecondaryText: { color: BORDEAUX, fontSize: 15, fontWeight: '700' },
+  btnGhost:         { alignItems: 'center', justifyContent: 'center', height: 44 },
+  btnGhostText:     { color: TEXT_S, fontSize: 14, fontWeight: '500', textDecorationLine: 'underline' },
+});
+
+const check = StyleSheet.create({
+  container: { width: 90, height: 90, alignItems: 'center', justifyContent: 'center' },
+  ring:      { position: 'absolute', width: 72, height: 72, borderRadius: 36, borderWidth: 2, borderColor: 'rgba(255,255,255,0.5)' },
+  circle: {
+    width: 72, height: 72, borderRadius: 36, backgroundColor: '#10B981',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#10B981', shadowOpacity: 0.5, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 6,
+  },
+});
+
+const row = StyleSheet.create({
+  container: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F9FAFB' },
+  iconWrap:  { width: 32, height: 32, borderRadius: 8, backgroundColor: '#FDF4F4', alignItems: 'center', justifyContent: 'center' },
+  texts:     { flex: 1 },
+  label:     { fontSize: 11, color: TEXT_S, textTransform: 'uppercase', letterSpacing: 0.4 },
+  value:     { fontSize: 14, fontWeight: '600', color: TEXT_P, marginTop: 1 },
+});
+
+const ns = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
+  dot: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(123,31,46,0.08)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  text: { flex: 1, fontSize: 13, color: TEXT_P, lineHeight: 19 },
 });

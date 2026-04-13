@@ -59,8 +59,30 @@ export type ClientTabParamList = {
   MyInvoices:          undefined;
 };
 
+/**
+ * Stack racine du client — enveloppe les tabs et expose les écrans
+ * qui ne font pas partie de la barre de navigation :
+ *   - Booking         : formulaire 3 étapes (BookingScreen)
+ *   - BookingConfirmation : page de succès après submitBooking()
+ *   - ReservationDetail   : détail / bon de commande d'une réservation
+ *
+ * ClientTabs est le point d'entrée (onglets) ; tous les push/replace
+ * depuis les sous-écrans atterrissent dans ce stack.
+ */
+export type ClientStackParamList = {
+  ClientTabs:           NavigatorScreenParams<ClientTabParamList>;
+  CreateReservation:              undefined;
+  ReservationDetails:  { reservationId: string };
+};
+
+export type DriverReservationsStackParamList = {
+  DriverReservationsList:  undefined;
+  DriverReservationDetail: { reservationId: string };
+};
+
 export type DriverDrawerParamList = {
   DriverHome:         undefined;
+  DriverReservations: NavigatorScreenParams<DriverReservationsStackParamList>;
   DriverTrips:        undefined;
   DriverDocuments:    undefined;
   DriverAvailability: undefined;
@@ -82,11 +104,18 @@ export type DriversStackParamList = {
   DriverDetail: { driverId: string };
 };
 
+// ── Stack interne Réservations (dans le Drawer Admin) ────────────
+export type ReservationsStackParamList = {
+  ReservationsList:     undefined;
+  AdminReservationDetail: { reservationId: string };
+};
+
 // ── Drawer Admin ─────────────────────────────────────────────────
 // AdminDrivers pointe vers le stack imbriqué DriversStackParamList
 export type AdminDrawerParamList = {
   AdminHome:      undefined;
   AdminDrivers:   NavigatorScreenParams<DriversStackParamList>;
+  AdminReservations: NavigatorScreenParams<ReservationsStackParamList>;
   AdminDocuments: undefined;
   AdminProfile:   undefined;
   AdminUsers:        undefined;

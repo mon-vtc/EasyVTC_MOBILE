@@ -1,8 +1,25 @@
-import React from 'react';
+// ══════════════════════════════════════════════════════════════════════════════
+// NAVIGATOR — Client
+// Architecture :
+//
+//   ClientNavigator  (Stack)
+//   ├── ClientTabs   (BottomTab)
+//   │   ├── ClientHome
+//   │   ├── MyReservations
+//   │   ├── CreateReservation   ← FAB central (redirige vers Booking)
+//   │   ├── Messages
+//   │   └── ClientProfile
+//   ├── Booking                 ← formulaire 3 étapes (push depuis FAB ou home)
+//   ├── BookingConfirmation     ← page succès (replace depuis Booking)
+//   └── ReservationDetail       ← détail / bon de commande
+// ══════════════════════════════════════════════════════════════════════════════
+
+import React                          from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons }                 from '@expo/vector-icons';
-import { Colors, Radius, Spacing }  from '../theme/colors';
+import { createBottomTabNavigator }   from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Ionicons }                   from '@expo/vector-icons';
+import { Colors, Radius, Spacing }    from '../theme/colors';
 
 import ClientHomeScreen           from '../screens/client/ClientHomeScreen';
 import MyReservationsScreen       from '../screens/client/MyReservationsScreen';
@@ -13,12 +30,16 @@ import MyOrdersScreen             from '../screens/client/MyOrdersScreen';
 import MyInvoicesScreen           from '../screens/client/MyInvoicesScreen';
 import BookingConfirmationScreen  from '../screens/client/BookingConfirmationScreen';
 import ReservationDetailsScreen   from '../screens/client/ReservationDetailsScreen';
-import type { ClientTabParamList }  from '../types/auth.types';
 
+import type { ClientTabParamList, ClientStackParamList } from '../types/auth.types';
 
-const Tab = createBottomTabNavigator<ClientTabParamList>();
+// ══════════════════════════════════════════════════════════════════════════════
+// NAVIGATORS
+// ══════════════════════════════════════════════════════════════════════════════
+const Tab   = createBottomTabNavigator<ClientTabParamList>();
+const Stack = createNativeStackNavigator<ClientStackParamList>();
 
-// ── Bouton FAB central ──────────────────────────────────────────
+// ── Bouton FAB central ──────────────────────────────────────────────────────
 function FABButton({ onPress }: { onPress: (e?: any) => void }) {
   return (
     <TouchableOpacity style={fabStyles.btn} onPress={onPress} activeOpacity={0.85}>
@@ -29,7 +50,8 @@ function FABButton({ onPress }: { onPress: (e?: any) => void }) {
 
 const fabStyles = StyleSheet.create({
   btn: {
-    width:           60, height: 60,
+    width:           60,
+    height:          60,
     borderRadius:    30,
     backgroundColor: Colors.bordeaux,
     alignItems:      'center',
@@ -43,25 +65,27 @@ const fabStyles = StyleSheet.create({
   },
 });
 
-// ── Navigator ───────────────────────────────────────────────────
-export default function ClientNavigator() {
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB NAVIGATOR (onglets)
+// ══════════════════════════════════════════════════════════════════════════════
+function ClientTabs() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarShowLabel: true,
+      screenOptions={{
+        headerShown:             false,
+        tabBarShowLabel:         true,
         tabBarActiveTintColor:   Colors.bordeauxDark,
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarStyle: {
-          backgroundColor:  Colors.surface,
-          borderTopWidth:   1,
-          borderTopColor:   Colors.border,
-          height:           Platform.OS === 'ios' ? 84 : 84,
-          paddingBottom:    Platform.OS === 'ios' ? 24 : 8,
-          paddingTop:       8,
+          backgroundColor: Colors.surface,
+          borderTopWidth:  1,
+          borderTopColor:  Colors.border,
+          height:          Platform.OS === 'ios' ? 84 : 84,
+          paddingBottom:   Platform.OS === 'ios' ? 24 : 8,
+          paddingTop:      8,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-      })}
+      }}
     >
       <Tab.Screen
         name="ClientHome"
@@ -73,6 +97,7 @@ export default function ClientNavigator() {
           ),
         }}
       />
+
       <Tab.Screen
         name="MyReservations"
         component={MyReservationsScreen}
@@ -84,16 +109,18 @@ export default function ClientNavigator() {
         }}
       />
 
-      {/* FAB central */}
+      {/*
+       * FAB central — CreateReservation n'est pas un vrai écran tab.
+       * Le bouton navigue vers le Stack "ReservationDetails" (hors tabs).
+       * Le composant CreateReservationScreen peut rester vide / redirect.
+       */}
       <Tab.Screen
         name="CreateReservation"
         component={CreateReservationScreen}
-        options={{
+        options={({ navigation }) => ({
           tabBarLabel: '',
-          tabBarButton: (props) => (
-            <FABButton onPress={props.onPress!} />
-          ),
-        }}
+          tabBarButton: () => <FABButton onPress={() => navigation.navigate('CreateReservation')} />,
+        })}
       />
 
       <Tab.Screen
@@ -106,6 +133,7 @@ export default function ClientNavigator() {
           ),
         }}
       />
+
       <Tab.Screen
         name="ClientProfile"
         component={ClientProfileScreen}
@@ -129,5 +157,43 @@ export default function ClientNavigator() {
         options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
       />
     </Tab.Navigator>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STACK NAVIGATOR (racine client)
+// ══════════════════════════════════════════════════════════════════════════════
+export default function ClientNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+
+      {/* Tabs — écran par défaut */}
+      <Stack.Screen
+        name="ClientTabs"
+        component={ClientTabs}
+      />
+
+      {/* Formulaire de réservation 3 étapes */}
+      <Stack.Screen
+        name="CreateReservation"
+        component={CreateReservationScreen}
+        options={{
+          animation:         'slide_from_bottom',
+          gestureEnabled:    true,
+          gestureDirection:  'vertical',
+        }}
+      />
+
+      {/* Page de succès — replace() depuis CreateReservationScreen empêche le retour */}
+      <Stack.Screen
+        name="ReservationDetails"
+        component={ReservationDetailsScreen} // Garde le même composant pour l'instant
+        options={{
+          animation:      'fade',
+          gestureEnabled: false,   // pas de swipe-back sur la confirmation
+        }}
+      />
+
+    </Stack.Navigator>
   );
 }

@@ -10,8 +10,8 @@ import { useAuthStore }   from '../../store/auth.store';
 import { reservationApi } from '../../services/api/reservation.api';
 import type { BottomTabScreenProps }  from '@react-navigation/bottom-tabs';
 import type { ClientTabParamList }    from '../../types/auth.types';
-import type { Reservation }           from '../../types/reservation.types';
-import { RESERVATION_STATUS_LABELS }  from '../../types/reservation.types';
+import type { Reservation }           from '../../types/reservations.types';
+import { RESERVATION_STATUS_LABELS }  from '../../types/reservations.types';
 
 type Props = BottomTabScreenProps<ClientTabParamList, 'BookingConfirmation'>;
 

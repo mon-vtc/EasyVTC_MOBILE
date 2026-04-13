@@ -12,6 +12,8 @@ import AdminDocumentsScreen from '../screens/admin/AdminDocumentsScreen';
 import AdminProfileScreen from '../screens/admin/AdminProfileScreen';
 import AdminDriversScreen from '../screens/admin/drivers/AdminDriversScreen';
 import AdminDriverDetailScreen from '../screens/admin/drivers/AdminDriverDetailScreen';
+import AdminReservationsScreen from '../screens/admin/AdminReservationsScreen';
+import AdminReservationScreen from '../screens/admin/AdminReservationScreen';
 import AdminPricingScreen from '../screens/admin/AdminPricingScreen';
 import AdminFlatRatesScreen from '../screens/admin/AdminFlatRatesScreen';
 import AdminOrdersScreen from '../screens/admin/AdminOrdersScreen';
@@ -21,9 +23,11 @@ import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import type {
   AdminDrawerParamList,
   DriversStackParamList,
+  ReservationsStackParamList,
 } from '../types/auth.types';
 
 const DriversStack = createNativeStackNavigator<DriversStackParamList>();
+const ReservationsStack = createNativeStackNavigator<ReservationsStackParamList>();
 
 // ── Stack pour la section Chauffeurs ────────────────────────────
 // Permet de naviguer de la liste vers le détail sans quitter le drawer
@@ -34,6 +38,16 @@ function AdminDriversStack() {
       <DriversStack.Screen name="DriversList"   component={AdminDriversScreen}      />
       <DriversStack.Screen name="DriverDetail"  component={AdminDriverDetailScreen} />
     </DriversStack.Navigator>
+  );
+}
+
+// ── Stack pour la section Réservations ──────────────────────────
+function AdminReservationsStack() {
+  return (
+    <ReservationsStack.Navigator screenOptions={{ headerShown: false }}>
+      <ReservationsStack.Screen name="ReservationsList" component={AdminReservationsScreen} />
+      <ReservationsStack.Screen name="AdminReservationDetail" component={AdminReservationScreen} />
+    </ReservationsStack.Navigator>
   );
 }
 
@@ -109,6 +123,15 @@ export default function AdminNavigator() {
         name="AdminHome"
         component={AdminHomeScreen}
         options={{ drawerLabel: () => <DrawerLabel icon="home-outline" label="Accueil" /> }}
+      />
+
+      <Drawer.Screen
+        name="AdminReservations"
+        component={AdminReservationsStack}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="car-outline" label="Réservations" />,
+          headerShown: false,
+        }}
       />
 
       <Drawer.Screen
