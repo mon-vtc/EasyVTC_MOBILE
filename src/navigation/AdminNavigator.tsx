@@ -14,6 +14,9 @@ import AdminDriversScreen from '../screens/admin/drivers/AdminDriversScreen';
 import AdminDriverDetailScreen from '../screens/admin/drivers/AdminDriverDetailScreen';
 import AdminPricingScreen from '../screens/admin/AdminPricingScreen';
 import AdminFlatRatesScreen from '../screens/admin/AdminFlatRatesScreen';
+import AdminOrdersScreen from '../screens/admin/AdminOrdersScreen';
+import AdminInvoicesScreen from '../screens/admin/AdminInvoicesScreen';
+import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 
 import type {
   AdminDrawerParamList,
@@ -119,10 +122,19 @@ export default function AdminNavigator() {
 
       <Drawer.Screen
         name="AdminDocuments"
-        component={AdminDocumentsStack} 
-        options={{ 
+        component={AdminDocumentsStack}
+        options={{
           drawerLabel: () => <DrawerLabel icon="document-text-outline" label="Documents" />,
-          headerShown: false, 
+          headerShown: false,
+        }}
+      />
+
+      <Drawer.Screen
+        name="AdminUsers"
+        component={AdminUsersScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="people-outline" label="Utilisateurs" />,
+          title: 'Gestion des utilisateurs',
         }}
       />
 
@@ -142,6 +154,18 @@ export default function AdminNavigator() {
           drawerItemStyle: { display: 'none' }, // Masqué de la liste principale
           headerShown: false,
         }}
+      />
+
+      <Drawer.Screen
+        name="AdminOrders"
+        component={AdminOrdersScreen}
+        options={{ drawerLabel: () => <DrawerLabel icon="document-text-outline" label="Bons de commande" /> }}
+      />
+
+      <Drawer.Screen
+        name="AdminInvoices"
+        component={AdminInvoicesScreen}
+        options={{ drawerLabel: () => <DrawerLabel icon="receipt-outline" label="Factures" /> }}
       />
 
       <Drawer.Screen

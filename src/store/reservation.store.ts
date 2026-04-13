@@ -16,7 +16,7 @@ import type {
   VehicleType,
   VehicleTypeOption,
 } from '../types/reservation.types';
-import { BOOKING_INITIAL_STATE } from '../types/reservation.types';
+import { BOOKING_INITIAL_STATE, VEHICLE_TYPE_OPTIONS } from '../types/reservation.types';
 
 interface ReservationState {
   // ── Liste ──────────────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   totalPages:      1,
   selected:        null,
   activeRide:      null,
-  vehicleTypes:    [],
+  vehicleTypes:    VEHICLE_TYPE_OPTIONS,
   booking:         { ...BOOKING_INITIAL_STATE },
   isLoading:       false,
   isSubmitting:    false,
@@ -215,16 +215,9 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     }
   },
 
-  // ── Types de véhicule ──────────────────────────────────────────────────────
-  fetchVehicleTypes: async (token, country) => {
-    set({ isLoading: true, error: null });
-    try {
-      const res = await reservationApi.getVehicleTypes(token, country);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur chargement véhicules');
-      set({ vehicleTypes: res.data, isLoading: false });
-    } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
-    }
+  // ── Types de véhicule (catalogue statique — pas d'endpoint backend) ──────────
+  fetchVehicleTypes: async (_token, _country) => {
+    // Les types sont pré-chargés depuis VEHICLE_TYPE_OPTIONS, aucun appel réseau
   },
 
   // ── Formulaire multi-étapes ────────────────────────────────────────────────
@@ -251,19 +244,37 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     try {
       const scheduledAt = new Date(`${booking.date}T${booking.time}:00`).toISOString();
 
+      // distance_km / duration_min : utiliser les valeurs calculées par l'estimation,
+      // ou recalculer à la volée via Haversine si l'estimation n'a pas été appelée.
+      let distance_km  = booking.distance_km  ?? undefined;
+      let duration_min = booking.duration_min ?? undefined;
+
+      if (distance_km === undefined || duration_min === undefined) {
+        const R    = 6371;
+        const dLat = ((booking.destination.latitude  - booking.origin.latitude)  * Math.PI) / 180;
+        const dLon = ((booking.destination.longitude - booking.origin.longitude) * Math.PI) / 180;
+        const a    = Math.sin(dLat / 2) ** 2
+          + Math.cos(booking.origin.latitude  * Math.PI / 180)
+          * Math.cos(booking.destination.latitude * Math.PI / 180)
+          * Math.sin(dLon / 2) ** 2;
+        distance_km  = Math.max(0.1, Math.round(6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10);
+        duration_min = Math.max(1, Math.round(distance_km * 1.8));
+      }
+
       const dto: CreateReservationDto = {
-        country:             country as any,
-        origin_address:      booking.origin.address,
-        origin_lat:          booking.origin.latitude,
-        origin_lng:          booking.origin.longitude,
-        destination_address: booking.destination.address,
-        destination_lat:     booking.destination.latitude,
-        destination_lng:     booking.destination.longitude,
-        scheduled_at:        scheduledAt,
-        passengers:          booking.passengers,
-        luggage:             booking.luggage,
-        vehicle_type:        booking.vehicle_type,
-        comment:             booking.comment || undefined,
+        country:        country as any,
+        pickup_address: booking.origin.address,
+        pickup_lat:     booking.origin.latitude,
+        pickup_lng:     booking.origin.longitude,
+        dest_address:   booking.destination.address,
+        dest_lat:       booking.destination.latitude,
+        dest_lng:       booking.destination.longitude,
+        vehicle_type:   booking.vehicle_type,
+        scheduled_at:   scheduledAt,
+        distance_km,
+        duration_min,
+        flat_rate_id:   booking.flat_rate_id ?? undefined,
+        comment:        booking.comment || undefined,
       };
 
       const res = await reservationApi.create(token, dto);

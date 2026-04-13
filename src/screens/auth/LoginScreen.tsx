@@ -10,10 +10,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient }              from 'expo-linear-gradient';
 import { Ionicons }                    from '@expo/vector-icons'; // Pour la checkbox et Google
 
-import { FormField }   from '../../components/forms/FormField';
-import { AppButton }   from '../../components/common/AppButton';
+import { FormField }      from '../../components/forms/FormField';
+import { AppButton }      from '../../components/common/AppButton';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
-import { useAuth }     from '../../hooks/useAuth';
+import { useAuth }        from '../../hooks/useAuth';
+import { useGoogleAuth }  from '../../hooks/useGoogleAuth';
 import type { AuthStackParamList } from '../../types/auth.types';
 import { Logo } from '../../constants/logo';
 
@@ -28,6 +29,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 export default function LoginScreen({ navigation }: Props) {
   const [rememberMe, setRememberMe] = useState(false);
   const { login, isLoading, error, clearError } = useAuth();
+  const { signInWithGoogle, isLoading: googleLoading, error: googleError, clearError: clearGoogleError } = useGoogleAuth();
   
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({ 
     resolver: zodResolver(schema) 
@@ -35,6 +37,7 @@ export default function LoginScreen({ navigation }: Props) {
 
   const onSubmit = async (data: FormData) => {
     clearError();
+    clearGoogleError();
     try {
       await login({
         email: data.email.trim().toLowerCase(),
@@ -42,6 +45,13 @@ export default function LoginScreen({ navigation }: Props) {
       });
     } catch (_) {}
   };
+
+  const handleGooglePress = () => {
+    clearError();
+    signInWithGoogle();
+  };
+
+  const anyLoading = isLoading || googleLoading;
 
   return (
     <LinearGradient 
@@ -73,9 +83,9 @@ export default function LoginScreen({ navigation }: Props) {
             />
 
             <View style={styles.cardContent}>
-              {error && (
+              {(error || googleError) && (
                 <View style={styles.errorBanner}>
-                  <Text style={styles.errorText}>⚠️ {error}</Text>
+                  <Text style={styles.errorText}>⚠️ {error ?? googleError}</Text>
                 </View>
               )}
 
@@ -85,7 +95,7 @@ export default function LoginScreen({ navigation }: Props) {
                 label="Email *"
                 placeholder="votre@email.com"
                 keyboardType="email-address"
-                editable={!isLoading}
+                editable={!anyLoading}
                 error={errors.email?.message}
                 icon="mail-outline"
               />
@@ -97,7 +107,7 @@ export default function LoginScreen({ navigation }: Props) {
                 placeholder="••••••••"
                 secureTextEntry
                 showToggle
-                editable={!isLoading}
+                editable={!anyLoading}
                 error={errors.password?.message}
                 icon="lock-closed-outline"
               />
@@ -124,7 +134,7 @@ export default function LoginScreen({ navigation }: Props) {
                 label={isLoading ? 'Connexion...' : 'Se connecter'}
                 onPress={handleSubmit(onSubmit)}
                 size="lg"
-                disabled={isLoading}
+                disabled={anyLoading}
                 style={styles.button}
               />
 
@@ -134,12 +144,19 @@ export default function LoginScreen({ navigation }: Props) {
                 <View style={styles.line} />
               </View>
 
-              <TouchableOpacity style={styles.googleButton} >
-                <Image 
-                  source={Logo.LogoGoogle} 
-                  style={styles.googleIcon} 
-                />
-                <Text style={styles.googleText}>Continuer avec Google</Text>
+              <TouchableOpacity
+                style={[styles.googleButton, anyLoading && { opacity: 0.6 }]}
+                onPress={handleGooglePress}
+                disabled={anyLoading}
+              >
+                {googleLoading ? (
+                  <Text style={styles.googleText}>Connexion Google...</Text>
+                ) : (
+                  <>
+                    <Image source={Logo.LogoGoogle} style={styles.googleIcon} />
+                    <Text style={styles.googleText}>Continuer avec Google</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
             <View style={styles.registration}>
@@ -147,11 +164,11 @@ export default function LoginScreen({ navigation }: Props) {
 
               <View style={styles.registrationRow}>
                 <Text style={styles.loginText}> Créer un compte  </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('RegisterClient')} disabled={isLoading}>
+                <TouchableOpacity onPress={() => navigation.navigate('RegisterClient')} disabled={anyLoading}>
                   <Text style={styles.loginBold}>Client</Text>
                 </TouchableOpacity>
                 <Text style={styles.registrationText}> ou </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('RegisterDriver')} disabled={isLoading}>
+                <TouchableOpacity onPress={() => navigation.navigate('RegisterDriver')} disabled={anyLoading}>
                   <Text style={styles.loginBold}>Chauffeur</Text>
                 </TouchableOpacity>
               </View>

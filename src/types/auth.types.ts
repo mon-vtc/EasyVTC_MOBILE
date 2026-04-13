@@ -46,11 +46,17 @@ export type AuthStackParamList = {
 };
 
 export type ClientTabParamList = {
-  ClientHome:        undefined;
-  MyReservations:    undefined;
-  CreateReservation: undefined;
-  Messages:          undefined;
-  ClientProfile:     undefined;
+  ClientHome:          undefined;
+  MyReservations:      undefined;
+  CreateReservation:   undefined;
+  Messages:            undefined;
+  ClientProfile:       undefined;
+  // Écrans hors tab bar — navigables via navigation.navigate()
+  BookingConfirmation: { reservationId: string };
+  ReservationDetails:  { reservationId: string };
+  // S4 — Documents financiers
+  MyOrders:            undefined;
+  MyInvoices:          undefined;
 };
 
 export type DriverDrawerParamList = {
@@ -59,6 +65,9 @@ export type DriverDrawerParamList = {
   DriverDocuments:    undefined;
   DriverAvailability: undefined;
   DriverProfile:      undefined;
+  // S4 — Documents financiers
+  DriverOrders:       undefined;
+  DriverInvoices:     undefined;
 };
 
 export type ManagerDrawerParamList = {
@@ -85,4 +94,7 @@ export type AdminDrawerParamList = {
   AdminReviews:      undefined;
   BaseGrid:          undefined;
   FlatRates:         undefined;
+  // S4 — Documents financiers
+  AdminOrders:       undefined;
+  AdminInvoices:     undefined;
 };

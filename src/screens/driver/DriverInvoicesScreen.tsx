@@ -1,0 +1,175 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// SCREEN — Mes factures (Chauffeur)
+// Sprint 4 — EazyVTC
+// ══════════════════════════════════════════════════════════════════════════════
+
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  View, Text, FlatList, TouchableOpacity,
+  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl,
+} from 'react-native';
+import { Ionicons }         from '@expo/vector-icons';
+import { useInvoicesStore } from '../../store/invoices.store';
+import { useAuthStore }     from '../../store/auth.store';
+import { invoicesApi }      from '../../services/api/invoices.api';
+import type { Invoice }     from '../../types/invoices.types';
+import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+function fmtAmount(n: number) {
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function InvoiceCard({ invoice, token }: { invoice: Invoice; token: string }) {
+  const [opening, setOpening] = useState(false);
+  const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
+  const snap = invoice.trip_snapshot;
+
+  const openPdf = async () => {
+    if (!invoice.pdf_url) { Alert.alert('PDF non disponible'); return; }
+    setOpening(true);
+    try {
+      await Linking.openURL(`${invoicesApi.getPdfUrl(token, invoice.id)}?token=${encodeURIComponent(token)}`);
+    } catch { Alert.alert('Erreur', 'Impossible d\'ouvrir la facture.'); }
+    finally { setOpening(false); }
+  };
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.row}>
+        <Text style={styles.invNum}>{invoice.invoice_number}</Text>
+        <Text style={styles.dateText}>Émise le {fmtDate(invoice.issued_at)}</Text>
+      </View>
+
+      <View style={styles.tripRow}>
+        <Ionicons name="navigate-outline" size={14} color={Colors.bordeaux} />
+        <Text style={styles.tripText} numberOfLines={1}>
+          {snap.pickup_address.split(',')[0]} → {snap.dest_address.split(',')[0]}
+        </Text>
+      </View>
+
+      <View style={styles.amountsBox}>
+        {invoice.tva_rate > 0 && (
+          <>
+            <View style={styles.amtRow}>
+              <Text style={styles.amtLabel}>HT</Text>
+              <Text style={styles.amtValue}>{fmtAmount(invoice.amount_ht)} {currency}</Text>
+            </View>
+            <View style={styles.amtRow}>
+              <Text style={styles.amtLabel}>TVA {invoice.tva_rate}%</Text>
+              <Text style={styles.amtValue}>
+                {fmtAmount(Math.round((invoice.amount_ttc - invoice.amount_ht) * 100) / 100)} {currency}
+              </Text>
+            </View>
+          </>
+        )}
+        <View style={[styles.amtRow, styles.ttcRow]}>
+          <Text style={styles.ttcLabel}>TTC</Text>
+          <Text style={styles.ttcValue}>{fmtAmount(invoice.amount_ttc)} {currency}</Text>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.pdfBtn, !invoice.pdf_url && styles.pdfBtnOff]}
+        onPress={openPdf}
+        disabled={opening || !invoice.pdf_url}
+      >
+        {opening
+          ? <ActivityIndicator size="small" color={Colors.white} />
+          : <Ionicons name="receipt-outline" size={15} color={Colors.white} />
+        }
+        <Text style={styles.pdfBtnText}>{opening ? 'Ouverture…' : 'Facture PDF'}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+export default function DriverInvoicesScreen() {
+  const { invoices, total, isLoading, error, fetch, clearError } = useInvoicesStore();
+  const token = useAuthStore((s) => s.accessToken) ?? '';
+
+  const load = useCallback(async () => {
+    try { await fetch(token); } catch { /* handled */ }
+  }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (error) { Alert.alert('Erreur', error); clearError(); } }, [error]);
+
+  if (isLoading && invoices.length === 0) {
+    return <View style={styles.centered}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>;
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Mes factures</Text>
+        <Text style={styles.headerCount}>{total} facture{total > 1 ? 's' : ''}</Text>
+      </View>
+
+      <FlatList
+        data={invoices}
+        keyExtractor={(i) => i.id}
+        renderItem={({ item }) => <InvoiceCard invoice={item} token={token} />}
+        contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Ionicons name="receipt-outline" size={48} color={Colors.textMuted} />
+            <Text style={styles.emptyTitle}>Aucune facture</Text>
+            <Text style={styles.emptySubtitle}>
+              Les factures sont générées automatiquement à la clôture de chaque course.
+            </Text>
+          </View>
+        }
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container:  { flex: 1, backgroundColor: Colors.background },
+  centered:   { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
+  header: {
+    backgroundColor: Colors.bordeaux,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.md,
+  },
+  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white },
+  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2 },
+  list:        { padding: Spacing.md, gap: Spacing.md },
+  card: {
+    backgroundColor: Colors.surface, borderRadius: Radius.md,
+    padding: Spacing.md, borderWidth: 1, borderColor: Colors.border,
+    shadowColor: Colors.black, shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
+  },
+  row:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: Spacing.xs },
+  invNum:   { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeaux },
+  dateText: { fontSize: Fonts.size.xs, color: Colors.textMuted },
+  tripRow:  { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.sm },
+  tripText: { flex: 1, fontSize: Fonts.size.sm, color: Colors.textPrimary },
+  amountsBox: {
+    backgroundColor: Colors.beigeLight, borderRadius: Radius.sm,
+    padding: Spacing.sm, gap: 4,
+  },
+  amtRow:   { flexDirection: 'row', justifyContent: 'space-between' },
+  amtLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
+  amtValue: { fontSize: Fonts.size.sm, color: Colors.textPrimary },
+  ttcRow:   { borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 4, marginTop: 4 },
+  ttcLabel: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary },
+  ttcValue: { fontSize: Fonts.size.md, fontWeight: '800', color: Colors.bordeaux },
+  pdfBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, marginTop: Spacing.md, backgroundColor: Colors.bordeaux,
+    paddingVertical: 9, borderRadius: Radius.sm,
+  },
+  pdfBtnOff:  { backgroundColor: Colors.textMuted },
+  pdfBtnText: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.white },
+  empty:      { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
+  emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },
+  emptySubtitle: { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: Spacing.lg },
+});

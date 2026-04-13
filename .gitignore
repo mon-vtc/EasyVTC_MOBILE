@@ -42,3 +42,4 @@ yarn-error.*
 /ios
 /android
 node_modules
+CLAUDE.md

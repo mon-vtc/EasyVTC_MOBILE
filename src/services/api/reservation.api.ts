@@ -12,6 +12,7 @@ import type {
   CreateReservationDto,
   VehicleTypeOption,
 } from '../../types/reservation.types';
+import { VEHICLE_TYPE_OPTIONS } from '../../types/reservation.types';
 
 export const reservationApi = {
 
@@ -120,56 +121,8 @@ export const reservationApi = {
   // UTILITAIRES
   // ══════════════════════════════════════════════════════════════════════════
 
-  /** GET /vehicle-types — Types de véhicule disponibles avec tarifs */
-//   getVehicleTypes: (
-//     token:    string,
-//     country?: string,
-//   ): Promise<ApiResponse<VehicleTypeOption[]>> => {
-//     const qs = country ? `?country=${country}` : '';
-//     return 
-//     // api.get(`/vehicle-types${qs}`, token);
-//   },
-
-
-    getVehicleTypes: async (
-    token: string,
-    country?: string,
-  ): Promise<ApiResponse<VehicleTypeOption[]>> => {
-    // Simulation d'un délai réseau
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const mockData: VehicleTypeOption[] = [
-      {
-        type: 'ECONOMY', // Assumé selon votre type VehicleType
-        label: 'Économique',
-        description: '1-3 passagers • Compacte',
-        base_price: 12.50,
-        icon: 'car-outline',
-        capacity: 3
-      },
-      {
-        type: 'COMFORT',
-        label: 'Confort',
-        description: '1-4 passagers • Berline',
-        base_price: 18.00,
-        icon: 'star-outline',
-        capacity: 4
-      },
-      {
-        type: 'VAN',
-        label: 'Van',
-        description: '1-7 passagers • Familial',
-        base_price: 35.00,
-        icon: 'bus-outline',
-        capacity: 7
-      }
-    ];
-
-    return {
-      ok: true,
-      data: mockData,
-      message: "Success"
-    };
-  },
+  /** Types de véhicule — catalogue statique (pas d'endpoint backend dédié) */
+  getVehicleTypes: (_token: string, _country?: string): Promise<ApiResponse<VehicleTypeOption[]>> =>
+    Promise.resolve({ ok: true, data: VEHICLE_TYPE_OPTIONS }),
 
 };

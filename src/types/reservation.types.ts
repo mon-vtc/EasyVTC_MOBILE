@@ -32,17 +32,45 @@ export const RESERVATION_STATUS_COLORS: Record<ReservationStatus, string> = {
   cancelled:      '#EF4444',
 };
 
-// ── Types de véhicule (dynamiques depuis l'API) ───────────────────────────────
-export type VehicleType = 'berline' | 'van' | 'premium' | string;
+// ── Types de véhicule ─────────────────────────────────────────────────────────
+export type VehicleType = 'standard' | 'berline' | 'van';
 
 export interface VehicleTypeOption {
   type:         VehicleType;
   label:        string;
-  description:  string;       // ex: "1-3 passagers"
+  description:  string;
   base_price:   number;
   icon:         string;       // nom Ionicons
   capacity:     number;
 }
+
+// Catalogue statique — aligné avec le backend (pas d'endpoint dédié)
+export const VEHICLE_TYPE_OPTIONS: VehicleTypeOption[] = [
+  {
+    type:        'standard',
+    label:       'Standard',
+    description: '1-3 passagers · Compacte',
+    base_price:  12.50,
+    icon:        'car-outline',
+    capacity:    3,
+  },
+  {
+    type:        'berline',
+    label:       'Berline',
+    description: '1-4 passagers · Confort',
+    base_price:  18.00,
+    icon:        'car-sport-outline',
+    capacity:    4,
+  },
+  {
+    type:        'van',
+    label:       'Van',
+    description: '1-7 passagers · Familial',
+    base_price:  35.00,
+    icon:        'bus-outline',
+    capacity:    7,
+  },
+];
 
 // ── Coordonnées géographiques ─────────────────────────────────────────────────
 export interface GeoPoint {
@@ -124,23 +152,28 @@ export interface Reservation {
   } | null;
 }
 
-// ── DTO création ──────────────────────────────────────────────────────────────
+// ── DTO création (champs alignés sur le validator backend) ────────────────────
 export interface CreateReservationDto {
-  country:             PricingCountry;
+  country:        PricingCountry;
 
-  origin_address:      string;
-  origin_lat:          number;
-  origin_lng:          number;
-  destination_address: string;
-  destination_lat:     number;
-  destination_lng:     number;
+  // Champs attendus par le backend (pickup_* / dest_*)
+  pickup_address: string;
+  pickup_lat?:    number;
+  pickup_lng?:    number;
 
-  scheduled_at:        string;   // ISO 8601
-  passengers:          number;
-  luggage:             number;
-  vehicle_type:        VehicleType;
-  flat_rate_id?:       string;
-  comment?:            string;
+  dest_address:   string;
+  dest_lat?:      number;
+  dest_lng?:      number;
+
+  vehicle_type:   VehicleType;
+  scheduled_at:   string;        // ISO 8601 — doit être dans le futur
+
+  // Tarification : l'un ou l'autre obligatoire côté backend
+  distance_km?:   number;
+  duration_min?:  number;
+  flat_rate_id?:  string;
+
+  comment?:       string;
 }
 
 // ── Filtres liste ─────────────────────────────────────────────────────────────
@@ -175,10 +208,11 @@ export interface BookingFormState {
   passengers:   number;
   luggage:      number;
 
-  // Étape 3 (calculé)
+  // Étape 3 (calculé ou sélectionné)
   estimated_price: number | null;
   distance_km:     number | null;
   duration_min:    number | null;
+  flat_rate_id:    string | null;
   comment:         string;
 
   // Navigation
@@ -196,6 +230,7 @@ export const BOOKING_INITIAL_STATE: BookingFormState = {
   estimated_price: null,
   distance_km:     null,
   duration_min:    null,
+  flat_rate_id:    null,
   comment:         '',
   step:            1,
 };

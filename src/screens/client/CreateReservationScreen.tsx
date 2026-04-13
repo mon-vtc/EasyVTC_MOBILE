@@ -21,9 +21,9 @@ import type { GeoPoint, VehicleTypeOption } from '../../types/reservation.types'
 // VEHICLE ICONS MAP
 // ══════════════════════════════════════════════════════════════════════════════
 const VEHICLE_ICONS: Record<string, string> = {
-  berline: 'car-outline',
-  van:     'bus-outline',
-  premium: 'car-sport-outline',
+  standard: 'car-outline',
+  berline:  'car-sport-outline',
+  van:      'bus-outline',
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -69,14 +69,18 @@ function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // ÉTAPE 1 — Lieu / Destination / Véhicule
 // ══════════════════════════════════════════════════════════════════════════════
+type GeoState = 'idle' | 'loading' | 'ok' | 'error';
+
 function Step1({
   booking, vehicleTypes, isFetchingPrice,
   setOrigin, setDestination, setVehicleType,
   getCurrentLocation, geocodeAddress,
 }: any) {
-  const [originInput, setOriginInput]           = useState(booking.origin?.address ?? '');
+  const [originInput,      setOriginInput]      = useState(booking.origin?.address ?? '');
   const [destinationInput, setDestinationInput] = useState(booking.destination?.address ?? '');
-  const [isGeolocating, setIsGeolocating]       = useState(false);
+  const [isGeolocating,    setIsGeolocating]    = useState(false);
+  const [originGeo,        setOriginGeo]        = useState<GeoState>(booking.origin ? 'ok' : 'idle');
+  const [destGeo,          setDestGeo]          = useState<GeoState>(booking.destination ? 'ok' : 'idle');
 
   const handleGeolocate = async () => {
     setIsGeolocating(true);
@@ -84,39 +88,79 @@ function Step1({
     if (point) {
       setOriginInput(point.address);
       setOrigin(point);
+      setOriginGeo('ok');
     } else {
-      Alert.alert('Géolocalisation', 'Impossible d\'obtenir votre position.');
+      Alert.alert('Géolocalisation', 'Impossible d\'obtenir votre position. Saisissez l\'adresse manuellement.');
     }
     setIsGeolocating(false);
   };
 
   const handleOriginBlur = async () => {
-    if (!originInput.trim()) return;
-    const point = await geocodeAddress(originInput.trim());
-    if (point) setOrigin({ ...point, address: originInput.trim() });
+    const text = originInput.trim();
+    if (!text) return;
+    setOriginGeo('loading');
+    const point = await geocodeAddress(text);
+    if (point) {
+      setOrigin({ ...point, address: text });
+      setOriginGeo('ok');
+    } else {
+      setOriginGeo('error');
+      Alert.alert(
+        'Adresse introuvable',
+        `"${text}" n'a pas été localisée. Essayez une adresse plus précise (ex : rue + ville + pays).`,
+      );
+    }
   };
 
   const handleDestinationBlur = async () => {
-    if (!destinationInput.trim()) return;
-    const point = await geocodeAddress(destinationInput.trim());
-    if (point) setDestination({ ...point, address: destinationInput.trim() });
+    const text = destinationInput.trim();
+    if (!text) return;
+    setDestGeo('loading');
+    const point = await geocodeAddress(text);
+    if (point) {
+      setDestination({ ...point, address: text });
+      setDestGeo('ok');
+    } else {
+      setDestGeo('error');
+      Alert.alert(
+        'Adresse introuvable',
+        `"${text}" n'a pas été localisée. Essayez une adresse plus précise (ex : rue + ville + pays).`,
+      );
+    }
   };
+
+  // Petit helper pour l'icône d'état à droite du champ adresse
+  function GeoStatusIcon({ state }: { state: GeoState }) {
+    if (state === 'loading') return <ActivityIndicator size="small" color={Colors.bordeaux} />;
+    if (state === 'ok')      return <AppIcon name="checkmark-circle" size={18} color="#10B981" />;
+    if (state === 'error')   return <AppIcon name="alert-circle-outline" size={18} color="#EF4444" />;
+    return null;
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.stepContent} keyboardShouldPersistTaps="handled">
       {/* Lieu de départ */}
       <Text style={styles.fieldLabel}>Lieu de départ</Text>
-      <View style={styles.inputRow}>
-        <AppIcon name="location-outline" size={18} color={Colors.textSecondary}/>
+      <View style={[
+        styles.inputRow,
+        originGeo === 'ok'    && styles.inputRowOk,
+        originGeo === 'error' && styles.inputRowError,
+      ]}>
+        <AppIcon name="location-outline" size={18} color={Colors.textSecondary} />
         <TextInput
           style={styles.inputField}
           value={originInput}
-          onChangeText={setOriginInput}
+          onChangeText={(t) => { setOriginInput(t); setOriginGeo('idle'); }}
           onBlur={handleOriginBlur}
-          placeholder="Léona, Dakar, 00221, Sénégal"
+          onSubmitEditing={handleOriginBlur}
+          placeholder="Ex : 12 rue de Rivoli, Paris, France"
           placeholderTextColor={Colors.textSecondary}
           returnKeyType="next"
+          blurOnSubmit={false}
         />
+        <View style={styles.geoBtn}>
+          <GeoStatusIcon state={originGeo} />
+        </View>
         <TouchableOpacity onPress={handleGeolocate} style={styles.geoBtn} disabled={isGeolocating}>
           {isGeolocating
             ? <ActivityIndicator size="small" color={Colors.bordeaux} />
@@ -124,27 +168,41 @@ function Step1({
           }
         </TouchableOpacity>
       </View>
-      {booking.origin && (
-        <Text style={styles.geoHint}>
-          <AppIcon name="checkmark-circle" size={12} color="#10B981" /> Position détectée — Vous pouvez la modifier
-        </Text>
+      {originGeo === 'ok' && (
+        <Text style={styles.geoHint}>Adresse localisée — vous pouvez la modifier</Text>
+      )}
+      {originGeo === 'error' && (
+        <Text style={[styles.geoHint, styles.geoHintError]}>Adresse introuvable — essayez une formulation plus précise</Text>
       )}
 
       {/* Destination */}
       <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Destination</Text>
-      <View style={styles.inputRow}>
-         {/* style={styles.inputIcon} */}
+      <View style={[
+        styles.inputRow,
+        destGeo === 'ok'    && styles.inputRowOk,
+        destGeo === 'error' && styles.inputRowError,
+      ]}>
         <AppIcon name="search-outline" size={18} color={Colors.textSecondary} />
         <TextInput
           style={styles.inputField}
           value={destinationInput}
-          onChangeText={setDestinationInput}
+          onChangeText={(t) => { setDestinationInput(t); setDestGeo('idle'); }}
           onBlur={handleDestinationBlur}
-          placeholder="Entrez l'adresse d'arrivée"
+          onSubmitEditing={handleDestinationBlur}
+          placeholder="Ex : Aéroport CDG, Roissy, France"
           placeholderTextColor={Colors.textSecondary}
           returnKeyType="done"
         />
+        <View style={styles.geoBtn}>
+          <GeoStatusIcon state={destGeo} />
+        </View>
       </View>
+      {destGeo === 'ok' && (
+        <Text style={styles.geoHint}>Adresse localisée — vous pouvez la modifier</Text>
+      )}
+      {destGeo === 'error' && (
+        <Text style={[styles.geoHint, styles.geoHintError]}>Adresse introuvable — essayez une formulation plus précise</Text>
+      )}
 
       {/* Type de véhicule */}
       <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Type de véhicule</Text>
@@ -561,12 +619,15 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   geoBtn: { padding: 4 },
+  inputRowOk:    { borderColor: '#10B981' },
+  inputRowError: { borderColor: '#EF4444' },
   geoHint: {
     fontSize: 12,
     color: '#10B981',
-    marginTop: 5,
+    marginTop: 4,
     marginLeft: 4,
   },
+  geoHintError: { color: '#EF4444' },
 
   // ── Date picker ─────────────────────────────────────────────────────────────
   datePickerBtn: {

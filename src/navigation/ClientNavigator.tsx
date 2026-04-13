@@ -4,11 +4,15 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons }                 from '@expo/vector-icons';
 import { Colors, Radius, Spacing }  from '../theme/colors';
 
-import ClientHomeScreen        from '../screens/client/ClientHomeScreen';
-import MyReservationsScreen    from '../screens/client/MyReservationsScreen';
-import CreateReservationScreen from '../screens/client/CreateReservationScreen';
-import MessagesScreen          from '../screens/client/MessagesScreen';
-import ClientProfileScreen     from '../screens/client/ClientProfileScreen';
+import ClientHomeScreen           from '../screens/client/ClientHomeScreen';
+import MyReservationsScreen       from '../screens/client/MyReservationsScreen';
+import CreateReservationScreen    from '../screens/client/CreateReservationScreen';
+import MessagesScreen             from '../screens/client/MessagesScreen';
+import ClientProfileScreen        from '../screens/client/ClientProfileScreen';
+import MyOrdersScreen             from '../screens/client/MyOrdersScreen';
+import MyInvoicesScreen           from '../screens/client/MyInvoicesScreen';
+import BookingConfirmationScreen  from '../screens/client/BookingConfirmationScreen';
+import ReservationDetailsScreen   from '../screens/client/ReservationDetailsScreen';
 import type { ClientTabParamList }  from '../types/auth.types';
 
 
@@ -111,6 +115,18 @@ export default function ClientNavigator() {
             <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
+      />
+
+      {/* S4 — Écrans cachés de la tab bar, accessibles via navigation.navigate() */}
+      <Tab.Screen
+        name="MyOrders"
+        component={MyOrdersScreen}
+        options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
+      />
+      <Tab.Screen
+        name="MyInvoices"
+        component={MyInvoicesScreen}
+        options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
       />
     </Tab.Navigator>
   );

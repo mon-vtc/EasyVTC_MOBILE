@@ -10,10 +10,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient }              from 'expo-linear-gradient';
 import { Ionicons }                    from '@expo/vector-icons';
 
-import { FormField }   from '../../components/forms/FormField';
-import { AppButton }   from '../../components/common/AppButton';
+import { FormField }     from '../../components/forms/FormField';
+import { AppButton }     from '../../components/common/AppButton';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
-import { useAuth }     from '../../hooks/useAuth';
+import { useAuth }       from '../../hooks/useAuth';
+import { useGoogleAuth } from '../../hooks/useGoogleAuth';
 import type { AuthStackParamList } from '../../types/auth.types';
 import { Logo } from '../../constants/logo';
 
@@ -71,6 +72,8 @@ const strengthStyles = StyleSheet.create({
 export default function RegisterDriverScreen({ navigation }: Props) {
   const [cguAccepted, setCguAccepted] = useState(false);
   const { register, isLoading, error, clearError } = useAuth();
+  const { signInWithGoogle, isLoading: googleLoading, error: googleError, clearError: clearGoogleError } = useGoogleAuth();
+  const anyLoading = isLoading || googleLoading;
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -135,9 +138,9 @@ export default function RegisterDriverScreen({ navigation }: Props) {
 
             <View style={styles.cardContent}>
 
-              {error && (
+              {(error || googleError) && (
                 <View style={styles.errorBanner}>
-                  <Text style={styles.errorText}>⚠️ {error}</Text>
+                  <Text style={styles.errorText}>⚠️ {error ?? googleError}</Text>
                 </View>
               )}
 
@@ -240,9 +243,19 @@ export default function RegisterDriverScreen({ navigation }: Props) {
                 <View style={styles.line} />
               </View>
 
-              <TouchableOpacity style={styles.googleButton}>
-                <Image source={Logo.LogoGoogle} style={styles.googleIcon} />
-                <Text style={styles.googleText}>Continuer avec Google</Text>
+              <TouchableOpacity
+                style={[styles.googleButton, anyLoading && { opacity: 0.6 }]}
+                onPress={() => { clearError(); clearGoogleError(); signInWithGoogle(); }}
+                disabled={anyLoading}
+              >
+                {googleLoading ? (
+                  <Text style={styles.googleText}>Connexion Google...</Text>
+                ) : (
+                  <>
+                    <Image source={Logo.LogoGoogle} style={styles.googleIcon} />
+                    <Text style={styles.googleText}>Continuer avec Google</Text>
+                  </>
+                )}
               </TouchableOpacity>
 
             </View>

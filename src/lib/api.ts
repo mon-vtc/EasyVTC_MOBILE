@@ -38,12 +38,18 @@ export const api = {
       body: body instanceof FormData ? body : JSON.stringify(body) 
     }, token),
 
-  patch: <T>(url: string, body: unknown, token?: string) => 
-    request<T>(url, { 
-      method: 'PATCH', 
-      body: body instanceof FormData ? body : JSON.stringify(body) 
+  put: <T>(url: string, body: unknown, token?: string) =>
+    request<T>(url, {
+      method: 'PUT',
+      body: body instanceof FormData ? body : JSON.stringify(body),
     }, token),
 
-  delete: <T>(url: string, token?: string) => 
+  patch: <T>(url: string, body: unknown, token?: string) =>
+    request<T>(url, {
+      method: 'PATCH',
+      body: body instanceof FormData ? body : JSON.stringify(body)
+    }, token),
+
+  delete: <T>(url: string, token?: string) =>
     request<T>(url, { method: 'DELETE' }, token),
 };
