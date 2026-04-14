@@ -272,16 +272,9 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     }
   },
 
-  // ── Types de véhicule ──────────────────────────────────────────────────────
-  fetchVehicleTypes: async (token, country) => {
-    set({ isLoading: true, error: null });
-    try {
-      const res = await reservationApi.getVehicleTypes(token, country);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur chargement véhicules');
-      set({ vehicleTypes: res.data, isLoading: false });
-    } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
-    }
+  // ── Types de véhicule (catalogue statique — pas d'endpoint backend) ──────────
+  fetchVehicleTypes: async (_token, _country) => {
+    // Les types sont pré-chargés depuis VEHICLE_TYPE_OPTIONS, aucun appel réseau
   },
 
   // ── Setters formulaire ─────────────────────────────────────────────────────

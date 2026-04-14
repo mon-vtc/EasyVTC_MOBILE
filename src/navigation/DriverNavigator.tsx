@@ -13,6 +13,8 @@ import DriverTripsScreen        from '../screens/driver/DriverTripsScreen';
 import DriverDocumentsScreen    from '../screens/driver/DriverDocumentsScreen';
 import DriverAvailabilityScreen from '../screens/driver/DriverAvailabilityScreen';
 import DriverProfileScreen      from '../screens/driver/DriverProfileScreen';
+import DriverOrdersScreen       from '../screens/driver/DriverOrdersScreen';
+import DriverInvoicesScreen     from '../screens/driver/DriverInvoicesScreen';
 
 import type { DriverDrawerParamList, DriverReservationsStackParamList } from '../types/auth.types';
 
@@ -139,6 +141,22 @@ export default function DriverNavigator() {
         component={DriverAvailabilityScreen}
         options={{
           drawerLabel: () => <DrawerLabel icon="cash-outline" label="Revenus" />,
+        }}
+      />
+
+      <Drawer.Screen
+        name="DriverOrders"
+        component={DriverOrdersScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="document-text-outline" label="Bons de commande" />,
+        }}
+      />
+
+      <Drawer.Screen
+        name="DriverInvoices"
+        component={DriverInvoicesScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="receipt-outline" label="Factures" />,
         }}
       />
     </Drawer.Navigator>

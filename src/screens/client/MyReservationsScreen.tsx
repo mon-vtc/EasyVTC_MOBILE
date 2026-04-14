@@ -12,7 +12,7 @@ type FilterTab = 'all' | 'invoices' | 'pending' | 'assigned' | 'completed' | 'ca
 
 const TABS: { key: FilterTab; label: string; statusFilter?: ReservationStatus }[] = [
   { key: 'all',       label: 'Tous'        },
-  { key: 'invoices',  label: 'Factures'    }, // Peut-être filtrer par completed avec price_final
+  { key: 'invoices',  label: 'Factures'    },
   { key: 'pending',   label: 'En attente',  statusFilter: 'pending'   },
   { key: 'assigned',  label: 'Confirmés',   statusFilter: 'assigned'  },
   { key: 'completed', label: 'Terminés',    statusFilter: 'completed' },
@@ -136,17 +136,15 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
   const load = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
     try {
-      const filters = {};
-      if (activeTabRef.current !== 'all') {
-        if (activeTabRef.current === 'invoices') {
-          // Pour factures, peut-être filtrer par completed
-          filters.status = 'completed';
-        } else {
-          const tab = TABS.find(t => t.key === activeTabRef.current);
-          if (tab?.statusFilter) filters.status = tab.statusFilter;
-        }
+      const filters: Record<string, any> = {};
+      const currentTab = activeTabRef.current;
+      if (currentTab !== 'all' && currentTab !== 'invoices') {
+        const tab = TABS.find(t => t.key === currentTab);
+        if (tab?.statusFilter) filters.status = tab.statusFilter;
+      } else if (currentTab === 'invoices') {
+        filters.status = 'completed';
       }
-      await fetchMine('', filters); // token à récupérer
+      await fetchMine(filters);
     } catch (err) {
       console.error(err);
     } finally {
@@ -158,7 +156,7 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
 
   const handleTabChange = (tab: FilterTab) => {
     setActiveTab(tab);
-    setSearchQuery(''); // Reset search on tab change
+    setSearchQuery('');
   };
 
   const filteredReservations = useMemo(() => {
@@ -176,12 +174,10 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
   }, [reservations, searchQuery]);
 
   const handleEvaluate = (reservation: Reservation) => {
-    // Navigate to evaluation screen
     Alert.alert('Évaluer', `Évaluer la réservation ${reservation.id}`);
   };
 
   const handleViewInvoice = (reservation: Reservation) => {
-    // Navigate to invoice screen
     Alert.alert('Facture', `Voir la facture pour ${reservation.id}`);
   };
 
@@ -222,7 +218,7 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={Colors.iconMuted} style={styles.searchIcon} />
+        <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Rechercher par ID, adresse, chauffeur..."

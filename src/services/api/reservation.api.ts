@@ -12,7 +12,7 @@ import type {
   ReservationListResult,
   CreateReservationDto,
   VehicleTypeOption,
-  AvailableDriverDto
+  AvailableDriverDto,
 } from '../../types/reservations.types';
 
 export const reservationApi = {
@@ -190,8 +190,7 @@ export const reservationApi = {
    * Types de véhicule disponibles avec tarifs de base.
    *
    * ⚠️  L'endpoint /vehicle-types n'est pas encore implémenté côté backend.
-   *     Le mock ci-dessous simule la réponse attendue avec les VehicleType
-   *     reconnus par le backend ('standard' | 'berline' | 'van').
+   *     Mock simulant la réponse avec les VehicleType backend ('standard' | 'berline' | 'van').
    *     Remplacer par l'appel réel dès que la route est disponible.
    */
   getVehicleTypes: async (
@@ -217,7 +216,7 @@ export const reservationApi = {
         label:       'Confort',
         description: '1-4 passagers • Berline',
         base_price:  isSenegal ? 5000 : 18.00,
-        icon:        'car-outline',
+        icon:        'car-sport-outline',
         capacity:    4,
       },
       {

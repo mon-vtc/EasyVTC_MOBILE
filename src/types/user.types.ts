@@ -5,6 +5,19 @@ export type VehicleType  = 'standard' | 'berline' | 'van';
 export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended';
 export type ZoneType     = 'senegal' | 'france'; 
 
+// ── DriverProfile (réponse brute API avant mapApiUser) ──────────
+export interface DriverProfile {
+  id:           string;
+  status:       DriverStatus;
+  vehicle_type: VehicleType | null;
+  siret:        string | null;
+  tva_rate:     number;
+  is_online:    boolean;
+  zone:         ZoneType;
+  created_at:   string;
+  updated_at:   string;
+}
+
 // ── Client ──────────────────────────────────────────────────────
 export interface ClientUser extends AuthUser {
   role: 'client';

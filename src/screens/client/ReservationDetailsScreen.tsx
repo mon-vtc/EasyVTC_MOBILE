@@ -126,13 +126,10 @@ function NextStep({ icon, text, delay }: { icon: string; text: string; delay: nu
 export default function ReservationDetailsScreen() {
   const nav   = useNavigation<ConfirmationNav>();
   const route = useRoute<ConfirmationRoute>();
-  
-  // Accès sécurisé aux paramètres de la route
+
   const reservationId = route.params?.reservationId;
 
-  // Si l'ID est manquant, on ne peut rien afficher
   if (!reservationId) {
-    // Idéalement, afficher un message d'erreur et un bouton pour revenir en arrière
     return <View style={styles.root}><Text style={styles.subtitle}>ID de réservation manquant.</Text></View>;
   }
 
@@ -140,7 +137,6 @@ export default function ReservationDetailsScreen() {
   const reservations = useReservationStore(s => s.reservations);
   const fetchById    = useReservationStore(s => s.fetchById);
 
-  // Cherche d'abord dans le store (déjà inséré par submitBooking)
   const reservation = reservations.find(r => r.id === reservationId) ?? null;
 
   useEffect(() => {
@@ -187,7 +183,7 @@ export default function ReservationDetailsScreen() {
         {r?.id && (
           <Animated.View style={[styles.refBadge, slideUp(headerAnim)]}>
             <Text style={styles.refLabel}>N° de réservation</Text>
-            <Text style={styles.refValue}  numberOfLines={1} ellipsizeMode="middle">{r.id}</Text>
+            <Text style={styles.refValue} numberOfLines={1} ellipsizeMode="middle">{r.id}</Text>
           </Animated.View>
         )}
 
@@ -254,17 +250,15 @@ export default function ReservationDetailsScreen() {
 
         {/* ── CTAs ── */}
         <Animated.View style={[styles.ctas, slideUp(ctaAnim)]}>
-
           <TouchableOpacity
             style={styles.btnPrimary}
             activeOpacity={0.85}
-            onPress={() => nav.navigate('CreateReservation')} // Exemple: naviguer vers la liste
+            onPress={() => nav.navigate('CreateReservation')}
           >
             <AppIcon name="document-text-outline" size={18} color={Colors.white} />
             <Text style={styles.btnPrimaryText}>Voir le bon de commande</Text>
           </TouchableOpacity>
 
-          {/* Retour aux tabs → onglet MyReservations */}
           <TouchableOpacity
             style={styles.btnSecondary}
             activeOpacity={0.85}
@@ -273,7 +267,6 @@ export default function ReservationDetailsScreen() {
             <Text style={styles.btnSecondaryText}>Voir mes réservations</Text>
           </TouchableOpacity>
 
-          {/* Nouvelle réservation — ouvre le formulaire */}
           <TouchableOpacity
             style={styles.btnGhost}
             activeOpacity={0.75}
@@ -281,8 +274,8 @@ export default function ReservationDetailsScreen() {
           >
             <Text style={styles.btnGhostText}>Nouvelle réservation</Text>
           </TouchableOpacity>
-
         </Animated.View>
+
       </ScrollView>
     </View>
   );
@@ -307,12 +300,10 @@ const styles = StyleSheet.create({
   },
   scroll: { paddingTop: Platform.OS === 'ios' ? 60 : 44, paddingBottom: 48, paddingHorizontal: 20 },
 
-  // Header
   header:   { alignItems: 'center', marginBottom: 20 },
   title:    { fontSize: 26, fontWeight: '800', color: WHITE, marginTop: 20, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 8, textAlign: 'center', lineHeight: 20 },
 
-  // Ref badge
   refBadge: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10,
@@ -322,7 +313,6 @@ const styles = StyleSheet.create({
   refLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
   refValue: { flexShrink: 1, fontSize: 14, color: WHITE, fontWeight: '700', letterSpacing: 0.5, textAlign: 'right' },
 
-  // Carte
   card: {
     backgroundColor: WHITE, borderRadius: 18, padding: 20, marginBottom: 12,
     shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3,
@@ -336,7 +326,6 @@ const styles = StyleSheet.create({
   routeAddr:  { fontSize: 14, fontWeight: '500', color: TEXT_P, marginTop: 2, lineHeight: 20 },
   divider:    { height: 1, backgroundColor: '#F3F4F6', marginVertical: 16 },
 
-  // Prix
   priceCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: BORDEAUX, borderRadius: 16, padding: 20, marginBottom: 12,
@@ -346,7 +335,6 @@ const styles = StyleSheet.create({
   priceNote:  { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 3, maxWidth: 180 },
   priceValue: { fontSize: 32, fontWeight: '900', color: WHITE, letterSpacing: -1 },
 
-  // Prochaines étapes
   nextCard: {
     backgroundColor: '#FDF4F4', borderRadius: 16, padding: 18, marginBottom: 24,
     borderWidth: 1, borderColor: '#F5DDE0',
@@ -354,7 +342,6 @@ const styles = StyleSheet.create({
   nextHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
   nextTitle:  { fontSize: 13, fontWeight: '700', color: BORDEAUX },
 
-  // CTAs
   ctas:           { gap: 10 },
   btnPrimary: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -371,7 +358,6 @@ const styles = StyleSheet.create({
   btnGhostText:     { color: TEXT_S, fontSize: 14, fontWeight: '500', textDecorationLine: 'underline' },
 });
 
-// ── AnimatedCheck
 const check = StyleSheet.create({
   container: { width: 90, height: 90, alignItems: 'center', justifyContent: 'center' },
   ring:      { position: 'absolute', width: 72, height: 72, borderRadius: 36, borderWidth: 2, borderColor: 'rgba(255,255,255,0.5)' },
@@ -382,18 +368,16 @@ const check = StyleSheet.create({
   },
 });
 
-// ── DetailRow
 const row = StyleSheet.create({
   container: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F9FAFB' },
   iconWrap:  { width: 32, height: 32, borderRadius: 8, backgroundColor: '#FDF4F4', alignItems: 'center', justifyContent: 'center' },
   texts:     { flex: 1 },
-  label:     { fontSize: 11, color: Colors.textSecondary ?? '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.4 },
-  value:     { fontSize: 14, fontWeight: '600', color: Colors.textPrimary ?? '#1A1A1A', marginTop: 1 },
+  label:     { fontSize: 11, color: TEXT_S, textTransform: 'uppercase', letterSpacing: 0.4 },
+  value:     { fontSize: 14, fontWeight: '600', color: TEXT_P, marginTop: 1 },
 });
 
-// ── NextStep
 const ns = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
   dot: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(123,31,46,0.08)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  text: { flex: 1, fontSize: 13, color: Colors.textPrimary ?? '#1A1A1A', lineHeight: 19 },
+  text: { flex: 1, fontSize: 13, color: TEXT_P, lineHeight: 19 },
 });

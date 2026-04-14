@@ -4,7 +4,8 @@ export type { UserRole, UserStatus, AuthUser, AuthTokens,
               ManagerDrawerParamList }                    from './auth.types';
 
 export type { ClientUser, DriverUser, AdminUser,
-              ManagerUser, TypedUser }           from './user.types'; // Add Vehicle if we use the object 
+              ManagerUser, TypedUser,
+              Vehicle, DriverProfile }           from './user.types';
 export { isClient, isDriver, isAdmin, isManager }        from './user.types';
 
 export type { LoginPayload, RegisterPayload,

@@ -37,13 +37,14 @@ interface AuthState {
   // Actions
   hydrate:        ()                          => Promise<void>;
   login:          (payload: LoginPayload)     => Promise<void>;
-  loginWithGoogle: (token: string)             => Promise<void>;
+  loginWithGoogle: (accessToken: string, refreshToken?: string) => Promise<void>;
   register:       (payload: RegisterPayload)  => Promise<void>;
   logout:         ()                          => Promise<void>;
   changePassword:  (currentPassword: string, newPassword: string, confirmPassword: string) => Promise<void>;
   forgotPassword: (email: string)             => Promise<void>;
+  resetPassword:  (token: string, newPassword: string) => Promise<void>;
   updateProfile: (payload: UpdateProfilePayload) => Promise<void>;
-  uploadAvatar:   (formData: FormData, pendingImage?: string)          => Promise<void>;
+  uploadAvatar:   (formData: FormData, pendingImage?: string) => Promise<void>;
   clearError:     ()                          => void;
 }
 
@@ -134,14 +135,19 @@ register: async (payload) => {
 },
 
   // ── Login with Google ─────────────────────────────────────────────────
-  loginWithGoogle: async (token) => {
+  loginWithGoogle: async (accessToken, refreshToken) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await authApi.google(token);
+      const res = await authApi.google(accessToken, refreshToken);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de connexion avec Google');
       const { user, access_token, refresh_token } = res.data;
-      await secureStorage.setTokens(access_token, refresh_token);
-      set({ user, accessToken: access_token, refreshToken: refresh_token, isLoading: false });
+      await secureStorage.setTokens(access_token, refresh_token ?? '');
+      set({
+        user: mapApiUser(user),
+        accessToken: access_token,
+        refreshToken: refresh_token,
+        isLoading: false,
+      });
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
       throw err;
@@ -169,7 +175,20 @@ register: async (payload) => {
     }
   },
 
-  // ── Reset Password  ─────────────────────────
+  // ── Reset Password (depuis email — token Supabase) ──────────────────────
+  resetPassword: async (token, newPassword) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await authApi.resetPassword(token, newPassword);
+      if (!res.ok) throw new Error(res.message ?? 'Erreur lors de la réinitialisation');
+      set({ isLoading: false });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      throw err;
+    }
+  },
+
+  // ── Change Password (utilisateur connecté) ────────────────────────────────
   changePassword: async (currentPassword, newPassword, confirmPassword) => {
     set({ isLoading: true, error: null });
     const { accessToken } = get();
@@ -222,22 +241,21 @@ register: async (payload) => {
 
   uploadAvatar: async (formData: FormData, localUri?: string) => {
     set({ isLoading: true, error: null });
-    const { accessToken } = get();  
+    const { accessToken } = get();
     try {
       if (!accessToken) throw new Error('Utilisateur non authentifié');
-      
+
       const res = await authApi.uploadAvatar(formData, accessToken);
-      
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de l\'upload de l\'avatar');
+      if (!res.ok || !res.data) throw new Error(res.message ?? "Erreur lors de l'upload de l'avatar");
 
-      // Optionnel : mettre à jour le contexte avec la nouvelle URL retournée
-      const updatedUser = { ...get().user } as AuthUser;
+      // Mettre à jour profile_photo_url avec l'URL retournée par le backend
+      const currentUser = get().user;
+      const updatedUser = currentUser
+        ? { ...currentUser, profile_photo_url: res.data.profile_photo_url }
+        : currentUser;
 
-      console.log(updatedUser);
-
-      if (localUri) set({ user: updatedUser, localAvatarUri: localUri, isLoading: false });
-      else  set({ user: updatedUser, isLoading: false });
-
+      if (localUri) set({ user: updatedUser as AuthUser, localAvatarUri: localUri, isLoading: false });
+      else set({ user: updatedUser as AuthUser, isLoading: false });
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
       throw err;
