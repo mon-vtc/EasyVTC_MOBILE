@@ -61,3 +61,8 @@ export interface UpdateUserStatusPayload {
   status: 'active' | 'inactive' | 'locked';
   reason: string;
 }
+
+export interface ChangeDriverStatusPayload {
+  status: 'active' | 'rejected' | 'suspended';
+  reason: string;
+}

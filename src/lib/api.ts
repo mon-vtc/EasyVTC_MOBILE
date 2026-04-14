@@ -1,4 +1,5 @@
 import type { ApiResponse } from '../types';
+import { handleUnauthorized } from '../services/auth/auth-callback';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -23,6 +24,26 @@ async function request<T>(
     ...options,
     headers,
   });
+  
+
+  // Intercepter les 401 (token expiré) et rediriger vers connexion
+  if (res.status === 401) {
+    handleUnauthorized();
+    // Essayer de parser le JSON d'erreur, sinon retourner un message générique
+    try {
+      const json = await res.json();
+      return {
+        ok: false,
+        message: json.message || 'Session expirée. Veuillez vous reconnecter.',
+        ...json,
+      } as ApiResponse<T>;
+    } catch {
+      return {
+        ok: false,
+        message: 'Session expirée. Veuillez vous reconnecter.',
+      } as ApiResponse<T>;
+    }
+  }
 
   const json = await res.json();
   return json as ApiResponse<T>;

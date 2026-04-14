@@ -1,19 +1,20 @@
 import { useAuth }       from './useAuth';
-import { useAuthStore , useUsersStore}  from '../store';
+import { useAuthStore, useUsersStore, useDriversStore}  from '../store';
 import type {
-  AdminUser, ListUsersParams,
-  UpdateUserStatusPayload, UserRole,
+  AdminUser, ListUsersParams, ListDriversParams,
+  UpdateUserStatusPayload, ChangeDriverStatusPayload, UserRole,
 } from '../types';
 
 // ✅ Réservé aux admins
 export function useAdmin() {
-  const auth        = useAuth();
-  const accessToken = useAuthStore(s => s.accessToken);
+  const auth         = useAuth();
+  const accessToken  = useAuthStore(s => s.accessToken);
 
   if (!auth.isAdmin) {
     throw new Error('useAdmin() ne peut être utilisé que par un administrateur.');
   }
 
+  // ── Store Utilisateurs (clients, autres admins, managers) ─────
   const users            = useUsersStore(s => s.users);
   const total            = useUsersStore(s => s.total);
   const page             = useUsersStore(s => s.page);
@@ -25,6 +26,18 @@ export function useAdmin() {
   const _updateStatus    = useUsersStore(s => s.updateUserStatus);
   const clearUsersError  = useUsersStore(s => s.clearError);
 
+  // ── Store Chauffeurs (endpoint /admin/drivers) ────────────────
+  const drivers          = useDriversStore(s => s.drivers);
+  const driversTotal     = useDriversStore(s => s.total);
+  const driversPage      = useDriversStore(s => s.page);
+  const driversPageTotal = useDriversStore(s => s.totalPages);
+  const isDriversLoading = useDriversStore(s => s.isLoading);
+  const driversError     = useDriversStore(s => s.error);
+  const _fetchDrivers       = useDriversStore(s => s.fetchDrivers);
+  const _fetchDriverById    = useDriversStore(s => s.fetchDriverById);
+  const _changeDriverStatus = useDriversStore(s => s.changeDriverStatus);
+  const clearDriversError   = useDriversStore(s => s.clearError);
+
   return {
     // Profil admin
     user:       auth.user as AdminUser,
@@ -32,7 +45,7 @@ export function useAdmin() {
     error:      auth.error,
     clearError: auth.clearError,
 
-    // Gestion utilisateurs
+    // Gestion utilisateurs (clients, admins, managers)
     users,
     total,
     page,
@@ -41,12 +54,18 @@ export function useAdmin() {
     usersError,
     clearUsersError,
 
-    // Actions admin — gestion users
+    // Gestion chauffeurs (endpoint /admin/drivers)
+    drivers,
+    driversTotal,
+    driversPage,
+    driversPageTotal,
+    isDriversLoading,
+    driversError,
+    clearDriversError,
+
+    // Actions admin — gestion users (deprecated, utiliser les actions spécifiques par rôle)
     fetchUsers: (params?: ListUsersParams) =>
       _fetchUsers(accessToken!, params),
-
-    fetchDrivers: (params?: Omit<ListUsersParams, 'role'>) =>
-      _fetchUsers(accessToken!, { ...params, role: 'driver' }),
 
     fetchClients: (params?: Omit<ListUsersParams, 'role'>) =>
       _fetchUsers(accessToken!, { ...params, role: 'client' }),
@@ -65,6 +84,16 @@ export function useAdmin() {
 
     lockUser: (userId: string, reason: string) =>
       _updateStatus(accessToken!, userId, { status: 'locked', reason }),
+
+    // Actions admin — gestion chauffeurs (utiliser /admin/drivers)
+    fetchDrivers: (params?: ListDriversParams) =>
+      _fetchDrivers(accessToken!, params),
+
+    fetchDriverById: (driverId: string) =>
+      _fetchDriverById(accessToken!, driverId),
+
+    changeDriverStatus: (driverId: string, payload: ChangeDriverStatusPayload) =>
+      _changeDriverStatus(accessToken!, driverId, payload),
 
     // Actions sur son propre compte
     updateProfile: auth.updateProfile,

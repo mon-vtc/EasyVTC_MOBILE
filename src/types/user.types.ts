@@ -18,6 +18,30 @@ export interface DriverProfile {
   updated_at:   string;
 }
 
+// ── DriverWithUser (réponse backend /admin/drivers) ─────────────
+export interface DriverWithUser {
+  id: string;
+  user_id: string;
+  status: DriverStatus;
+  vehicle_type: VehicleType | null;
+  siret: string | null;
+  tva_rate: number;
+  is_online: boolean;
+  zone: ZoneType;
+  created_at: string;
+  updated_at: string;
+  user: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    phone: string | null;
+    profile_photo_url: string | null;
+    status: string;
+    created_at: string;
+  };
+}
+
 // ── Client ──────────────────────────────────────────────────────
 export interface ClientUser extends AuthUser {
   role: 'client';

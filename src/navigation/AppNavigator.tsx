@@ -3,6 +3,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { useAuth }             from '../hooks/useAuth';
 import { useAuthStore }        from '../store/auth.store';
+import { setOnUnauthorized }   from '../services/auth/auth-callback';
 import AuthNavigator           from './AuthNavigator';
 import ClientNavigator         from './ClientNavigator';
 import DriverNavigator         from './DriverNavigator';
@@ -12,6 +13,14 @@ import { Colors }              from '../theme/colors';
 export default function AppNavigator() {
   const { user, isHydrated }  = useAuth();
   const hydrate               = useAuthStore((s) => s.hydrate);
+  const forceLogout           = useAuthStore((s) => s.forceLogout);
+
+  // Configurer le callback pour les erreurs 401
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      forceLogout(); // Nettoyer localement sans appel API
+    });
+  }, [forceLogout]);
 
   // Charger le token au démarrage
   useEffect(() => { hydrate(); }, []);

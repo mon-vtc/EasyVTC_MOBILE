@@ -5,7 +5,7 @@ export type { UserRole, UserStatus, AuthUser, AuthTokens,
 
 export type { ClientUser, DriverUser, AdminUser,
               ManagerUser, TypedUser,
-              Vehicle, DriverProfile }           from './user.types';
+              Vehicle, DriverProfile, DriverWithUser }           from './user.types';
 export { isClient, isDriver, isAdmin, isManager }        from './user.types';
 
 export type { LoginPayload, RegisterPayload,
@@ -14,11 +14,12 @@ export type { LoginPayload, RegisterPayload,
               UpdateClientProfilePayload,
               // UpdateDriverProfilePayload,
               // UpdateAdminProfilePayload,
-              UpdateUserStatusPayload }                   from './payload.types';
+              UpdateUserStatusPayload,
+              ChangeDriverStatusPayload }                   from './payload.types';
 
 export type { ApiResponse, AuthResponseData,
-              AvatarUploadResponseData, PaginatedUsers,
-              ListUsersParams }                           from './api.types';
+              AvatarUploadResponseData, PaginatedUsers, PaginatedDrivers,
+              ListUsersParams, ListDriversParams }                           from './api.types';
 
 
 export type {

@@ -1,6 +1,6 @@
 import { useAuth }       from './useAuth';
-import { useAuthStore, useUsersStore }  from '../store';
-import type { ManagerUser, ListUsersParams } from '../types';
+import { useAuthStore, useUsersStore, useDriversStore }  from '../store';
+import type { ManagerUser, ListUsersParams, ListDriversParams } from '../types';
 
 // ✅ Réservé aux managers — lecture seule sur les users, pas de changement de statut
 export function useManager() {
@@ -19,6 +19,15 @@ export function useManager() {
   const _fetchById     = useUsersStore(s => s.fetchUserById);
   const clearError     = useUsersStore(s => s.clearError);
 
+  // ── Store Chauffeurs (endpoint /admin/drivers) ────────────────
+  const drivers        = useDriversStore(s => s.drivers);
+  const driversTotal   = useDriversStore(s => s.total);
+  const isDriversLoading = useDriversStore(s => s.isLoading);
+  const driversError   = useDriversStore(s => s.error);
+  const _fetchDrivers  = useDriversStore(s => s.fetchDrivers);
+  const _fetchDriverById = useDriversStore(s => s.fetchDriverById);
+  const clearDriversError = useDriversStore(s => s.clearError);
+
   return {
     // Profil manager
     user:       auth.user as ManagerUser,
@@ -33,11 +42,21 @@ export function useManager() {
     usersError,
     clearUsersError: clearError,
 
+    // Consultation chauffeurs (endpoint /admin/drivers)
+    drivers,
+    driversTotal,
+    isDriversLoading,
+    driversError,
+    clearDriversError,
+
     fetchUsers: (params?: ListUsersParams) =>
       _fetchUsers(accessToken!, params),
 
-    fetchDrivers: (params?: Omit<ListUsersParams, 'role'>) =>
-      _fetchUsers(accessToken!, { ...params, role: 'driver' }),
+    fetchDrivers: (params?: ListDriversParams) =>
+      _fetchDrivers(accessToken!, params),
+
+    fetchDriverById: (driverId: string) =>
+      _fetchDriverById(accessToken!, driverId),
 
     fetchUserById: (userId: string) =>
       _fetchById(accessToken!, userId),
