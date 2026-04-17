@@ -56,7 +56,7 @@ export type ClientTabParamList = {
   ReservationDetails:  { reservationId: string };
   // S4 — Documents financiers
   MyOrders:            undefined;
-  MyInvoices:          undefined;
+  MyInvoices:          { reservationId?: string } | undefined;
 };
 
 /**

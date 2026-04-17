@@ -6,10 +6,10 @@
 // le store (déjà insérée par submitBooking) ou via fetchById en fallback.
 // ══════════════════════════════════════════════════════════════════════════════
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import {
   View, Text, Image, ScrollView, TouchableOpacity,
-  StyleSheet, Animated, Platform, Easing,
+  StyleSheet, Animated, Platform, Easing, Alert,
 } from 'react-native';
 import {
   useNavigation, useRoute,
@@ -21,6 +21,7 @@ import { useReservationStore } from '../../store/reservation.store';
 import { useAuthStore }        from '../../store/auth.store';
 import type { ClientStackParamList } from '../../types/auth.types';
 import { Logo } from '../../constants/logo';
+import CancelReservationModal from '../../components/common/CancelReservationModal';
 
 // ── Types navigation typés ──────────────────────────────────────────────────
 type ConfirmationNav   = NavigationProp<ClientStackParamList, 'ReservationDetails'>;
@@ -81,12 +82,87 @@ export default function ReservationDetailsScreen() {
   const accessToken  = useAuthStore(s => s.accessToken);
   const reservations = useReservationStore(s => s.reservations);
   const fetchById    = useReservationStore(s => s.fetchById);
+  const cancel       = useReservationStore(s => s.cancel);
 
   const reservation = reservations.find(r => r.id === reservationId) ?? null;
+  const status = reservation?.status as string | undefined;
+  const ref = reservation?.id.split('-').pop()?.toUpperCase() ?? reservation?.id;
+
+  // ── États et logiques contextuelles ───────────────────────────────────────
+  const isCancellable = ['pending', 'assigned', 'driver_arrived'].includes(status ?? '');
+  const isCompleted = status === 'completed';
+  const isActive = ['assigned', 'driver_arrived', 'in_progress'].includes(status ?? '');
+
+  // ── États du modal d'annulation ────────────────────────────────────────────
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
 
   useEffect(() => {
     if (!reservation && accessToken) fetchById(accessToken, reservationId);
   }, [reservationId, reservation, accessToken, fetchById]);
+
+  // ── Handlers d'actions ──────────────────────────────────────────────────────
+  const handleCall = useCallback(() => {
+    if (reservation?.driver?.user?.phone) {
+      Alert.alert(
+        'Appel',
+        `Appel au chauffeur: ${reservation.driver.user.phone}`,
+        [{ text: 'Fermer', style: 'default' }]
+      );
+      // Débloquer ce code en production :
+      // Linking.openURL(`tel:${reservation.driver.user.phone}`).catch(() => {
+      //   Alert.alert('Erreur', 'Impossible d\'appeler ce numéro');
+      // });
+    } else {
+      Alert.alert('Non disponible', 'Le numéro du chauffeur n\'est pas disponible');
+    }
+  }, [reservation?.driver?.user?.phone]);
+
+  const handleMessage = useCallback(() => {
+    if (reservation?.driver_id) {
+      nav.navigate('Messages' as any);
+    }
+  }, [reservation?.driver_id, nav]);
+
+  const handleViewInvoice = useCallback(() => {
+    nav.navigate('MyInvoices' as any, { reservationId: reservation?.id });
+  }, [reservation?.id, nav]);
+
+  const handleEvaluate = useCallback(() => {
+    Alert.alert(
+      'Évaluer le chauffeur',
+      'Quelle note donnez-vous à cette course ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: '⭐⭐⭐⭐⭐ (5)', onPress: () => submitRating(5) },
+        { text: '⭐⭐⭐⭐ (4)', onPress: () => submitRating(4) },
+        { text: '⭐⭐⭐ (3)', onPress: () => submitRating(3) },
+      ],
+    );
+  }, []);
+
+  const submitRating = (rating: number) => {
+    Alert.alert('Merci !', `Vous avez noté la course ${rating}/5`);
+    // Appel API pour soumettre l'évaluation
+  };
+
+  const handleCancel = useCallback(() => {
+    setCancelModalVisible(true);
+  }, []);
+
+  const handleCancelConfirm = async (reason: string) => {
+    try {
+      if (accessToken && reservation?.id) {
+        // Faire l'appel API pour annuler
+        await cancel(reservation.id, reason);
+        setCancelModalVisible(false);
+        Alert.alert('Succès', 'La réservation a été annulée');
+        // Retourner à l'écran précédent
+        nav.goBack();
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur', error?.message ?? 'Impossible d\'annuler la réservation');
+    }
+  };
 
   // ── Animations page ────────────────────────────────────────────────────────
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -133,7 +209,7 @@ export default function ReservationDetailsScreen() {
         {r?.id && (
           <Animated.View style={[styles.refBadge, slideUp(headerAnim)]}>
             <Text style={styles.refLabel}>N° de réservation</Text>
-            <Text style={styles.refValue} numberOfLines={1} ellipsizeMode="middle">{r.id}</Text>
+            <Text style={styles.refValue} numberOfLines={1} ellipsizeMode="middle">RES-{ref}</Text>
           </Animated.View>
         )}
 
@@ -229,14 +305,18 @@ export default function ReservationDetailsScreen() {
               </View>
             </View>
             <View style={styles.driverActions}>
-              <TouchableOpacity style={styles.btnCall} activeOpacity={0.75}>
-                <AppIcon name="call-outline" size={14} color={WHITE} />
-                <Text style={styles.btnCallText}>Appeler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.btnMsg} activeOpacity={0.75}>
-                <AppIcon name="chatbubble-outline" size={14} color={BORDEAUX} />
-                <Text style={styles.btnMsgText}>Message</Text>
-              </TouchableOpacity>
+              {isActive && (
+                <>
+                  <TouchableOpacity style={styles.btnCall} activeOpacity={0.75} onPress={handleCall}>
+                    <AppIcon name="call-outline" size={14} color={WHITE} />
+                    <Text style={styles.btnCallText}>Appeler</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.btnMsg} activeOpacity={0.75} onPress={handleMessage}>
+                    <AppIcon name="chatbubble-outline" size={14} color={BORDEAUX} />
+                    <Text style={styles.btnMsgText}>Message</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </Animated.View>
         )}
@@ -281,28 +361,65 @@ export default function ReservationDetailsScreen() {
           <Text style={styles.priceValue}>{formatPrice(r?.price_final ?? r?.price_estimated)}</Text>
         </Animated.View>
 
-        {/* ── CTAs ── */}
+        {/* ── CTAs — Actions contextuelles ── */}
         <Animated.View style={[styles.ctas, slideUp(ctaAnim)]}>
-          <TouchableOpacity
-            style={styles.btnSecondary}
-            activeOpacity={0.85}
-            onPress={() => { /* Handle invoice view */ }}
-          >
-            <AppIcon name="document-text-outline" size={18} color={BORDEAUX} />
-            <Text style={styles.btnSecondaryText}>Voir la facture</Text>
-          </TouchableOpacity>
+          {/* Réservations complétées */}
+          {isCompleted && (
+            <>
+              <TouchableOpacity
+                style={styles.btnPrimary}
+                activeOpacity={0.85}
+                onPress={handleEvaluate}
+              >
+                <AppIcon name="star-outline" size={18} color={WHITE} />
+                <Text style={styles.btnPrimaryText}>Évaluer le chauffeur</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.btnDanger}
-            activeOpacity={0.85}
-            onPress={() => { /* Handle cancel reservation */ }}
-          >
-            <AppIcon name="close-circle-outline" size={18} color="#C0392B" />
-            <Text style={styles.btnDangerText}>Annuler la réservation</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.btnSecondary}
+                activeOpacity={0.85}
+                onPress={handleViewInvoice}
+              >
+                <AppIcon name="document-text-outline" size={18} color={BORDEAUX} />
+                <Text style={styles.btnSecondaryText}>Voir la facture</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {/* Réservations annulables */}
+          {isCancellable && (
+            <TouchableOpacity
+              style={styles.btnDanger}
+              activeOpacity={0.85}
+              onPress={handleCancel}
+            >
+              <AppIcon name="close-circle-outline" size={18} color="#C0392B" />
+              <Text style={styles.btnDangerText}>Annuler la réservation</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Réservations en cours (non annulables) */}
+          {!isCancellable && !isCompleted && (
+            <TouchableOpacity
+              style={styles.btnSecondary}
+              activeOpacity={0.85}
+              onPress={handleViewInvoice}
+            >
+              <AppIcon name="document-text-outline" size={18} color={BORDEAUX} />
+              <Text style={styles.btnSecondaryText}>Voir les détails</Text>
+            </TouchableOpacity>
+          )}
         </Animated.View>
 
       </ScrollView>
+
+      {/* Modal d'annulation */}
+      <CancelReservationModal
+        visible={cancelModalVisible}
+        reservationRef={`RES-${ref}`}
+        onConfirm={handleCancelConfirm}
+        onClose={() => setCancelModalVisible(false)}
+      />
     </View>
   );
 }
@@ -421,6 +538,11 @@ const styles = StyleSheet.create({
   nextTitle:  { fontSize: 13, fontWeight: '700', color: BORDEAUX },
 
   ctas:           { gap: 10 },
+  btnPrimary: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    height: 50, borderRadius: 14, backgroundColor: BORDEAUX,
+  },
+  btnPrimaryText: { color: WHITE, fontSize: 15, fontWeight: '700' },
   btnSecondary: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     height: 50, borderRadius: 14, borderWidth: 1.5, borderColor: BORDEAUX, backgroundColor: WHITE,

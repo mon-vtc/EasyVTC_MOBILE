@@ -278,7 +278,7 @@ export default function DriverHomeScreen({ navigation }: any) {
   }, [status, setOnlineStatus]);
 
   const handleRideDetails = useCallback((id: string) => {
-    navigation?.navigate('RideDetail', { rideId: id });
+    navigation?.navigate('DriverReservationDetail', { reservationId: id });
     // Exemple d'utilisation de startTrip (à adapter à votre logique de bouton "Démarrer")
     /*
     try {
