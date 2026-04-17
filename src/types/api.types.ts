@@ -49,7 +49,7 @@ export interface ListDriversParams {
   page?:         number;
   limit?:        number;
   status?:       'pending' | 'active' | 'rejected' | 'suspended';
-  zone?:         'senegal' | 'france';
+  zone?:         'senegal' | 'france'; 
   vehicle_type?: 'standard' | 'berline' | 'van';
   is_online?:    boolean;
   search?:       string;

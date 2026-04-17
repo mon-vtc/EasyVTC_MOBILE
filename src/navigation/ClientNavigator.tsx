@@ -194,6 +194,15 @@ export default function ClientNavigator() {
         }}
       />
 
+      <Stack.Screen
+        name="BookingConfirmation"
+        component={BookingConfirmationScreen} // Garde le même composant pour l'instant
+        options={{
+          animation:      'fade',
+          gestureEnabled: false,   // pas de swipe-back sur la confirmation
+        }}
+      />
+
     </Stack.Navigator>
   );
 }

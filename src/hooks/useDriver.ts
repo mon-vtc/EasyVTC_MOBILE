@@ -74,13 +74,19 @@ export function useDriver() {
   // FIX : après l'appel API réussi, on patche `user.is_online` directement
   // dans le store Zustand. Sans ce patch, le store conserve l'ancienne valeur
   // et tous les composants abonnés (Switch, StatusCard…) ne se re-rendent pas.
-  const setOnlineStatus = useCallback(async (is_online: boolean) => {
-    await driverApi.setOnlineStatus(token(), is_online);
+const setOnlineStatus = useCallback(async (is_online: boolean) => {
+  const res = await driverApi.setOnlineStatus(token(), is_online);
+  if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur statut en ligne');
 
-    useAuthStore.setState(state => ({
-      user: state.user ? { ...state.user, is_online } : state.user,
-    }));
-  }, [accessToken]);
+  // Sync status + is_online depuis la réponse backend
+  useAuthStore.setState(state => ({
+    user: state.user ? {
+      ...state.user,
+      is_online: res.data!.is_online,
+      status:    (res.data as any).status ?? state.user.status,
+    } : state.user,
+  }));
+}, [accessToken]);
 
   return {
     user:           driver,
@@ -96,7 +102,7 @@ export function useDriver() {
     zone:        driver?.zone         ?? null,
     vehicleType: driver?.vehicle_type ?? null,
     isOnline:    driver?.is_online    ?? false,
-    status:      driver?.status       ?? null,
+    status:      driver?.driverStatus       ?? null,
 
     // Véhicule actif
     vehicle:     activeVehicle,

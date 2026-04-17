@@ -202,19 +202,26 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
       </View>
 
       {/* Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsContainer}>
-        <View style={styles.tabs}>
+      <View style={styles.tabsWrapper}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.tabsContent}
+          bounces={false}
+        >
           {TABS.map(tab => (
             <TouchableOpacity
               key={tab.key}
               style={[styles.tab, activeTab === tab.key && styles.tabActive]}
               onPress={() => handleTabChange(tab.key)}
             >
-              <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>{tab.label}</Text>
+              <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
+                {tab.label}
+              </Text>
             </TouchableOpacity>
           ))}
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       {/* Search */}
       <View style={styles.searchContainer}>
@@ -259,15 +266,46 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
   headerBtn: { padding: Spacing.sm, width: 40 },
   headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
-  tabsContainer: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  tabs: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, gap: Spacing.sm, flexDirection: 'row' },
-  tab: { alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.md, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border },
-  tabActive: { backgroundColor: Colors.bordeaux, borderColor: Colors.bordeaux },
-  tabLabel: { fontSize: Fonts.size.sm, color: Colors.textMuted },
-  tabLabelActive: { color: Colors.white },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: Radius.md, marginHorizontal: Spacing.md, marginVertical: Spacing.sm, paddingHorizontal: Spacing.md, borderWidth: 1, borderColor: Colors.border },
+  tabsWrapper: {
+    backgroundColor: '#FFFFFF', // Remplacez par Colors.white si défini
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 
+  },
+  tabsContent: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12, // Le padding vertical DOIT être ici pour ne pas écraser le texte
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  tab: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 999, // Force l'arrondi parfait style pilule
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    minHeight: 36, // SÉCURITÉ : Empêche le texte de disparaître au premier rendu
+  },
+  tabActive: {
+    backgroundColor: Colors.bordeaux,
+    borderColor: Colors.bordeaux,
+  },
+  tabLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  tabLabelActive: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: Radius.md, marginHorizontal: Spacing.md, marginVertical: Spacing.sm, paddingHorizontal: Spacing.md,shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3  },
   searchIcon: { marginRight: Spacing.sm },
-  searchInput: { flex: 1, fontSize: Fonts.size.md, color: Colors.textPrimary },
+  searchInput: { flex: 1, fontSize: Fonts.size.md, color: Colors.textPrimary, paddingVertical: Spacing.sm },
   scroll: { padding: Spacing.md, paddingTop: Spacing.sm },
   empty: { alignItems: 'center', paddingVertical: 60, gap: Spacing.md },
   emptyText: { color: Colors.textMuted, fontSize: Fonts.size.md },

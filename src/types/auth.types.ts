@@ -2,8 +2,8 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 
 // ── Rôles & Statuts ─────────────────────────────────────────────
 export type UserRole   = 'client' | 'driver' | 'admin' | 'manager';
-export type UserStatus = 'active' | 'inactive' | 'locked';
-export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended';
+export type UserStatus = 'active' | 'inactive' | 'locked' ;
+export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended' | 'on_trip';
 
 // ── Entité de base ───────────────────────────────────────────────
 export interface AuthUser {
@@ -73,6 +73,7 @@ export type ClientStackParamList = {
   ClientTabs:           NavigatorScreenParams<ClientTabParamList>;
   CreateReservation:              undefined;
   ReservationDetails:  { reservationId: string };
+  BookingConfirmation: { reservationId: string };
 };
 
 export type DriverReservationsStackParamList = {

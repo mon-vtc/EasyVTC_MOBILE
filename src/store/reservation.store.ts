@@ -19,6 +19,7 @@ import type {
   AvailableDriverDto,
 } from '../types/reservations.types';
 import { BOOKING_INITIAL_STATE } from '../types/reservations.types';
+import { vehicleApi } from '../services/api/vehicle.api';
 
 interface ReservationState {
   // ── Liste ──────────────────────────────────────────────────────────────────
@@ -248,7 +249,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       throw err;
     }
   },
-
+ 
   // ── Assignation admin ──────────────────────────────────────────────────────
   fetchAvailableDrivers: async (token) => {
     const res = await reservationApi.getAvailableDrivers(token);
@@ -272,9 +273,16 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     }
   },
 
-  // ── Types de véhicule (catalogue statique — pas d'endpoint backend) ──────────
-  fetchVehicleTypes: async (_token, _country) => {
-    // Les types sont pré-chargés depuis VEHICLE_TYPE_OPTIONS, aucun appel réseau
+  // ── Types de véhicule ──────────────────────────────────────────────────────
+  fetchVehicleTypes: async (token, country) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await vehicleApi.getVehicleTypes(token, country);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur chargement véhicules');
+      set({ vehicleTypes: res.data, isLoading: false });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+    }
   },
 
   // ── Setters formulaire ─────────────────────────────────────────────────────

@@ -47,6 +47,7 @@ function ReservationCard({ reservation, onDetails, onAction }: {
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
   const price = reservation.price_final ?? reservation.price_estimated;
   const refNumber = `BC-${reservation.id.slice(-6).toUpperCase()}`;
+  const currencySymbol = reservation.country === 'france' ? '€' : ' CFA';
 
   let primaryText = 'Voir';
   if (status === 'assigned') primaryText = 'Démarrer';
@@ -59,7 +60,7 @@ function ReservationCard({ reservation, onDetails, onAction }: {
           <Ionicons name={statusCfg.icon as any} size={12} color={statusCfg.color} />
           <Text style={[styles.badgeText, { color: statusCfg.color }]}> {statusCfg.label}</Text>
         </View>
-        <Text style={styles.price}>{price != null ? `${price.toFixed(2)} €` : '—'}</Text>
+        <Text style={styles.price}>{price != null ? `${price.toFixed(2)} ${currencySymbol}` : '—'}</Text>
       </View>
 
       <Text style={styles.ref}>{refNumber}</Text>
@@ -73,7 +74,7 @@ function ReservationCard({ reservation, onDetails, onAction }: {
         <Text style={styles.routeText} numberOfLines={1}>{reservation.dest_address}</Text>
       </View>
 
-      <View style={styles.cardFooter}>
+      <View style={styles.cardFooter} >
         <TouchableOpacity style={styles.detailBtn} onPress={() => onDetails(reservation.id)}>
           <Text style={styles.detailBtnText}>Détails</Text>
         </TouchableOpacity>
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
   tabItem: { flex: 1, alignItems: 'center', paddingVertical: Spacing.sm, borderRadius: Radius.sm,  },
   tabItemActive: { backgroundColor: Colors.bordeauxLight },
   tabLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '600' },
-  tabLabelActive: { color: Colors.bordeaux },
+  tabLabelActive: { color: Colors.white },
   list: {marginHorizontal:  Spacing.md, paddingBottom: Spacing.xl },
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: Spacing.xxl },
   empty: { marginTop: Spacing.lg, alignItems: 'center' },

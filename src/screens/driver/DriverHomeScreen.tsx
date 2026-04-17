@@ -39,6 +39,7 @@ function StatusCard({
   onToggle:     (v: boolean) => void;
 }) {
   const canGoOnline = driverStatus === 'active';
+  const isOnTrip = driverStatus === 'on_trip';
 
   return (
     <View style={sc.card}>
@@ -55,7 +56,7 @@ function StatusCard({
             <Switch
               value={isOnline}
               onValueChange={onToggle}
-              disabled={!canGoOnline && !isOnline}
+              disabled={isOnTrip || (!canGoOnline && !isOnline)}
               trackColor={{ false: '#D1D5DB', true: Colors.bordeauxLight }}
               thumbColor={Colors.white}
               ios_backgroundColor="#D1D5DB"
@@ -65,6 +66,15 @@ function StatusCard({
       </View>
 
       {/* Message contextuel */}
+      {isOnTrip && (
+        <View style={[sc.infoBox, sc.infoBoxWarn]}>
+          <AppIcon name="warning-outline" size={18} color="#92400E" />
+          <Text style={[sc.infoText, sc.infoTextWarn]}>
+            Vous ne pouvez pas changer de statut pendant une course.
+          </Text>
+        </View>
+      )}
+
       {isOnline && (
         <View style={sc.infoBox}>
           <AppIcon name="checkmark-circle" size={18} color="#10B981" />
@@ -74,10 +84,10 @@ function StatusCard({
         </View>
       )}
 
-      {!isOnline && !canGoOnline && (
+      {!isOnline && !canGoOnline && !isOnTrip && (
         <View style={[sc.infoBox, sc.infoBoxWarn]}>
-          <AppIcon name="warning-outline" size={18} color="#F59E0B" />
-          <Text style={[sc.infoText, sc.infoTextWarn]}>
+          <AppIcon name="alert-circle-outline" size={18} color="#92400E" />
+          <Text style={[sc.infoText, { color: '#92400E' }]}>
             Votre profil doit être validé pour passer en ligne
           </Text>
         </View>
@@ -248,6 +258,15 @@ export default function DriverHomeScreen({ navigation }: any) {
       return;
     }
 
+    if (status === 'on_trip') {
+      Alert.alert(
+        'Action impossible',
+        'Vous ne pouvez pas changer votre statut de disponibilité pendant que vous êtes en mission.',
+        [{ text: 'Compris', style: 'default' }],
+      );
+      return;
+    }
+
     setIsToggling(true);
     try {
       await setOnlineStatus(value);
@@ -260,6 +279,15 @@ export default function DriverHomeScreen({ navigation }: any) {
 
   const handleRideDetails = useCallback((id: string) => {
     navigation?.navigate('RideDetail', { rideId: id });
+    // Exemple d'utilisation de startTrip (à adapter à votre logique de bouton "Démarrer")
+    /*
+    try {
+      await startTrip(id);
+      navigation?.navigate('RideInProgress', { rideId: id });
+    } catch (err) {
+      Alert.alert('Erreur', 'Impossible de démarrer la course.');
+    }
+    */
   }, [navigation]);
 
   // ── Rendu ─────────────────────────────────────────────────────────────────
