@@ -61,6 +61,11 @@ export interface Invoice {
   issued_at:       string;
   created_at:      string;
   updated_at:      string;
+  // Relation avec le trip et la réservation
+  trip?: {
+    id: string;
+    reservation_id: string;
+  };
 }
 
 // ── Liste paginée ─────────────────────────────────────────────────────────────
