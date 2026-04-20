@@ -305,9 +305,13 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   submitBooking: async (token, country) => {
     const { booking } = get();
 
+    // Avec forfait : origin/destination non obligatoires (l'itinéraire est défini par le forfait).
+    // Sans forfait : origin + destination requis.
+    const hasRoute = !!(booking.origin && booking.destination);
+    const hasForfait = !!booking.flat_rate_id;
+
     if (
-      !booking.origin       ||
-      !booking.destination  ||
+      (!hasRoute && !hasForfait) ||
       !booking.vehicle_type ||
       !booking.date         ||
       !booking.time
@@ -322,13 +326,13 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
 
       // DTO aligné champ par champ avec CreateReservationDto backend
       const dto: CreateReservationDto = {
-        // Trajet — noms backend
-        pickup_address: booking.origin.address,
-        pickup_lat:     booking.origin.latitude,
-        pickup_lng:     booking.origin.longitude,
-        dest_address:   booking.destination.address,
-        dest_lat:       booking.destination.latitude,
-        dest_lng:       booking.destination.longitude,
+        // Trajet — noms backend (adresses du forfait si non saisies manuellement)
+        pickup_address: booking.origin?.address ?? '',
+        pickup_lat:     booking.origin?.latitude ?? 0,
+        pickup_lng:     booking.origin?.longitude ?? 0,
+        dest_address:   booking.destination?.address ?? '',
+        dest_lat:       booking.destination?.latitude ?? 0,
+        dest_lng:       booking.destination?.longitude ?? 0,
 
         // Véhicule & pays
         vehicle_type: booking.vehicle_type,

@@ -375,7 +375,12 @@ export function useReservation() {
   }, [_setStep]);
 
   // ── Validation ─────────────────────────────────────────────────────────────
-  const isStep1Valid = !!(booking.origin && booking.destination && booking.vehicle_type);
+  // Un forfait sélectionné remplace la saisie manuelle des adresses (itinéraire déjà défini).
+  // Le type de véhicule reste toujours obligatoire.
+  const isStep1Valid = !!(
+    booking.vehicle_type &&
+    ((booking.origin && booking.destination) || booking.flat_rate_id)
+  );
   const isStep2Valid = !!(booking.date && booking.time && booking.nb_passengers >= 1);
   const isStep3Valid = isStep1Valid && isStep2Valid;
 
