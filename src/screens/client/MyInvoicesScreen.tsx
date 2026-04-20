@@ -9,11 +9,13 @@ import {
   StyleSheet, ActivityIndicator, Alert, Linking,
   RefreshControl,
 } from 'react-native';
+import { RouteProp } from '@react-navigation/native';
 import { Ionicons }           from '@expo/vector-icons';
 import { useInvoicesStore }   from '../../store/invoices.store';
 import { useAuthStore }       from '../../store/auth.store';
 import { invoicesApi }        from '../../services/api/invoices.api';
 import type { Invoice }       from '../../types/invoices.types';
+import type { ClientTabParamList } from '../../types/auth.types';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -142,19 +144,30 @@ function InvoiceCard({ invoice, token }: { invoice: Invoice; token: string }) {
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-export default function MyInvoicesScreen() {
+export default function MyInvoicesScreen({ 
+  route 
+}: { 
+  route?: RouteProp<ClientTabParamList, 'MyInvoices'> 
+}) {
   const { invoices, total, isLoading, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
+  const params = route?.params;
+  const filteredByReservation = params?.reservationId;
 
   const load = useCallback(async () => {
     try { await fetch(token); } catch { /* handled in store */ }
-  }, [token]);
+  }, [token, fetch]);
 
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
     if (error) { Alert.alert('Erreur', error); clearError(); }
-  }, [error]);
+  }, [error, clearError]);
+
+  // Filtrer les factures si une réservation est spécifiée
+  const displayedInvoices = filteredByReservation
+    ? invoices.filter(inv => inv.trip?.reservation_id === filteredByReservation)
+    : invoices;
 
   if (isLoading && invoices.length === 0) {
     return (
@@ -167,12 +180,16 @@ export default function MyInvoicesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mes factures</Text>
-        <Text style={styles.headerCount}>{total} facture{total > 1 ? 's' : ''}</Text>
+        <Text style={styles.headerTitle}>
+          {filteredByReservation ? 'Facture de la course' : 'Mes factures'}
+        </Text>
+        <Text style={styles.headerCount}>
+          {displayedInvoices.length} facture{displayedInvoices.length > 1 ? 's' : ''}
+        </Text>
       </View>
 
       <FlatList
-        data={invoices}
+        data={displayedInvoices}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <InvoiceCard invoice={item} token={token} />}
         contentContainerStyle={styles.list}
@@ -184,7 +201,10 @@ export default function MyInvoicesScreen() {
             <Ionicons name="receipt-outline" size={48} color={Colors.textMuted} />
             <Text style={styles.emptyTitle}>Aucune facture</Text>
             <Text style={styles.emptySubtitle}>
-              Les factures sont générées automatiquement à la clôture de chaque course.
+              {filteredByReservation 
+                ? 'Pas de facture disponible pour cette course.'
+                : 'Les factures sont générées automatiquement à la clôture de chaque course.'
+              }
             </Text>
           </View>
         }

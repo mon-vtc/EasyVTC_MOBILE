@@ -105,16 +105,17 @@ export interface Reservation {
     phone:            string | null;
     profile_photo_url:string | null;
   };
-  driver?: {
-    id:           string;
-    vehicle_type: VehicleType | null;
-    user: {
-      first_name:        string;
-      last_name:         string;
-      phone:             string | null;
-      profile_photo_url: string | null;
-    };
-  } | null;
+  driver?: AvailableDriverDto | null ;
+  // {
+  //   id:           string;
+  //   vehicle_type: VehicleType | null;
+  //   user: {
+  //     first_name:        string;
+  //     last_name:         string;
+  //     phone:             string | null;
+  //     profile_photo_url: string | null;
+  //   };
+  // } | null;
 }
 
 // ── DTO création — aligné champ par champ avec le backend ─────────────────────

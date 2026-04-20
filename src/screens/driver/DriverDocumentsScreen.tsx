@@ -340,9 +340,9 @@ const s = StyleSheet.create({
   },
 
   statsRow: {
-    flexDirection: 'row', gap: Spacing.xxs ?? 4, flexWrap: 'wrap',
+    flexDirection: 'row', gap: 1 , flexWrap: 'wrap',
     justifyContent: 'center', 
-    paddingVertical:Spacing.md, paddingHorizontal: 2, 
+    paddingVertical:Spacing.md, paddingHorizontal: 1, 
     backgroundColor: Colors.white ?? '#fff',
     borderBottomWidth: 1, borderBottomColor: Colors.border,
     borderBottomRightRadius : Radius.lg, borderBottomLeftRadius : Radius.lg,

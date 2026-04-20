@@ -2,6 +2,9 @@
 import { api } from '../../lib/api';
 import type { ApiResponse } from '../../types';
 import type { Vehicle, VehicleType } from '../../types/user.types';
+import type {
+  VehicleTypeOption,
+} from '../../types/reservations.types';
 
 export interface CreateVehiclePayload {
   plate_number: string;
@@ -37,4 +40,15 @@ export const vehicleApi = {
 
   deleteVehicle: (token: string, vehicleId: string): Promise<ApiResponse<null>> =>
     api.delete(`/drivers/vehicles/${vehicleId}`, token),
+
+    /** GET /vehicle-types — Types de véhicule disponibles avec tarifs */
+  getVehicleTypes: (
+    token:    string,
+    country?: string,
+  ): Promise<ApiResponse<VehicleTypeOption[]>> => {
+    const qs = country ? `?country=${country}` : '';
+    return (
+    api.get(`/vehicle-types${qs}`, token)
+    )
+  },
 };

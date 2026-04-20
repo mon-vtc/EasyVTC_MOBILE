@@ -15,7 +15,7 @@ import { useRoute, useNavigation, RouteProp, NavigationProp } from '@react-navig
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 import DriverPickerModal from './DriverPickerModal';
-import  CancelReservationModal from './CancelReservationModal';
+import  CancelReservationModal from '../../components/common/CancelReservationModal';
 import type { Reservation , AvailableDriverDto} from '../../types/reservations.types';
 
 type ScreenRoute = RouteProp<{ AdminReservationDetail: { reservationId: string } }, 'AdminReservationDetail'>;

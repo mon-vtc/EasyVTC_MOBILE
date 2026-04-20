@@ -116,24 +116,12 @@ export function useReservation() {
     }
   }, []);
 
-  // ── Géocodage d'une adresse saisie → GeoPoint (Nominatim / OpenStreetMap) ──
-  // N'utilise pas Location.geocodeAsync (natif Android, défaillant sur émulateur
-  // sans Google Play Services configuré). Nominatim fonctionne partout sans clé.
+  // ── Géocodage ──────────────────────────────────────────────────────────────
   const geocodeAddress = useCallback(async (address: string): Promise<GeoPoint | null> => {
     try {
-      const query = encodeURIComponent(address);
-      const res   = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&addressdetails=0`,
-        { headers: { 'User-Agent': 'EazyVTC/1.0 (contact@infinitiax.com)' } },
-      );
-      if (!res.ok) return null;
-      const data: { lat: string; lon: string }[] = await res.json();
-      if (!data.length) return null;
-      return {
-        latitude:  parseFloat(data[0].lat),
-        longitude: parseFloat(data[0].lon),
-        address,
-      };
+      const results = await Location.geocodeAsync(address);
+      if (!results.length) return null;
+      return { latitude: results[0].latitude, longitude: results[0].longitude, address };
     } catch {
       return null;
     }

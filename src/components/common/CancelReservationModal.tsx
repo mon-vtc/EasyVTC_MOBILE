@@ -10,6 +10,9 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  KeyboardAvoidingView,
+  Keyboard,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing } from '../../theme/colors';
@@ -38,6 +41,7 @@ export default function CancelReservationModal({
     }
     setError(null);
     setCancelling(true);
+    Keyboard.dismiss();
     try {
       await onConfirm(reason.trim());
       setReason('');
@@ -50,6 +54,7 @@ export default function CancelReservationModal({
 
   const handleClose = () => {
     if (cancelling) return;
+    Keyboard.dismiss();
     setReason('');
     setError(null);
     onClose();
@@ -64,7 +69,16 @@ export default function CancelReservationModal({
       statusBarTranslucent
     >
       <View style={S.overlay}>
-        <View style={S.sheet}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={S.keyboardAvoid}
+        >
+          <ScrollView
+            contentContainerStyle={S.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
+          >
+            <View style={S.sheet}>
 
           {/* ── En-tête ── */}
           <View style={S.header}>
@@ -143,7 +157,9 @@ export default function CancelReservationModal({
             </TouchableOpacity>
           </View>
 
-        </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
@@ -153,6 +169,13 @@ const S = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  keyboardAvoid: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'flex-end',
   },
   sheet: {
@@ -160,6 +183,7 @@ const S = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: Platform.OS === 'ios' ? 36 : Spacing.lg,
+    maxHeight: '90%',
   },
 
   // Header

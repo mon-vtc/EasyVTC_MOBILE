@@ -183,13 +183,13 @@ export interface PriceBreakdown {
   pickup_surcharge_total?: number;
 }
 
-export interface PriceEstimateResult {
-  pricing_type:  PricingType;
-  country:       PricingCountry;
-  currency:      string;
-  final_price:   number;
-  breakdown:     PriceBreakdown;
-}
+// export interface PriceEstimateResult {
+//   pricing_type:  PricingType;
+//   country:       PricingCountry;
+//   currency:      string;
+//   final_price:   number;
+//   breakdown:     PriceBreakdown;
+// }
 
 // ── Filtres liste forfaits ────────────────────────────────────────────────────
 export interface FlatRateListFilters {
