@@ -352,6 +352,24 @@ export function useReservation() {
     _setFlatRateId(id);
     setSuggestedFlatRate(null);
     if (id) {
+      // Auto-populate origin/destination depuis les labels du forfait
+      // si le client n'a pas saisi d'adresses manuellement.
+      // Garantit que pickup_address >= 5 chars (exigé par le validator backend).
+      const fr = flatRatesRef.current.find(f => f.id === id);
+      if (fr) {
+        if (!bookingRef.current.origin) {
+          const addr = fr.origin_label.length >= 5
+            ? fr.origin_label
+            : `Zone: ${fr.origin_label}`;
+          _setOrigin({ address: addr, latitude: 0, longitude: 0 });
+        }
+        if (!bookingRef.current.destination) {
+          const addr = fr.destination_label.length >= 5
+            ? fr.destination_label
+            : `Zone: ${fr.destination_label}`;
+          _setDestination({ address: addr, latitude: 0, longitude: 0 });
+        }
+      }
       fetchFlatRateEstimate(id, bookingRef.current.nb_passengers);
     } else {
       const { origin, destination, vehicle_type, nb_passengers } = bookingRef.current;
@@ -359,7 +377,7 @@ export function useReservation() {
         fetchEstimate(origin, destination, vehicle_type, nb_passengers);
       }
     }
-  }, [_setFlatRateId, fetchEstimate, fetchFlatRateEstimate]);
+  }, [_setFlatRateId, _setOrigin, _setDestination, fetchEstimate, fetchFlatRateEstimate]);
 
   // ── Navigation étapes ──────────────────────────────────────────────────────
   const goToStep = useCallback((step: BookingStep) => _setStep(step), [_setStep]);
@@ -382,7 +400,11 @@ export function useReservation() {
     ((booking.origin && booking.destination) || booking.flat_rate_id)
   );
   const isStep2Valid = !!(booking.date && booking.time && booking.nb_passengers >= 1);
-  const isStep3Valid = isStep1Valid && isStep2Valid;
+  // Étape 3 : l'estimation doit être disponible (prix calculé côté serveur).
+  // Sans ça, le DTO n'a ni flat_rate_id ni distance_km/duration_min → 400 backend.
+  const isStep3Valid = isStep1Valid && isStep2Valid && !isFetchingPrice && (
+    !!booking.flat_rate_id || booking.estimated_price != null
+  );
 
   // ── Soumission ─────────────────────────────────────────────────────────────
   const submitBooking = useCallback(async (): Promise<Reservation> => {

@@ -326,16 +326,17 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
 
       // DTO aligné champ par champ avec CreateReservationDto backend
       const dto: CreateReservationDto = {
-        // Trajet — noms backend (adresses du forfait si non saisies manuellement)
+        // Trajet — noms backend (adresses saisies ou labels du forfait)
         pickup_address: booking.origin?.address ?? '',
-        pickup_lat:     booking.origin?.latitude ?? 0,
-        pickup_lng:     booking.origin?.longitude ?? 0,
+        // lat/lng : omis si nuls ou 0 (placeholder forfait) — backend les accepte en optionnel
+        ...(booking.origin?.latitude  ? { pickup_lat: booking.origin.latitude  } : {}),
+        ...(booking.origin?.longitude ? { pickup_lng: booking.origin.longitude } : {}),
         dest_address:   booking.destination?.address ?? '',
-        dest_lat:       booking.destination?.latitude ?? 0,
-        dest_lng:       booking.destination?.longitude ?? 0,
+        ...(booking.destination?.latitude  ? { dest_lat: booking.destination.latitude  } : {}),
+        ...(booking.destination?.longitude ? { dest_lng: booking.destination.longitude } : {}),
 
         // Véhicule & pays
-        vehicle_type: booking.vehicle_type,
+        vehicle_type: booking.vehicle_type!,
         country:      country as any,
 
         // Horaire
