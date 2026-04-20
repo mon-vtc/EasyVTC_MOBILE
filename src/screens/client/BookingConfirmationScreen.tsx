@@ -8,12 +8,12 @@ import { Ionicons }       from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuthStore }   from '../../store/auth.store';
 import { reservationApi } from '../../services/api/reservation.api';
-import type { BottomTabScreenProps }  from '@react-navigation/bottom-tabs';
-import type { ClientTabParamList }    from '../../types/auth.types';
-import type { Reservation }           from '../../types/reservations.types';
-import { RESERVATION_STATUS_LABELS }  from '../../types/reservations.types';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { ClientStackParamList }   from '../../types/auth.types';
+import type { Reservation }            from '../../types/reservations.types';
+import { RESERVATION_STATUS_LABELS }   from '../../types/reservations.types';
 
-type Props = BottomTabScreenProps<ClientTabParamList, 'BookingConfirmation'>;
+type Props = NativeStackScreenProps<ClientStackParamList, 'BookingConfirmation'>;
 
 function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
@@ -50,11 +50,12 @@ export default function BookingConfirmationScreen({ route, navigation }: Props) 
   }, [reservationId, token]);
 
   const handleGoHome = () => {
-    navigation.reset({ index: 0, routes: [{ name: 'ClientHome' }] });
+    // Remonte au Stack racine puis navigue vers les Tabs
+    (navigation as any).reset({ index: 0, routes: [{ name: 'ClientTabs' }] });
   };
 
   const handleGoReservations = () => {
-    navigation.navigate('MyReservations');
+    (navigation as any).navigate('ClientTabs', { screen: 'MyReservations' });
   };
 
   if (loading) {

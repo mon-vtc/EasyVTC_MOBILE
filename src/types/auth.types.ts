@@ -70,9 +70,10 @@ export type ClientTabParamList = {
  * depuis les sous-écrans atterrissent dans ce stack.
  */
 export type ClientStackParamList = {
-  ClientTabs:           NavigatorScreenParams<ClientTabParamList>;
-  CreateReservation:              undefined;
-  ReservationDetails:  { reservationId: string };
+  ClientTabs:            NavigatorScreenParams<ClientTabParamList>;
+  CreateReservation:     undefined;
+  BookingConfirmation:   { reservationId: string };
+  ReservationDetails:    { reservationId: string };
 };
 
 export type DriverReservationsStackParamList = {
