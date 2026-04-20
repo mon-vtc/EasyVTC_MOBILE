@@ -11,7 +11,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView,
-  Platform, Image,
+  Platform, Image, Modal,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation }  from '@react-navigation/native';
@@ -37,6 +37,91 @@ const VEHICLE_ICONS: Record<string, string> = {
 
 function formatPrice(price: number): string {
   return `${price.toFixed(2)} €`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL DÉTAIL FORFAIT
+// ══════════════════════════════════════════════════════════════════════════════
+function ForfaitDetailModal({
+  forfait,
+  onApply,
+  onClose,
+}: {
+  forfait: PricingFlatRate;
+  onApply: () => void;
+  onClose: () => void;
+}) {
+  const hasSurcharge = (forfait.pickup_surcharge ?? 0) > 0;
+
+  return (
+    <Modal transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={fdm.overlay} activeOpacity={1} onPress={onClose} />
+      <View style={fdm.sheet}>
+        {/* En-tête */}
+        <View style={fdm.header}>
+          <View style={fdm.handle} />
+          <TouchableOpacity onPress={onClose} style={fdm.closeBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <AppIcon name="close-outline" size={22} color={Colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Icône + label */}
+        <View style={fdm.titleRow}>
+          <View style={fdm.iconWrap}>
+            <AppIcon name="pricetag-outline" size={26} color={Colors.white} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={fdm.label}>{forfait.label}</Text>
+            <Text style={fdm.subtitle}>Tarif forfaitaire</Text>
+          </View>
+        </View>
+
+        {/* Itinéraire */}
+        <View style={fdm.routeCard}>
+          <View style={fdm.routeRow}>
+            <View style={[fdm.dot, { backgroundColor: '#10B981' }]} />
+            <View>
+              <Text style={fdm.routeRole}>Départ</Text>
+              <Text style={fdm.routePlace}>{forfait.origin_label}</Text>
+            </View>
+          </View>
+          <View style={fdm.routeLine} />
+          <View style={fdm.routeRow}>
+            <View style={[fdm.dot, { backgroundColor: Colors.bordeaux }]} />
+            <View>
+              <Text style={fdm.routeRole}>Arrivée</Text>
+              <Text style={fdm.routePlace}>{forfait.destination_label}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Prix */}
+        <View style={fdm.priceRow}>
+          <Text style={fdm.priceLabel}>Tarif de base</Text>
+          <Text style={fdm.priceValue}>{formatPrice(forfait.price)}</Text>
+        </View>
+
+        {hasSurcharge && (
+          <View style={fdm.surchargeRow}>
+            <AppIcon name="information-circle-outline" size={14} color={Colors.textSecondary} />
+            <Text style={fdm.surchargeText}>
+              Supplément de {formatPrice(forfait.pickup_surcharge!)} par passager supplémentaire (au-delà du 1er)
+            </Text>
+          </View>
+        )}
+
+        {/* CTA */}
+        <TouchableOpacity style={fdm.applyBtn} onPress={onApply} activeOpacity={0.85}>
+          <AppIcon name="checkmark-outline" size={18} color={Colors.white} />
+          <Text style={fdm.applyBtnText}>Choisir ce forfait</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={fdm.cancelBtn} onPress={onClose} activeOpacity={0.85}>
+          <Text style={fdm.cancelBtnText}>Annuler</Text>
+        </TouchableOpacity>
+      </View>
+    </Modal>
+  );
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -93,6 +178,7 @@ function Step1({
   const [originInput, setOriginInput]           = useState<string>(booking.origin?.address ?? '');
   const [destinationInput, setDestinationInput] = useState<string>(booking.destination?.address ?? '');
   const [isGeolocating, setIsGeolocating]       = useState(false);
+  const [detailForfait, setDetailForfait]       = useState<PricingFlatRate | null>(null);
 
   // ── Géolocalisation ────────────────────────────────────────────────────────
   const handleGeolocate = async () => {
@@ -122,13 +208,33 @@ function Step1({
     if (point) setDestination({ ...point, address: trimmed });
   }, [destinationInput, geocodeAddress, setDestination]);
 
-  // ── Bascule sélection forfait ─────────────────────────────────────────────
+  // ── Forfait : ouvre la vue détail avant d'appliquer ───────────────────────
   const handleFlatRatePress = useCallback((fr: PricingFlatRate) => {
-    setFlatRateId(booking.flat_rate_id === fr.id ? null : fr.id);
+    if (booking.flat_rate_id === fr.id) {
+      setFlatRateId(null); // désélection directe si déjà actif
+    } else {
+      setDetailForfait(fr); // ouvre la vue détail
+    }
   }, [booking.flat_rate_id, setFlatRateId]);
+
+  const handleApplyForfait = useCallback(() => {
+    if (detailForfait) {
+      setFlatRateId(detailForfait.id);
+      setDetailForfait(null);
+    }
+  }, [detailForfait, setFlatRateId]);
 
   return (
     <ScrollView contentContainerStyle={styles.stepContent} keyboardShouldPersistTaps="handled">
+
+      {/* ── Modal détail forfait ── */}
+      {detailForfait && (
+        <ForfaitDetailModal
+          forfait={detailForfait}
+          onApply={handleApplyForfait}
+          onClose={() => setDetailForfait(null)}
+        />
+      )}
 
       {/* ── Lieu de départ ── */}
       <Text style={styles.fieldLabel}>Lieu de départ</Text>
@@ -182,7 +288,7 @@ function Step1({
       {suggestedFlatRate && booking.flat_rate_id !== suggestedFlatRate.id && (
         <TouchableOpacity
           style={styles.suggestionBanner}
-          onPress={() => setFlatRateId(suggestedFlatRate.id)}
+          onPress={() => setDetailForfait(suggestedFlatRate)}
           activeOpacity={0.85}
         >
           <AppIcon name="pricetag-outline" size={16} color={Colors.bordeaux} />
@@ -232,9 +338,11 @@ function Step1({
                 </Text>
                 <Text style={styles.vehicleDesc}>{v.description}</Text>
               </View>
-              <Text style={[styles.vehiclePrice, isSelected && styles.vehiclePriceSelected]}>
-                À partir de {formatPrice(v.base_price)}
-              </Text>
+              {v.base_price > 0 && (
+                <Text style={[styles.vehiclePrice, isSelected && styles.vehiclePriceSelected]}>
+                  À partir de {formatPrice(v.base_price)}
+                </Text>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -912,4 +1020,98 @@ const si = StyleSheet.create({
   circleTextActive: { color: Colors.white },
   line:             { flex: 1, height: 2, backgroundColor: Colors.border ?? '#D1D5DB', marginHorizontal: 6 },
   lineActive:       { backgroundColor: Colors.bordeaux },
+});
+
+// ── ForfaitDetailModal styles ──────────────────────────────────────────────────
+const fdm = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  sheet: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: Colors.white ?? '#fff',
+    borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    paddingHorizontal: 20, paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+    elevation: 20,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: -4 },
+  },
+  header: {
+    alignItems: 'center', paddingTop: 12, marginBottom: 16,
+    flexDirection: 'row', justifyContent: 'center',
+  },
+  handle: {
+    position: 'absolute', top: 0,
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: Colors.border ?? '#D1D5DB',
+  },
+  closeBtn: {
+    position: 'absolute', right: 0, top: -4,
+    padding: 4,
+  },
+  titleRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 20,
+  },
+  iconWrap: {
+    width: 50, height: 50, borderRadius: 25,
+    backgroundColor: Colors.bordeaux,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  label: {
+    fontSize: 17, fontWeight: '700', color: Colors.textPrimary,
+  },
+  subtitle: {
+    fontSize: 12, color: Colors.textSecondary, marginTop: 2,
+  },
+  routeCard: {
+    backgroundColor: '#F9FAFB', borderRadius: 12, padding: 14, marginBottom: 16,
+  },
+  routeRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+  },
+  dot: {
+    width: 10, height: 10, borderRadius: 5, marginTop: 3,
+  },
+  routeLine: {
+    width: 1, height: 14, backgroundColor: Colors.border ?? '#D1D5DB',
+    marginLeft: 4, marginVertical: 4,
+  },
+  routeRole: {
+    fontSize: 10, color: Colors.textSecondary,
+    textTransform: 'uppercase', letterSpacing: 0.5,
+  },
+  routePlace: {
+    fontSize: 14, fontWeight: '600', color: Colors.textPrimary, marginTop: 1,
+  },
+  priceRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 10,
+  },
+  priceLabel: {
+    fontSize: 14, color: Colors.textSecondary, fontWeight: '500',
+  },
+  priceValue: {
+    fontSize: 22, fontWeight: '800', color: Colors.bordeaux,
+  },
+  surchargeRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 16,
+  },
+  surchargeText: {
+    flex: 1, fontSize: 12, color: Colors.textSecondary, lineHeight: 17,
+  },
+  applyBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: Colors.bordeaux, borderRadius: 12,
+    height: 50, marginBottom: 10,
+  },
+  applyBtnText: {
+    color: Colors.white, fontSize: 15, fontWeight: '700',
+  },
+  cancelBtn: {
+    alignItems: 'center', justifyContent: 'center',
+    height: 44,
+  },
+  cancelBtnText: {
+    color: Colors.textSecondary, fontSize: 14, fontWeight: '500',
+  },
 });

@@ -82,13 +82,35 @@ export function useReservation() {
   const [suggestedFlatRate, setSuggestedFlatRate] = useState<PricingFlatRate | null>(null);
   const flatRatesRef = useRef<PricingFlatRate[]>([]);
 
-  // Chargement initial des types de véhicule et des forfaits
+  // ── Chargement initial des types de véhicule ─────────────────────────────
+  // Pas d'endpoint backend dédié — on construit les options à partir de la
+  // grille tarifaire active (minimum_price comme base d'affichage).
   useEffect(() => {
-    if (accessToken && vehicleTypes.length === 0) {
-      _fetchVehicleTypes(accessToken, COUNTRY);
-    }
-  }, [accessToken]);
+    if (vehicleTypes.length > 0) return;
+    pricingApi.getActiveGrid(COUNTRY)
+      .then(res => {
+        const base = res.ok && res.data ? res.data.minimum_price : 0;
+        const r    = (n: number) => Math.round(n * 100) / 100;
+        useReservationStore.setState({
+          vehicleTypes: [
+            { type: 'standard', label: 'Standard', description: '1–4 passagers',                        base_price: base,        icon: 'car-outline',  capacity: 4 },
+            { type: 'berline',  label: 'Berline',  description: 'Confort supérieur · 1–4 passagers',    base_price: r(base*1.2), icon: 'car-outline',  capacity: 4 },
+            { type: 'van',      label: 'Van',       description: "Grand espace · jusqu'à 7 passagers",  base_price: r(base*1.5), icon: 'bus-outline',  capacity: 7 },
+          ],
+        });
+      })
+      .catch(() => {
+        useReservationStore.setState({
+          vehicleTypes: [
+            { type: 'standard', label: 'Standard', description: '1–4 passagers',                        base_price: 0, icon: 'car-outline',  capacity: 4 },
+            { type: 'berline',  label: 'Berline',  description: 'Confort supérieur · 1–4 passagers',    base_price: 0, icon: 'car-outline',  capacity: 4 },
+            { type: 'van',      label: 'Van',       description: "Grand espace · jusqu'à 7 passagers",  base_price: 0, icon: 'bus-outline',  capacity: 7 },
+          ],
+        });
+      });
+  }, []);
 
+  // ── Chargement initial des forfaits ───────────────────────────────────────
   useEffect(() => {
     pricingApi.listFlatRates(undefined, COUNTRY, { is_active: true, limit: 100 })
       .then(res => {
@@ -97,7 +119,7 @@ export function useReservation() {
           flatRatesRef.current = res.data.flat_rates;
         }
       })
-      .catch(() => { /* silencieux — endpoint public toujours disponible */ });
+      .catch(() => {});
   }, []);
 
   // ── Géolocalisation ────────────────────────────────────────────────────────
@@ -192,8 +214,10 @@ export function useReservation() {
 
     if (priceDebounceRef.current) clearTimeout(priceDebounceRef.current);
 
+    // Signal immédiat : le prix est en cours de recalcul, même avant la fin du debounce.
+    useReservationStore.setState({ isFetchingPrice: true });
+
     priceDebounceRef.current = setTimeout(async () => {
-      useReservationStore.setState({ isFetchingPrice: true });
       try {
         const R    = 6371;
         const dLat = ((destination.latitude  - origin.latitude)  * Math.PI) / 180;
