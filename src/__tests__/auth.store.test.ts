@@ -95,7 +95,7 @@ beforeEach(() => {
 // login
 // ══════════════════════════════════════════════════════════════════
 describe('login()', () => {
-  it('✅ met à jour user + tokens dans le store', async () => {
+  it(' met à jour user + tokens dans le store', async () => {
     mockApi.login.mockResolvedValueOnce({
       ok: true,
       data: { user: mockUser, ...mockTokens },
@@ -112,7 +112,7 @@ describe('login()', () => {
     expect(mockStorage.setTokens).toHaveBeenCalledWith('access-tok', 'refresh-tok');
   });
 
-  it('❌ remplit error si API retourne ok:false', async () => {
+  it(' remplit error si API retourne ok:false', async () => {
     mockApi.login.mockResolvedValueOnce({ ok: false, message: 'Email ou mot de passe incorrect' });
 
     await expect(
@@ -122,7 +122,7 @@ describe('login()', () => {
     expect(getStore().error).toContain('Email ou mot de passe incorrect');
   });
 
-  it('❌ isLoading revient à false après erreur', async () => {
+  it(' isLoading revient à false après erreur', async () => {
     mockApi.login.mockRejectedValueOnce(new Error('Réseau indisponible'));
 
     await expect(
@@ -137,7 +137,7 @@ describe('login()', () => {
 // register
 // ══════════════════════════════════════════════════════════════════
 describe('register()', () => {
-  it('✅ crée le compte et met le user dans le store', async () => {
+  it(' crée le compte et met le user dans le store', async () => {
     mockApi.register.mockResolvedValueOnce({
       ok: true,
       data: { user: mockUser, ...mockTokens },
@@ -154,7 +154,7 @@ describe('register()', () => {
     expect(mockStorage.setTokens).toHaveBeenCalled();
   });
 
-  it('❌ gère email déjà existant', async () => {
+  it(' gère email déjà existant', async () => {
     mockApi.register.mockResolvedValueOnce({ ok: false, message: 'Un compte existe déjà avec cet email' });
 
     await expect(
@@ -176,7 +176,7 @@ describe('logout()', () => {
     useAuthStore.setState({ user: mockUser, accessToken: 'tok', refreshToken: 'ref' });
   });
 
-  it('✅ vide le store et efface les tokens', async () => {
+  it(' vide le store et efface les tokens', async () => {
     mockApi.logout.mockResolvedValueOnce({ ok: true, data: null });
 
     await act(async () => { await getStore().logout(); });
@@ -187,7 +187,7 @@ describe('logout()', () => {
     expect(mockStorage.clearTokens).toHaveBeenCalled();
   });
 
-  it('✅ vide le store même si API logout échoue', async () => {
+  it(' vide le store même si API logout échoue', async () => {
     mockApi.logout.mockRejectedValueOnce(new Error('Network error'));
 
     await act(async () => { await getStore().logout(); });
@@ -201,7 +201,7 @@ describe('logout()', () => {
 // hydrate
 // ══════════════════════════════════════════════════════════════════
 describe('hydrate()', () => {
-  it('✅ restaure la session depuis le token stocké', async () => {
+  it(' restaure la session depuis le token stocké', async () => {
     mockStorage.getAccessToken.mockResolvedValueOnce('stored-tok');
     mockStorage.getRefreshToken.mockResolvedValueOnce('stored-ref');
     mockApi.me.mockResolvedValueOnce({ ok: true, data: mockUser });
@@ -213,7 +213,7 @@ describe('hydrate()', () => {
     expect(state.isHydrated).toBe(true);
   });
 
-  it('✅ tente le refresh si /me échoue', async () => {
+  it(' tente le refresh si /me échoue', async () => {
     mockStorage.getAccessToken.mockResolvedValueOnce('expired-tok');
     mockStorage.getRefreshToken.mockResolvedValueOnce('valid-ref');
     mockApi.me
@@ -230,7 +230,7 @@ describe('hydrate()', () => {
     expect(getStore().user?.id).toBe('uuid-123');
   });
 
-  it('✅ déconnecte si pas de token stocké', async () => {
+  it(' déconnecte si pas de token stocké', async () => {
     mockStorage.getAccessToken.mockResolvedValueOnce(null);
     mockStorage.getRefreshToken.mockResolvedValueOnce(null);
 
@@ -247,7 +247,7 @@ describe('hydrate()', () => {
 // forgotPassword
 // ══════════════════════════════════════════════════════════════════
 describe('forgotPassword()', () => {
-  it('✅ appelle API sans erreur', async () => {
+  it(' appelle API sans erreur', async () => {
     mockApi.forgotPassword.mockResolvedValueOnce({ ok: true, data: null });
 
     await act(async () => { await getStore().forgotPassword('test@easyvtc.com'); });
@@ -261,7 +261,7 @@ describe('forgotPassword()', () => {
 // resetPassword — nouveau
 // ══════════════════════════════════════════════════════════════════
 describe('resetPassword()', () => {
-  it('✅ appelle API avec token + new_password', async () => {
+  it(' appelle API avec token + new_password', async () => {
     mockApi.resetPassword.mockResolvedValueOnce({ ok: true, data: null });
 
     await act(async () => {
@@ -273,7 +273,7 @@ describe('resetPassword()', () => {
     expect(getStore().error).toBeNull();
   });
 
-  it('❌ remplit error si token invalide', async () => {
+  it(' remplit error si token invalide', async () => {
     mockApi.resetPassword.mockResolvedValueOnce({ ok: false, message: 'Token invalide ou expiré' });
 
     await expect(
@@ -292,7 +292,7 @@ describe('changePassword()', () => {
     useAuthStore.setState({ accessToken: 'my-token' });
   });
 
-  it('✅ appelle API avec les 3 paramètres', async () => {
+  it(' appelle API avec les 3 paramètres', async () => {
     mockApi.changePassword.mockResolvedValueOnce({ ok: true, data: null });
 
     await act(async () => {
@@ -302,7 +302,7 @@ describe('changePassword()', () => {
     expect(mockApi.changePassword).toHaveBeenCalledWith('Old1234', 'New5678A', 'New5678A', 'my-token');
   });
 
-  it('❌ 401 si ancien mot de passe incorrect', async () => {
+  it(' 401 si ancien mot de passe incorrect', async () => {
     mockApi.changePassword.mockResolvedValueOnce({ ok: false, message: 'Mot de passe actuel incorrect' });
 
     await expect(
@@ -312,7 +312,7 @@ describe('changePassword()', () => {
     expect(getStore().error).toContain('Mot de passe actuel incorrect');
   });
 
-  it('❌ lève une erreur si non authentifié', async () => {
+  it(' lève une erreur si non authentifié', async () => {
     useAuthStore.setState({ accessToken: null });
 
     await expect(
@@ -325,7 +325,7 @@ describe('changePassword()', () => {
 // loginWithGoogle — REGRESSION bug mapApiUser + endpoint
 // ══════════════════════════════════════════════════════════════════
 describe('loginWithGoogle() — REGRESSION', () => {
-  it('✅ applique mapApiUser sur le user reçu', async () => {
+  it(' applique mapApiUser sur le user reçu', async () => {
     const driverUser = {
       ...mockUser,
       role: 'driver' as const,
@@ -352,7 +352,7 @@ describe('loginWithGoogle() — REGRESSION', () => {
     expect(user?.is_online).toBe(false);
   });
 
-  it('✅ appelle authApi.google (pas /auth/google GET)', async () => {
+  it(' appelle authApi.google (pas /auth/google GET)', async () => {
     mockApi.google.mockResolvedValueOnce({
       ok: true,
       data: { user: mockUser, ...mockTokens },
@@ -377,7 +377,7 @@ describe('uploadAvatar() — REGRESSION', () => {
     });
   });
 
-  it('✅ met à jour profile_photo_url dans le store', async () => {
+  it(' met à jour profile_photo_url dans le store', async () => {
     mockApi.uploadAvatar.mockResolvedValueOnce({
       ok: true,
       data: { profile_photo_url: 'https://cdn.example.com/avatar.jpg' },
@@ -390,7 +390,7 @@ describe('uploadAvatar() — REGRESSION', () => {
     expect(getStore().user?.profile_photo_url).toBe('https://cdn.example.com/avatar.jpg');
   });
 
-  it('✅ met localAvatarUri si URI fourni', async () => {
+  it(' met localAvatarUri si URI fourni', async () => {
     mockApi.uploadAvatar.mockResolvedValueOnce({
       ok: true,
       data: { profile_photo_url: 'https://cdn.example.com/avatar.jpg' },
@@ -404,7 +404,7 @@ describe('uploadAvatar() — REGRESSION', () => {
     expect(getStore().user?.profile_photo_url).toBe('https://cdn.example.com/avatar.jpg');
   });
 
-  it('❌ remplit error si upload échoue', async () => {
+  it(' remplit error si upload échoue', async () => {
     mockApi.uploadAvatar.mockResolvedValueOnce({ ok: false, message: 'Fichier trop volumineux' });
 
     await expect(
@@ -419,7 +419,7 @@ describe('uploadAvatar() — REGRESSION', () => {
 // clearError
 // ══════════════════════════════════════════════════════════════════
 describe('clearError()', () => {
-  it('✅ remet error à null', () => {
+  it(' remet error à null', () => {
     useAuthStore.setState({ error: 'une erreur' });
     getStore().clearError();
     expect(getStore().error).toBeNull();
