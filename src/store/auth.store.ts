@@ -6,24 +6,28 @@
 
   // ── Utilitaire : aplatir la réponse API → AuthUser/DriverUser ──
   export function mapApiUser(raw: any): AuthUser {
-    if (raw?.role !== 'driver') return raw;
+  if (raw?.role !== 'driver') return raw;
 
-    return {
-      // Champs racine
-      ...raw,
-      // Champs driver aplatis depuis raw.driver
-      driverStatus: raw.driver?.status        ?? 'pending',
-      vehicle_type: raw.driver?.vehicle_type  ?? null,
-      siret:        raw.driver?.siret         ?? null,
-      zone:         raw.driver?.zone          ?? null,
-      iban:         raw.driver?.iban          ?? null,
-      vtc_license:  raw.driver?.vtc_license   ?? null,
-      tva_rate:     raw.driver?.tva_rate      ?? 0,
-      is_online:    raw.driver?.is_online     ?? false,
-      // Véhicule actif
-      vehicle:      raw.vehicle               ?? null,
-    };
-  }
+  return {
+    ...raw,
+    driver: raw.driver
+      ? raw.driver  // driver présent → on le passe tel quel
+      : {           // driver absent → valeurs par défaut
+          id:           '',
+          status:       'pending',
+          vehicle_type: null,
+          siret:        null,
+          zone:         null,
+          iban:         null,
+          vtc_license:  null,
+          tva_rate:     0,
+          is_online:    false,
+          created_at:   '',
+          updated_at:   '',
+        },
+    vehicle: raw.vehicle ?? null,
+  };
+}
 
   interface AuthState {
     user:           AuthUser  | null;
