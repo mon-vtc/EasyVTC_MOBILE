@@ -4,7 +4,7 @@
 // Aligné avec le backend (reservations.types.ts serveur)
 // ══════════════════════════════════════════════════════════════════════════════
 
-import type { PricingCountry } from './pricing.types';
+import type { PricingCountry, PriceBreakdown } from './pricing.types';
 
 // ── Statuts ───────────────────────────────────────────────────────────────────
 // Aligné avec le backend : 'driver_arrived' est géré côté front uniquement
@@ -81,7 +81,7 @@ export interface Reservation {
   price_estimated: number;
   price_final:     number | null;
   price_adjusted:  number | null;
-  price_breakdown: Record<string, unknown>;
+  price_breakdown: PriceBreakdown;
 
   // Métriques
   distance_km:  number | null;
@@ -212,12 +212,8 @@ export const BOOKING_INITIAL_STATE: BookingFormState = {
   step:            1,
 };
 
-// types/reservations.types.ts  (ou un fichier dédié)
-
-import type { Vehicle } from './user.types';
-
 export interface AvailableDriverDto {
-  id:           string;          // drivers.id — passé à assign()
+  id:           string;
   rating:       number | null;
   is_online:    boolean;
   status:       string;
@@ -231,5 +227,13 @@ export interface AvailableDriverDto {
     email:             string;
     profile_photo_url: string | null;
   };
-  vehicle: Pick<Vehicle, 'id' | 'model' | 'plate_number' | 'brand' | 'color' | 'type' | 'photo_url'> | null;
+  vehicle: {
+    id:           string;
+    model:        string;
+    plate_number: string;
+    brand:        string;
+    color:        string | null;
+    type:         string;
+    photo_url:    string | null;
+  } | null;
 }
