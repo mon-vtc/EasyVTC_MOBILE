@@ -57,6 +57,7 @@ export type ClientTabParamList = {
   // S4 — Documents financiers
   MyOrders:            undefined;
   MyInvoices:          { reservationId?: string } | undefined;
+  OrderDetails:        { orderId: string };
 };
 
 /**
@@ -74,6 +75,7 @@ export type ClientStackParamList = {
   CreateReservation:              undefined;
   ReservationDetails:  { reservationId: string };
   BookingConfirmation: { reservationId: string };
+  OrderDetails:        { orderId: string };
 };
 
 export type DriverReservationsStackParamList = {
