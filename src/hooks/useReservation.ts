@@ -357,18 +357,14 @@ export function useReservation() {
       // Garantit que pickup_address >= 5 chars (exigé par le validator backend).
       const fr = flatRatesRef.current.find(f => f.id === id);
       if (fr) {
-        if (!bookingRef.current.origin) {
-          const addr = fr.origin_label.length >= 5
-            ? fr.origin_label
-            : `Zone: ${fr.origin_label}`;
-          _setOrigin({ address: addr, latitude: 0, longitude: 0 });
-        }
-        if (!bookingRef.current.destination) {
-          const addr = fr.destination_label.length >= 5
-            ? fr.destination_label
-            : `Zone: ${fr.destination_label}`;
-          _setDestination({ address: addr, latitude: 0, longitude: 0 });
-        }
+        const originAddr = fr.origin_label.length >= 5
+          ? fr.origin_label
+          : `Zone: ${fr.origin_label}`;
+        const destAddr = fr.destination_label.length >= 5
+          ? fr.destination_label
+          : `Zone: ${fr.destination_label}`;
+        _setOrigin({ address: originAddr, latitude: 0, longitude: 0 });
+        _setDestination({ address: destAddr, latitude: 0, longitude: 0 });
       }
       fetchFlatRateEstimate(id, bookingRef.current.nb_passengers);
     } else {

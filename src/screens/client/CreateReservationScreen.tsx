@@ -208,6 +208,8 @@ function Step1({
 
   const handleApplyForfait = useCallback(() => {
     if (detailForfait) {
+      setOriginInput(detailForfait.origin_label);
+      setDestinationInput(detailForfait.destination_label);
       setFlatRateId(detailForfait.id);
       setDetailForfait(null);
     }
