@@ -184,22 +184,22 @@ export default function ClientNavigator() {
         }}
       />
 
-      {/* Page de succès — replace() depuis CreateReservationScreen empêche le retour */}
+      {/* Page de succès après réservation — replace() depuis CreateReservationScreen empêche le retour */}
       <Stack.Screen
-        name="ReservationDetails"
-        component={ReservationDetailsScreen} // Garde le même composant pour l'instant
+        name="BookingConfirmation"
+        component={BookingConfirmationScreen}
         options={{
           animation:      'fade',
-          gestureEnabled: false,   // pas de swipe-back sur la confirmation
+          gestureEnabled: false,
         }}
       />
 
+      {/* Détail d'une réservation existante */}
       <Stack.Screen
-        name="BookingConfirmation"
-        component={BookingConfirmationScreen} // Garde le même composant pour l'instant
+        name="ReservationDetails"
+        component={ReservationDetailsScreen}
         options={{
-          animation:      'fade',
-          gestureEnabled: false,   // pas de swipe-back sur la confirmation
+          animation: 'slide_from_right',
         }}
       />
 
