@@ -178,13 +178,13 @@ export default function OrderDetailsScreen() {
           <View style={styles.docHeader}>
             <View style={styles.docHeaderLeft}>
               <Text style={styles.docTitle}>BON DE{'\n'}COMMANDE</Text>
-              <Text style={styles.docOrderNumber}>n°{order.order_number}</Text>
+              <Text style={styles.docOrderNumber}>n° {order.order_number}</Text>
               <Text style={styles.docDate}>Date : {fmtDateLong(order.created_at)}</Text>
             </View>
             <View style={styles.docLogoContainer}>
               {/* Remplacer par <Image> si le logo est disponible en local */}
               <View style={styles.docLogoFallback}>
-                <Image source={Logo.LogoVTCMarron} style={{ width: 32, height: 32, marginBottom: 4 }} />
+                <Image source={Logo.LogoVTCMarron} style={styles.docLogoImage} />
               </View>
             </View>
           </View>
@@ -197,9 +197,9 @@ export default function OrderDetailsScreen() {
             <Text style={styles.clientName}>
               {passenger.first_name} {passenger.last_name}
             </Text>
-            {/* {passenger.address ? (
-              <Text style={styles.clientInfo}>{passenger.address}</Text>
-            ) : null} */}
+            {snap.pickup_address ? (
+              <Text style={styles.clientInfo}>{snap.pickup_address}</Text>
+            ) : null}
             {passenger.phone ? (
               <Text style={styles.clientInfo}>{passenger.phone}</Text>
             ) : null}
@@ -445,29 +445,27 @@ const styles = StyleSheet.create({
   docOrderNumber: {
     fontSize: Fonts.size.sm,
     color: 'rgba(255,255,255,0.85)',
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md,
     fontWeight: '500',
   },
   docDate: {
     fontSize: Fonts.size.sm,
     color: 'rgba(255,255,255,0.75)',
-    marginTop: 2,
+    marginTop: Spacing.md / 2,
   },
   docLogoContainer: { marginLeft: Spacing.md, justifyContent: 'center', alignItems: 'center' },
   docLogoFallback: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    // backgroundColor: Colors.white,
+    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  docLogoText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: Colors.bordeaux,
-    textAlign: 'center',
-    lineHeight: 14,
+  docLogoImage: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
   },
 
   divider: {
@@ -541,7 +539,7 @@ const styles = StyleSheet.create({
   tripMeta: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.md,
+    gap: Spacing.lg,
     marginTop: Spacing.xs,
   },
   tripMetaItem: {
@@ -581,8 +579,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
   },
   tableHeaderCell: {
-    fontSize: Fonts.size.xs,
-    fontWeight: '700',
+    fontSize: 8,
+    fontWeight: '900',
     color: Colors.white,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
