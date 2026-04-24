@@ -20,6 +20,7 @@ import type { AvailableDriverDto } from '../../types'; // ajuste le chemin si be
 interface Props {
   visible: boolean;
   reservationRef?: string; // ex: "BC-00A1" — affiché dans le titre
+  vehicleType?: string;    // type de véhicule choisi par le client — filtre les chauffeurs
   onConfirm: (driver: AvailableDriverDto) => void;
   onClose: () => void;
 }
@@ -37,6 +38,7 @@ function DriverUserRow({
   const name = `${driver.user?.first_name} ${driver.user?.last_name}`;
   const vehicleLabel =
     [driver.vehicle?.model, driver.vehicle?.plate_number].filter(Boolean).join(' · ') || 'N/A';
+  const driverVehicleType = driver.vehicle_type ?? driver.vehicle?.type ?? null;
 
   return (
     <TouchableOpacity
@@ -60,14 +62,12 @@ function DriverUserRow({
           <Ionicons name="car-outline" size={12} color={Colors.textMuted} />
           <Text style={row.meta} numberOfLines={1}>{vehicleLabel}</Text>
         </View>
-        {/* {driver.rating != null && (
+        {driverVehicleType && (
           <View style={row.metaLine}>
-            <Ionicons name="star" size={12} color="#F9A825" />
-            <Text style={[row.meta, { color: '#F9A825', fontWeight: '700' }]}>
-              {/* {driver.rating.toFixed(1)} */}
-            {/* </Text> */}
-          {/* </View> */}
-        {/* )} */}
+            <Ionicons name="pricetag-outline" size={12} color={Colors.textMuted} />
+            <Text style={row.meta}>{driverVehicleType}</Text>
+          </View>
+        )}
       </View>
 
       {/* Checkmark */}
@@ -137,8 +137,8 @@ const row = StyleSheet.create({
 });
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
-export default function DriverUserPickerModal({ visible, reservationRef, onConfirm, onClose }: Props) {
-  const { fetchDriverUserActive: fetchDriverUserActive  } = useReservation();
+export default function DriverUserPickerModal({ visible, reservationRef, vehicleType, onConfirm, onClose }: Props) {
+  const { fetchDriverUserActive } = useReservation();
 
   const [drivers, setDriverUsers]       = useState<AvailableDriverDto[]>([]);
   const [loading, setLoading]       = useState(false);
@@ -152,21 +152,30 @@ export default function DriverUserPickerModal({ visible, reservationRef, onConfi
     setSelected(null);
     setSearch('');
     setLoading(true);
-    fetchDriverUserActive()
+    fetchDriverUserActive(vehicleType)
       .then((list: AvailableDriverDto[]) => setDriverUsers(list ?? []))
       .catch(console.warn)
       .finally(() => setLoading(false));
   }, [visible]);
 
-  const filtered = search.trim()
+  // Filtre 1 — type de véhicule correspondant à la demande du client
+  const byType = vehicleType
     ? drivers.filter(d => {
+        const driverType = d.vehicle_type ?? d.vehicle?.type ?? null;
+        return driverType?.toLowerCase() === vehicleType.toLowerCase();
+      })
+    : drivers;
+
+  // Filtre 2 — recherche textuelle sur nom / plaque / modèle
+  const filtered = search.trim()
+    ? byType.filter(d => {
         const q = search.toLowerCase();
         const name = `${d.user?.first_name} ${d.user?.last_name}`.toLowerCase();
         const plate = (d.vehicle?.plate_number ?? '').toLowerCase();
         const model = (d.vehicle?.model ?? '').toLowerCase();
         return name.includes(q) || plate.includes(q) || model.includes(q);
       })
-    : drivers;
+    : byType;
 
   const handleConfirm = useCallback(async () => {
     if (!selected) return;
@@ -220,6 +229,17 @@ export default function DriverUserPickerModal({ visible, reservationRef, onConfi
             )}
           </View>
 
+          {/* ── Filtre type de véhicule ── */}
+          {vehicleType && (
+            <View style={M.typeBanner}>
+              <Ionicons name="filter-outline" size={14} color={Colors.bordeaux} />
+              <Text style={M.typeBannerText}>
+                Type demandé : <Text style={M.typeBannerBold}>{vehicleType}</Text>
+                {' '}— {byType.length} chauffeur{byType.length > 1 ? 's' : ''} compatible{byType.length > 1 ? 's' : ''}
+              </Text>
+            </View>
+          )}
+
           {/* ── Liste ── */}
           {loading ? (
             <View style={M.centered}>
@@ -230,7 +250,11 @@ export default function DriverUserPickerModal({ visible, reservationRef, onConfi
             <View style={M.centered}>
               <Ionicons name="person-outline" size={36} color={Colors.textMuted} />
               <Text style={M.emptyText}>
-                {search ? 'Aucun chauffeur trouvé' : 'Aucun chauffeur actif'}
+                {search
+                  ? 'Aucun chauffeur trouvé'
+                  : vehicleType
+                  ? `Aucun chauffeur disponible pour le type "${vehicleType}"`
+                  : 'Aucun chauffeur actif'}
               </Text>
             </View>
           ) : (
@@ -339,6 +363,31 @@ const M = StyleSheet.create({
     fontSize: Fonts.size.sm,
     color: Colors.textPrimary,
     padding: 0,
+  },
+
+  // Vehicle type banner
+  typeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 7,
+    backgroundColor: '#FFF5F5',
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.bordeaux + '40',
+  },
+  typeBannerText: {
+    flex: 1,
+    fontSize: Fonts.size.xs,
+    color: Colors.textSecondary,
+  },
+  typeBannerBold: {
+    fontWeight: '700',
+    color: Colors.bordeaux,
+    textTransform: 'capitalize',
   },
 
   // List
