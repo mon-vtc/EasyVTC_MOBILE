@@ -30,6 +30,7 @@ import MyOrdersScreen             from '../screens/client/MyOrdersScreen';
 import MyInvoicesScreen           from '../screens/client/MyInvoicesScreen';
 import BookingConfirmationScreen  from '../screens/client/BookingConfirmationScreen';
 import ReservationDetailsScreen   from '../screens/client/ReservationDetailsScreen';
+import OrderDetailsScreen         from '../screens/client/OrderDetailsScreen';
 
 import type { ClientTabParamList, ClientStackParamList } from '../types/auth.types';
 
@@ -156,6 +157,11 @@ function ClientTabs() {
         component={MyInvoicesScreen}
         options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
       />
+      <Tab.Screen
+        name="OrderDetails"
+        component={OrderDetailsScreen}
+        options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
+      />
     </Tab.Navigator>
   );
 }
@@ -203,6 +209,14 @@ export default function ClientNavigator() {
         }}
       />
 
+      {/* Détail d'un bon de commande */}
+      <Stack.Screen
+        name="OrderDetails"
+        component={OrderDetailsScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
     </Stack.Navigator>
   );
 }
