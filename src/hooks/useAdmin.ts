@@ -6,7 +6,7 @@ import type {
   CreateManagerDto, ChangeManagerStatusDto, ManagerListFilters,
 } from '../types';
 
-// ✅ Réservé aux admins
+//  Réservé aux admins
 export function useAdmin() {
   const auth         = useAuth();
   const accessToken  = useAuthStore(s => s.accessToken);

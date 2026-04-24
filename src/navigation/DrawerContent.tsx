@@ -123,6 +123,12 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
               style={styles.subItem}
               labelStyle={styles.subItemLabel}
             />
+            <DrawerItem
+              label="Types de véhicule"
+              onPress={() => props.navigation.navigate('AdminVehicleTypes')}
+              style={styles.subItem}
+              labelStyle={styles.subItemLabel}
+            />
           </DrawerAccordion>
         )}
       </DrawerContentScrollView>

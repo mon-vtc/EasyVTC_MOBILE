@@ -1,8 +1,8 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // STORE — Tarification (Zustand)
 // Sprint 3 — EasyVTC
-// fetchConfig : 3 appels parallèles (grille + commission + supplement)
-// saveConfig  : 3 PATCH indépendants sur les IDs connus
+// fetchConfig : GET /pricing/grids/active/:country
+// saveConfig  : POST (création) ou PATCH /pricing/grids/:id (mise à jour)
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { create }      from 'zustand';
@@ -44,46 +44,21 @@ export const usePricingStore = create<PricingState>((set, get) => ({
 
   setCountry: (country) => set({ activeCountry: country, config: null }),
 
-  // ── Chargement : 3 appels parallèles, silencieux si aucune config ────────
-  // Cas "première visite" : les 3 routes retournent 404 → config = null,
-  // l'écran affiche un formulaire vierge prêt à la première saisie.
+  // ── Chargement — silencieux si aucune config (première visite → formulaire vierge) ──
   fetchConfig: async (token, country) => {
     set({ isLoading: true, error: null });
     try {
-    //   const [gridRes, commRes, suppRes] = await Promise.all([
-    //     pricingApi.getActiveGrid(country),
-    //     pricingApi.getActiveCommission(token, country),
-    //     pricingApi.getActiveSupplement(token, country),
-    //   ]);
-      const [gridRes] = await Promise.all([
-        pricingApi.getActiveGrid(country),
-      ]);
+      const gridRes = await pricingApi.getActiveGrid(country);
 
-      // Si aucune des 3 ressources n'existe encore → formulaire vierge, pas d'erreur
-    //   const noneExist = !gridRes.ok && !commRes.ok && !suppRes.ok;
-    //   if (noneExist) {
-    //     set({ config: null, isLoading: false });
-    //     return;
-    //   }
-
-      const noneExist = !gridRes.ok;
-      if (noneExist) {
+      if (!gridRes.ok) {
         set({ config: null, isLoading: false });
         return;
       }
 
-      // Si certaines existent mais pas d'autres → erreur partielle réelle
-      if (!gridRes.ok || !gridRes.data) throw new Error(gridRes.message ?? 'Grille introuvable');
-    //   if (!commRes.ok || !commRes.data) throw new Error(commRes.message ?? 'Commission introuvable');
-    //   if (!suppRes.ok || !suppRes.data) throw new Error(suppRes.message ?? 'Suppléments introuvables');
+      if (!gridRes.data) throw new Error(gridRes.message ?? 'Grille introuvable');
 
       set({
-        config: {
-          country,
-          grid:       gridRes.data,
-        //   commission: commRes.data,
-        //   supplement: suppRes.data,
-        },
+        config: { country, grid: gridRes.data },
         isLoading: false,
       });
     } catch (err: unknown) {
@@ -99,76 +74,25 @@ export const usePricingStore = create<PricingState>((set, get) => ({
       const { config } = get();
       const currency = country === 'france' ? 'EUR' : 'XOF';
 
-      let gridRes, commRes, suppRes;
+      let gridRes;
 
       if (!config) {
-        // ── Première création : POST sur les 3 ressources ──────────────────
-
-        // [gridRes, commRes, suppRes] = await Promise.all([
-        [gridRes] = await Promise.all([
-          pricingApi.createGrid(token, {
-            country,
-            currency,
-            base_price:    dto.grid.base_price    ?? 0,
-            price_per_km:  dto.grid.price_per_km  ?? 0,
-            price_per_min: dto.grid.price_per_min ?? 0,
-            minimum_price: dto.grid.minimum_price ?? 0,
-          }),
-        //   pricingApi.createCommission(token, {
-        //     country,
-        //     currency,
-        //     commission_rate:     dto.commission.commission_rate     ?? 0,
-        //     commission_vat_rate: dto.commission.commission_vat_rate ?? 0,
-        //   }),
-        //   pricingApi.createSupplement(token, {
-        //     country,
-        //     currency,
-        //     airport_fee: dto.supplement.airport_fee ?? 0,
-        //     night_rate:  dto.supplement.night_rate  ?? 0,
-        //   }),
-        ]);
+        gridRes = await pricingApi.createGrid(token, {
+          country,
+          currency,
+          base_price:    dto.grid.base_price    ?? 0,
+          price_per_km:  dto.grid.price_per_km  ?? 0,
+          price_per_min: dto.grid.price_per_min ?? 0,
+          minimum_price: dto.grid.minimum_price ?? 0,
+        });
       } else {
-    //     // ── Mise à jour : PATCH sur les IDs existants ──────────────────────
-    //     [gridRes, commRes, suppRes] = await Promise.all([
-    //       pricingApi.updateGrid(token, config.grid.id, dto.grid),
-    //       pricingApi.updateCommission(token, config.commission.id, dto.commission),
-    //       pricingApi.updateSupplement(token, config.supplement.id, dto.supplement),
-    //     ]);
-    //   }
-
-    //   if (!gridRes.ok || !gridRes.data) throw new Error(gridRes.message ?? 'Erreur grille');
-    //   if (!commRes.ok || !commRes.data) throw new Error(commRes.message ?? 'Erreur commission');
-    //   if (!suppRes.ok || !suppRes.data) throw new Error(suppRes.message ?? 'Erreur suppléments');
-
-    //   set({
-    //     config: {
-    //       country,
-    //       grid:       gridRes.data,
-    //       commission: commRes.data,
-    //       supplement: suppRes.data,
-    //     },
-    //     isSaving: false,
-
-
-        // ── Mise à jour : PATCH sur les IDs existants ──────────────────────
-        [gridRes] = await Promise.all([
-          pricingApi.updateGrid(token, config.grid.id, dto.grid),
-        //   pricingApi.updateCommission(token, config.commission.id, dto.commission),
-        //   pricingApi.updateSupplement(token, config.supplement.id, dto.supplement),
-        ]);
+        gridRes = await pricingApi.updateGrid(token, config.grid.id, dto.grid);
       }
 
       if (!gridRes.ok || !gridRes.data) throw new Error(gridRes.message ?? 'Erreur grille');
-    //   if (!commRes.ok || !commRes.data) throw new Error(commRes.message ?? 'Erreur commission');
-    //   if (!suppRes.ok || !suppRes.data) throw new Error(suppRes.message ?? 'Erreur suppléments');
 
       set({
-        config: {
-          country,
-          grid:       gridRes.data,
-        //   commission: commRes.data,
-        //   supplement: suppRes.data,
-        },
+        config: { country, grid: gridRes.data },
         isSaving: false,
       });
     } catch (err: unknown) {

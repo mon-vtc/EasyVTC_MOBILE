@@ -8,15 +8,9 @@ import { api }              from '../../lib/api';
 import type { ApiResponse } from '../../types';
 import type {
   PricingGrid,
-  PricingCommission,
-  PricingSupplement,
   PricingFlatRate,
   CreatePricingGridDto,
   UpdatePricingGridDto,
-  CreatePricingCommissionDto,
-  UpdatePricingCommissionDto,
-  CreatePricingSupplementDto,
-  UpdatePricingSupplementDto,
   PriceEstimateDto,
   PriceEstimateResult,
   PricingCountry,
@@ -67,58 +61,6 @@ export const pricingApi = {
     dto:   UpdatePricingGridDto,
   ): Promise<ApiResponse<PricingGrid>> =>
     api.patch(`/pricing/grids/${id}`, dto, token),
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // COMMISSIONS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /** GET /pricing/commissions/active/:country — admin */
-  getActiveCommission: (
-    token:   string,
-    country: PricingCountry,
-  ): Promise<ApiResponse<PricingCommission>> =>
-    api.get(`/pricing/commissions/active/${country}`, token),
-
-  /** POST /pricing/commissions — admin (première création) */
-  createCommission: (
-    token: string,
-    dto:   CreatePricingCommissionDto,
-  ): Promise<ApiResponse<PricingCommission>> =>
-    api.post('/pricing/commissions', dto, token),
-
-  /** PATCH /pricing/commissions/:id — admin */
-  updateCommission: (
-    token: string,
-    id:    string,
-    dto:   UpdatePricingCommissionDto,
-  ): Promise<ApiResponse<PricingCommission>> =>
-    api.patch(`/pricing/commissions/${id}`, dto, token),
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // SUPPLÉMENTS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /** GET /pricing/supplements/active/:country — admin */
-  getActiveSupplement: (
-    token:   string,
-    country: PricingCountry,
-  ): Promise<ApiResponse<PricingSupplement>> =>
-    api.get(`/pricing/supplements/active/${country}`, token),
-
-  /** POST /pricing/supplements — admin (première création) */
-  createSupplement: (
-    token: string,
-    dto:   CreatePricingSupplementDto,
-  ): Promise<ApiResponse<PricingSupplement>> =>
-    api.post('/pricing/supplements', dto, token),
-
-  /** PATCH /pricing/supplements/:id — admin */
-  updateSupplement: (
-    token: string,
-    id:    string,
-    dto:   UpdatePricingSupplementDto,
-  ): Promise<ApiResponse<PricingSupplement>> =>
-    api.patch(`/pricing/supplements/${id}`, dto, token),
 
   // ══════════════════════════════════════════════════════════════════════════
   // FORFAITS ITINÉRAIRES

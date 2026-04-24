@@ -11,7 +11,6 @@ import type {
   ReservationListFilters,
   ReservationListResult,
   CreateReservationDto,
-  VehicleTypeOption,
   AvailableDriverDto,
 } from '../../types/reservations.types';
 
@@ -185,19 +184,12 @@ export const reservationApi = {
   // UTILITAIRES
   // ══════════════════════════════════════════════════════════════════════════
 
-  /**
-   * GET /vehicle-types?country=<country>
-   * Types de véhicule disponibles avec tarifs de base.
-   */
-  getVehicleTypes: (
-    token:    string,
-    country?: string,
-  ): Promise<ApiResponse<VehicleTypeOption[]>> =>
-    api.get(`/vehicle-types${country ? `?country=${country}` : ''}`, token),
-
   getAvailableDrivers: (
     token: string,
-  ): Promise<ApiResponse<AvailableDriverDto[]>> =>
-    api.get('/reservations/drivers/available', token),
+    vehicleType?: string,
+  ): Promise<ApiResponse<AvailableDriverDto[]>> => {
+    const qs = vehicleType ? `?vehicle_type=${encodeURIComponent(vehicleType)}` : '';
+    return api.get(`/reservations/drivers/available${qs}`, token);
+  },
   
 };
