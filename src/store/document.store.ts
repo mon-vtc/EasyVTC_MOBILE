@@ -107,7 +107,7 @@ export const useDocumentsStore = create<DocumentsState>((set) => ({
   },
 
   // ── Suppression ───────────────────────────────────────────────
-  // ✅ CORRIGÉ : méthode DELETE (pas PATCH)
+  //  CORRIGÉ : méthode DELETE (pas PATCH)
   deleteDocument: async (token, id) => {
     set({ isLoading: true, error: null });
     try {

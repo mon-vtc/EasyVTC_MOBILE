@@ -509,6 +509,7 @@ export default function AdminReservationScreen() {
       <DriverPickerModal
         visible={pickerVisible}
         reservationRef={reservationRef}
+        vehicleType={reservation?.vehicle_type}
         onConfirm={handleAssignConfirm}
         onClose={() => setPickerVisible(false)}
       />

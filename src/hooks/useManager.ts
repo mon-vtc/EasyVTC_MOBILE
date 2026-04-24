@@ -2,7 +2,7 @@ import { useAuth }       from './useAuth';
 import { useAuthStore, useUsersStore, useDriversStore }  from '../store';
 import type { ManagerUser, ListUsersParams, ListDriversParams } from '../types';
 
-// ✅ Réservé aux managers — lecture seule sur les users, pas de changement de statut
+//  Réservé aux managers — lecture seule sur les users, pas de changement de statut
 export function useManager() {
   const auth        = useAuth();
   const accessToken = useAuthStore(s => s.accessToken);

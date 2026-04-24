@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useAdmin }  from '../../../hooks/useAdmin';
+import { useVehicleTypesStore } from '../../../store/vehicleTypes.store';
 import type { AuthUser, DriverUser } from '../../../types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriversStackParamList }  from '../../../types/auth.types';
@@ -51,7 +52,27 @@ const infoStyles = StyleSheet.create({
 
 // ── Tab Informations ────────────────────────────────────────────
 function TabInformations({ driver }: { driver: DriverUser }) {
-  const vehicle  = driver.vehicle;
+  const vehicle    = driver.vehicle;
+  const allTypes   = useVehicleTypesStore(s => s.allTypes);
+  const activeTypes = useVehicleTypesStore(s => s.activeTypes);
+
+  const vehicleTypeCode  = driver.vehicle_type;
+  const matchedType      = [...allTypes, ...activeTypes].find(t => t.code === vehicleTypeCode);
+  const vehicleTypeLabel = matchedType?.label
+    ?? (vehicleTypeCode
+      ? vehicleTypeCode.charAt(0).toUpperCase() + vehicleTypeCode.slice(1)
+      : '—');
+
+  const vehicleRows = [
+    { label: 'Type de véhicule', value: vehicleTypeLabel },
+    ...(vehicle ? [
+      { label: 'Marque / Modèle', value: [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || '—' },
+      { label: 'Immatriculation',  value: vehicle.plate_number },
+      { label: 'Couleur',          value: vehicle.color ?? '—' },
+      { label: 'Année',            value: vehicle.year ? String(vehicle.year) : '—' },
+    ] : []),
+  ];
+
   const docs: { label: string; expiry: string; status: 'valid' | 'expired' }[] = [
     { label: 'Permis de conduire', expiry: '15/03/2028', status: 'valid'   },
     { label: 'Carte VTC',          expiry: '15/03/2026', status: 'valid'   },
@@ -62,19 +83,15 @@ function TabInformations({ driver }: { driver: DriverUser }) {
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       {/* Véhicule */}
-      {vehicle && (
-        <View style={tabStyles.card}>
-          <Text style={tabStyles.cardTitle}>Véhicule</Text>
-          {[
-            { label: 'Type',           value: vehicle ?? '—' },
-          ].map(row => (
-            <View key={row.label} style={tabStyles.infoRow}>
-              <Text style={tabStyles.infoLabel}>{row.label}</Text>
-              {/* <Text style={tabStyles.infoValue}>{row.value}</Text> */}
-            </View>
-          ))}
-        </View>
-      )}
+      <View style={tabStyles.card}>
+        <Text style={tabStyles.cardTitle}>Véhicule</Text>
+        {vehicleRows.map(row => (
+          <View key={row.label} style={tabStyles.infoRow}>
+            <Text style={tabStyles.infoLabel}>{row.label}</Text>
+            <Text style={tabStyles.infoValue}>{row.value}</Text>
+          </View>
+        ))}
+      </View>
 
       {/* Documents */}
       <View style={tabStyles.card}>

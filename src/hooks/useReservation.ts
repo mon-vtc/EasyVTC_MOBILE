@@ -11,6 +11,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import * as Location                      from 'expo-location';
 import { useAuthStore }                   from '../store/auth.store';
 import { useReservationStore }            from '../store/reservation.store';
+import { vehicleTypesApi }               from '../services/api/vehicleTypes.api';
 import { pricingApi }                     from '../services/api/pricing.api';
 import { useAuth }                        from './useAuth';
 import type {
@@ -82,32 +83,25 @@ export function useReservation() {
   const [suggestedFlatRate, setSuggestedFlatRate] = useState<PricingFlatRate | null>(null);
   const flatRatesRef = useRef<PricingFlatRate[]>([]);
 
-  // ── Chargement initial des types de véhicule ─────────────────────────────
-  // Pas d'endpoint backend dédié — on construit les options à partir de la
-  // grille tarifaire active (minimum_price comme base d'affichage).
+  // ── Chargement initial des types de véhicule depuis l'API ────────────────
   useEffect(() => {
     if (vehicleTypes.length > 0) return;
-    pricingApi.getActiveGrid(COUNTRY)
+    vehicleTypesApi.getActiveTypes(COUNTRY)
       .then(res => {
-        const base = res.ok && res.data ? res.data.minimum_price : 0;
-        const r    = (n: number) => Math.round(n * 100) / 100;
-        useReservationStore.setState({
-          vehicleTypes: [
-            { type: 'standard', label: 'Standard', description: '1–4 passagers',                        base_price: base,        icon: 'car-outline',  capacity: 4 },
-            { type: 'berline',  label: 'Berline',  description: 'Confort supérieur · 1–4 passagers',    base_price: r(base*1.2), icon: 'car-outline',  capacity: 4 },
-            { type: 'van',      label: 'Van',       description: "Grand espace · jusqu'à 7 passagers",  base_price: r(base*1.5), icon: 'bus-outline',  capacity: 7 },
-          ],
-        });
+        if (res.ok && res.data && res.data.length > 0) {
+          useReservationStore.setState({
+            vehicleTypes: res.data.map(vt => ({
+              type:        vt.code,
+              label:       vt.label,
+              description: vt.description ?? '',
+              base_price:  vt.base_price,
+              icon:        vt.icon ?? 'car-outline',
+              capacity:    vt.capacity,
+            })),
+          });
+        }
       })
-      .catch(() => {
-        useReservationStore.setState({
-          vehicleTypes: [
-            { type: 'standard', label: 'Standard', description: '1–4 passagers',                        base_price: 0, icon: 'car-outline',  capacity: 4 },
-            { type: 'berline',  label: 'Berline',  description: 'Confort supérieur · 1–4 passagers',    base_price: 0, icon: 'car-outline',  capacity: 4 },
-            { type: 'van',      label: 'Van',       description: "Grand espace · jusqu'à 7 passagers",  base_price: 0, icon: 'bus-outline',  capacity: 7 },
-          ],
-        });
-      });
+      .catch(() => {});
   }, []);
 
   // ── Chargement initial des forfaits ───────────────────────────────────────
@@ -345,18 +339,14 @@ export function useReservation() {
       // Garantit que pickup_address >= 5 chars (exigé par le validator backend).
       const fr = flatRatesRef.current.find(f => f.id === id);
       if (fr) {
-        if (!bookingRef.current.origin) {
-          const addr = fr.origin_label.length >= 5
-            ? fr.origin_label
-            : `Zone: ${fr.origin_label}`;
-          _setOrigin({ address: addr, latitude: 0, longitude: 0 });
-        }
-        if (!bookingRef.current.destination) {
-          const addr = fr.destination_label.length >= 5
-            ? fr.destination_label
-            : `Zone: ${fr.destination_label}`;
-          _setDestination({ address: addr, latitude: 0, longitude: 0 });
-        }
+        const originAddr = fr.origin_label.length >= 5
+          ? fr.origin_label
+          : `Zone: ${fr.origin_label}`;
+        const destAddr = fr.destination_label.length >= 5
+          ? fr.destination_label
+          : `Zone: ${fr.destination_label}`;
+        _setOrigin({ address: originAddr, latitude: 0, longitude: 0 });
+        _setDestination({ address: destAddr, latitude: 0, longitude: 0 });
       }
       fetchFlatRateEstimate(id, bookingRef.current.nb_passengers);
     } else {
@@ -457,7 +447,7 @@ export function useReservation() {
     fetchAll:              useCallback((filters?: ReservationListFilters) => _fetchAll(accessTokenRef.current!, filters), []),
     fetchById:             useCallback((id: string)                       => _fetchById(accessTokenRef.current!, id), []),
     fetchDriverActive:     useCallback(()                               => _fetchDriverActive(accessTokenRef.current!), []),
-    fetchDriverUserActive: useCallback(() => _fetchAvailableDrivers(accessTokenRef.current!), []),
+    fetchDriverUserActive: useCallback((vehicleType?: string) => _fetchAvailableDrivers(accessTokenRef.current!, vehicleType), []),
 
     // Actions fournisseurs
     cancel:   useCallback((id: string, reason?: string)                                                             => _cancel(accessTokenRef.current!, id, reason), []),

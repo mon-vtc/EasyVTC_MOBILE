@@ -51,8 +51,6 @@ function ForfaitDetailModal({
   onApply: () => void;
   onClose: () => void;
 }) {
-  const hasSurcharge = (forfait.pickup_surcharge ?? 0) > 0;
-
   return (
     <Modal transparent animationType="slide" onRequestClose={onClose}>
       <TouchableOpacity style={fdm.overlay} activeOpacity={1} onPress={onClose} />
@@ -100,15 +98,6 @@ function ForfaitDetailModal({
           <Text style={fdm.priceLabel}>Tarif de base</Text>
           <Text style={fdm.priceValue}>{formatPrice(forfait.price)}</Text>
         </View>
-
-        {hasSurcharge && (
-          <View style={fdm.surchargeRow}>
-            <AppIcon name="information-circle-outline" size={14} color={Colors.textSecondary} />
-            <Text style={fdm.surchargeText}>
-              Supplément de {formatPrice(forfait.pickup_surcharge!)} par passager supplémentaire (au-delà du 1er)
-            </Text>
-          </View>
-        )}
 
         {/* CTA */}
         <TouchableOpacity style={fdm.applyBtn} onPress={onApply} activeOpacity={0.85}>
@@ -219,6 +208,8 @@ function Step1({
 
   const handleApplyForfait = useCallback(() => {
     if (detailForfait) {
+      setOriginInput(detailForfait.origin_label);
+      setDestinationInput(detailForfait.destination_label);
       setFlatRateId(detailForfait.id);
       setDetailForfait(null);
     }
@@ -1092,12 +1083,6 @@ const fdm = StyleSheet.create({
   },
   priceValue: {
     fontSize: 22, fontWeight: '800', color: Colors.bordeaux,
-  },
-  surchargeRow: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 16,
-  },
-  surchargeText: {
-    flex: 1, fontSize: 12, color: Colors.textSecondary, lineHeight: 17,
   },
   applyBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
