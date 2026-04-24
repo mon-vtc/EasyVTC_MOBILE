@@ -105,11 +105,20 @@ export type DriversStackParamList = {
   DriverDetail: { driverId: string };
 };
 
+// ── Stack interne Gestionnaires (dans le Drawer Admin) ───────────
+export type ManagersStackParamList = {
+  ManagersList:  undefined;
+  CreateManager: undefined;
+  ManagerDetail: { managerId: string };
+  EditManager:   { managerId: string };
+};
+
 // ── Stack interne Réservations (dans le Drawer Admin) ────────────
 export type ReservationsStackParamList = {
   ReservationsList:     undefined;
   AdminReservationDetail: { reservationId: string };
 };
+
 
 // ── Drawer Admin ─────────────────────────────────────────────────
 // AdminDrivers pointe vers le stack imbriqué DriversStackParamList
@@ -118,6 +127,7 @@ export type AdminDrawerParamList = {
   AdminDrivers:   NavigatorScreenParams<DriversStackParamList>;
   AdminReservations: NavigatorScreenParams<ReservationsStackParamList>;
   AdminDocuments: undefined;
+  AdminManagers:  NavigatorScreenParams<ManagersStackParamList>;
   AdminProfile:   undefined;
   AdminUsers:        undefined;
   AdminAvailability: undefined;

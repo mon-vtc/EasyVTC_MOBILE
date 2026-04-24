@@ -20,11 +20,18 @@ import AdminOrdersScreen from '../screens/admin/AdminOrdersScreen';
 import AdminInvoicesScreen from '../screens/admin/AdminInvoicesScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 
+import ManagersListScreen from '../screens/admin/managers/ManagersListScreen';
+import ManagerDetailScreen from '../screens/admin/managers/ManagerDetailScreen';
+import CreateManagerScreen from '../screens/admin/managers/CreateManagerScreen';
+import EditManagerScreen from '../screens/admin/managers/Editmanagerscreen';
+
 import type {
   AdminDrawerParamList,
   DriversStackParamList,
   ReservationsStackParamList,
 } from '../types/auth.types';
+
+import type { ManagersStackParamList } from '../types';
 
 const DriversStack = createNativeStackNavigator<DriversStackParamList>();
 const ReservationsStack = createNativeStackNavigator<ReservationsStackParamList>();
@@ -69,6 +76,23 @@ function AdminDocumentsStack() {
       />
       {/* Tu pourras ajouter ici une page de détail spécifique plus tard si besoin */}
     </DocumentsStack.Navigator>
+  );
+}
+
+const ManagersStack = createNativeStackNavigator<ManagersStackParamList>();
+
+function AdminManagersNavigator() {
+  return (
+    <ManagersStack.Navigator
+      initialRouteName="ManagersList"
+      screenOptions={{ headerShown: false }}
+    >
+      <ManagersStack.Screen name="ManagersList" component={ManagersListScreen} />
+      <ManagersStack.Screen name="CreateManager" component={CreateManagerScreen} />
+      <ManagersStack.Screen name="EditManager" component={EditManagerScreen} />
+      <ManagersStack.Screen name="ManagerDetail" component={ManagerDetailScreen} />
+     
+    </ManagersStack.Navigator>
   );
 }
 
@@ -142,6 +166,16 @@ export default function AdminNavigator() {
           headerShown: false,
         }}
       />
+
+      <Drawer.Screen
+        name="AdminManagers"
+        component={AdminManagersNavigator}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="people-outline" label="Gestionnaires" />,
+          headerShown: false,
+        }}
+      />
+
 
       <Drawer.Screen
         name="AdminDocuments"
