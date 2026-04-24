@@ -50,7 +50,7 @@ export interface ListDriversParams {
   limit?:        number;
   status?:       'pending' | 'active' | 'rejected' | 'suspended';
   zone?:         'senegal' | 'france';
-  vehicle_type?: 'standard' | 'berline' | 'van';
+  vehicle_type?: string;
   is_online?:    boolean;
   search?:       string;
 }

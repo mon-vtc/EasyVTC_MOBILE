@@ -1,7 +1,7 @@
 // types/user.types.ts
 import type { AuthUser } from './auth.types';
 
-export type VehicleType  = 'standard' | 'berline' | 'van';
+export type VehicleType  = string;
 export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended';
 export type ZoneType     = 'senegal' | 'france'; 
 

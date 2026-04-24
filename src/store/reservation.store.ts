@@ -49,7 +49,7 @@ interface ReservationState {
   fetchAll:              (token: string, filters?: ReservationListFilters) => Promise<void>;
   fetchById:             (token: string, id: string)                       => Promise<void>;
   fetchDriverActive:     (token: string)                                   => Promise<void>;
-  fetchAvailableDrivers: (token: string)                                   => Promise<AvailableDriverDto[]>;
+  fetchAvailableDrivers: (token: string, vehicleType?: string)             => Promise<AvailableDriverDto[]>;
   cancel:            (token: string, id: string, reason?: string)      => Promise<void>;
 
   // ── Actions chauffeur ──────────────────────────────────────────────────────
@@ -250,8 +250,8 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   },
 
   // ── Assignation admin ──────────────────────────────────────────────────────
-  fetchAvailableDrivers: async (token) => {
-    const res = await reservationApi.getAvailableDrivers(token);
+  fetchAvailableDrivers: async (token, vehicleType) => {
+    const res = await reservationApi.getAvailableDrivers(token, vehicleType);
     if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur chargement chauffeurs');
     return res.data;
   },

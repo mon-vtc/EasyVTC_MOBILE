@@ -124,6 +124,7 @@ export type AdminDrawerParamList = {
   AdminReviews:      undefined;
   BaseGrid:          undefined;
   FlatRates:         undefined;
+  AdminVehicleTypes: undefined;
   // S4 — Documents financiers
   AdminOrders:       undefined;
   AdminInvoices:     undefined;

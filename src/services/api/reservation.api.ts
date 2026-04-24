@@ -186,7 +186,10 @@ export const reservationApi = {
 
   getAvailableDrivers: (
     token: string,
-  ): Promise<ApiResponse<AvailableDriverDto[]>> =>
-    api.get('/reservations/drivers/available', token),
+    vehicleType?: string,
+  ): Promise<ApiResponse<AvailableDriverDto[]>> => {
+    const qs = vehicleType ? `?vehicle_type=${encodeURIComponent(vehicleType)}` : '';
+    return api.get(`/reservations/drivers/available${qs}`, token);
+  },
   
 };

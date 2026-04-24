@@ -35,14 +35,13 @@ export const RESERVATION_STATUS_COLORS: Record<ReservationStatus, string> = {
   cancelled:      '#EF4444',
 };
 
-// ── Types de véhicule — alignés avec le backend ───────────────────────────────
-// Backend : 'standard' | 'berline' | 'van'
-export type VehicleType = 'standard' | 'berline' | 'van';
+// ── Types de véhicule — dynamiques (chargés depuis GET /vehicle-types) ────────
+export type VehicleType = string;
 
 export interface VehicleTypeOption {
-  type:        VehicleType;
+  type:        string;   // code du type (ex: 'standard', 'berline', 'van', ...)
   label:       string;
-  description: string;   // ex: "1-3 passagers"
+  description: string;
   base_price:  number;
   icon:        string;   // nom Ionicons
   capacity:    number;
