@@ -1,8 +1,9 @@
 import { useAuth }       from './useAuth';
-import { useAuthStore, useUsersStore, useDriversStore}  from '../store';
+import { useAuthStore, useUsersStore, useDriversStore, useManagersStore}  from '../store';
 import type {
   AdminUser, ListUsersParams, ListDriversParams,
   UpdateUserStatusPayload, ChangeDriverStatusPayload, UserRole,
+  CreateManagerDto, ChangeManagerStatusDto, ManagerListFilters,
 } from '../types';
 
 // ✅ Réservé aux admins
@@ -38,6 +39,19 @@ export function useAdmin() {
   const _changeDriverStatus = useDriversStore(s => s.changeDriverStatus);
   const clearDriversError   = useDriversStore(s => s.clearError);
 
+  // ── Store Gestionnaires (endpoint /admin/managers) ────────────
+  const managers          = useManagersStore(s => s.managers);
+  const managersTotal     = useManagersStore(s => s.total);
+  const managersPage      = useManagersStore(s => s.page);
+  const managersPageTotal = useManagersStore(s => s.totalPages);
+  const isManagersLoading = useManagersStore(s => s.isLoading);
+  const managersError     = useManagersStore(s => s.error);
+  const _fetchManagers    = useManagersStore(s => s.fetchManagers);
+  const _createManager    = useManagersStore(s => s.createManager);
+  const _fetchManagerById   = useManagersStore(s => s.fetchManagerById);
+  const _changeManagerStatus = useManagersStore(s => s.changeStatus);
+  const clearManagersError  = useManagersStore(s => s.clearError);
+
   return {
     // Profil admin
     user:       auth.user as AdminUser,
@@ -62,6 +76,15 @@ export function useAdmin() {
     isDriversLoading,
     driversError,
     clearDriversError,
+
+    // Gestion des managers
+    managers,
+    managersTotal,
+    managersPage,
+    managersPageTotal,
+    isManagersLoading,
+    managersError,
+    clearManagersError,
 
     // Actions admin — gestion users (deprecated, utiliser les actions spécifiques par rôle)
     fetchUsers: (params?: ListUsersParams) =>
@@ -94,6 +117,17 @@ export function useAdmin() {
 
     changeDriverStatus: (driverId: string, payload: ChangeDriverStatusPayload) =>
       _changeDriverStatus(accessToken!, driverId, payload),
+
+    // Actions admin — gestion managers
+    fetchManagers: (params?: ManagerListFilters) =>
+      _fetchManagers(accessToken!, params),
+    createManager: (dto: CreateManagerDto) =>
+      _createManager(accessToken!, dto),
+    fetchManagerById: (managerId: string) =>
+      _fetchManagerById(accessToken!, managerId),
+    changeManagerStatus: (managerId: string, payload: ChangeManagerStatusDto) =>
+      _changeManagerStatus(accessToken!, managerId, payload),
+
 
     // Actions sur son propre compte
     updateProfile: auth.updateProfile,
