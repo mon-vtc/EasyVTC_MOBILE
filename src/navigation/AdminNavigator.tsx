@@ -19,6 +19,7 @@ import AdminFlatRatesScreen from '../screens/admin/AdminFlatRatesScreen';
 import AdminOrdersScreen from '../screens/admin/AdminOrdersScreen';
 import AdminInvoicesScreen from '../screens/admin/AdminInvoicesScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
+import AdminVehicleTypesScreen from '../screens/admin/AdminVehicleTypesScreen';
 
 import type {
   AdminDrawerParamList,
@@ -175,6 +176,15 @@ export default function AdminNavigator() {
         component={AdminFlatRatesScreen}
         options={{
           drawerItemStyle: { display: 'none' }, // Masqué de la liste principale
+          headerShown: false,
+        }}
+      />
+
+      <Drawer.Screen
+        name="AdminVehicleTypes"
+        component={AdminVehicleTypesScreen}
+        options={{
+          drawerItemStyle: { display: 'none' },
           headerShown: false,
         }}
       />
