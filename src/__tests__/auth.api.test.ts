@@ -35,7 +35,7 @@ beforeEach(() => {
 // login
 // ══════════════════════════════════════════════════════════════════
 describe('authApi.login', () => {
-  it('✅ POST /auth/login avec les credentials', async () => {
+  it(' POST /auth/login avec les credentials', async () => {
     mockOkResponse({ user: { id: 'u1' }, access_token: 'tok', refresh_token: 'ref' });
 
     await authApi.login({ email: 'a@b.com', password: 'Pass1234' });
@@ -49,7 +49,7 @@ describe('authApi.login', () => {
     );
   });
 
-  it('❌ retourne ok:false si credentials invalides', async () => {
+  it(' retourne ok:false si credentials invalides', async () => {
     mockErrorResponse('Email ou mot de passe incorrect');
     const res = await authApi.login({ email: 'x@x.com', password: 'wrong' });
     expect(res.ok).toBe(false);
@@ -60,7 +60,7 @@ describe('authApi.login', () => {
 // google — REGRESSION bug endpoint incorrect
 // ══════════════════════════════════════════════════════════════════
 describe('authApi.google — REGRESSION endpoint', () => {
-  it('✅ POST /auth/google/token (pas /auth/google)', async () => {
+  it(' POST /auth/google/token (pas /auth/google)', async () => {
     mockOkResponse({ user: { id: 'u1' }, access_token: 'tok', refresh_token: null });
 
     await authApi.google('google-access-token');
@@ -72,7 +72,7 @@ describe('authApi.google — REGRESSION endpoint', () => {
     expect(body).toMatchObject({ access_token: 'google-access-token' });
   });
 
-  it('✅ transmet refresh_token si fourni', async () => {
+  it(' transmet refresh_token si fourni', async () => {
     mockOkResponse({ user: { id: 'u1' }, access_token: 'tok', refresh_token: 'ref' });
 
     await authApi.google('g-access', 'g-refresh');
@@ -87,7 +87,7 @@ describe('authApi.google — REGRESSION endpoint', () => {
 // register
 // ══════════════════════════════════════════════════════════════════
 describe('authApi.register', () => {
-  it('✅ POST /auth/register avec le bon payload', async () => {
+  it(' POST /auth/register avec le bon payload', async () => {
     mockOkResponse({ user: { id: 'u2' }, access_token: 'tok', refresh_token: 'ref' });
 
     const payload = {
@@ -109,7 +109,7 @@ describe('authApi.register', () => {
     );
   });
 
-  it('❌ retourne ok:false si email déjà existant', async () => {
+  it(' retourne ok:false si email déjà existant', async () => {
     mockErrorResponse('Un compte existe déjà avec cet email');
     const res = await authApi.register({
       email: 'dup@test.com', password: 'Test1234', first_name: 'A',
@@ -124,7 +124,7 @@ describe('authApi.register', () => {
 // me
 // ══════════════════════════════════════════════════════════════════
 describe('authApi.me', () => {
-  it('✅ GET /auth/me avec Bearer token', async () => {
+  it(' GET /auth/me avec Bearer token', async () => {
     mockOkResponse({ id: 'u1', email: 'a@b.com', role: 'client' });
 
     await authApi.me('my-token');
@@ -139,7 +139,7 @@ describe('authApi.me', () => {
 // logout
 // ══════════════════════════════════════════════════════════════════
 describe('authApi.logout', () => {
-  it('✅ POST /auth/logout avec Bearer token', async () => {
+  it(' POST /auth/logout avec Bearer token', async () => {
     mockOkResponse(null);
 
     await authApi.logout('my-token');
@@ -155,7 +155,7 @@ describe('authApi.logout', () => {
 // refresh
 // ══════════════════════════════════════════════════════════════════
 describe('authApi.refresh', () => {
-  it('✅ POST /auth/refresh avec refresh_token', async () => {
+  it(' POST /auth/refresh avec refresh_token', async () => {
     mockOkResponse({ access_token: 'new-tok', refresh_token: 'new-ref' });
 
     await authApi.refresh('old-refresh');
@@ -171,7 +171,7 @@ describe('authApi.refresh', () => {
 // forgotPassword
 // ══════════════════════════════════════════════════════════════════
 describe('authApi.forgotPassword', () => {
-  it('✅ POST /auth/forgot-password avec email', async () => {
+  it(' POST /auth/forgot-password avec email', async () => {
     mockOkResponse(null);
 
     await authApi.forgotPassword('user@test.com');
@@ -187,7 +187,7 @@ describe('authApi.forgotPassword', () => {
 // resetPassword — nouveau endpoint
 // ══════════════════════════════════════════════════════════════════
 describe('authApi.resetPassword', () => {
-  it('✅ POST /auth/reset-password avec token Bearer + new_password', async () => {
+  it(' POST /auth/reset-password avec token Bearer + new_password', async () => {
     mockOkResponse(null);
 
     await authApi.resetPassword('eyJhbGci...jwt', 'NewPass123');
@@ -199,7 +199,7 @@ describe('authApi.resetPassword', () => {
     expect(body.new_password).toBe('NewPass123');
   });
 
-  it('❌ retourne ok:false si token invalide', async () => {
+  it(' retourne ok:false si token invalide', async () => {
     mockErrorResponse('Token invalide ou expiré');
     const res = await authApi.resetPassword('bad-token', 'NewPass123');
     expect(res.ok).toBe(false);
@@ -210,7 +210,7 @@ describe('authApi.resetPassword', () => {
 // changePassword
 // ══════════════════════════════════════════════════════════════════
 describe('authApi.changePassword', () => {
-  it('✅ POST /auth/change-password avec les 3 champs + token', async () => {
+  it(' POST /auth/change-password avec les 3 champs + token', async () => {
     mockOkResponse(null);
 
     await authApi.changePassword('OldPass1', 'NewPass2', 'NewPass2', 'my-token');
@@ -231,7 +231,7 @@ describe('authApi.changePassword', () => {
 // uploadAvatar
 // ══════════════════════════════════════════════════════════════════
 describe('authApi.uploadAvatar', () => {
-  it('✅ POST /users/me/avatar avec FormData + token', async () => {
+  it(' POST /users/me/avatar avec FormData + token', async () => {
     mockOkResponse({ profile_photo_url: 'https://cdn.example.com/photo.jpg' });
 
     const formData = new FormData();
@@ -243,7 +243,7 @@ describe('authApi.uploadAvatar', () => {
     expect((options.headers as Record<string, string>)['Authorization']).toBe('Bearer my-token');
   });
 
-  it('✅ réponse contient profile_photo_url', async () => {
+  it(' réponse contient profile_photo_url', async () => {
     mockOkResponse({ profile_photo_url: 'https://cdn.example.com/photo.jpg' });
     const res = await authApi.uploadAvatar(new FormData(), 'tok');
     expect(res.data?.profile_photo_url).toBe('https://cdn.example.com/photo.jpg');
