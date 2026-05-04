@@ -1,7 +1,9 @@
 export type { UserRole, UserStatus, AuthUser, AuthTokens,
               AuthStackParamList, ClientTabParamList,
               DriverDrawerParamList, AdminDrawerParamList,
-              ManagerDrawerParamList, ManagersStackParamList,
+              ManagerDrawerParamList, ManagerReservationsStackParamList,
+              ManagersStackParamList,
+              ClientsStackParamList,
             } from './auth.types';
 
 export type { ClientUser, DriverUser, AdminUser,
@@ -36,7 +38,18 @@ export type {
 export type {
   UserProfile,
   CreateManagerDto,
+  UpdateManagerDto,
   ChangeManagerStatusDto,
   ManagerListFilters,
-  ManagerListResult
+  ManagerListResult,
+  ClientGlobalStats,
+  ClientWithStats,
+  ClientListFilters,
+  ClientListResult,
+  ClientTripItem,
+  ClientTripsResult,
+  ManagerPermission,
+  SetManagerPermissionsDto,
+  ManagerPermissionsResult,
 } from './admin.types';
+export { MANAGER_PERMISSIONS, PERMISSION_LABELS } from './admin.types';

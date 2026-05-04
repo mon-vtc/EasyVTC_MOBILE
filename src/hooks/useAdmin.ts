@@ -1,9 +1,11 @@
 import { useAuth }       from './useAuth';
-import { useAuthStore, useUsersStore, useDriversStore, useManagersStore}  from '../store';
+import { useAuthStore, useUsersStore, useDriversStore, useManagersStore, useClientsStore } from '../store';
+import { managersApi }  from '../services/api/managers.api';
 import type {
   AdminUser, ListUsersParams, ListDriversParams,
   UpdateUserStatusPayload, ChangeDriverStatusPayload, UserRole,
-  CreateManagerDto, ChangeManagerStatusDto, ManagerListFilters,
+  CreateManagerDto, UpdateManagerDto, ChangeManagerStatusDto, ManagerListFilters,
+  ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult,
 } from '../types';
 
 //  Réservé aux admins
@@ -39,6 +41,18 @@ export function useAdmin() {
   const _changeDriverStatus = useDriversStore(s => s.changeDriverStatus);
   const clearDriversError   = useDriversStore(s => s.clearError);
 
+  // ── Store Clients (endpoint /admin/clients) ──────────────────
+  const clients           = useClientsStore(s => s.clients);
+  const clientsTotal      = useClientsStore(s => s.total);
+  const clientsGlobalStats= useClientsStore(s => s.globalStats);
+  const isClientsLoading  = useClientsStore(s => s.isLoading);
+  const clientsError      = useClientsStore(s => s.error);
+  const _fetchClients     = useClientsStore(s => s.fetchClients);
+  const _fetchClientById  = useClientsStore(s => s.fetchClientById);
+  const _fetchClientTrips = useClientsStore(s => s.fetchClientTrips);
+  const _changeClientStatus = useClientsStore(s => s.changeClientStatus);
+  const clearClientsError = useClientsStore(s => s.clearError);
+
   // ── Store Gestionnaires (endpoint /admin/managers) ────────────
   const managers          = useManagersStore(s => s.managers);
   const managersTotal     = useManagersStore(s => s.total);
@@ -48,6 +62,7 @@ export function useAdmin() {
   const managersError     = useManagersStore(s => s.error);
   const _fetchManagers    = useManagersStore(s => s.fetchManagers);
   const _createManager    = useManagersStore(s => s.createManager);
+  const _updateManager    = useManagersStore(s => s.updateManager);
   const _fetchManagerById   = useManagersStore(s => s.fetchManagerById);
   const _changeManagerStatus = useManagersStore(s => s.changeStatus);
   const clearManagersError  = useManagersStore(s => s.clearError);
@@ -123,11 +138,42 @@ export function useAdmin() {
       _fetchManagers(accessToken!, params),
     createManager: (dto: CreateManagerDto) =>
       _createManager(accessToken!, dto),
+    updateManager: (managerId: string, dto: UpdateManagerDto) =>
+      _updateManager(accessToken!, managerId, dto),
     fetchManagerById: (managerId: string) =>
       _fetchManagerById(accessToken!, managerId),
     changeManagerStatus: (managerId: string, payload: ChangeManagerStatusDto) =>
       _changeManagerStatus(accessToken!, managerId, payload),
 
+    getManagerPermissions: async (managerId: string): Promise<ManagerPermissionsResult> => {
+      const res = await managersApi.getPermissions(accessToken!, managerId);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la récupération des permissions');
+      return res.data;
+    },
+
+    setManagerPermissions: async (managerId: string, dto: SetManagerPermissionsDto): Promise<ManagerPermissionsResult> => {
+      const res = await managersApi.setPermissions(accessToken!, managerId, dto);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la mise à jour des permissions');
+      return res.data;
+    },
+
+
+    // Gestion des clients (endpoint /admin/clients)
+    clients,
+    clientsTotal,
+    clientsGlobalStats,
+    isClientsLoading,
+    clientsError,
+    clearClientsError,
+
+    fetchAdminClients: (params?: ClientListFilters) =>
+      _fetchClients(accessToken!, params),
+    fetchAdminClientById: (clientId: string) =>
+      _fetchClientById(accessToken!, clientId),
+    fetchAdminClientTrips: (clientId: string, params?: { page?: number; limit?: number }) =>
+      _fetchClientTrips(accessToken!, clientId, params),
+    changeClientStatus: (clientId: string, payload: UpdateUserStatusPayload) =>
+      _changeClientStatus(accessToken!, clientId, payload),
 
     // Actions sur son propre compte
     updateProfile: auth.updateProfile,

@@ -6,9 +6,12 @@ import { api } from '../../lib/api';
 import type { ApiResponse, UserProfile } from '../../types';
 import type {
   CreateManagerDto,
+  UpdateManagerDto,
   ChangeManagerStatusDto,
   ManagerListFilters,
   ManagerListResult,
+  SetManagerPermissionsDto,
+  ManagerPermissionsResult,
 } from '../../types/admin.types';
 
 const buildQs = (filters?: ManagerListFilters): string => {
@@ -36,7 +39,7 @@ export const managersApi = {
     api.get(`/admin/managers/${id}`, token),
 
   /** PATCH /admin/managers/:id — Mettre à jour un gestionnaire */
-  update: (token: string, id: string, dto: Partial<CreateManagerDto>): Promise<ApiResponse<UserProfile>> =>
+  update: (token: string, id: string, dto: UpdateManagerDto): Promise<ApiResponse<UserProfile>> =>
     api.patch(`/admin/managers/${id}`, dto, token),
 
   /** PATCH /admin/managers/:id/status — Changer le statut */
@@ -46,4 +49,12 @@ export const managersApi = {
   /** DELETE /admin/managers/:id — Supprimer un gestionnaire */
   delete: (token: string, id: string): Promise<ApiResponse<void>> =>
     api.delete(`/admin/managers/${id}`, token),
+
+  /** GET /admin/managers/:id/permissions — Lire les permissions d'un gestionnaire */
+  getPermissions: (token: string, id: string): Promise<ApiResponse<ManagerPermissionsResult>> =>
+    api.get(`/admin/managers/${id}/permissions`, token),
+
+  /** PUT /admin/managers/:id/permissions — Définir les permissions d'un gestionnaire */
+  setPermissions: (token: string, id: string, dto: SetManagerPermissionsDto): Promise<ApiResponse<ManagerPermissionsResult>> =>
+    api.put(`/admin/managers/${id}/permissions`, dto, token),
 };

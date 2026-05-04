@@ -1,36 +1,160 @@
-// ══════════════════════════════════════════════════════════════════════════════
-// SCREEN — Admin / Voir le profil d'un Gestionnaire
-// Conforme à : Image 1 — "Admin qui consulte les informations du gestionnaire"
-// ══════════════════════════════════════════════════════════════════════════════
-
+// screens/admin/managers/ManagerDetailScreen.tsx
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Linking,
-  Platform,
-  Image,
+  View, Text, ScrollView, StyleSheet, TouchableOpacity,
+  ActivityIndicator, Linking, Platform, Image, Modal,
+  TextInput, Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useAdmin } from '../../../hooks/useAdmin';
-import { Colors, Spacing, Radius } from '../../../theme/colors';
+import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
 import type { ManagersStackParamList, UserProfile } from '../../../types';
 
 type Nav = NativeStackNavigationProp<ManagersStackParamList, 'ManagerDetail'>;
 
+type ManagerStatus = 'active' | 'inactive' | 'locked';
+
+const STATUS_CONFIG: Record<ManagerStatus, { label: string; bg: string; color: string; dot: string }> = {
+  active:   { label: 'Actif',    bg: '#E6F9F1', color: '#34C77B', dot: '#34C77B' },
+  inactive: { label: 'Inactif',  bg: '#FFF3E0', color: '#E65100', dot: '#E65100' },
+  locked:   { label: 'Suspendu', bg: '#FDECEA', color: '#E53935', dot: '#E53935' },
+};
+
+// ── Modal statut ─────────────────────────────────────────────────
+type NextStatus = 'active' | 'inactive' | 'locked';
+
+function ChangeStatusModal({
+  manager, visible, onClose, onConfirm, isLoading,
+}: {
+  manager:   UserProfile | null;
+  visible:   boolean;
+  onClose:   () => void;
+  onConfirm: (status: NextStatus, reason: string) => void;
+  isLoading: boolean;
+}) {
+  const [chosen, setChosen] = useState<NextStatus | null>(null);
+  const [reason, setReason] = useState('');
+
+  const reset = () => { setChosen(null); setReason(''); };
+  const handleClose = () => { reset(); onClose(); };
+
+  const ACTIONS: { status: NextStatus; label: string; icon: string; color: string }[] = [
+    { status: 'active',   label: 'Activer',    icon: 'checkmark-circle-outline', color: '#2E7D32' },
+    { status: 'inactive', label: 'Désactiver', icon: 'pause-circle-outline',     color: '#E65100' },
+    { status: 'locked',   label: 'Suspendre',  icon: 'ban-outline',              color: '#C62828' },
+  ].filter(a => a.status !== manager?.status);
+
+  if (!manager) return null;
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+      <View style={modalSt.overlay}>
+        <View style={modalSt.card}>
+          <Text style={modalSt.title}>Modifier le statut</Text>
+          <Text style={modalSt.subtitle}>{manager.first_name} {manager.last_name} · Gestionnaire</Text>
+
+          <Text style={modalSt.label}>Nouvelle action</Text>
+          {ACTIONS.map(a => (
+            <TouchableOpacity
+              key={a.status}
+              style={[modalSt.option, chosen === a.status && modalSt.optionSelected]}
+              onPress={() => setChosen(a.status)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name={a.icon as any} size={18} color={a.color} />
+              <Text style={[modalSt.optionLabel, { color: a.color }]}>{a.label}</Text>
+              {chosen === a.status && (
+                <Ionicons name="checkmark" size={16} color={a.color} style={{ marginLeft: 'auto' }} />
+              )}
+            </TouchableOpacity>
+          ))}
+
+          <Text style={[modalSt.label, { marginTop: Spacing.md }]}>Motif *</Text>
+          <TextInput
+            style={modalSt.input}
+            value={reason}
+            onChangeText={setReason}
+            placeholder="Ex : Demande de l'utilisateur, Documents non conformes…"
+            placeholderTextColor={Colors.textPlaceholder}
+            multiline
+            numberOfLines={3}
+          />
+
+          <View style={modalSt.btnRow}>
+            <TouchableOpacity style={modalSt.btnCancel} onPress={handleClose}>
+              <Text style={modalSt.btnCancelText}>Annuler</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[modalSt.btnConfirm, (!chosen || !reason.trim()) && modalSt.btnDisabled]}
+              onPress={() => {
+                if (!chosen || !reason.trim()) return;
+                onConfirm(chosen, reason.trim());
+                reset();
+              }}
+              disabled={isLoading || !chosen || !reason.trim()}
+            >
+              {isLoading
+                ? <ActivityIndicator size="small" color={Colors.white} />
+                : <Text style={modalSt.btnConfirmText}>Confirmer</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const modalSt = StyleSheet.create({
+  overlay:        { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  card: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg,
+    padding: Spacing.lg, paddingBottom: Spacing.xl,
+  },
+  title:          { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.bordeaux, marginBottom: 4 },
+  subtitle:       { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.md },
+  label:          { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.xs },
+  option: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    padding: Spacing.sm, borderRadius: Radius.md,
+    borderWidth: 1, borderColor: Colors.border, marginBottom: Spacing.xs,
+  },
+  optionSelected: { borderColor: Colors.bordeaux, backgroundColor: Colors.overlayLight },
+  optionLabel:    { fontSize: Fonts.size.md, fontWeight: '600' },
+  input: {
+    borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md,
+    padding: Spacing.md, fontSize: Fonts.size.sm, color: Colors.textPrimary,
+    minHeight: 72, textAlignVertical: 'top',
+  },
+  btnRow:         { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.md },
+  btnCancel: {
+    flex: 1, paddingVertical: Spacing.md, borderRadius: Radius.md,
+    borderWidth: 1, borderColor: Colors.border, alignItems: 'center',
+  },
+  btnCancelText:  { fontSize: Fonts.size.md, color: Colors.textSecondary, fontWeight: '600' },
+  btnConfirm: {
+    flex: 2, paddingVertical: Spacing.md, borderRadius: Radius.md,
+    backgroundColor: Colors.bordeaux, alignItems: 'center',
+  },
+  btnConfirmText: { fontSize: Fonts.size.md, color: Colors.white, fontWeight: '700' },
+  btnDisabled:    { opacity: 0.4 },
+});
+
+// ── Screen principal ─────────────────────────────────────────────
 export default function ManagerDetailScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<any>();
   const { managerId } = route.params as { managerId: string };
-  const { fetchManagerById, user } = useAdmin();
-  const [manager, setManager] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const { fetchManagerById, changeManagerStatus } = useAdmin();
+  const [manager,      setManager]      = useState<UserProfile | null>(null);
+  const [isLoading,    setIsLoading]    = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [actionLoading,setActionLoading]= useState(false);
+
   useEffect(() => {
     (async () => {
       try {
@@ -42,10 +166,24 @@ export default function ManagerDetailScreen() {
     })();
   }, [managerId]);
 
+  const handleStatusConfirm = async (status: NextStatus, reason: string) => {
+    if (!manager) return;
+    setActionLoading(true);
+    try {
+      const updated = await changeManagerStatus(manager.id, { status, reason });
+      if (updated) setManager(updated);
+      setModalVisible(false);
+    } catch (err: any) {
+      Alert.alert('Erreur', err.message ?? 'Impossible de modifier le statut.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.bordeauxLight} />
+        <ActivityIndicator size="large" color={Colors.bordeaux} />
       </View>
     );
   }
@@ -53,435 +191,274 @@ export default function ManagerDetailScreen() {
   if (!manager) {
     return (
       <View style={styles.center}>
+        <Ionicons name="person-outline" size={48} color={Colors.border} />
         <Text style={styles.errorText}>Gestionnaire introuvable.</Text>
       </View>
     );
   }
 
-  const fullName = `${manager.first_name} ${manager.last_name}`;
-  const isActive = manager.status === 'active';
+  const initials   = `${manager.first_name?.[0] ?? ''}${manager.last_name?.[0] ?? ''}`.toUpperCase();
+  const statusCfg  = STATUS_CONFIG[manager.status as ManagerStatus] ?? STATUS_CONFIG.inactive;
+  const memberSince = new Date(manager.created_at).toLocaleDateString('fr-FR', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
 
   return (
     <View style={styles.container}>
-      {/* ── Header ── */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Voir le profil</Text>
-        {user?.role && (
-          <View style={styles.roleContent}>
-            <Ionicons style={styles.iconRole} name="person" size={16} color={Colors.white} />
-            <Text style={styles.roleText}>
-              {user.role === 'admin' ? 'Administrateur' : ''}
-            </Text>
-          </View>
-        )}
+        <Text style={styles.headerTitle}>Profil gestionnaire</Text>
+        <TouchableOpacity
+          style={styles.headerEditBtn}
+          onPress={() => navigation.navigate('EditManager', { managerId: manager.id })}
+        >
+          <Ionicons name="pencil-outline" size={20} color={Colors.white} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── Carte identité ── */}
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Carte identité */}
         <View style={styles.identityCard}>
-          {/* Avatar */}
           <View style={styles.avatarWrapper}>
             {manager.profile_photo_url ? (
               <Image source={{ uri: manager.profile_photo_url }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarFallback}>
-                <Text style={styles.avatarInitials}>
-                  {manager.first_name?.[0]}{manager.last_name?.[0]}
-                </Text>
+                <Text style={styles.avatarInitials}>{initials}</Text>
               </View>
             )}
           </View>
 
-          {/* Nom + statut */}
           <View style={styles.nameRow}>
-            <Text style={styles.managerName}>{fullName}</Text>
-            <View style={[styles.statusBadge, isActive ? styles.statusActive : styles.statusInactive]}>
-              <View style={[styles.statusDot, isActive ? styles.dotActive : styles.dotInactive]} />
-              <Text style={[styles.statusText, isActive ? styles.statusTextActive : styles.statusTextInactive]}>
-                {isActive ? 'Actif' : 'Inactif'}
-              </Text>
+            <Text style={styles.managerName}>{manager.first_name} {manager.last_name}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}>
+              <View style={[styles.statusDot, { backgroundColor: statusCfg.dot }]} />
+              <Text style={[styles.statusText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
             </View>
           </View>
 
-          {/* Rôle */}
-          <Text style={styles.roleLabel}>Gestionnaire</Text>
-
-          {/* Tags */}
-          <View style={styles.tagsRow}>
-            <View style={styles.tagGestionnaire}>
-              <Text style={styles.tagGestionnaireText}>Gestionnaire</Text>
-            </View>
-            {manager.company && (
-              <View style={styles.tagCompany}>
-                <Text style={styles.tagCompanyIcon}>⭐</Text>
-                <Text style={styles.tagCompanyText}>{manager.company}</Text>
-              </View>
-            )}
+          <View style={styles.rolePill}>
+            <Text style={styles.roleText}>Gestionnaire</Text>
           </View>
         </View>
 
-        {/* ── Actions rapides : Message / Appeler ── */}
+        {/* Actions rapides */}
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={styles.actionCard}
             activeOpacity={0.7}
-            onPress={() => {/* Navigation vers messagerie */}}
+            onPress={() => Linking.openURL(`mailto:${manager.email}`)}
           >
             <View style={[styles.actionIconCircle, { backgroundColor: '#EAF0FB' }]}>
-              <Ionicons name="chatbubble-outline" size={24} color="#5B8DEF" />
+              <Ionicons name="mail-outline" size={22} color="#5B8DEF" />
             </View>
-            <Text style={styles.actionLabel}>Message</Text>
+            <Text style={styles.actionLabel}>Email</Text>
+          </TouchableOpacity>
+
+          {manager.phone && (
+            <TouchableOpacity
+              style={styles.actionCard}
+              activeOpacity={0.7}
+              onPress={() => Linking.openURL(`tel:${manager.phone!}`)}
+            >
+              <View style={[styles.actionIconCircle, { backgroundColor: '#E6F9F1' }]}>
+                <Ionicons name="call-outline" size={22} color="#34C77B" />
+              </View>
+              <Text style={styles.actionLabel}>Appeler</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            activeOpacity={0.7}
+            onPress={() => setModalVisible(true)}
+          >
+            <View style={[styles.actionIconCircle, { backgroundColor: '#F5E2E2' }]}>
+              <Ionicons name="shield-outline" size={22} color={Colors.bordeaux} />
+            </View>
+            <Text style={styles.actionLabel}>Statut</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionCard}
             activeOpacity={0.7}
-            onPress={() => manager.phone && Linking.openURL(`tel:${manager.phone}`)}
+            onPress={() => navigation.navigate('ManagerPermissions', { managerId: manager.id })}
           >
-            <View style={[styles.actionIconCircle, { backgroundColor: '#E6F9F1' }]}>
-              <Ionicons name="call-outline" size={24} color="#34C77B" />
+            <View style={[styles.actionIconCircle, { backgroundColor: '#EDE7F6' }]}>
+              <Ionicons name="key-outline" size={22} color="#7B1FA2" />
             </View>
-            <Text style={styles.actionLabel}>Appelant</Text>
+            <Text style={styles.actionLabel}>Accès</Text>
           </TouchableOpacity>
         </View>
 
-        {/* ── Section Contact ── */}
+        {/* Contact */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Ionicons name="person-outline" size={18} color={Colors.bordeauxLight} />
             <Text style={styles.sectionTitle}>Contact</Text>
           </View>
 
-          {/* Email */}
           <TouchableOpacity
-            style={styles.contactRow}
+            style={styles.infoRow}
             activeOpacity={0.7}
-            onPress={() => manager.email && Linking.openURL(`mailto:${manager.email}`)}
+            onPress={() => Linking.openURL(`mailto:${manager.email}`)}
           >
-            <View style={[styles.contactIconCircle, { backgroundColor: '#EAF0FB' }]}>
-              <Ionicons name="mail-outline" size={18} color="#5B8DEF" />
+            <View style={[styles.infoIcon, { backgroundColor: '#EAF0FB' }]}>
+              <Ionicons name="mail-outline" size={16} color="#5B8DEF" />
             </View>
-            <Text style={styles.contactValue}>{manager.email || '—'}</Text>
+            <Text style={styles.infoValue}>{manager.email}</Text>
           </TouchableOpacity>
 
-          {/* Téléphone */}
-          <TouchableOpacity
-            style={styles.contactRow}
-            activeOpacity={0.7}
-            onPress={() => manager.phone && Linking.openURL(`tel:${manager.phone}`)}
-          >
-            <View style={[styles.contactIconCircle, { backgroundColor: '#E6F9F1' }]}>
-              <Ionicons name="call-outline" size={18} color="#34C77B" />
+          <View style={styles.infoRow}>
+            <View style={[styles.infoIcon, { backgroundColor: '#E6F9F1' }]}>
+              <Ionicons name="call-outline" size={16} color="#34C77B" />
             </View>
-            <Text style={styles.contactValue}>{manager.phone || '—'}</Text>
-          </TouchableOpacity>
+            <Text style={styles.infoValue}>{manager.phone ?? '—'}</Text>
+          </View>
         </View>
 
-        {/* ── Section Informations professionnelles ── */}
+        {/* Informations */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Ionicons name="briefcase-outline" size={18} color={Colors.bordeauxLight} />
-            <Text style={styles.sectionTitle}>Informations professionnelles</Text>
+            <Text style={styles.sectionTitle}>Informations</Text>
           </View>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Zone de couverture</Text>
-            <Text style={styles.infoValue} numberOfLines={1}>
-              {manager.zone || 'Paris Est (11e, 12e,20e…)'}
-            </Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Statut</Text>
+            <Text style={[styles.detailValue, { color: statusCfg.color }]}>{statusCfg.label}</Text>
           </View>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Ancienneté</Text>
-            <Text style={styles.infoValue}>
-              {Math.floor((Date.now() - new Date(manager.created_at).getTime()) / (1000 * 60 * 60 * 24 * 365)) < 1
-                ? 'Moins d\'un an'
-                : Math.floor((Date.now() - new Date(manager.created_at).getTime()) / (1000 * 60 * 60 * 24 * 365)) + ' ans'
-              }
-            </Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Membre depuis</Text>
+            <Text style={styles.detailValue}>{memberSince}</Text>
           </View>
+
+          {manager.coverage_zone ? (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Zone de couverture</Text>
+              <Text style={styles.detailValue}>{manager.coverage_zone}</Text>
+            </View>
+          ) : null}
+
+          {manager.priority_level ? (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Niveau de priorité</Text>
+              <Text style={styles.detailValue}>
+                {manager.priority_level === 1 ? 'Standard'
+                  : manager.priority_level === 2 ? 'Prioritaire'
+                  : 'Haute priorité'}
+              </Text>
+            </View>
+          ) : null}
+
+          {manager.status_reason && (
+            <View style={[styles.detailRow, { flexDirection: 'column', gap: 4 }]}>
+              <Text style={styles.detailLabel}>Motif du statut</Text>
+              <Text style={[styles.detailValue, { textAlign: 'left' }]}>{manager.status_reason}</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
-      {/* FAB + (accès rapide création) */}
-      <TouchableOpacity
-        style={styles.fab}
-        activeOpacity={0.8}
-        onPress={() => navigation.navigate('CreateManager')}
-      >
-        <Ionicons name="add-outline" size={28} color={Colors.white} />
-      </TouchableOpacity>
+      <ChangeStatusModal
+        manager={manager}
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onConfirm={handleStatusConfirm}
+        isLoading={actionLoading}
+      />
     </View>
   );
 }
 
-// ── Styles ─────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
+  container:   { flex: 1, backgroundColor: Colors.background },
+  center:      { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md },
+  errorText:   { fontSize: Fonts.size.md, color: Colors.textMuted },
 
-  // ── Header ─────────────────────────────────────────────────────────────────
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom: Spacing.md,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    backgroundColor:   Colors.bordeaux,
+    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
+    paddingBottom:     Spacing.md,
     paddingHorizontal: Spacing.md,
   },
-  headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: Colors.white },
-  roleContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: Radius.full,
-    padding: Spacing.sm,
-  },
-  iconRole: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: Radius.full,
-    padding: Spacing.sm,
-  },
-  roleText: {
-    fontSize: 11,
-    color: Colors.white,
-    marginLeft: 4,
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 2,
-  },
+  headerBtn:     { padding: Spacing.sm, width: 40 },
+  headerTitle:   { fontSize: Fonts.size.lg, fontWeight: '600', color: Colors.white },
+  headerEditBtn: { padding: Spacing.sm, width: 40, alignItems: 'flex-end' },
 
-  // ── Scroll ─────────────────────────────────────────────────────────────────
-  scroll: { flex: 1 },
-  scrollContent: { padding: Spacing.md, paddingBottom: 100 },
+  scroll:        { flex: 1 },
+  scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl },
 
-  // ── Carte identité ─────────────────────────────────────────────────────────
   identityCard: {
-    backgroundColor: Colors.white,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
+    backgroundColor: Colors.white, borderRadius: Radius.md,
+    padding: Spacing.md, marginBottom: Spacing.sm,
+    elevation: 2, shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4,
   },
-  avatarWrapper: { marginBottom: Spacing.sm },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-  },
+  avatarWrapper:  { marginBottom: Spacing.sm },
+  avatar:         { width: 64, height: 64, borderRadius: 32 },
   avatarFallback: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 64, height: 64, borderRadius: 32,
     backgroundColor: Colors.beigeLight,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
-  avatarInitials: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: Colors.bordeauxLight,
-  },
+  avatarInitials: { fontSize: Fonts.size.xl, fontWeight: '700', color: Colors.bordeauxLight },
   nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', marginBottom: Spacing.sm,
   },
-  managerName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
+  managerName: { fontSize: Fonts.size.xl, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.full,
+  },
+  statusDot:  { width: 7, height: 7, borderRadius: 4 },
+  statusText: { fontSize: Fonts.size.sm, fontWeight: '600' },
+  rolePill: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.overlayLight,
+    paddingHorizontal: Spacing.md, paddingVertical: 4,
     borderRadius: Radius.full,
   },
-  statusActive: { backgroundColor: '#E6F9F1' },
-  statusInactive: { backgroundColor: '#FDECEA' },
-  statusDot: { width: 7, height: 7, borderRadius: 4 },
-  dotActive: { backgroundColor: '#34C77B' },
-  dotInactive: { backgroundColor: '#E53935' },
-  statusText: { fontSize: 13, fontWeight: '600' },
-  statusTextActive: { color: '#34C77B' },
-  statusTextInactive: { color: '#E53935' },
-  roleLabel: {
-    fontSize: 14,
-    color: Colors.bordeauxLight,
-    marginBottom: Spacing.sm,
-  },
-  tagsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
-    marginTop: 4,
-  },
-  tagGestionnaire: {
-    backgroundColor: '#F3EDE8',
-    borderRadius: Radius.full,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  tagGestionnaireText: {
-    fontSize: 13,
-    color: Colors.bordeauxLight,
-    fontWeight: '500',
-  },
-  tagCompany: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.beigeLight,
-    borderRadius: Radius.full,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  tagCompanyIcon: { fontSize: 13 },
-  tagCompanyText: { fontSize: 13, color: Colors.textPrimary, fontWeight: '500' },
+  roleText: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.bordeaux },
 
-  // ── Actions rapides ────────────────────────────────────────────────────────
-  actionsRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
+  actionsRow:   { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
   actionCard: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: Radius.md,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    gap: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
+    flex: 1, backgroundColor: Colors.white, borderRadius: Radius.md,
+    paddingVertical: Spacing.md, alignItems: 'center', gap: 6,
+    elevation: 2, shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4,
   },
   actionIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 44, height: 44, borderRadius: 22,
+    justifyContent: 'center', alignItems: 'center',
   },
-  actionLabel: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    fontWeight: '500',
-  },
+  actionLabel: { fontSize: Fonts.size.xs, color: Colors.textSecondary, fontWeight: '500' },
 
-  // ── Section générique ──────────────────────────────────────────────────────
   sectionCard: {
-    backgroundColor: Colors.white,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
+    backgroundColor: Colors.white, borderRadius: Radius.md,
+    padding: Spacing.md, marginBottom: Spacing.sm,
+    elevation: 2, shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: Spacing.md,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: Colors.bordeauxDark,
-  },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.md },
+  sectionTitle:  { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeauxDark },
 
-  // ── Contacts ───────────────────────────────────────────────────────────────
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  contactIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  contactValue: {
-    fontSize: 14,
-    color: Colors.textPrimary,
-    flex: 1,
-  },
+  infoRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },
+  infoIcon: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  infoValue: { fontSize: Fonts.size.sm, color: Colors.textPrimary, flex: 1 },
 
-  // ── Infos pro ──────────────────────────────────────────────────────────────
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+  detailRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  infoLabel: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  infoValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    maxWidth: '55%',
-    textAlign: 'right',
-  },
-
-  // ── États ──────────────────────────────────────────────────────────────────
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.lg,
-  },
-  errorText: {
-    fontSize: 14,
-    color: Colors.error,
-    textAlign: 'center',
-  },
-
-  // ── FAB ────────────────────────────────────────────────────────────────────
-  fab: {
-    position: 'absolute',
-    bottom: 30,
-    right: 20,
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: Colors.bordeauxLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 8,
-    shadowColor: Colors.bordeauxDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-  },
+  detailLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
+  detailValue: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary, textAlign: 'right', maxWidth: '55%' },
 });
