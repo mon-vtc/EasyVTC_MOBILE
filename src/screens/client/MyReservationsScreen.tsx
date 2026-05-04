@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList,
-  TextInput, RefreshControl, Alert, Platform
+  TextInput, RefreshControl, Alert, Platform, ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useReservation } from '../../hooks/useReservation';
+import { Ionicons }         from '@expo/vector-icons';
+import { useReservation }   from '../../hooks/useReservation';
+import { useAuthStore }     from '../../store/auth.store';
+import { invoicesApi }      from '../../services/api/invoices.api';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { Reservation, ReservationStatus } from '../../types/reservations.types';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
@@ -222,6 +224,8 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     fetchMine, clearError, cancel,
   } = useReservation();
 
+  const token = useAuthStore(s => s.accessToken) ?? '';
+
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -290,10 +294,20 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     Alert.alert('Merci !', `Vous avez noté la course ${rating}/5`);
   };
 
-  const handleViewInvoice = (reservation: Reservation) => {
-    // Naviguer directement vers l'écran de factures
-    // Optionnel : passer la reservation en paramètre pour pré-filtrer
-    navigation.navigate('MyInvoices', { reservationId: reservation.id });
+  const handleViewInvoice = async (reservation: Reservation) => {
+    try {
+      const res = await invoicesApi.fetchByReservationId(token, reservation.id);
+      if (res.ok && res.data) {
+        navigation.navigate('InvoiceDetails', { invoiceId: res.data.id });
+      } else {
+        Alert.alert(
+          'Facture indisponible',
+          res.message ?? 'La facture n\'est pas encore disponible pour cette course.',
+        );
+      }
+    } catch {
+      Alert.alert('Erreur', 'Impossible de récupérer la facture. Veuillez réessayer.');
+    }
   };
 
   const handleCall = (reservation: Reservation) => {

@@ -31,6 +31,7 @@ import MyInvoicesScreen           from '../screens/client/MyInvoicesScreen';
 import BookingConfirmationScreen  from '../screens/client/BookingConfirmationScreen';
 import ReservationDetailsScreen   from '../screens/client/ReservationDetailsScreen';
 import OrderDetailsScreen         from '../screens/client/OrderDetailsScreen';
+import InvoiceDetailsScreen       from '../screens/client/InvoiceDetailsScreen';
 
 import type { ClientTabParamList, ClientStackParamList } from '../types/auth.types';
 
@@ -213,6 +214,15 @@ export default function ClientNavigator() {
       <Stack.Screen
         name="OrderDetails"
         component={OrderDetailsScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+
+      {/* Détail d'une facture */}
+      <Stack.Screen
+        name="InvoiceDetails"
+        component={InvoiceDetailsScreen}
         options={{
           animation: 'slide_from_right',
         }}

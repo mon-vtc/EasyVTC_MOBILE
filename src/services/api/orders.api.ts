@@ -65,13 +65,7 @@ export const ordersApi = {
   ): Promise<ApiResponse<Order>> =>
     api.get(`/orders/by-reservation/${reservationId}`, token),
 
-  /**
-   * GET /orders/:id/pdf — Récupère l'URL signée du PDF (1h).
-   * Le backend redirige (302) → on intercepte l'URL finale.
-   * Retourne l'URL à ouvrir via Linking.openURL.
-   */
-  getPdfUrl: (token: string, id: string): string => {
-    const base = process.env.EXPO_PUBLIC_API_URL ?? '';
-    return `${base}/orders/${id}/pdf`;
-  },
+  /** GET /orders/:id/pdf — URL signée du PDF (1h). Ouvrir via Linking.openURL(res.data.url). */
+  fetchPdfUrl: (token: string, id: string): Promise<ApiResponse<{ url: string }>> =>
+    api.get(`/orders/${id}/pdf`, token),
 };

@@ -24,6 +24,13 @@ export const invoicesApi = {
 
   // ── Client / Chauffeur / Admin (filtrés côté service) ────────────────────────
 
+  /** GET /invoices/by-reservation/:reservationId — Facture d'une réservation */
+  fetchByReservationId: (
+    token:         string,
+    reservationId: string,
+  ): Promise<ApiResponse<Invoice>> =>
+    api.get(`/invoices/by-reservation/${reservationId}`, token),
+
   /** GET /invoices — Liste (filtrée selon le rôle) */
   list: (
     token:    string,
@@ -48,12 +55,7 @@ export const invoicesApi = {
   ): Promise<ApiResponse<Invoice>> =>
     api.put(`/invoices/${id}/price`, dto, token),
 
-  /**
-   * URL du PDF signé (1h) — ouvrir via Linking.openURL avec le token
-   * Le backend redirige vers Supabase Storage (302).
-   */
-  getPdfUrl: (token: string, id: string): string => {
-    const base = process.env.EXPO_PUBLIC_API_URL ?? '';
-    return `${base}/invoices/${id}/pdf`;
-  },
+  /** GET /invoices/:id/pdf — URL signée du PDF (1h). Ouvrir via Linking.openURL(res.data.url). */
+  fetchPdfUrl: (token: string, id: string): Promise<ApiResponse<{ url: string }>> =>
+    api.get(`/invoices/${id}/pdf`, token),
 };

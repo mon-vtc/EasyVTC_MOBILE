@@ -7,6 +7,7 @@ import { managersApi } from '../services/api/managers.api';
 import type {
   UserProfile,
   CreateManagerDto,
+  UpdateManagerDto,
   ChangeManagerStatusDto,
   ManagerListFilters,
 } from '../types/admin.types';
@@ -23,7 +24,7 @@ interface ManagersState {
 
   fetchManagers: (token: string, filters?: ManagerListFilters) => Promise<void>;
   createManager: (token: string, dto: CreateManagerDto) => Promise<UserProfile | null>;
-  updateManager: (token: string, id: string, dto: Partial<CreateManagerDto>) => Promise<UserProfile | null>;
+  updateManager: (token: string, id: string, dto: UpdateManagerDto) => Promise<UserProfile | null>;
   fetchManagerById: (token: string, id: string) => Promise<UserProfile | null>;
   changeStatus:  (token: string, id: string, dto: ChangeManagerStatusDto) => Promise<UserProfile | null>;
   deleteManager: (token: string, id: string) => Promise<void>;
@@ -60,14 +61,14 @@ export const useManagersStore = create<ManagersState>((set, get) => ({
   createManager: async (token, dto) => {
     set({ isSaving: true, error: null });
     try {
-      console.log('Creating manager with data:', dto);
       const res = await managersApi.create(token, dto);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de création');
       set(state => ({ managers: [res.data!, ...state.managers], total: state.total + 1 }));
       return res.data;
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue' });
-      return null;
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      set({ error: message });
+      throw new Error(message);
     } finally {
       set({ isSaving: false });
     }
@@ -87,8 +88,19 @@ export const useManagersStore = create<ManagersState>((set, get) => ({
   },
 
   updateManager: async (token, id, dto) => {
-    // Implémentation similaire à createManager
-    return null;
+    set({ isSaving: true, error: null });
+    try {
+      const res = await managersApi.update(token, id, dto);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de mise à jour');
+      set(state => ({ managers: state.managers.map(m => m.id === id ? res.data! : m) }));
+      return res.data;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      set({ error: message });
+      throw new Error(message);
+    } finally {
+      set({ isSaving: false });
+    }
   },
 
   changeStatus: async (token, id, dto) => {
@@ -99,19 +111,24 @@ export const useManagersStore = create<ManagersState>((set, get) => ({
       set(state => ({ managers: state.managers.map(m => m.id === id ? res.data! : m) }));
       return res.data;
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue' });
-      return null;
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      set({ error: message });
+      throw new Error(message);
     } finally {
       set({ isSaving: false });
     }
   },
 
   deleteManager: async (token, id) => {
-    await managersApi.delete(token, id);
-    set(state => ({
-      managers: state.managers.filter(m => m.id !== id),
-      total: state.total - 1,
-    }));
+    try {
+      await managersApi.delete(token, id);
+      set(state => ({
+        managers: state.managers.filter(m => m.id !== id),
+        total: state.total - 1,
+      }));
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue' });
+    }
   },
 
   clearError: () => set({ error: null }),

@@ -24,6 +24,7 @@ export interface TripSnapshot {
   vehicle_type:   string;
   country:        string;
   scheduled_at:   string;
+  nb_passengers:  number;
   comment:        string | null;
   via:            string;
   pricing_type:   'formula' | 'flat_rate';

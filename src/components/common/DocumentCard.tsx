@@ -73,7 +73,7 @@ export const DocumentCard = ({
       {status === 'rejected' && rejectedReason && (
         <View style={cardStyles.rejectBox}>
           <Ionicons name="information-circle-outline" size={14} color="#C62828" />
-          <Text style={cardStyles.rejectText} numberOfLines={2}>{rejectedReason}</Text>
+          <Text style={cardStyles.rejectText} numberOfLines={4}>{rejectedReason}</Text>
         </View>
       )}
 

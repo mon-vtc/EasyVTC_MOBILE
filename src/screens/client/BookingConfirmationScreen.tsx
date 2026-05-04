@@ -19,6 +19,7 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useReservationStore }   from '../../store/reservation.store';
 import { useAuthStore }          from '../../store/auth.store';
 import { reservationApi }        from '../../services/api/reservation.api';
+import { ordersApi }             from '../../services/api/orders.api';
 import type { ClientStackParamList } from '../../types/auth.types';
 import type { Reservation }          from '../../types/reservations.types';
 import { RESERVATION_STATUS_LABELS } from '../../types/reservations.types';
@@ -176,9 +177,10 @@ export default function BookingConfirmationScreen() {
   const reservations = useReservationStore(s => s.reservations);
   const fetchById    = useReservationStore(s => s.fetchById);
 
-  const [loading,          setLoading]          = useState(false);
-  const [error,            setError]            = useState<string | null>(null);
-  const [localReservation, setLocalReservation] = useState<Reservation | null>(null);
+  const [loading,            setLoading]            = useState(false);
+  const [error,              setError]              = useState<string | null>(null);
+  const [localReservation,   setLocalReservation]   = useState<Reservation | null>(null);
+  const [isLoadingOrder,     setIsLoadingOrder]     = useState(false);
 
   // Cherche d'abord dans le store (déjà inséré par submitBooking)
   const storeReservation = reservationId
@@ -207,6 +209,27 @@ export default function BookingConfirmationScreen() {
       }
     })();
   }, [reservationId]);
+
+  // ── Navigation vers le bon de commande ───────────────────────────────────
+  // Tente de récupérer l'ordre lié à la réservation. L'ordre peut ne pas exister
+  // encore (généré après attribution du chauffeur). Si trouvé → OrderDetails
+  // directement. Sinon → liste MyOrders.
+  const handleViewOrder = async () => {
+    if (!reservationId || !accessToken || isLoadingOrder) return;
+    setIsLoadingOrder(true);
+    try {
+      const res = await ordersApi.getByReservation(accessToken, reservationId);
+      if (res.ok && res.data) {
+        nav.navigate('OrderDetails', { orderId: res.data.id });
+      } else {
+        nav.navigate('ClientTabs', { screen: 'MyOrders' });
+      }
+    } catch {
+      nav.navigate('ClientTabs', { screen: 'MyOrders' });
+    } finally {
+      setIsLoadingOrder(false);
+    }
+  };
 
   // ── Animations entrée page ────────────────────────────────────────────────
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -403,10 +426,16 @@ export default function BookingConfirmationScreen() {
           <TouchableOpacity
             style={styles.btnPrimary}
             activeOpacity={0.85}
-            onPress={() => nav.navigate('ClientTabs', { screen: 'MyOrders' })}
+            onPress={handleViewOrder}
+            disabled={isLoadingOrder}
           >
-            <Ionicons name="document-text-outline" size={18} color={WHITE} />
-            <Text style={styles.btnPrimaryText}>Voir le bon de commande</Text>
+            {isLoadingOrder
+              ? <ActivityIndicator color={WHITE} size="small" />
+              : <>
+                  <Ionicons name="document-text-outline" size={18} color={WHITE} />
+                  <Text style={styles.btnPrimaryText}>Voir le bon de commande</Text>
+                </>
+            }
           </TouchableOpacity>
 
           <TouchableOpacity

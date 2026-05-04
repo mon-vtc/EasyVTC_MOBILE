@@ -10,13 +10,14 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import { DrawerActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { Logo }    from '../../constants/logo';
 import { useReservation } from '../../hooks/useReservation';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { Reservation, ReservationStatus } from '../../types/reservations.types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriverReservationsStackParamList } from '../../types/auth.types';
-import { Logo } from '../../constants/logo';
 
 type DriverReservationsProps = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationsList'>;
 
@@ -65,13 +66,13 @@ function ReservationCard({ reservation, onDetails, onAction }: {
 
       <Text style={styles.ref}>{refNumber}</Text>
 
-      <View style={styles.row}> 
+      <View style={styles.row}>
         <Ionicons name="location-outline" size={14} color={Colors.bordeaux} />
-        <Text style={styles.routeText} numberOfLines={1}>{reservation.pickup_address}</Text>
+        <Text style={styles.routeText} numberOfLines={2}>{reservation.pickup_address}</Text>
       </View>
-      <View style={styles.row}> 
+      <View style={styles.row}>
         <Ionicons name="navigate-outline" size={14} color="#10B981" />
-        <Text style={styles.routeText} numberOfLines={1}>{reservation.dest_address}</Text>
+        <Text style={styles.routeText} numberOfLines={2}>{reservation.dest_address}</Text>
       </View>
 
       <View style={styles.cardFooter} >
@@ -149,13 +150,18 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
     
       {/* ── Header ── */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Image source={Logo.LogoEasyVTC} style={{ width: 36, height: 36 }} />
+        {/* Barre de navigation : hamburger | logo | notif */}
+        <View style={styles.headerNav}>
+          <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={styles.navBtn}>
+            <Ionicons name="menu-outline" size={28} color={Colors.white} />
+          </TouchableOpacity>
+          <Image source={Logo.LogoEasyVTC} style={styles.logo} resizeMode="contain" />
+          <TouchableOpacity style={styles.navBtn}>
+            <Ionicons name="notifications-outline" size={24} color={Colors.white} />
+          </TouchableOpacity>
         </View>
-        <View style={{ width: 40 }} />
+        {/* Sous-header : titre */}
+        <Text style={styles.headerTitle}>Mes courses</Text>
       </View>
 
       <View style={styles.tabBar}>
@@ -199,13 +205,20 @@ const styles = StyleSheet.create({
   scroll: { padding: Spacing.lg, paddingTop: Spacing.md },
   
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xxl,
-    paddingBottom: Spacing.md, paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl,
+    paddingBottom: Spacing.lg,
   },
-  headerBtn:    { padding: Spacing.sm, width: 40 },
-  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+  headerNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: 44,
+  },
+  navBtn:      { padding: 4, width: 36, alignItems: 'center' },
+  logo:        { width: 40, height: 40 },
+  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white, marginTop: Spacing.md },
 
   tabBar: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm, backgroundColor: Colors.surface, borderRadius: Radius.md, padding: 4, marginHorizontal:  Spacing.md, marginTop: Spacing.sm },
   tabItem: { flex: 1, alignItems: 'center', paddingVertical: Spacing.sm, borderRadius: Radius.sm,  },

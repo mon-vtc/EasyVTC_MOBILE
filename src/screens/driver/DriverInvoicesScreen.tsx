@@ -29,10 +29,11 @@ function InvoiceCard({ invoice, token }: { invoice: Invoice; token: string }) {
   const snap = invoice.trip_snapshot;
 
   const openPdf = async () => {
-    if (!invoice.pdf_url) { Alert.alert('PDF non disponible'); return; }
     setOpening(true);
     try {
-      await Linking.openURL(`${invoicesApi.getPdfUrl(token, invoice.id)}?token=${encodeURIComponent(token)}`);
+      const res = await invoicesApi.fetchPdfUrl(token, invoice.id);
+      if (!res.ok || !res.data?.url) throw new Error(res.message ?? 'URL indisponible');
+      await Linking.openURL(res.data.url);
     } catch { Alert.alert('Erreur', 'Impossible d\'ouvrir la facture.'); }
     finally { setOpening(false); }
   };
@@ -46,7 +47,7 @@ function InvoiceCard({ invoice, token }: { invoice: Invoice; token: string }) {
 
       <View style={styles.tripRow}>
         <Ionicons name="navigate-outline" size={14} color={Colors.bordeaux} />
-        <Text style={styles.tripText} numberOfLines={1}>
+        <Text style={styles.tripText} numberOfLines={2}>
           {snap.pickup_address.split(',')[0]} → {snap.dest_address.split(',')[0]}
         </Text>
       </View>
@@ -73,9 +74,9 @@ function InvoiceCard({ invoice, token }: { invoice: Invoice; token: string }) {
       </View>
 
       <TouchableOpacity
-        style={[styles.pdfBtn, !invoice.pdf_url && styles.pdfBtnOff]}
+        style={styles.pdfBtn}
         onPress={openPdf}
-        disabled={opening || !invoice.pdf_url}
+        disabled={opening}
       >
         {opening
           ? <ActivityIndicator size="small" color={Colors.white} />

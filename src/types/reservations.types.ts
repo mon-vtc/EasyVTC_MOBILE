@@ -99,6 +99,7 @@ export interface Reservation {
   // Relations hydratées (optionnelles selon l'endpoint)
   client?: {
     id:               string;
+    email:            string;
     first_name:       string;
     last_name:        string;
     phone:            string | null;

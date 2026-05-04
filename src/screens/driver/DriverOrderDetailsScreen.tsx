@@ -1,8 +1,8 @@
 // ══════════════════════════════════════════════════════════════════════════════
-// SCREEN — OrderDetailsScreen
+// SCREEN — DriverOrderDetailsScreen
 // Sprint 4 — EazyVTC
-// Affiche le détail d'un bon de commande avec rendu fidèle au document PDF,
-// et permet de télécharger / partager le PDF.
+// Affiche le détail d'un bon de commande (vue chauffeur) avec rendu fidèle
+// au document et possibilité de télécharger / partager le PDF.
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useEffect, useState } from 'react';
@@ -30,13 +30,12 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useOrdersStore } from '../../store/orders.store';
 import { useAuthStore } from '../../store/auth.store';
 import { ordersApi } from '../../services/api/orders.api';
-import type { ClientStackParamList } from '../../types/auth.types';
+import type { DriverOrdersStackParamList } from '../../types/auth.types';
 import { Logo } from '../../constants/logo';
-// ── Types ──────────────────────────────────────────────────────────────────────
-type DetailsNavRoute = RouteProp<ClientStackParamList, 'OrderDetails'>;
-type DetailsNavProp  = NavigationProp<ClientStackParamList, 'OrderDetails'>;
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+type DetailsNavRoute = RouteProp<DriverOrdersStackParamList, 'DriverOrderDetails'>;
+type DetailsNavProp  = NavigationProp<DriverOrdersStackParamList, 'DriverOrderDetails'>;
+
 function fmtDate(iso: string, long = false): string {
   return new Date(iso).toLocaleDateString('fr-FR', {
     day: '2-digit',
@@ -70,23 +69,20 @@ const vehicleLabel: Record<string, string> = {
   van: 'Van',
 };
 
-// ── Composant principal ────────────────────────────────────────────────────────
-export default function OrderDetailsScreen() {
+export default function DriverOrderDetailsScreen() {
   const navigation = useNavigation<DetailsNavProp>();
   const route      = useRoute<DetailsNavRoute>();
   const { orderId } = route.params;
 
-  const token                           = useAuthStore(s => s.accessToken) ?? '';
-  const { orders, fetchMine, isLoading } = useOrdersStore();
-  const order                           = orders.find(o => o.id === orderId);
+  const token                                      = useAuthStore(s => s.accessToken) ?? '';
+  const { orders, fetchDriverMine, isLoading }     = useOrdersStore();
+  const order                                      = orders.find(o => o.id === orderId);
 
   const [openingPdf, setOpeningPdf] = useState(false);
 
   useEffect(() => {
-    if (!order) fetchMine(token);
-  }, [order, fetchMine, token]);
-
-  // ── Actions ──────────────────────────────────────────────────────────────────
+    if (!order) fetchDriverMine(token);
+  }, [order, fetchDriverMine, token]);
 
   const handleOpenPdf = async () => {
     setOpeningPdf(true);
@@ -113,12 +109,10 @@ export default function OrderDetailsScreen() {
           : `Bon de commande EazyVTC — ${order.order_number}`,
         url: pdfUrl ?? undefined,
       });
-    } catch (err) {
+    } catch {
       // Annulation silencieuse
     }
   };
-
-  // ── États de chargement / erreur ─────────────────────────────────────────────
 
   if (isLoading && !order) {
     return (
@@ -139,13 +133,11 @@ export default function OrderDetailsScreen() {
     );
   }
 
-  const snap       = order.trip_snapshot;
-  const passenger  = order.passenger_snapshot;
-  const driver     = order.driver_snapshot;
+  const snap      = order.trip_snapshot;
+  const passenger = order.passenger_snapshot;
+  const driver    = order.driver_snapshot;
   const isFlatRate = snap.pricing_type === 'flat_rate';
-  const isPerKm    = snap.pricing_type === 'formula';
-
-  // ── Rendu ────────────────────────────────────────────────────────────────────
+  const isPerKm   = snap.pricing_type === 'formula';
 
   return (
     <View style={styles.container}>
@@ -175,7 +167,6 @@ export default function OrderDetailsScreen() {
               <Text style={styles.docDate}>Date : {fmtDateLong(order.created_at)}</Text>
             </View>
             <View style={styles.docLogoContainer}>
-              {/* Remplacer par <Image> si le logo est disponible en local */}
               <View style={styles.docLogoFallback}>
                 <Image source={Logo.LogoVTCMarron} style={styles.docLogoImage} />
               </View>
@@ -196,9 +187,6 @@ export default function OrderDetailsScreen() {
             {passenger.phone ? (
               <Text style={styles.clientInfo}>{passenger.phone}</Text>
             ) : null}
-            {/* {passenger.email ? (
-              <Text style={styles.clientInfo}>{passenger.email}</Text>
-            ) : null} */}
           </View>
 
           <View style={styles.divider} />
@@ -216,7 +204,6 @@ export default function OrderDetailsScreen() {
 
           {/* ── Détails trajet ── */}
           <View style={styles.tripBlock}>
-            {/* Départ */}
             <View style={styles.tripRow}>
               <View style={styles.tripIconCol}>
                 <Ionicons name="location" size={18} color={Colors.bordeaux} />
@@ -227,7 +214,6 @@ export default function OrderDetailsScreen() {
               </View>
             </View>
 
-            {/* Destination */}
             <View style={styles.tripRow}>
               <View style={styles.tripIconCol}>
                 <Ionicons name="location-outline" size={18} color={Colors.textMuted} />
@@ -238,7 +224,6 @@ export default function OrderDetailsScreen() {
               </View>
             </View>
 
-            {/* Méta : date / heure / véhicule */}
             <View style={styles.tripMeta}>
               <View style={styles.tripMetaItem}>
                 <Ionicons name="calendar-outline" size={14} color={Colors.textMuted} />
@@ -256,7 +241,6 @@ export default function OrderDetailsScreen() {
               </View>
             </View>
 
-            {/* Passagers */}
             {snap.nb_passengers > 0 && (
               <View style={styles.tripMeta}>
                 <View style={styles.tripMetaItem}>
@@ -268,7 +252,6 @@ export default function OrderDetailsScreen() {
               </View>
             )}
 
-            {/* Chauffeur */}
             <View style={styles.driverRow}>
               <Ionicons name="person-circle-outline" size={14} color={Colors.textMuted} />
               <Text style={styles.driverText}>
@@ -281,7 +264,6 @@ export default function OrderDetailsScreen() {
 
           {/* ── Tableau de tarification ── */}
           <View style={styles.table}>
-            {/* En-tête tableau */}
             <View style={styles.tableHeader}>
               <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Désignation</Text>
               <Text style={[styles.tableHeaderCell, styles.tableHeaderCellCenter]}>
@@ -292,22 +274,17 @@ export default function OrderDetailsScreen() {
               </Text>
             </View>
 
-            {/* Ligne principale */}
             {snap.final_price != null && (
               <View style={styles.tableRow}>
                 <View style={{ flex: 2 }}>
                   <Text style={styles.tableCell}>Transport de voyageurs</Text>
-                  <Text style={styles.tableCellSub}>
-                    De : {snap.pickup_address}
-                  </Text>
-                  <Text style={styles.tableCellSub}>
-                    À : {snap.dest_address}
-                  </Text>
+                  <Text style={styles.tableCellSub}>De : {snap.pickup_address}</Text>
+                  <Text style={styles.tableCellSub}>À : {snap.dest_address}</Text>
                 </View>
 
                 <View style={styles.tableCellCenterCol}>
-                  {isPerKm && snap.distance_km != null ? (
-                    <Text style={styles.tableCell}>{snap.distance_km} km</Text>
+                  {isPerKm && (snap as any).distance_km != null ? (
+                    <Text style={styles.tableCell}>{(snap as any).distance_km} km</Text>
                   ) : isFlatRate ? (
                     <Text style={styles.tableCell}>1</Text>
                   ) : (
@@ -323,7 +300,6 @@ export default function OrderDetailsScreen() {
               </View>
             )}
 
-            {/* Total */}
             {snap.final_price != null && (
               <View style={styles.tableTotal}>
                 <Text style={styles.tableTotalLabel}>Total TTC</Text>
@@ -337,12 +313,11 @@ export default function OrderDetailsScreen() {
           {/* ── Note de bas de document ── */}
           <View style={styles.docFooterNote}>
             <Text style={styles.docFooterNoteText}>
-              Ce bon de commande confirme votre réservation. La facture sera générée après la course.
+              Ce bon de commande confirme votre mission. La facture sera générée après la course.
             </Text>
           </View>
 
         </View>
-        {/* FIN DOCUMENT */}
 
         {/* ── Bouton télécharger ── */}
         <TouchableOpacity
@@ -366,14 +341,12 @@ export default function OrderDetailsScreen() {
   );
 }
 
-// ── Styles ─────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: Colors.background },
   centered:    { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.lg },
   errorText:   { fontSize: Fonts.size.md, color: Colors.error, textAlign: 'center', marginBottom: Spacing.md },
   linkText:    { fontSize: Fonts.size.md, color: Colors.bordeaux, fontWeight: '600' },
 
-  // Header navigation
   header: {
     backgroundColor: Colors.bordeaux,
     paddingTop: Platform.OS === 'ios' ? 60 : Spacing.xl,
@@ -383,8 +356,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  backBtn:    { padding: Spacing.xs },
-  shareBtn:   { padding: Spacing.xs },
+  backBtn:     { padding: Spacing.xs },
+  shareBtn:    { padding: Spacing.xs },
   headerTitle: {
     fontSize: Fonts.size.md,
     fontWeight: '700',
@@ -395,7 +368,6 @@ const styles = StyleSheet.create({
 
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl * 2 },
 
-  // ── Document ──
   document: {
     backgroundColor: Colors.white,
     borderRadius: Radius.md,
@@ -403,7 +375,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     overflow: 'hidden',
     marginBottom: Spacing.lg,
-    // Légère ombre pour simuler un document papier
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -411,7 +382,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  // En-tête document
   docHeader: {
     backgroundColor: Colors.bordeaux,
     padding: Spacing.lg,
@@ -419,7 +389,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  docHeaderLeft:   { flex: 1 },
+  docHeaderLeft: { flex: 1 },
   docTitle: {
     fontSize: 24,
     fontWeight: '900',
@@ -459,7 +429,6 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.md,
   },
 
-  // Sections
   section: {
     padding: Spacing.md,
     paddingVertical: Spacing.md,
@@ -484,7 +453,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // Objet
   objetLabel: {
     fontSize: Fonts.size.sm,
     fontWeight: '700',
@@ -497,7 +465,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // Bloc trajet
   tripBlock: {
     padding: Spacing.md,
     gap: Spacing.sm,
@@ -508,8 +475,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: Spacing.sm,
   },
-  tripIconCol:        { width: 24, alignItems: 'center', paddingTop: 2 },
-  tripTextCol:        { flex: 1 },
+  tripIconCol:      { width: 24, alignItems: 'center', paddingTop: 2 },
+  tripTextCol:      { flex: 1 },
   tripAddressLabel: {
     fontSize: Fonts.size.xs,
     color: Colors.textMuted,
@@ -549,7 +516,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  // Tableau
   table: {
     margin: Spacing.md,
     borderRadius: Radius.sm,
@@ -628,7 +594,6 @@ const styles = StyleSheet.create({
     color: Colors.bordeaux,
   },
 
-  // Note pied de document
   docFooterNote: {
     margin: Spacing.md,
     padding: Spacing.sm,
@@ -645,7 +610,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  // Bouton PDF
   pdfBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -659,11 +623,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
-  },
-  pdfBtnOff: {
-    backgroundColor: Colors.textMuted,
-    shadowOpacity: 0,
-    elevation: 0,
   },
   pdfBtnText: {
     fontSize: Fonts.size.md,

@@ -49,7 +49,7 @@ function PasswordStrength({ value }: { value: string }) {
             <Ionicons
               name={ok ? 'checkmark-circle' : 'ellipse-outline'}
               size={16}
-              color={ok ? Colors.bordeauxLight   : Colors.textMuted}
+              color={ok ? Colors.bordeauxLight : Colors.textMuted}
             />
             <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>
               {rule.label}
@@ -64,8 +64,10 @@ function PasswordStrength({ value }: { value: string }) {
 const strengthStyles = StyleSheet.create({
   wrapper: { marginTop: -Spacing.xs, marginBottom: Spacing.md },
   row:     { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  text:    { marginLeft: Spacing.xs, fontSize: Fonts.size.sm, color: Colors.textCallToAction, opacity: 0.8 },
-  textOk:  { color: Colors.bordeauxLight},
+  /* FIX: flex: 1 pour que le texte prenne tout l'espace restant après l'icône
+     et puisse passer à la ligne si nécessaire au lieu d'être tronqué */
+  text:    { marginLeft: Spacing.xs, fontSize: Fonts.size.sm, color: Colors.textCallToAction, opacity: 0.8, flex: 1 },
+  textOk:  { color: Colors.bordeauxLight },
 });
 
 // ── Screen ─────────────────────────────────────────────────────
@@ -80,12 +82,12 @@ export default function RegisterClientScreen({ navigation }: Props) {
     defaultValues: { password: '' },
   });
 
-  // Watch pour la checklist live
   const passwordValue = useWatch({ control, name: 'password', defaultValue: '' });
 
   const onSubmit = async (data: FormData) => {
     if (!cguAccepted) return;
     clearError();
+    clearGoogleError();
     try {
       await register({
         email:        data.email.trim().toLowerCase(),
@@ -124,6 +126,7 @@ export default function RegisterClientScreen({ navigation }: Props) {
               <Image source={Logo.LogoEasyVTC} style={styles.logo} />
             </View>
             <Text style={styles.title}>Créer un compte</Text>
+            {/* FIX: alignSelf stretch */}
             <Text style={styles.subtitle}>Rejoignez notre communauté premium</Text>
           </View>
 
@@ -206,7 +209,7 @@ export default function RegisterClientScreen({ navigation }: Props) {
                 error={errors.password?.message}
               />
 
-              {/* Checklist live */}
+              {/* Checklist live — textes désormais non tronqués grâce à flex:1 */}
               <PasswordStrength value={passwordValue} />
 
               {/* CGU checkbox */}
@@ -221,7 +224,7 @@ export default function RegisterClientScreen({ navigation }: Props) {
                   color={cguAccepted ? Colors.bordeaux : Colors.textMuted}
                 />
                 <Text style={styles.cguText}>
-                  CGU — J'accepte les{' '}
+                  J'accepte les{' '}
                   <Text style={styles.cguLink}>conditions d'utilisation</Text>
                   {' '}et la{' '}
                   <Text style={styles.cguLink}>politique de confidentialité</Text>
@@ -260,18 +263,19 @@ export default function RegisterClientScreen({ navigation }: Props) {
 
             </View>
 
-            {/* Lien login */}
+            {/* FIX: lien login en colonne pour ne plus tronquer */}
+           
             <View style={styles.registration}>
-              <Text style={styles.loginText}>Déjà un compte ?</Text>
+              <Text style={styles.registrationLabel}>Déjà un compte ?</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Login')} disabled={isLoading}>
-                <Text style={styles.loginBold}> Se connecter</Text>
+                <Text style={styles.registrationBold}> Se connecter</Text>
               </TouchableOpacity>
             </View>
 
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>© 2026 EasyVTC. Tous droits réservés.</Text>
+            <Text style={styles.footerText}>© 2026 EazyVTC. Tous droits réservés.</Text>
           </View>
 
         </ScrollView>
@@ -284,25 +288,30 @@ const styles = StyleSheet.create({
   flex:   { flex: 1 },
   scroll: { flexGrow: 1, paddingVertical: Spacing.xl },
 
-  // Header
+  /* ── Header ── */
   header:   { alignItems: 'center', marginBottom: Spacing.xl, marginTop: Spacing.lg },
   logo:     { width: 80, height: 80, marginBottom: Spacing.sm, resizeMode: 'contain' },
   logoShadow: {
-    // iOS
     shadowColor: 'white', 
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.9, 
     shadowRadius: 20,
-    // Android  
     elevation: 40,        
-
     borderRadius: 40,
     marginBottom: Spacing.md,
   },
   title:    { fontSize: Fonts.size.xl, fontWeight: '800', color: '#FFF', marginBottom: Spacing.xs },
-  subtitle: { fontSize: Fonts.size.md, color: Colors.surface, opacity: 0.5, textAlign: 'center', paddingHorizontal: Spacing.xl },
+  /* FIX: alignSelf stretch pour éviter la troncature par alignItems center du parent */
+  subtitle: {
+    fontSize: Fonts.size.md,
+    color: Colors.surface,
+    opacity: 0.5,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.xl,
+    alignSelf: 'stretch',
+  },
 
-  // Card
+  /* ── Card ── */
   card: {
     backgroundColor: Colors.surface, marginHorizontal: Spacing.lg,
     borderRadius: Radius.lg, overflow: 'hidden', elevation: 5,
@@ -310,27 +319,27 @@ const styles = StyleSheet.create({
   cardTopLine: { height: 6, width: '100%', marginTop: Spacing.xxs },
   cardContent: { padding: Spacing.lg },
 
-  // Erreur
+  /* ── Erreur ── */
   errorBanner: { backgroundColor: Colors.errorLight, borderRadius: Radius.sm, borderLeftWidth: 3, borderLeftColor: Colors.error, padding: Spacing.md, marginBottom: Spacing.md },
   errorText:   { color: Colors.error, fontSize: Fonts.size.sm },
 
-  // Champs
+  /* ── Champs ── */
   row:  { flexDirection: 'row' },
   half: { flex: 1 },
 
-  // CGU
+  /* ── CGU ── */
   cguRow:  { flexDirection: 'row', alignItems: 'flex-start', marginBottom: Spacing.lg, gap: Spacing.sm },
   cguText: { flex: 1, fontSize: Fonts.size.sm, color: Colors.textSecondary, lineHeight: 20 },
   cguLink: { color: Colors.bordeaux, fontWeight: '600' },
 
   button: { marginBottom: Spacing.sm },
 
-  // Séparateur
+  /* ── Séparateur ── */
   separatorContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: Spacing.lg },
   line:               { flex: 1, height: 1, backgroundColor: '#E0E0E0' },
   separatorText:      { marginHorizontal: Spacing.md, color: Colors.textCallToAction, fontSize: Fonts.size.sm },
 
-  // Google
+  /* ── Google ── */
   googleButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     borderWidth: Colors.borderWith, borderColor: Colors.border,
@@ -339,15 +348,31 @@ const styles = StyleSheet.create({
   googleIcon: { width: 20, height: 20, marginRight: Spacing.md },
   googleText: { fontWeight: '600', color: '#333' },
 
-  // Footer card
-  registration: {
-    flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
-    marginVertical: Spacing.xl,
-  },
-  loginText: { color: Colors.textCallToAction, fontSize: Fonts.size.md },
-  loginBold: { color: Colors.bordeauxLight, fontWeight: 'bold', fontSize: Fonts.size.md },
+  /* ── Inscription / Login link ── */
+  /* FIX: layout vertical pur, pas de flexDirection row */
 
-  // Footer page
-  footer:     { flexDirection: 'row', justifyContent: 'center', marginTop: Spacing.lg, marginBottom: Spacing.xl },
-  footerText: { color: Colors.surface, opacity: 0.5, fontSize: Fonts.size.sm },
+  registration: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl,
+  },
+  registrationLabel: { color: Colors.textCallToAction, fontSize: Fonts.size.sm,flex: 1 },
+  registrationBold:  { color: Colors.bordeauxLight, fontWeight: 'bold', fontSize: Fonts.size.md },
+
+  /* ── Footer ── */
+  /* FIX: layout vertical centré, plus de flexDirection row */
+  footer: {
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+  footerText: {
+    color: Colors.surface,
+    opacity: 0.5,
+    fontSize: Fonts.size.sm,
+    textAlign: 'center',
+  },
 });

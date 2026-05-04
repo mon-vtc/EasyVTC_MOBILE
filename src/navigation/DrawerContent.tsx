@@ -93,7 +93,7 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{user?.first_name} {user?.last_name}</Text>
+            <Text style={styles.name} numberOfLines={1}>{user?.first_name} {user?.last_name}</Text>
             <Text style={styles.badgeText}>{roleLabel[user?.role ?? 'client']} VTC</Text>
           </View>
         </View>
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   logoutBtn:       { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.sm },
   logoutText:      { color: Colors.error, fontSize: Fonts.size.md, fontWeight: '600' },
   labelRow:        { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  labelText:       { fontSize: 16, color: Colors.textPrimary, fontWeight: '500' },
+  labelText:       { fontSize: 16, color: Colors.textPrimary, fontWeight: '500', flex: 1 },
   accordionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 12 },
   accordionBody:   { paddingLeft: Spacing.xl },
   subItem:         { marginLeft: 26, marginVertical: -4 },

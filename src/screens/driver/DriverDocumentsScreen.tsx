@@ -78,9 +78,8 @@ export default function DriverDocumentsScreen() {
   return (
     <View style={s.root}>
 
-      {/* ── Header Banner ── */}
-      <View style={s.headerBanner}>
-        <Ionicons name="copy-outline" size={24} color={Colors.white} style={{ marginBottom: 8 }} />
+      {/* ── Header ── */}
+      <View style={s.header}>
         <Text style={s.headerTitle}>Vos documents</Text>
         <Text style={s.headerSub}>
           Gardez vos documents à jour pour continuer à recevoir des courses
@@ -301,23 +300,23 @@ const DocumentViewer = ({ visible, view, onClose, onReplace }: ViewerProps) => {
 // ─── Styles ───────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.background, marginTop : Spacing.sm,},
+  root: { flex: 1, backgroundColor: Colors.background },
 
-  headerBanner: {
+  header: {
     backgroundColor: Colors.bordeaux,
-    padding: Spacing.lg,
-    borderRadius: Radius.lg,
-    marginHorizontal: Spacing.md
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.md,
   },
   headerTitle: {
-    color: Colors.white,
-    fontSize: Fonts.size.lg,
+    fontSize: Fonts.size.xl,
     fontWeight: '800',
-    marginBottom: 4,
+    color: Colors.white,
   },
   headerSub: {
-    color: 'rgba(255,255,255,0.8)',
     fontSize: Fonts.size.sm,
+    color: Colors.beigeLight,
+    marginTop: 2,
   },
 
   progressWrap: {

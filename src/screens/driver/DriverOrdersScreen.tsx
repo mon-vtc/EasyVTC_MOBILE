@@ -3,19 +3,24 @@
 // Sprint 4 — EazyVTC
 // ══════════════════════════════════════════════════════════════════════════════
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl,
+  View, Text, FlatList, TouchableOpacity, Image,
+  StyleSheet, ActivityIndicator, Alert, RefreshControl, Platform,
 } from 'react-native';
-import { Ionicons }        from '@expo/vector-icons';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { Logo }    from '../../constants/logo';
 import { useOrdersStore } from '../../store/orders.store';
 import { useAuthStore } from '../../store/auth.store';
 import type { Order } from '../../types/orders.types';
+import type { DriverOrdersStackParamList } from '../../types/auth.types';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { OrderCard } from '../../components/common/OrderCard';
 
 export default function DriverOrdersScreen() {
+  const navigation = useNavigation<NavigationProp<DriverOrdersStackParamList>>();
   const { orders, total, isLoading, error, fetchDriverMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
 
@@ -26,6 +31,10 @@ export default function DriverOrdersScreen() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (error) { Alert.alert('Erreur', error); clearError(); } }, [error]);
 
+  const handleViewOrder = (order: Order) => {
+    navigation.navigate('DriverOrderDetails', { orderId: order.id });
+  };
+
   if (isLoading && orders.length === 0) {
     return <View style={styles.centered}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>;
   }
@@ -33,6 +42,17 @@ export default function DriverOrdersScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        {/* Barre de navigation : hamburger | logo | notif */}
+        <View style={styles.headerNav}>
+          <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={styles.navBtn}>
+            <Ionicons name="menu-outline" size={28} color={Colors.white} />
+          </TouchableOpacity>
+          <Image source={Logo.LogoEasyVTC} style={styles.logo} resizeMode="contain" />
+          <TouchableOpacity style={styles.navBtn}>
+            <Ionicons name="notifications-outline" size={24} color={Colors.white} />
+          </TouchableOpacity>
+        </View>
+        {/* Sous-header : titre + compteur */}
         <Text style={styles.headerTitle}>Bons de commande</Text>
         <Text style={styles.headerCount}>{total} document{total > 1 ? 's' : ''}</Text>
       </View>
@@ -40,7 +60,9 @@ export default function DriverOrdersScreen() {
       <FlatList
         data={orders}
         keyExtractor={(o) => o.id}
-        renderItem={({ item }) => <OrderCard order={item} token={token} role="driver" />}
+        renderItem={({ item }) => (
+          <OrderCard order={item} token={token} role="driver" onPress={handleViewOrder} />
+        )}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
         ListEmptyComponent={
@@ -61,11 +83,19 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: Colors.bordeaux,
     paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.md,
+    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl,
+    paddingBottom: Spacing.lg,
   },
-  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white },
-  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2 },
+  headerNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: 44,
+  },
+  navBtn:      { padding: 4, width: 36, alignItems: 'center' },
+  logo:        { width: 40, height: 40 },
+  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white, marginTop: Spacing.md },
+  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: Spacing.xs },
   list:        { padding: Spacing.md, gap: Spacing.md },
   empty:      { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
   emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },

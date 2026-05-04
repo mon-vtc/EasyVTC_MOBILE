@@ -76,7 +76,7 @@ export function OrderCard({ order, token, role, onPress }: OrderCardProps) {
       {/* Trajet */}
       <View style={styles.infoRow}>
         <Ionicons name="navigate-outline" size={15} color={Colors.textMuted} />
-        <Text style={styles.infoText} numberOfLines={1}>
+        <Text style={styles.infoText} numberOfLines={2}>
           {snap.pickup_address.split(',')[0]} → {snap.dest_address.split(',')[0]}
         </Text>
       </View>
@@ -99,7 +99,7 @@ export function OrderCard({ order, token, role, onPress }: OrderCardProps) {
 
       {/* Bouton PDF */}
       <TouchableOpacity
-        style={[styles.pdfBtn, !order.pdf_url && styles.pdfBtnOff]}
+        style={styles.pdfBtn}
         onPress={handlePress}
         disabled={!onPress}
       >

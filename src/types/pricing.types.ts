@@ -103,6 +103,7 @@ export interface PriceEstimateDto {
   duration_min?:  number;
   flat_rate_id?:  string;
   nb_passengers?: number;
+  vehicle_type?:  string;
 }
 
 // ── Détail interne (stocké en BDD, JAMAIS affiché sur documents — CDC p.26) ──

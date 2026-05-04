@@ -265,10 +265,10 @@ describe('invoicesApi', () => {
     );
   });
 
-  it('getPdfUrl retourne une URL construite avec la base d\'environnement', () => {
-    process.env.EXPO_PUBLIC_API_URL = 'https://api.eazyvtc.com';
-    const url = invoicesApi.getPdfUrl(TOKEN, 'inv-42');
-    expect(url).toBe('https://api.eazyvtc.com/invoices/inv-42/pdf');
+  it('fetchPdfUrl appelle GET /invoices/:id/pdf avec le token', () => {
+    mockApi.get.mockResolvedValue({ ok: true, data: { url: 'https://storage.supabase.co/signed' } });
+    invoicesApi.fetchPdfUrl(TOKEN, 'inv-42');
+    expect(mockApi.get).toHaveBeenCalledWith('/invoices/inv-42/pdf', TOKEN);
   });
 });
 
@@ -302,10 +302,10 @@ describe('ordersApi', () => {
     expect(mockApi.get).toHaveBeenCalledWith('/orders/by-reservation/resa-99', TOKEN);
   });
 
-  it('getPdfUrl retourne l\'URL correcte', () => {
-    process.env.EXPO_PUBLIC_API_URL = 'https://api.eazyvtc.com';
-    const url = ordersApi.getPdfUrl(TOKEN, 'order-42');
-    expect(url).toBe('https://api.eazyvtc.com/orders/order-42/pdf');
+  it('fetchPdfUrl appelle GET /orders/:id/pdf avec le token', () => {
+    mockApi.get.mockResolvedValue({ ok: true, data: { url: 'https://storage.supabase.co/signed' } });
+    ordersApi.fetchPdfUrl(TOKEN, 'order-42');
+    expect(mockApi.get).toHaveBeenCalledWith('/orders/order-42/pdf', TOKEN);
   });
 });
 

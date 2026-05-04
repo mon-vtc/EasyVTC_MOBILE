@@ -221,21 +221,17 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
             )}
           </View>
 
-          {/* Passagers & bagages */}
-          <View style={styles.clientMeta}>
-            {(reservation as any).passengers_count != null && (
+          {/* Passagers */}
+          {reservation.nb_passengers > 0 && (
+            <View style={styles.clientMeta}>
               <View style={styles.metaItem}>
                 <Ionicons name="people-outline" size={15} color={Colors.textSecondary} />
-                <Text style={styles.metaText}>{(reservation as any).passengers_count} passager{(reservation as any).passengers_count > 1 ? 's' : ''}</Text>
+                <Text style={styles.metaText}>
+                  {reservation.nb_passengers} passager{reservation.nb_passengers > 1 ? 's' : ''}
+                </Text>
               </View>
-            )}
-            {(reservation as any).luggage_count != null && (
-              <View style={styles.metaItem}>
-                <Ionicons name="briefcase-outline" size={15} color={Colors.textSecondary} />
-                <Text style={styles.metaText}>{(reservation as any).luggage_count} bagage{(reservation as any).luggage_count > 1 ? 's' : ''}</Text>
-              </View>
-            )}
-          </View>
+            </View>
+          )}
         </View>
 
         {/* ── Itinéraire ───────────────────────────────────── */}

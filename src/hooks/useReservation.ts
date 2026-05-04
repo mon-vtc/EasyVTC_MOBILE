@@ -217,6 +217,7 @@ export function useReservation() {
           distance_km,
           duration_min,
           nb_passengers: _nbPassengers,
+          vehicle_type:  _vehicleType,
         });
 
         if (res.ok && res.data) {
@@ -379,9 +380,11 @@ export function useReservation() {
   );
   const isStep2Valid = !!(booking.date && booking.time && booking.nb_passengers >= 1);
   // Étape 3 : l'estimation doit être disponible (prix calculé côté serveur).
-  // Sans ça, le DTO n'a ni flat_rate_id ni distance_km/duration_min → 400 backend.
+  // En mode formule, distance_km ET duration_min doivent être non-null :
+  // sans eux, le DTO ne passe pas la refine du validator backend → 400.
   const isStep3Valid = isStep1Valid && isStep2Valid && !isFetchingPrice && (
-    !!booking.flat_rate_id || booking.estimated_price != null
+    !!booking.flat_rate_id ||
+    (booking.estimated_price != null && booking.distance_km != null && booking.duration_min != null)
   );
 
   // ── Soumission ─────────────────────────────────────────────────────────────

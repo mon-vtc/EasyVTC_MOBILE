@@ -19,6 +19,7 @@ import { AppIcon }             from '../../components/common/AppIcon';
 import { Colors }              from '../../theme/colors';
 import { useReservationStore } from '../../store/reservation.store';
 import { useAuthStore }        from '../../store/auth.store';
+import { invoicesApi }         from '../../services/api/invoices.api';
 import type { ClientStackParamList } from '../../types/auth.types';
 import { Logo } from '../../constants/logo';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
@@ -123,9 +124,22 @@ export default function ReservationDetailsScreen() {
     }
   }, [reservation?.driver_id, nav]);
 
-  const handleViewInvoice = useCallback(() => {
-    nav.navigate('MyInvoices' as any, { reservationId: reservation?.id });
-  }, [reservation?.id, nav]);
+  const handleViewInvoice = useCallback(async () => {
+    if (!reservation?.id || !accessToken) return;
+    try {
+      const res = await invoicesApi.fetchByReservationId(accessToken, reservation.id);
+      if (res.ok && res.data) {
+        nav.navigate('InvoiceDetails', { invoiceId: res.data.id });
+      } else {
+        Alert.alert(
+          'Facture indisponible',
+          res.message ?? 'La facture n\'est pas encore disponible pour cette course.',
+        );
+      }
+    } catch {
+      Alert.alert('Erreur', 'Impossible de récupérer la facture. Veuillez réessayer.');
+    }
+  }, [reservation?.id, accessToken, nav]);
 
   const handleEvaluate = useCallback(() => {
     Alert.alert(
@@ -288,11 +302,13 @@ export default function ReservationDetailsScreen() {
           <Animated.View style={[styles.card, slideUp(cardAnim, 12)]}>
             <Text style={styles.cardTitle}>Votre chauffeur</Text>
             <View style={styles.driverRow}>
-              <View style={styles.driverAvatar}>
+              <View style={[styles.driverAvatar, { backgroundColor: BORDEAUX }]}>
                 {r.driver.user?.profile_photo_url ? (
                   <Image source={{ uri: r.driver.user.profile_photo_url }} style={styles.driverAvatarImage} />
                 ) : (
-                  `${r.driver.user?.first_name?.[0]}${r.driver.user?.last_name?.[0]}`
+                  <Text style={styles.driverAvatarText}>
+                    {r.driver.user?.first_name?.[0]}{r.driver.user?.last_name?.[0]}
+                  </Text>
                 )}
               </View>
               <View style={{ flex: 1 }}>
