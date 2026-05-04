@@ -1,228 +1,56 @@
+// screens/admin/managers/Editmanagerscreen.tsx
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  Alert,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-  Image,
-  Platform,
+  View, Text, ScrollView, StyleSheet, Alert, TouchableOpacity,
+  ActivityIndicator, Image, Platform,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAdmin } from '../../../hooks/useAdmin';
-import { Colors, Spacing, Radius } from '../../../theme/colors';
+import { AppInput } from '../../../components/common/AppInput';
+import { AppButton } from '../../../components/common/AppButton';
+import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
 import type { UserProfile } from '../../../types';
 import ChangeStatusModal from '../../../components/common/ChangeStatusModal';
 
-// ── Données statiques pour les selects ────────────────────────────────────────
-const POSTES    = ['Gestionnaire', 'Adjoint'];
-const ZONES     = ['Paris Est (11e, 12e, 20e…)', 'Paris Ouest', 'Paris Nord', 'Paris Sud'];
-const STATUTS   = ['Actif', 'Inactif', 'En congé'];
-const PRIORITES = ['Gestionnaire prioritaire', 'Standard'];
+const PRIORITY_OPTIONS = [
+  { value: 1, label: 'Standard' },
+  { value: 2, label: 'Prioritaire' },
+  { value: 3, label: 'Haute priorité' },
+];
 
-// ── FieldInput ─────────────────────────────────────────────────────────────────
-interface FieldInputProps {
-  label: string;
-  value: string;
-  onChangeText: (t: string) => void;
-  placeholder?: string;
-  error?: string;
-  keyboardType?: 'default' | 'email-address' | 'phone-pad';
-  autoCapitalize?: 'none' | 'words' | 'sentences';
-  required?: boolean;
-}
-
-function FieldInput({
-  label, value, onChangeText, placeholder, error,
-  keyboardType = 'default', autoCapitalize = 'sentences', required = false,
-}: FieldInputProps) {
-  return (
-    <View style={fieldStyles.wrapper}>
-      <Text style={fieldStyles.label}>
-        {label}{required && <Text style={fieldStyles.required}> *</Text>}
-      </Text>
-      <TextInput
-        style={[fieldStyles.input, error ? fieldStyles.inputError : null]}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={Colors.textPlaceholder}
-        keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize}
-      />
-      {error ? <Text style={fieldStyles.errorText}>{error}</Text> : null}
-    </View>
-  );
-}
-
-// ── FieldSelect ────────────────────────────────────────────────────────────────
-interface FieldSelectProps {
-  label: string;
-  value: string;
-  options: string[];
-  onSelect: (v: string) => void;
-  required?: boolean;
-  /** Affiche un dot coloré devant la valeur (pour Statut) */
-  withStatusDot?: boolean;
-  /** Affiche une icône étoile devant la valeur (pour Priorité) */
-  withStarIcon?: boolean;
-}
-
-function FieldSelect({
-  label, value, options, onSelect, required,
-  withStatusDot = false, withStarIcon = false,
-}: FieldSelectProps) {
-  const [open, setOpen] = useState(false);
-  const isActive = value === 'Actif';
-
-  return (
-    <View style={fieldStyles.wrapper}>
-      <Text style={fieldStyles.label}>
-        {label}{required && <Text style={fieldStyles.required}> *</Text>}
-      </Text>
-      <TouchableOpacity
-        style={fieldStyles.select}
-        onPress={() => setOpen((p) => !p)}
-        activeOpacity={0.7}
-      >
-        {/* Dot statut */}
-        {withStatusDot && value && (
-          <View style={[
-            fieldStyles.statusDot,
-            { backgroundColor: isActive ? '#34C77B' : '#E53935' },
-          ]} />
-        )}
-        {/* Étoile priorité */}
-        {withStarIcon && value && (
-          <Text style={{ fontSize: 16 }}>⭐</Text>
-        )}
-        <Text style={[fieldStyles.selectValue, !value && { color: Colors.textPlaceholder }]}>
-          {value || 'Choisir…'}
-        </Text>
-        <Ionicons
-          name={open ? 'chevron-up-outline' : 'chevron-down-outline'}
-          size={16}
-          color={Colors.textSecondary}
-        />
-      </TouchableOpacity>
-
-      {open && (
-        <View style={fieldStyles.dropdown}>
-          {options.map((opt) => (
-            <TouchableOpacity
-              key={opt}
-              style={[fieldStyles.dropdownItem, value === opt && fieldStyles.dropdownItemActive]}
-              onPress={() => { onSelect(opt); setOpen(false); }}
-            >
-              <Text style={[fieldStyles.dropdownText, value === opt && fieldStyles.dropdownTextActive]}>
-                {opt}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
-const fieldStyles = StyleSheet.create({
-  wrapper: { marginBottom: Spacing.sm },
-  label: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary, marginBottom: 4 },
-  required: { color: Colors.error },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.sm,
-    height: 44,
-    fontSize: 14,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.white,
-  },
-  inputError: { borderColor: Colors.error },
-  errorText: { fontSize: 11, color: Colors.error, marginTop: 3 },
-  select: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.sm,
-    height: 44,
-    backgroundColor: Colors.white,
-  },
-  statusDot: { width: 9, height: 9, borderRadius: 5 },
-  selectValue: { flex: 1, fontSize: 14, color: Colors.textPrimary },
-  dropdown: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.sm,
-    backgroundColor: Colors.white,
-    marginTop: 2,
-    overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    zIndex: 10,
-  },
-  dropdownItem: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 11,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  dropdownItemActive: { backgroundColor: Colors.beigeLight },
-  dropdownText: { fontSize: 14, color: Colors.textPrimary },
-  dropdownTextActive: { color: Colors.bordeauxLight, fontWeight: '600' },
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
-// SCREEN PRINCIPAL
-// ══════════════════════════════════════════════════════════════════════════════
 export default function EditManagerScreen() {
   const navigation = useNavigation();
   const route = useRoute<any>();
   const { managerId } = route.params as { managerId: string };
 
-  const { fetchManagerById, changeManagerStatus, user } = useAdmin();
+  const { fetchManagerById, updateManager, changeManagerStatus } = useAdmin();
 
-  const [manager, setManager]   = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [manager,      setManager]      = useState<UserProfile | null>(null);
+  const [isLoading,    setIsLoading]    = useState(true);
+  const [isSaving,     setIsSaving]     = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // ── Champs ────────────────────────────────────────────────────────────────
-  const [fullName,    setFullName]    = useState('');
-  const [poste,       setPoste]       = useState('');
-  const [zone,        setZone]        = useState('');
-  const [statut,      setStatut]      = useState('Actif');
-  const [priorite,    setPriorite]    = useState('');
-  const [email,       setEmail]       = useState('');
-  const [phone,       setPhone]       = useState('');
-  const [zoneContact, setZoneContact] = useState('');
+  // Champs éditables
+  const [firstName,     setFirstName]     = useState('');
+  const [lastName,      setLastName]      = useState('');
+  const [phone,         setPhone]         = useState('');
+  const [coverageZone,  setCoverageZone]  = useState('');
+  const [priorityLevel, setPriorityLevel] = useState<number | null>(null);
 
-  // ── Chargement initial ─────────────────────────────────────────────────────
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   useEffect(() => {
     (async () => {
       try {
         const data = await fetchManagerById(managerId);
         if (data) {
           setManager(data);
-          setFullName(`${data.first_name ?? ''} ${data.last_name ?? ''}`.trim());
-          setPoste(data.role ?? 'Gestionnaire');
-          setZone((data as UserProfile).zone ?? 'Paris Est (11e, 12e, 20e…)' );
-          setStatut(data.status === 'active' ? 'Actif' : 'Inactif');
-          setPriorite(data.priorite ?? '');
-          setEmail(data.email ?? '');
+          setFirstName(data.first_name);
+          setLastName(data.last_name);
           setPhone(data.phone ?? '');
-          setZoneContact(data.zone_contact ?? '');
+          setCoverageZone(data.coverage_zone ?? '');
+          setPriorityLevel(data.priority_level ?? null);
         }
       } finally {
         setIsLoading(false);
@@ -230,285 +58,341 @@ export default function EditManagerScreen() {
     })();
   }, [managerId]);
 
-  // ── Soumission ─────────────────────────────────────────────────────────────
-  const handleStatusChange = async (newStatus: 'active' | 'inactive' | 'locked', reason: string) => {
-    if (!manager) return;
+  const validate = (): boolean => {
+    const e: Record<string, string> = {};
+    if (!firstName.trim()) e.firstName = 'Le prénom est requis';
+    if (!lastName.trim())  e.lastName  = 'Le nom est requis';
+    if (phone.trim() && !/^\+?[1-9]\d{7,14}$/.test(phone.trim())) {
+      e.phone = 'Format international attendu (ex : +33612345678)';
+    }
+    if (coverageZone.trim() && coverageZone.trim().length < 2) {
+      e.coverageZone = 'La zone de couverture doit comporter au moins 2 caractères';
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!manager || !validate()) return;
     setIsSaving(true);
     try {
-      const updatedManager = await changeManagerStatus(manager.id, { status: newStatus, reason });
-      setManager(updatedManager);
-      setStatut(updatedManager?.status === 'active' ? 'Actif' : 'Inactif');
-      setModalVisible(false);
-
-      Alert.alert(
-        'Succès',
-        'Le statut du gestionnaire a été mis à jour.',
-      );
-    } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Une erreur est survenue');
+      const updated = await updateManager(manager.id, {
+        first_name:    firstName.trim(),
+        last_name:     lastName.trim(),
+        ...(phone.trim()         ? { phone: phone.trim() }                   : {}),
+        ...(coverageZone.trim()  ? { coverage_zone: coverageZone.trim() }    : {}),
+        ...(priorityLevel !== null ? { priority_level: priorityLevel }       : {}),
+      });
+      if (updated) setManager(updated);
+      Alert.alert('Succès', 'Les informations du gestionnaire ont été mises à jour.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (err: any) {
+      Alert.alert('Erreur', err.message || 'Une erreur est survenue');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const onSelectStatus = (newStatusLabel: string) => {
-    setStatut(newStatusLabel);
-    setModalVisible(true);
-  }
+  const handleStatusChange = async (
+    newStatus: 'active' | 'inactive' | 'locked',
+    reason: string,
+  ) => {
+    if (!manager) return;
+    setIsSaving(true);
+    try {
+      const updated = await changeManagerStatus(manager.id, { status: newStatus, reason });
+      if (updated) setManager(updated);
+      setModalVisible(false);
+      Alert.alert('Succès', 'Le statut du gestionnaire a été mis à jour.');
+    } catch (err: any) {
+      Alert.alert('Erreur', err.message || 'Une erreur est survenue');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-  // ── Loading ─────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.bordeauxLight} />
+        <ActivityIndicator size="large" color={Colors.bordeaux} />
       </View>
     );
   }
 
+  if (!manager) {
+    return (
+      <View style={styles.center}>
+        <Ionicons name="person-outline" size={48} color={Colors.border} />
+        <Text style={styles.errorText}>Gestionnaire introuvable.</Text>
+      </View>
+    );
+  }
+
+  const initials    = `${manager.first_name?.[0] ?? ''}${manager.last_name?.[0] ?? ''}`.toUpperCase();
+  const isActive    = manager.status === 'active';
+  const statusLabel = isActive ? 'Actif' : manager.status === 'locked' ? 'Suspendu' : 'Inactif';
+  const statusColor = isActive ? '#2E7D32' : manager.status === 'locked' ? '#C62828' : '#E65100';
+  const statusBg    = isActive ? '#E8F5E9' : manager.status === 'locked' ? '#f5e2e2' : '#FFF3E0';
+
   return (
     <View style={styles.container}>
-      {/* ── Header : titre gauche + bouton "Sauvegarder" droite ── */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={Colors.white} />
         </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>Modifier le Gestionnaire</Text>
+        <Text style={styles.headerTitle}>Modifier le gestionnaire</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      {/* ── Bandeau identité sous le header (avatar + nom) ── */}
+      {/* Bandeau identité */}
       <View style={styles.identityBanner}>
-        {manager?.profile_photo_url ? (
+        {manager.profile_photo_url ? (
           <Image source={{ uri: manager.profile_photo_url }} style={styles.avatar} />
         ) : (
           <View style={styles.avatarFallback}>
-            <Text style={styles.avatarInitials}>
-              {manager?.first_name?.[0]}{manager?.last_name?.[0]}
-            </Text>
+            <Text style={styles.avatarInitials}>{initials}</Text>
           </View>
         )}
-        <Text style={styles.bannerName}>{fullName || 'Gestionnaire'}</Text>
+        <View>
+          <Text style={styles.bannerName}>{manager.first_name} {manager.last_name}</Text>
+          <Text style={styles.bannerRole}>Gestionnaire · {manager.email}</Text>
+        </View>
       </View>
 
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <View style={{marginBottom: Spacing.md, elevation: 1, backgroundColor: Colors.white, borderRadius: Radius.lg, padding: Spacing.md }}>
-          {/* ── Nom complet ── */}
-        <FieldInput
-          label="Nom complet"
-          value={fullName}
-          onChangeText={() => {}}
-          placeholder="Marie Dubois"
-          // editable={false}
-          required
-        />
-
-        {/* ── Poste + Zone de couverture ── */}
-        <View style={styles.row}>
-          <View style={styles.col}>
-              <FieldSelect
-                label="Poste"
-                value={poste}
-                options={POSTES}
-                onSelect={() => {}}
-                required
-              />
-            </View>
-            <View style={styles.col}>
-              <FieldSelect
-                label="Zone de couverture"
-                value={zone}
-                options={ZONES}
-                onSelect={() => {}}
-                required
-              />
-            </View>
-          </View>
-
-          {/* ── Statut + Niveau de priorité ── */}
-          <View style={styles.row}>
-            <View style={styles.col}>
-              <FieldSelect
-                label="Statut"
-                value={statut}
-                options={STATUTS}
-                onSelect={onSelectStatus}
-                withStatusDot
-              />
-            </View>
-            <View style={styles.col}>
-              <FieldSelect
-                label="Niveau de priorité"
-                value={priorite}
-                options={PRIORITES}
-                onSelect={() => {}}
-                withStarIcon
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* ── Section Informations de contact ── */}
-        <View style={{ elevation: 1, backgroundColor: Colors.white, borderRadius: Radius.lg, padding: Spacing.md }}>
+        {/* Identité */}
+        <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="person-circle-outline" size={18} color={Colors.bordeauxLight} />
-            <Text style={styles.sectionTitle}>Informations de contact</Text>
+            <Ionicons name="person-outline" size={18} color={Colors.bordeauxLight} />
+            <Text style={styles.sectionTitle}>Identité</Text>
           </View>
-
-          <FieldInput
-            label="Courriel professionnel"
-            value={email}
-            onChangeText={() => {}}
-            placeholder="marie.dubois@easyvtc.fr"
-            // editable={false}
-            required
+          <AppInput
+            label="Prénom *"
+            value={firstName}
+            onChangeText={setFirstName}
+            error={errors.firstName}
+            autoCapitalize="words"
           />
-
-          <FieldInput
-            label="Téléphone direct"
+          <AppInput
+            label="Nom *"
+            value={lastName}
+            onChangeText={setLastName}
+            error={errors.lastName}
+            autoCapitalize="words"
+          />
+          <AppInput
+            label="Téléphone"
+            placeholder="+33612345678"
             value={phone}
-            onChangeText={() => {}}
-            placeholder="+33123456789"
-            // editable={false}
-            required
-          />
-
-          <FieldInput
-            label="Zone de couverture"
-            value={zoneContact}
-            onChangeText={() => {}}
-            placeholder="Paris Est"
-            // editable={false}
+            onChangeText={setPhone}
+            error={errors.phone}
+            keyboardType="phone-pad"
           />
         </View>
 
-        {/* Espace bas pour le FAB */}
-        <View style={{ height: 40 }} />
-      </ScrollView>
+        {/* Périmètre */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="map-outline" size={18} color={Colors.bordeauxLight} />
+            <Text style={styles.sectionTitle}>Périmètre d'action</Text>
+          </View>
 
-      {/* FAB + */}
-      <TouchableOpacity style={styles.fab} activeOpacity={0.8}>
-        <Ionicons name="add-outline" size={26} color={Colors.white} />
-      </TouchableOpacity>
+          <AppInput
+            label="Zone de couverture"
+            placeholder="Ex : Île-de-France, Dakar Nord…"
+            value={coverageZone}
+            onChangeText={setCoverageZone}
+            error={errors.coverageZone}
+            autoCapitalize="words"
+          />
+
+          <Text style={styles.fieldLabel}>Niveau de priorité</Text>
+          <View style={styles.priorityRow}>
+            {PRIORITY_OPTIONS.map(opt => (
+              <TouchableOpacity
+                key={opt.value}
+                style={[
+                  styles.priorityOption,
+                  priorityLevel === opt.value && styles.priorityOptionSelected,
+                ]}
+                onPress={() => setPriorityLevel(priorityLevel === opt.value ? null : opt.value)}
+                activeOpacity={0.75}
+              >
+                <Text style={[
+                  styles.priorityOptionText,
+                  priorityLevel === opt.value && styles.priorityOptionTextSelected,
+                ]}>
+                  {opt.value} — {opt.label}
+                </Text>
+                {priorityLevel === opt.value && (
+                  <Ionicons name="checkmark" size={16} color={Colors.bordeaux} style={{ marginLeft: 'auto' }} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Statut */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="shield-outline" size={18} color={Colors.bordeauxLight} />
+            <Text style={styles.sectionTitle}>Statut du compte</Text>
+          </View>
+
+          <View style={styles.statusRow}>
+            <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
+              <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+              <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.changeStatusBtn}
+              onPress={() => setModalVisible(true)}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="swap-horizontal-outline" size={16} color={Colors.bordeaux} />
+              <Text style={styles.changeStatusText}>Modifier</Text>
+            </TouchableOpacity>
+          </View>
+
+          {manager.status_reason ? (
+            <View style={styles.reasonBox}>
+              <Text style={styles.reasonLabel}>Motif actuel</Text>
+              <Text style={styles.reasonValue}>{manager.status_reason}</Text>
+            </View>
+          ) : null}
+        </View>
+
+        <AppButton
+          label="Enregistrer les modifications"
+          onPress={handleSave}
+          loading={isSaving}
+          style={styles.button}
+        />
+      </ScrollView>
 
       <ChangeStatusModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onConfirm={handleStatusChange}
-        currentStatus={manager?.status ?? 'inactive'}
-        userName={`${manager?.first_name} ${manager?.last_name}`}
+        currentStatus={manager.status}
+        userName={`${manager.first_name} ${manager.last_name}`}
         isSaving={isSaving}
       />
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container:   { flex: 1, backgroundColor: Colors.background },
+  center:      { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md },
+  errorText:   { fontSize: Fonts.size.md, color: Colors.textMuted },
 
-  // ── Header ─────────────────────────────────────────────────────────────────
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom: Spacing.md,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    backgroundColor:   Colors.bordeaux,
+    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
+    paddingBottom:     Spacing.md,
     paddingHorizontal: Spacing.md,
   },
-  headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.white,
-    marginLeft: Spacing.sm,
-    lineHeight: 20,
-  },
-  /** Bouton "Sauvegarder" blanc dans le header (Image 2) */
-  saveHeaderBtn: {
-    backgroundColor: Colors.white,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 8,
-  },
-  saveHeaderBtnLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.bordeauxDark,
-  },
+  headerBtn:   { padding: Spacing.sm, width: 40 },
+  headerTitle: { fontSize: Fonts.size.lg, fontWeight: '600', color: Colors.white },
 
-  // ── Bandeau identité ────────────────────────────────────────────────────────
   identityBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.bordeaux,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               Spacing.md,
+    backgroundColor:   Colors.bordeaux,
     paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
+    paddingBottom:     Spacing.lg,
   },
-  avatar: { width: 50, height: 50, borderRadius: 24 },
+  avatar:         { width: 52, height: 52, borderRadius: 26 },
   avatarFallback: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52, height: 52, borderRadius: 26,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
-  avatarInitials: { fontSize: 18, fontWeight: '700', color: Colors.white },
-  bannerName: {
-    fontSize: 20,
+  avatarInitials: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white },
+  bannerName:     { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white },
+  bannerRole:     { fontSize: Fonts.size.xs, color: Colors.beigeLight, marginTop: 2 },
+
+  scroll:  { flex: 1 },
+  content: { padding: Spacing.md, paddingBottom: Spacing.xl, gap: Spacing.md },
+
+  sectionCard: {
+    backgroundColor: Colors.white, borderRadius: Radius.md,
+    padding: Spacing.md, gap: Spacing.sm,
+    elevation: 2, shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4,
+  },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
+  sectionTitle:  { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeauxDark },
+
+  fieldLabel: {
+    fontSize:    Fonts.size.sm,
+    fontWeight:  '600',
+    color:       Colors.textSecondary,
+    marginBottom: 4,
+  },
+  priorityRow:   { gap: Spacing.xs },
+  priorityOption: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    paddingVertical:   10,
+    paddingHorizontal: Spacing.md,
+    borderRadius:      Radius.md,
+    borderWidth:       1,
+    borderColor:       Colors.border,
+    backgroundColor:   Colors.white,
+  },
+  priorityOptionSelected: {
+    borderColor:     Colors.bordeaux,
+    backgroundColor: Colors.overlayLight,
+  },
+  priorityOptionText: {
+    fontSize:   Fonts.size.sm,
+    fontWeight: '500',
+    color:      Colors.textSecondary,
+    flex:       1,
+  },
+  priorityOptionTextSelected: {
+    color:      Colors.bordeaux,
     fontWeight: '700',
-    color: Colors.white,
   },
 
-  // ── Formulaire ──────────────────────────────────────────────────────────────
-  scroll: { flex: 1 },
-  content: { padding: Spacing.md, paddingBottom: 100 },
-
-  row: { flexDirection: 'row', gap: Spacing.sm, zIndex: -1 },
-  col: { flex: 1 },
-
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.md,
-    paddingBottom: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    zIndex: -1,
+  statusRow: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'space-between',
+    paddingVertical: Spacing.sm,
   },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.bordeauxDark,
+  statusBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: Spacing.sm, paddingVertical: 5,
+    borderRadius: Radius.full,
   },
+  statusDot:  { width: 8, height: 8, borderRadius: 4 },
+  statusText: { fontSize: Fonts.size.sm, fontWeight: '600' },
 
-  // ── États ───────────────────────────────────────────────────────────────────
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  changeStatusBtn:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  changeStatusText: { fontSize: Fonts.size.sm, color: Colors.bordeaux, fontWeight: '500' },
 
-  // ── FAB ─────────────────────────────────────────────────────────────────────
-  fab: {
-    position: 'absolute',
-    bottom: 30,
-    right: 20,
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: Colors.bordeauxLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 8,
-    shadowColor: Colors.bordeauxDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
+  reasonBox: {
+    backgroundColor: Colors.beigeLight,
+    borderRadius:    Radius.sm,
+    padding:         Spacing.sm,
+    gap:             4,
   },
+  reasonLabel: { fontSize: Fonts.size.xs, fontWeight: '600', color: Colors.textSecondary },
+  reasonValue: { fontSize: Fonts.size.sm, color: Colors.textPrimary },
+
+  button: { marginTop: Spacing.xs },
 });
