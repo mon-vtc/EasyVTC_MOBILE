@@ -104,9 +104,15 @@ export type DriverDrawerParamList = {
   DriverInvoices:     undefined;
 };
 
+
+export type ManagerReservationsStackParamList = {
+  ManagerReservationsList: undefined;
+  ManagerReservationDetail: { reservationId: string; };
+};
+
 export type ManagerDrawerParamList = {
-  ManagerHome:         undefined;
-  ManagerReservations: undefined;
+  ManagerHome:         undefined;  
+  ManagerReservations: NavigatorScreenParams<ManagerReservationsStackParamList>;
   ManagerDrivers:      undefined;
   ManagerClients:      undefined;
   ManagerOrders:       undefined;
@@ -118,10 +124,6 @@ export type ManagerDrawerParamList = {
   FlatRates:           undefined;
 };
 
-export type ManagerReservationsStackParamList = {
-  ManagerReservationsList:  undefined;
-  ManagerReservationDetail: { reservationId: string };
-};
 
 // ── Stack interne Clients (dans le Drawer Admin) ─────────────────
 export type ClientsStackParamList = {

@@ -12,9 +12,10 @@ import type {
 export function useAdmin() {
   const auth         = useAuth();
   const accessToken  = useAuthStore(s => s.accessToken);
+  const isAdminOrManager = auth.isAdmin || auth.isManager;
 
-  if (!auth.isAdmin) {
-    throw new Error('useAdmin() ne peut être utilisé que par un administrateur.');
+  if (!isAdminOrManager) {
+    throw new Error('useAdmin() ne peut être utilisé que par un administrateur ou un manager.');
   }
 
   // ── Store Utilisateurs (clients, autres admins, managers) ─────
