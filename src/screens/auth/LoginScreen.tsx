@@ -8,12 +8,13 @@ import { zodResolver }                 from '@hookform/resolvers/zod';
 import { z }                           from 'zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient }              from 'expo-linear-gradient';
-import { Ionicons }                    from '@expo/vector-icons'; // Pour la checkbox et Google
+import { Ionicons }                    from '@expo/vector-icons';
 
-import { FormField }   from '../../components/forms/FormField';
-import { AppButton }   from '../../components/common/AppButton';
+import { FormField }      from '../../components/forms/FormField';
+import { AppButton }      from '../../components/common/AppButton';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
-import { useAuth }     from '../../hooks/useAuth';
+import { useAuth }        from '../../hooks/useAuth';
+import { useGoogleAuth }  from '../../hooks/useGoogleAuth';
 import type { AuthStackParamList } from '../../types/auth.types';
 import { Logo } from '../../constants/logo';
 
@@ -28,6 +29,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 export default function LoginScreen({ navigation }: Props) {
   const [rememberMe, setRememberMe] = useState(false);
   const { login, isLoading, error, clearError } = useAuth();
+  const { signInWithGoogle, isLoading: googleLoading, error: googleError, clearError: clearGoogleError } = useGoogleAuth();
   
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({ 
     resolver: zodResolver(schema) 
@@ -35,6 +37,7 @@ export default function LoginScreen({ navigation }: Props) {
 
   const onSubmit = async (data: FormData) => {
     clearError();
+    clearGoogleError();
     try {
       await login({
         email: data.email.trim().toLowerCase(),
@@ -42,6 +45,14 @@ export default function LoginScreen({ navigation }: Props) {
       });
     } catch (_) {}
   };
+
+  const handleGooglePress = () => {
+    clearError();
+    clearGoogleError();
+    signInWithGoogle();
+  };
+
+  const anyLoading = isLoading || googleLoading;
 
   return (
     <LinearGradient 
@@ -60,8 +71,11 @@ export default function LoginScreen({ navigation }: Props) {
             <View style={styles.logoShadow}>
               <Image source={Logo.LogoEasyVTC} style={styles.logo} />
             </View>
-            <Text style={styles.title}>Bienvenue sur EasyVTC</Text>
-            <Text style={styles.subtitle}>Connectez-vous pour accéder à votre espace</Text>
+            <Text style={styles.title}>Bienvenue sur EazyVTC</Text>
+            {/* FIX: alignSelf stretch pour occuper toute la largeur du header */}
+            <Text style={styles.subtitle}>
+              Connectez-vous pour accéder à votre espace
+            </Text>
           </View>
 
           <View style={styles.card}>
@@ -73,9 +87,9 @@ export default function LoginScreen({ navigation }: Props) {
             />
 
             <View style={styles.cardContent}>
-              {error && (
+              {(error || googleError) && (
                 <View style={styles.errorBanner}>
-                  <Text style={styles.errorText}>⚠️ {error}</Text>
+                  <Text style={styles.errorText}>⚠️ {error ?? googleError}</Text>
                 </View>
               )}
 
@@ -85,7 +99,7 @@ export default function LoginScreen({ navigation }: Props) {
                 label="Email *"
                 placeholder="votre@email.com"
                 keyboardType="email-address"
-                editable={!isLoading}
+                editable={!anyLoading}
                 error={errors.email?.message}
                 icon="mail-outline"
               />
@@ -97,11 +111,13 @@ export default function LoginScreen({ navigation }: Props) {
                 placeholder="••••••••"
                 secureTextEntry
                 showToggle
-                editable={!isLoading}
+                editable={!anyLoading}
                 error={errors.password?.message}
                 icon="lock-closed-outline"
               />
 
+              {/* FIX: "Se souvenir" — le TouchableOpacity prend flex:1
+                  et le Text à l'intérieur aussi, pour ne plus être tronqué */}
               <View style={styles.rowBetween}>
                 <TouchableOpacity 
                   style={styles.rememberMe} 
@@ -112,7 +128,7 @@ export default function LoginScreen({ navigation }: Props) {
                     size={20} 
                     color={Colors.textSecondary} 
                   />
-                  <Text style={styles.rememberText}>Se souvenir</Text>
+                  <Text style={styles.rememberText}>Se souvenir de moi</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
@@ -124,7 +140,7 @@ export default function LoginScreen({ navigation }: Props) {
                 label={isLoading ? 'Connexion...' : 'Se connecter'}
                 onPress={handleSubmit(onSubmit)}
                 size="lg"
-                disabled={isLoading}
+                disabled={anyLoading}
                 style={styles.button}
               />
 
@@ -134,32 +150,41 @@ export default function LoginScreen({ navigation }: Props) {
                 <View style={styles.line} />
               </View>
 
-              <TouchableOpacity style={styles.googleButton} >
-                <Image 
-                  source={Logo.LogoGoogle} 
-                  style={styles.googleIcon} 
-                />
-                <Text style={styles.googleText}>Continuer avec Google</Text>
+              <TouchableOpacity
+                style={[styles.googleButton, anyLoading && { opacity: 0.6 }]}
+                onPress={handleGooglePress}
+                disabled={anyLoading}
+              >
+                {googleLoading ? (
+                  <Text style={styles.googleText}>Connexion Google...</Text>
+                ) : (
+                  <>
+                    <Image source={Logo.LogoGoogle} style={styles.googleIcon} />
+                    <Text style={styles.googleText}>Continuer avec Google</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
-            <View style={styles.registration}>
-              <Text style={styles.loginText}>Pas encore de compte ?</Text>
 
+            {/* FIX: section inscription — layout colonne avec width: 100% implicite */}
+            <View style={styles.registration}>
+              {/* <Text style={styles.registrationLabel}>Pas encore de compte ?</Text> */}
               <View style={styles.registrationRow}>
-                <Text style={styles.loginText}> Créer un compte  </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('RegisterClient')} disabled={isLoading}>
-                  <Text style={styles.loginBold}>Client</Text>
+                <Text style={styles.registrationLabel}>Créer un compte </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('RegisterClient')} disabled={anyLoading}>
+                  <Text style={styles.registrationBold}> Client</Text>
                 </TouchableOpacity>
-                <Text style={styles.registrationText}> ou </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('RegisterDriver')} disabled={isLoading}>
-                  <Text style={styles.loginBold}>Chauffeur</Text>
+                <Text style={styles.registrationLabel}> ou </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('RegisterDriver')} disabled={anyLoading}>
+                  <Text style={styles.registrationBold}> Chauffeur</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
 
+          {/* FIX: footer — suppression de flexDirection row, simple View centrée */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>©2026 EazyVTC. Tous droits réservés.</Text>
+            <Text style={styles.footerText}>© 2026 EazyVTC. Tous droits réservés.</Text>
           </View>
 
         </ScrollView>
@@ -171,24 +196,33 @@ export default function LoginScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { flexGrow: 1, paddingVertical: Spacing.xl },
+
+  /* ── Header ── */
   header: { alignItems: 'center', marginBottom: Spacing.xl, marginTop: Spacing.lg },
   title: { fontSize: Fonts.size.xl, fontWeight: '800', color: '#FFF', marginBottom: Spacing.xs },
-  subtitle: { fontSize: Fonts.size.md, color: Colors.surface, opacity: 0.5, textAlign: 'center', paddingHorizontal: Spacing.xl },
+  /* FIX: alignSelf: 'stretch' empêche alignItems:'center' du parent
+     de réduire la largeur du Text à son contenu intrinsèque */
+  subtitle: {
+    fontSize: Fonts.size.md,
+    color: Colors.surface,
+    opacity: 0.5,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.xl,
+    alignSelf: 'stretch',
+  },
   
   logo: { width: 80, height: 80, marginBottom: Spacing.sm, resizeMode: 'contain' },
   logoShadow: {
-    // iOS
     shadowColor:   'white',
     shadowOffset:  { width: 0, height: 0 },
     shadowOpacity: 0.9,
     shadowRadius:  20,
-    // Android
     elevation: 40,
-    
     borderRadius: 40, 
     marginBottom: Spacing.sm,
   },
 
+  /* ── Card ── */
   card: { 
     backgroundColor: Colors.surface, 
     marginHorizontal: Spacing.lg, 
@@ -196,33 +230,35 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     elevation: 5,
   },
-  cardTopLine: { 
-    height: 6, 
-    width: '100%',
-    marginTop: Spacing.xxs,
-  },
+  cardTopLine: { height: 6, width: '100%', marginTop: Spacing.xxs },
   cardContent: { padding: Spacing.lg },
   
-  rowBetween: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
+  /* ── Se souvenir / Mot de passe oublié ── */
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.lg 
+    marginBottom: Spacing.lg,
   },
-  rememberMe: { flexDirection: 'row', alignItems: 'center' },
-  rememberText: { marginLeft: Spacing.xs, color: Colors.textCallToAction, fontSize: Fonts.size.sm },
+  /* FIX: flex: 1 sur le TouchableOpacity pour qu'il prenne sa part d'espace */
+  rememberMe: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: Spacing.sm },
+  /* FIX: flex: 1 sur le Text pour qu'il wrappe dans l'espace du TouchableOpacity */
+  rememberText: {
+    marginLeft: Spacing.xs,
+    color: Colors.textCallToAction,
+    fontSize: Fonts.size.sm,
+    flex: 1,
+  },
   forgotLink: { color: Colors.textLight, fontSize: Fonts.size.sm, fontWeight: '600' },
   
   button: { marginTop: Spacing.sm },
   
-  separatorContainer: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginVertical: Spacing.xl 
-  },
+  /* ── Séparateur ── */
+  separatorContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: Spacing.xl },
   line: { flex: 1, height: 1, backgroundColor: '#E0E0E0' },
   separatorText: { marginHorizontal: Spacing.md, color: Colors.textCallToAction, fontSize: Fonts.size.sm },
   
+  /* ── Google ── */
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -231,40 +267,45 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderRadius: Radius.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: '#FFF'
+    backgroundColor: '#FFF',
   },
   googleIcon: { width: 20, height: 20, marginRight: Spacing.md },
   googleText: { fontWeight: '600', color: '#333' },
 
+  /* ── Inscription ── */
+  /* FIX: layout vertical pur — pas de flexDirection row, 
+     les textes prennent naturellement toute la largeur */
   registration: {
     alignItems: 'center',
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.xl,
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.xs,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl,
   },
   registrationRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: Spacing.xs,
+  },
+  registrationLabel: { color: Colors.textCallToAction, fontSize: Fonts.size.md },
+  registrationBold:  { color: Colors.bordeauxLight, fontWeight: 'bold', fontSize: Fonts.size.md },
   
+  /* ── Footer ── */
+  /* FIX: suppression de flexDirection row — un simple conteneur centré */
+  footer: {
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
-  registrationText: { 
-    color: Colors.textCallToAction, 
-    fontSize: Fonts.size.sm 
-  },
-  signupLink: { 
-    color: Colors.bordeauxLight,   // contraste > textSecondary sur fond clair
-    fontWeight: 'bold', 
+  footerText: {
+    color: Colors.surface,
+    opacity: 0.5,
     fontSize: Fonts.size.sm,
+    textAlign: 'center',
   },
-  
-  loginText:   { color: Colors.textCallToAction, fontSize: Fonts.size.md },
-  loginBold:   { color: Colors.bordeauxLight, fontWeight: 'bold' },
-  
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: Spacing.lg, marginBottom: Spacing.xl },
-  footerText: { color: Colors.surface, opacity: 0.5 },
+
+  /* ── Erreurs ── */
   errorBanner: { backgroundColor: Colors.errorLight, borderRadius: Radius.sm, borderLeftWidth: 3, borderLeftColor: Colors.error, padding: Spacing.md, marginBottom: Spacing.md },
   errorText:   { color: Colors.error, fontSize: Fonts.size.sm },
 });

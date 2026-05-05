@@ -3,15 +3,25 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { useAuth }             from '../hooks/useAuth';
 import { useAuthStore }        from '../store/auth.store';
+import { setOnUnauthorized }   from '../services/auth/auth-callback';
 import AuthNavigator           from './AuthNavigator';
 import ClientNavigator         from './ClientNavigator';
 import DriverNavigator         from './DriverNavigator';
 import AdminNavigator          from './AdminNavigator';
+import ManagerNavigator        from './ManagerNavigator';
 import { Colors }              from '../theme/colors';
 
 export default function AppNavigator() {
   const { user, isHydrated }  = useAuth();
   const hydrate               = useAuthStore((s) => s.hydrate);
+  const forceLogout           = useAuthStore((s) => s.forceLogout);
+
+  // Configurer le callback pour les erreurs 401
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      forceLogout(); // Nettoyer localement sans appel API
+    });
+  }, [forceLogout]);
 
   // Charger le token au démarrage
   useEffect(() => { hydrate(); }, []);
@@ -28,9 +38,10 @@ export default function AppNavigator() {
   // Routage selon rôle
   const renderNavigator = () => {
     if (!user) return <AuthNavigator />;
-    if (user.role === 'driver') return <DriverNavigator />;
-    else if (user.role === 'admin') return <AdminNavigator />; // admin → driver nav pour l'instant
-    return <ClientNavigator />; // client | admin | manager → client nav pour l'instant
+    if (user.role === 'driver')  return <DriverNavigator />;
+    if (user.role === 'admin')   return <AdminNavigator />;
+    if (user.role === 'manager') return <ManagerNavigator />;
+    return <ClientNavigator />;
   };
 
 

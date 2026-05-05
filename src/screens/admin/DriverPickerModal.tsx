@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -10,21 +10,25 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Keyboard,
+  Animated,
+  KeyboardEvent,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
-import type { AvailableDriverDto } from '../../types'; // ajuste le chemin si besoin
+import type { AvailableDriverDto } from '../../types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Props {
   visible: boolean;
   reservationRef?: string; // ex: "BC-00A1" — affiché dans le titre
+  vehicleType?: string;    // type de véhicule choisi par le client — filtre les chauffeurs
   onConfirm: (driver: AvailableDriverDto) => void;
   onClose: () => void;
 }
 
-// ─── AvailableDriverDto row ───────────────────────────────────────────────────────────────
+// ─── DriverUserRow ────────────────────────────────────────────────────────────
 function DriverUserRow({
   driver,
   selected,
@@ -37,6 +41,7 @@ function DriverUserRow({
   const name = `${driver.user?.first_name} ${driver.user?.last_name}`;
   const vehicleLabel =
     [driver.vehicle?.model, driver.vehicle?.plate_number].filter(Boolean).join(' · ') || 'N/A';
+  const driverVehicleType = driver.vehicle_type ?? driver.vehicle?.type ?? null;
 
   return (
     <TouchableOpacity
@@ -44,33 +49,28 @@ function DriverUserRow({
       onPress={onSelect}
       activeOpacity={0.75}
     >
-      {/* Avatar */}
       {driver.user?.profile_photo_url ? (
-        <Image source={{ uri: driver.user?.profile_photo_url }} style={row.avatar} />
+        <Image source={{ uri: driver.user.profile_photo_url }} style={row.avatar} />
       ) : (
         <View style={[row.avatar, row.avatarFallback]}>
           <Ionicons name="person" size={22} color={Colors.textSecondary} />
         </View>
       )}
 
-      {/* Info */}
       <View style={row.info}>
         <Text style={row.name} numberOfLines={1}>{name}</Text>
         <View style={row.metaLine}>
           <Ionicons name="car-outline" size={12} color={Colors.textMuted} />
           <Text style={row.meta} numberOfLines={1}>{vehicleLabel}</Text>
         </View>
-        {/* {driver.rating != null && (
+        {driverVehicleType && (
           <View style={row.metaLine}>
-            <Ionicons name="star" size={12} color="#F9A825" />
-            <Text style={[row.meta, { color: '#F9A825', fontWeight: '700' }]}>
-              {/* {driver.rating.toFixed(1)} */}
-            {/* </Text> */}
-          {/* </View> */}
-        {/* )} */}
+            <Ionicons name="pricetag-outline" size={12} color={Colors.textMuted} />
+            <Text style={row.meta}>{driverVehicleType}</Text>
+          </View>
+        )}
       </View>
 
-      {/* Checkmark */}
       <View style={[row.check, selected && row.checkActive]}>
         {selected && <Ionicons name="checkmark" size={14} color={Colors.white} />}
       </View>
@@ -95,31 +95,16 @@ const row = StyleSheet.create({
     borderColor: Colors.bordeaux,
     backgroundColor: '#FFF5F5',
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
+  avatar: { width: 48, height: 48, borderRadius: 24 },
   avatarFallback: {
     backgroundColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   info: { flex: 1, gap: 3 },
-  name: {
-    fontSize: Fonts.size.sm,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  metaLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  meta: {
-    fontSize: Fonts.size.xs,
-    color: Colors.textMuted,
-  },
+  name: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary },
+  metaLine: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  meta: { fontSize: Fonts.size.xs, color: Colors.textMuted },
   check: {
     width: 22,
     height: 22,
@@ -130,46 +115,99 @@ const row = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Colors.white,
   },
-  checkActive: {
-    backgroundColor: Colors.bordeaux,
-    borderColor: Colors.bordeaux,
-  },
+  checkActive: { backgroundColor: Colors.bordeaux, borderColor: Colors.bordeaux },
 });
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
-export default function DriverUserPickerModal({ visible, reservationRef, onConfirm, onClose }: Props) {
-  const { fetchDriverUserActive: fetchDriverUserActive  } = useReservation();
+export default function DriverUserPickerModal({ visible, reservationRef, vehicleType, onConfirm, onClose }: Props) {
+  const { fetchDriverUserActive } = useReservation();
 
-  const [drivers, setDriverUsers]       = useState<AvailableDriverDto[]>([]);
+  const [drivers, setDriverUsers]   = useState<AvailableDriverDto[]>([]);
   const [loading, setLoading]       = useState(false);
   const [search, setSearch]         = useState('');
   const [selected, setSelected]     = useState<AvailableDriverDto | null>(null);
   const [confirming, setConfirming] = useState(false);
 
-  // Charge les chauffeurs actifs à l'ouverture
+  /*
+   * sheetPadding est un Animated.Value qui représente le paddingBottom
+   * du sheet. On l'incrémente de la hauteur du clavier quand il s'ouvre,
+   * et on le remet à 0 quand il se ferme.
+   *
+   * Pourquoi pas KeyboardAvoidingView ?
+   * Sur Android avec statusBarTranslucent={true}, KAV calcule mal
+   * l'offset et ne remonte pas du tout le contenu. L'écoute manuelle
+   * via Keyboard.addListener est la seule solution fiable dans ce contexte.
+   */
+  const sheetPadding = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!visible) {
+      sheetPadding.setValue(0);
+      return;
+    }
+
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const onShow = (e: KeyboardEvent) => {
+      Animated.timing(sheetPadding, {
+        toValue: e.endCoordinates.height,
+        duration: Platform.OS === 'ios' ? e.duration ?? 250 : 200,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const onHide = (e: KeyboardEvent) => {
+      Animated.timing(sheetPadding, {
+        toValue: 0,
+        duration: Platform.OS === 'ios' ? e.duration ?? 250 : 200,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const subShow = Keyboard.addListener(showEvent, onShow);
+    const subHide = Keyboard.addListener(hideEvent, onHide);
+
+    return () => {
+      subShow.remove();
+      subHide.remove();
+    };
+  }, [visible]);
+
+  // Chargement des chauffeurs à l'ouverture
   useEffect(() => {
     if (!visible) return;
     setSelected(null);
     setSearch('');
     setLoading(true);
-    fetchDriverUserActive()
+    fetchDriverUserActive(vehicleType)
       .then((list: AvailableDriverDto[]) => setDriverUsers(list ?? []))
       .catch(console.warn)
       .finally(() => setLoading(false));
   }, [visible]);
 
-  const filtered = search.trim()
+  // Filtre 1 — type de véhicule correspondant à la demande du client
+  const byType = vehicleType
     ? drivers.filter(d => {
+        const driverType = d.vehicle_type ?? d.vehicle?.type ?? null;
+        return driverType?.toLowerCase() === vehicleType.toLowerCase();
+      })
+    : drivers;
+
+  // Filtre 2 — recherche textuelle sur nom / plaque / modèle
+  const filtered = search.trim()
+    ? byType.filter(d => {
         const q = search.toLowerCase();
         const name = `${d.user?.first_name} ${d.user?.last_name}`.toLowerCase();
         const plate = (d.vehicle?.plate_number ?? '').toLowerCase();
         const model = (d.vehicle?.model ?? '').toLowerCase();
         return name.includes(q) || plate.includes(q) || model.includes(q);
       })
-    : drivers;
+    : byType;
 
   const handleConfirm = useCallback(async () => {
     if (!selected) return;
+    Keyboard.dismiss();
     setConfirming(true);
     try {
       await onConfirm(selected);
@@ -178,47 +216,58 @@ export default function DriverUserPickerModal({ visible, reservationRef, onConfi
     }
   }, [selected, onConfirm]);
 
+  const handleClose = useCallback(() => {
+    Keyboard.dismiss();
+    onClose();
+  }, [onClose]);
+
   return (
     <Modal
       visible={visible}
       transparent
       animationType="slide"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
       statusBarTranslucent
     >
       <View style={M.overlay}>
-        <View style={M.sheet}>
+        {/* Tap en dehors du sheet → ferme */}
+        <TouchableOpacity style={M.backdrop} activeOpacity={1} onPress={handleClose} />
 
-          {/* ── En-tête ── */}
-          <View style={M.header}>
-            <View style={M.headerText}>
-              <Text style={M.title}>Assigner un chauffeur</Text>
-              {reservationRef ? (
-                <Text style={M.subtitle}>Réservation {reservationRef}</Text>
-              ) : null}
-            </View>
-            <TouchableOpacity onPress={onClose} style={M.closeBtn}>
-              <Ionicons name="close" size={20} color={Colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-
-          {/* ── Recherche ── */}
-          <View style={M.searchBar}>
-            <Ionicons name="search" size={16} color={Colors.textMuted} />
-            <TextInput
-              style={M.searchInput}
-              placeholder="Nom, plaque, véhicule…"
-              placeholderTextColor={Colors.textMuted}
-              value={search}
-              onChangeText={setSearch}
-              autoCorrect={false}
-            />
-            {search.length > 0 && (
-              <TouchableOpacity onPress={() => setSearch('')}>
-                <Ionicons name="close-circle" size={16} color={Colors.textMuted} />
-              </TouchableOpacity>
+        {/*
+          Le sheet est un Animated.View.
+          paddingBottom = hauteur du clavier → le contenu remonte
+          exactement de ce qu'il faut, sans aucun calcul approximatif.
+        */}
+        <Animated.View style={[M.sheet, { paddingBottom: sheetPadding }]}>
+          <FlatList
+            data={loading ? [] : filtered}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <DriverUserRow
+                driver={item}
+                selected={selected?.id === item.id}
+                onSelect={() => setSelected(item)}
+              />
             )}
-          </View>
+            contentContainerStyle={M.list}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            ListHeaderComponent={
+              <>
+                {/* Handle bar */}
+                <View style={M.handle} />
+
+          {/* ── Filtre type de véhicule ── */}
+          {vehicleType && (
+            <View style={M.typeBanner}>
+              <Ionicons name="filter-outline" size={14} color={Colors.bordeaux} />
+              <Text style={M.typeBannerText}>
+                Type demandé : <Text style={M.typeBannerBold}>{vehicleType}</Text>
+                {' '}— {byType.length} chauffeur{byType.length > 1 ? 's' : ''} compatible{byType.length > 1 ? 's' : ''}
+              </Text>
+            </View>
+          )}
 
           {/* ── Liste ── */}
           {loading ? (
@@ -230,7 +279,11 @@ export default function DriverUserPickerModal({ visible, reservationRef, onConfi
             <View style={M.centered}>
               <Ionicons name="person-outline" size={36} color={Colors.textMuted} />
               <Text style={M.emptyText}>
-                {search ? 'Aucun chauffeur trouvé' : 'Aucun chauffeur actif'}
+                {search
+                  ? 'Aucun chauffeur trouvé'
+                  : vehicleType
+                  ? `Aucun chauffeur disponible pour le type "${vehicleType}"`
+                  : 'Aucun chauffeur actif'}
               </Text>
             </View>
           ) : (
@@ -250,51 +303,97 @@ export default function DriverUserPickerModal({ visible, reservationRef, onConfi
             />
           )}
 
-          {/* ── Actions ── */}
-          <View style={M.actions}>
-            <TouchableOpacity style={M.cancelBtn} onPress={onClose}>
-              <Text style={M.cancelText}>Annuler</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[M.confirmBtn, !selected && M.confirmBtnDisabled]}
-              onPress={handleConfirm}
-              disabled={!selected || confirming}
-            >
-              {confirming ? (
-                <ActivityIndicator size="small" color={Colors.white} />
+                {/* Barre de recherche */}
+                <View style={M.searchBar}>
+                  <Ionicons name="search" size={16} color={Colors.textMuted} />
+                  <TextInput
+                    style={M.searchInput}
+                    placeholder="Nom, plaque, véhicule…"
+                    placeholderTextColor={Colors.textMuted}
+                    value={search}
+                    onChangeText={setSearch}
+                    autoCorrect={false}
+                    returnKeyType="search"
+                  />
+                  {search.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearch('')}>
+                      <Ionicons name="close-circle" size={16} color={Colors.textMuted} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </>
+            }
+            ListEmptyComponent={
+              loading ? (
+                <View style={M.centered}>
+                  <ActivityIndicator size="large" color={Colors.bordeaux} />
+                  <Text style={M.loadingText}>Chargement des chauffeurs…</Text>
+                </View>
               ) : (
-                <Text style={M.confirmText}>Assigner</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-
-        </View>
+                <View style={M.centered}>
+                  <Ionicons name="person-outline" size={36} color={Colors.textMuted} />
+                  <Text style={M.emptyText}>
+                    {search ? 'Aucun chauffeur trouvé' : 'Aucun chauffeur actif'}
+                  </Text>
+                </View>
+              )
+            }
+            ListFooterComponent={
+              <View style={M.actions}>
+                <TouchableOpacity style={M.cancelBtn} onPress={handleClose}>
+                  <Text style={M.cancelText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[M.confirmBtn, !selected && M.confirmBtnDisabled]}
+                  onPress={handleConfirm}
+                  disabled={!selected || confirming}
+                >
+                  {confirming ? (
+                    <ActivityIndicator size="small" color={Colors.white} />
+                  ) : (
+                    <Text style={M.confirmText}>Assigner</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            }
+          />
+        </Animated.View>
       </View>
     </Modal>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const M = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  backdrop: {
+    flex: 1,
   },
   sheet: {
     backgroundColor: Colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingBottom: Platform.OS === 'ios' ? 36 : Spacing.lg,
     maxHeight: '85%',
   },
-
-  // Header
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.border,
+    alignSelf: 'center',
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.xs,
     paddingBottom: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
@@ -319,8 +418,6 @@ const M = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: Spacing.sm,
   },
-
-  // Search
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -341,36 +438,50 @@ const M = StyleSheet.create({
     padding: 0,
   },
 
+  // Vehicle type banner
+  typeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 7,
+    backgroundColor: '#FFF5F5',
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.bordeaux + '40',
+  },
+  typeBannerText: {
+    flex: 1,
+    fontSize: Fonts.size.xs,
+    color: Colors.textSecondary,
+  },
+  typeBannerBold: {
+    fontWeight: '700',
+    color: Colors.bordeaux,
+    textTransform: 'capitalize',
+  },
+
   // List
   list: {
     paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xs,
-    paddingBottom: Spacing.sm,
+    paddingBottom: Spacing.lg,
   },
-
-  // States
   centered: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 40,
     gap: Spacing.sm,
   },
-  loadingText: {
-    color: Colors.textSecondary,
-    fontSize: Fonts.size.sm,
-  },
-  emptyText: {
-    color: Colors.textMuted,
-    fontSize: Fonts.size.sm,
-    fontStyle: 'italic',
-  },
-
-  // Actions
+  loadingText: { color: Colors.textSecondary, fontSize: Fonts.size.sm },
+  emptyText: { color: Colors.textMuted, fontSize: Fonts.size.sm, fontStyle: 'italic' },
   actions: {
     flexDirection: 'row',
     gap: Spacing.sm,
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
@@ -383,11 +494,7 @@ const M = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.surface,
   },
-  cancelText: {
-    color: Colors.textSecondary,
-    fontWeight: '600',
-    fontSize: Fonts.size.sm,
-  },
+  cancelText: { color: Colors.textSecondary, fontWeight: '600', fontSize: Fonts.size.sm },
   confirmBtn: {
     flex: 2,
     paddingVertical: Spacing.md,
@@ -396,12 +503,6 @@ const M = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  confirmBtnDisabled: {
-    backgroundColor: Colors.border,
-  },
-  confirmText: {
-    color: Colors.white,
-    fontWeight: '800',
-    fontSize: Fonts.size.sm,
-  },
+  confirmBtnDisabled: { backgroundColor: Colors.border },
+  confirmText: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.sm },
 });

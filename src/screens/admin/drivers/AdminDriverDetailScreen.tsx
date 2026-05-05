@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useAdmin }  from '../../../hooks/useAdmin';
+import { useVehicleTypesStore } from '../../../store/vehicleTypes.store';
 import type { AuthUser, DriverUser } from '../../../types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriversStackParamList }  from '../../../types/auth.types';
@@ -27,6 +28,13 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }
   locked:   { label: 'Verrouillé',  bg: '#FCE4EC', color: '#C62828' },
 };
 
+const DRIVER_STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
+  pending:   { label: 'En attente', bg: '#FFF3E0', color: '#E65100' },
+  active:    { label: 'Validé',     bg: '#E8F5E9', color: '#2E7D32' },
+  rejected:  { label: 'Rejeté',     bg: '#FCE4EC', color: '#C62828' },
+  suspended: { label: 'Suspendu',   bg: '#EDE7F6', color: '#5E35B1' },
+};
+
 // ── Ligne info ──────────────────────────────────────────────────
 function InfoRow({ icon, value }: { icon: keyof typeof Ionicons.glyphMap; value: string }) {
   return (
@@ -44,7 +52,27 @@ const infoStyles = StyleSheet.create({
 
 // ── Tab Informations ────────────────────────────────────────────
 function TabInformations({ driver }: { driver: DriverUser }) {
-  const vehicle  = driver.vehicle;
+  const vehicle    = driver.vehicle;
+  const allTypes   = useVehicleTypesStore(s => s.allTypes);
+  const activeTypes = useVehicleTypesStore(s => s.activeTypes);
+
+  const vehicleTypeCode  = driver.vehicle_type;
+  const matchedType      = [...allTypes, ...activeTypes].find(t => t.code === vehicleTypeCode);
+  const vehicleTypeLabel = matchedType?.label
+    ?? (vehicleTypeCode
+      ? vehicleTypeCode.charAt(0).toUpperCase() + vehicleTypeCode.slice(1)
+      : '—');
+
+  const vehicleRows = [
+    { label: 'Type de véhicule', value: vehicleTypeLabel },
+    ...(vehicle ? [
+      { label: 'Marque / Modèle', value: [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || '—' },
+      { label: 'Immatriculation',  value: vehicle.plate_number },
+      { label: 'Couleur',          value: vehicle.color ?? '—' },
+      { label: 'Année',            value: vehicle.year ? String(vehicle.year) : '—' },
+    ] : []),
+  ];
+
   const docs: { label: string; expiry: string; status: 'valid' | 'expired' }[] = [
     { label: 'Permis de conduire', expiry: '15/03/2028', status: 'valid'   },
     { label: 'Carte VTC',          expiry: '15/03/2026', status: 'valid'   },
@@ -55,19 +83,15 @@ function TabInformations({ driver }: { driver: DriverUser }) {
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       {/* Véhicule */}
-      {vehicle && (
-        <View style={tabStyles.card}>
-          <Text style={tabStyles.cardTitle}>Véhicule</Text>
-          {[
-            { label: 'Type',           value: vehicle ?? '—' },
-          ].map(row => (
-            <View key={row.label} style={tabStyles.infoRow}>
-              <Text style={tabStyles.infoLabel}>{row.label}</Text>
-              {/* <Text style={tabStyles.infoValue}>{row.value}</Text> */}
-            </View>
-          ))}
-        </View>
-      )}
+      <View style={tabStyles.card}>
+        <Text style={tabStyles.cardTitle}>Véhicule</Text>
+        {vehicleRows.map(row => (
+          <View key={row.label} style={tabStyles.infoRow}>
+            <Text style={tabStyles.infoLabel}>{row.label}</Text>
+            <Text style={tabStyles.infoValue}>{row.value}</Text>
+          </View>
+        ))}
+      </View>
 
       {/* Documents */}
       <View style={tabStyles.card}>
@@ -241,16 +265,16 @@ const tabStyles = StyleSheet.create({
 // ── Screen principal ────────────────────────────────────────────
 export default function AdminDriverDetailScreen({ navigation, route }: Props) {
   const { driverId } = route.params as { driverId: string };
-  const { fetchUserById, activateUser, deactivateUser, lockUser, isLoading } = useAdmin();
+  const { fetchDriverById, activateUser, deactivateUser, lockUser, changeDriverStatus, isLoading } = useAdmin();
 
   const [driver,  setDriver]  = useState<AuthUser | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('informations');
 
-  const fetchUserByIdRef = useRef(fetchUserById);
-  useEffect(() => { fetchUserByIdRef.current = fetchUserById; });
+  const fetchDriverByIdRef = useRef(fetchDriverById);
+  useEffect(() => { fetchDriverByIdRef.current = fetchDriverById; });
 
   const load = useCallback(async () => {
-    const data = await fetchUserByIdRef.current(driverId);
+    const data = await fetchDriverByIdRef.current(driverId);
     if (data) setDriver(data);
   }, [driverId]); // ← driverId seulement, stable
 
@@ -306,6 +330,43 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
     );
   };
 
+  const handleDriverStatusChange = (status: 'active' | 'rejected' | 'suspended') => {
+    if (!driver?.driver) return;
+
+    const labels = {
+      active: 'Valider',
+      rejected: 'Rejeter',
+      suspended: 'Suspendre',
+    } as const;
+
+    const messages = {
+      active: 'Le chauffeur pourra reprendre son activité.',
+      rejected: 'Le chauffeur sera refusé et son compte ne pourra pas être activé sans nouvelle validation.',
+      suspended: 'Le chauffeur sera temporairement suspendu.',
+    } as const;
+
+    Alert.alert(
+      `${labels[status]} ce chauffeur ?`,
+      messages[status],
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: labels[status],
+          style: status === 'rejected' ? 'destructive' : 'default',
+          onPress: async () => {
+            try {
+              await changeDriverStatus(driver.driver.id, {
+                status,
+                reason: `Changement de statut par l'administrateur : ${labels[status]}.`,
+              });
+              await load();
+            } catch (_) {}
+          },
+        },
+      ]
+    );
+  };
+
   if (isLoading && !driver) {
     return (
       <View style={[styles.flex, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -323,6 +384,7 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
   }
 
   const statusConfig = STATUS_CONFIG[driver.status] ?? STATUS_CONFIG.active;
+  const driverStatusConfig = DRIVER_STATUS_CONFIG[driver.driver?.status ?? 'pending'] ?? DRIVER_STATUS_CONFIG.pending;
   const initials     = `${driver.first_name?.[0] ?? ''}${driver.last_name?.[0] ?? ''}`.toUpperCase();
   const rating       = (driver as any).rating     ?? 0;
   const tripsCount   = (driver as any).trips_count ?? 0;
@@ -459,6 +521,10 @@ const styles = StyleSheet.create({
   driverName:    { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary, flex: 1 },
   statusBadge:   { borderRadius: Radius.full, paddingVertical: 3, paddingHorizontal: Spacing.sm, marginLeft: Spacing.xs },
   statusText:    { fontSize: Fonts.size.xs, fontWeight: '700' },
+  driverStatusRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.xs },
+  driverStatusLabel: { fontSize: Fonts.size.xs, color: Colors.textSecondary, fontWeight: '600' },
+  driverStatusBadge: { borderRadius: Radius.full, paddingVertical: 3, paddingHorizontal: Spacing.sm, marginLeft: Spacing.xs },
+  driverStatusText: { fontSize: Fonts.size.xs, fontWeight: '700' },
   ratingRow:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
   rating:        { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
   tripsCount:    { fontSize: Fonts.size.sm, color: Colors.textMuted },

@@ -7,10 +7,11 @@
 // sans stale closure grâce aux refs.
 // ══════════════════════════════════════════════════════════════════════════════
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import * as Location                      from 'expo-location';
 import { useAuthStore }                   from '../store/auth.store';
 import { useReservationStore }            from '../store/reservation.store';
+import { vehicleTypesApi }               from '../services/api/vehicleTypes.api';
 import { pricingApi }                     from '../services/api/pricing.api';
 import { useAuth }                        from './useAuth';
 import type {
@@ -20,7 +21,7 @@ import type {
   Reservation,
   ReservationListFilters,
 } from '../types/reservations.types';
-import type { PricingCountry } from '../types/pricing.types';
+import type { PricingCountry, PricingFlatRate } from '../types/pricing.types';
 
 const COUNTRY: PricingCountry = 'france';
 
@@ -65,6 +66,7 @@ export function useReservation() {
   const _setLuggage        = useReservationStore(s => s.setLuggage);
   const _setComment        = useReservationStore(s => s.setComment);
   const _setEstimate       = useReservationStore(s => s.setEstimate);
+  const _setFlatRateId     = useReservationStore(s => s.setFlatRateId);
   const clearError         = useReservationStore(s => s.clearError);
 
   // ── Refs pour éviter les stale closures ────────────────────────────────────
@@ -76,12 +78,43 @@ export function useReservation() {
   useEffect(() => { bookingRef.current = booking; },         [booking]);
   useEffect(() => { accessTokenRef.current = accessToken; }, [accessToken]);
 
-  // ── Chargement initial des types de véhicule ──────────────────────────────
+  // ── Forfaits disponibles ───────────────────────────────────────────────────
+  const [flatRates, setFlatRates]               = useState<PricingFlatRate[]>([]);
+  const [suggestedFlatRate, setSuggestedFlatRate] = useState<PricingFlatRate | null>(null);
+  const flatRatesRef = useRef<PricingFlatRate[]>([]);
+
+  // ── Chargement initial des types de véhicule depuis l'API ────────────────
   useEffect(() => {
-    if (accessToken && vehicleTypes.length === 0) {
-      _fetchVehicleTypes(accessToken, COUNTRY);
-    }
-  }, [accessToken]);
+    if (vehicleTypes.length > 0) return;
+    vehicleTypesApi.getActiveTypes(COUNTRY)
+      .then(res => {
+        if (res.ok && res.data && res.data.length > 0) {
+          useReservationStore.setState({
+            vehicleTypes: res.data.map(vt => ({
+              type:        vt.code,
+              label:       vt.label,
+              description: vt.description ?? '',
+              base_price:  vt.base_price,
+              icon:        vt.icon ?? 'car-outline',
+              capacity:    vt.capacity,
+            })),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // ── Chargement initial des forfaits ───────────────────────────────────────
+  useEffect(() => {
+    pricingApi.listFlatRates(undefined, COUNTRY, { is_active: true, limit: 100 })
+      .then(res => {
+        if (res.ok && res.data) {
+          setFlatRates(res.data.flat_rates);
+          flatRatesRef.current = res.data.flat_rates;
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // ── Géolocalisation ────────────────────────────────────────────────────────
   const getCurrentLocation = useCallback(async (): Promise<GeoPoint | null> => {
@@ -127,7 +160,23 @@ export function useReservation() {
     }
   }, []);
 
-  // ── Calcul du prix estimé (debounced 500ms) ───────────────────────────────
+  // ── Détection automatique de forfait par correspondance d'adresse ──────────
+  /**
+   * Compare les adresses saisies avec les labels des forfaits (case-insensitive
+   * substring match). Si une correspondance est trouvée, elle est proposée
+   * via suggestedFlatRate — sans rien appliquer automatiquement.
+   */
+  const detectSuggestedFlatRate = useCallback((origin: GeoPoint, destination: GeoPoint) => {
+    const o = origin.address.toLowerCase();
+    const d = destination.address.toLowerCase();
+    const match = flatRatesRef.current.find(fr =>
+      o.includes(fr.origin_label.toLowerCase()) &&
+      d.includes(fr.destination_label.toLowerCase())
+    ) ?? null;
+    setSuggestedFlatRate(match);
+  }, []);
+
+  // ── Calcul du prix estimé (debounced 500ms) — mode formule ───────────────
   /**
    * Reçoit les paramètres explicitement (pas de lecture depuis booking)
    * pour éviter tout stale closure. Peut être appelé autant de fois que
@@ -147,8 +196,10 @@ export function useReservation() {
 
     if (priceDebounceRef.current) clearTimeout(priceDebounceRef.current);
 
+    // Signal immédiat : le prix est en cours de recalcul, même avant la fin du debounce.
+    useReservationStore.setState({ isFetchingPrice: true });
+
     priceDebounceRef.current = setTimeout(async () => {
-      useReservationStore.setState({ isFetchingPrice: true });
       try {
         const R    = 6371;
         const dLat = ((destination.latitude  - origin.latitude)  * Math.PI) / 180;
@@ -166,8 +217,8 @@ export function useReservation() {
           distance_km,
           duration_min,
           nb_passengers: _nbPassengers,
+          vehicle_type:  _vehicleType,
         });
-        // vehicle_type:  _vehicleType,
 
         if (res.ok && res.data) {
           // Écriture atomique directe dans le store — contourne tout
@@ -188,6 +239,37 @@ export function useReservation() {
     }, 500);
   }, []); // stable — lit les valeurs fraîches via accessTokenRef et écrit directement dans le store
 
+  // ── Calcul du prix estimé — mode forfait ──────────────────────────────────
+  /**
+   * Appelle l'API d'estimation avec un flat_rate_id au lieu de la formule
+   * distance/durée. Utilisé à chaque sélection de forfait ou changement
+   * du nombre de passagers quand un forfait est actif (surcharge par passager).
+   */
+  const fetchFlatRateEstimate = useCallback((flatRateId: string, nbPassengers: number) => {
+    const token = accessTokenRef.current;
+    if (!token) return;
+    useReservationStore.setState({ isFetchingPrice: true });
+    pricingApi.estimate(token, {
+      country:       COUNTRY,
+      flat_rate_id:  flatRateId,
+      nb_passengers: nbPassengers,
+    }).then(res => {
+      if (res.ok && res.data) {
+        useReservationStore.setState(state => ({
+          booking: {
+            ...state.booking,
+            estimated_price: res.data!.final_price,
+            // Efface distance/durée — non pertinents en mode forfait
+            distance_km:  null,
+            duration_min: null,
+          },
+        }));
+      }
+    }).finally(() => {
+      useReservationStore.setState({ isFetchingPrice: false });
+    });
+  }, []);
+
   // ── Setters enrichis ───────────────────────────────────────────────────────
   /**
    * Chaque setter lit bookingRef.current pour obtenir les autres champs à jour,
@@ -195,48 +277,86 @@ export function useReservation() {
    * La valeur fraîche du champ modifié est toujours passée directement en
    * paramètre (pas depuis bookingRef) car setState est asynchrone — le ref
    * n'est pas encore mis à jour au moment de l'appel.
-   *
-   * Le recalcul se déclenche systématiquement si les 3 critères géographiques
-   * sont présents, même en cas de re-saisie d'un champ déjà rempli.
    */
 
   const setOrigin = useCallback((point: GeoPoint | null) => {
     _setOrigin(point);
+    _setFlatRateId(null); // tout changement d'adresse annule le forfait sélectionné
+    setSuggestedFlatRate(null);
     const { destination, vehicle_type, nb_passengers } = bookingRef.current;
-    if (point && destination && vehicle_type) {
-      fetchEstimate(point, destination, vehicle_type, nb_passengers);
+    if (point && destination) {
+      detectSuggestedFlatRate(point, destination);
+      if (vehicle_type) fetchEstimate(point, destination, vehicle_type, nb_passengers);
     }
-  }, [_setOrigin, fetchEstimate]);
+  }, [_setOrigin, _setFlatRateId, fetchEstimate, detectSuggestedFlatRate]);
 
   const setDestination = useCallback((point: GeoPoint | null) => {
     _setDestination(point);
+    _setFlatRateId(null); // tout changement d'adresse annule le forfait sélectionné
+    setSuggestedFlatRate(null);
     const { origin, vehicle_type, nb_passengers } = bookingRef.current;
-    if (point && origin && vehicle_type) {
-      fetchEstimate(origin, point, vehicle_type, nb_passengers);
+    if (point && origin) {
+      detectSuggestedFlatRate(origin, point);
+      if (vehicle_type) fetchEstimate(origin, point, vehicle_type, nb_passengers);
     }
-  }, [_setDestination, fetchEstimate]);
+  }, [_setDestination, _setFlatRateId, fetchEstimate, detectSuggestedFlatRate]);
 
   const setVehicleType = useCallback((type: VehicleType) => {
     _setVehicleType(type);
-    const { origin, destination, nb_passengers } = bookingRef.current;
-    if (origin && destination) {
+    const { origin, destination, nb_passengers, flat_rate_id } = bookingRef.current;
+    if (!origin || !destination) return;
+    if (flat_rate_id) {
+      fetchFlatRateEstimate(flat_rate_id, nb_passengers);
+    } else {
       fetchEstimate(origin, destination, type, nb_passengers);
     }
-  }, [_setVehicleType, fetchEstimate]);
+  }, [_setVehicleType, fetchEstimate, fetchFlatRateEstimate]);
 
   /**
-   * Déclenche un recalcul si origine + destination + véhicule sont présents.
-   * `count` est passé directement à fetchEstimate (valeur fraîche) car
-   * bookingRef.current.nb_passengers n'est pas encore mis à jour au moment
-   * où setState (_setPassengers) est traité de manière asynchrone.
+   * Si un forfait est actif, recalcule avec flat_rate_id (surcharge passager).
+   * Sinon, utilise la formule distance. `count` passé directement (fresh value).
    */
   const setPassengers = useCallback((count: number) => {
     _setPassengers(count);
-    const { origin, destination, vehicle_type } = bookingRef.current;
-    if (origin && destination && vehicle_type) {
+    const { origin, destination, vehicle_type, flat_rate_id } = bookingRef.current;
+    if (flat_rate_id) {
+      fetchFlatRateEstimate(flat_rate_id, count);
+    } else if (origin && destination && vehicle_type) {
       fetchEstimate(origin, destination, vehicle_type, count);
     }
-  }, [_setPassengers, fetchEstimate]);
+  }, [_setPassengers, fetchEstimate, fetchFlatRateEstimate]);
+
+  /**
+   * Sélectionne ou désélectionne un forfait.
+   * - Sélection  : stocke flat_rate_id + estime le prix via l'API forfait.
+   * - Désélection: efface flat_rate_id + re-estime par formule si adresses présentes.
+   */
+  const setFlatRateId = useCallback((id: string | null) => {
+    _setFlatRateId(id);
+    setSuggestedFlatRate(null);
+    if (id) {
+      // Auto-populate origin/destination depuis les labels du forfait
+      // si le client n'a pas saisi d'adresses manuellement.
+      // Garantit que pickup_address >= 5 chars (exigé par le validator backend).
+      const fr = flatRatesRef.current.find(f => f.id === id);
+      if (fr) {
+        const originAddr = fr.origin_label.length >= 5
+          ? fr.origin_label
+          : `Zone: ${fr.origin_label}`;
+        const destAddr = fr.destination_label.length >= 5
+          ? fr.destination_label
+          : `Zone: ${fr.destination_label}`;
+        _setOrigin({ address: originAddr, latitude: 0, longitude: 0 });
+        _setDestination({ address: destAddr, latitude: 0, longitude: 0 });
+      }
+      fetchFlatRateEstimate(id, bookingRef.current.nb_passengers);
+    } else {
+      const { origin, destination, vehicle_type, nb_passengers } = bookingRef.current;
+      if (origin && destination && vehicle_type) {
+        fetchEstimate(origin, destination, vehicle_type, nb_passengers);
+      }
+    }
+  }, [_setFlatRateId, _setOrigin, _setDestination, fetchEstimate, fetchFlatRateEstimate]);
 
   // ── Navigation étapes ──────────────────────────────────────────────────────
   const goToStep = useCallback((step: BookingStep) => _setStep(step), [_setStep]);
@@ -252,9 +372,20 @@ export function useReservation() {
   }, [_setStep]);
 
   // ── Validation ─────────────────────────────────────────────────────────────
-  const isStep1Valid = !!(booking.origin && booking.destination && booking.vehicle_type);
+  // Un forfait sélectionné remplace la saisie manuelle des adresses (itinéraire déjà défini).
+  // Le type de véhicule reste toujours obligatoire.
+  const isStep1Valid = !!(
+    booking.vehicle_type &&
+    ((booking.origin && booking.destination) || booking.flat_rate_id)
+  );
   const isStep2Valid = !!(booking.date && booking.time && booking.nb_passengers >= 1);
-  const isStep3Valid = isStep1Valid && isStep2Valid;
+  // Étape 3 : l'estimation doit être disponible (prix calculé côté serveur).
+  // En mode formule, distance_km ET duration_min doivent être non-null :
+  // sans eux, le DTO ne passe pas la refine du validator backend → 400.
+  const isStep3Valid = isStep1Valid && isStep2Valid && !isFetchingPrice && (
+    !!booking.flat_rate_id ||
+    (booking.estimated_price != null && booking.distance_km != null && booking.duration_min != null)
+  );
 
   // ── Soumission ─────────────────────────────────────────────────────────────
   const submitBooking = useCallback(async (): Promise<Reservation> => {
@@ -282,9 +413,14 @@ export function useReservation() {
     prevStep,
 
     // Recalcul manuel (ex : transition étape 2 → 3 sans modification des champs)
-    fetchEstimate,  // exposé pour forcer le recalcul à la transition étape 2→3
+    fetchEstimate,
 
-    // Setters étape 1 (enrichis — déclenchent fetchEstimate)
+    // Forfaits
+    flatRates,
+    suggestedFlatRate,
+    setFlatRateId,
+
+    // Setters étape 1 (enrichis — déclenchent fetchEstimate ou fetchFlatRateEstimate)
     setOrigin,
     setDestination,
     setVehicleType,
@@ -292,7 +428,7 @@ export function useReservation() {
     // Setters étape 2
     setDate:       _setDate,
     setTime:       _setTime,
-    setPassengers,          // enrichi — déclenche fetchEstimate
+    setPassengers,
     setLuggage:    _setLuggage,
 
     // Setters étape 3
@@ -314,7 +450,7 @@ export function useReservation() {
     fetchAll:              useCallback((filters?: ReservationListFilters) => _fetchAll(accessTokenRef.current!, filters), []),
     fetchById:             useCallback((id: string)                       => _fetchById(accessTokenRef.current!, id), []),
     fetchDriverActive:     useCallback(()                               => _fetchDriverActive(accessTokenRef.current!), []),
-    fetchDriverUserActive: useCallback(() => _fetchAvailableDrivers(accessTokenRef.current!), []),
+    fetchDriverUserActive: useCallback((vehicleType?: string) => _fetchAvailableDrivers(accessTokenRef.current!, vehicleType), []),
 
     // Actions fournisseurs
     cancel:   useCallback((id: string, reason?: string)                                                             => _cancel(accessTokenRef.current!, id, reason), []),

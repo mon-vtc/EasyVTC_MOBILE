@@ -34,70 +34,41 @@ export const PRICING_CURRENCY_SYMBOLS: Record<string, string> = {
 export interface PricingGrid {
   id:            string;
   country:       PricingCountry;
-  base_price:    number;   // Prix de prise en charge
-  price_per_km:  number;   // Prix par kilomètre
-  price_per_min: number;   // Prix par minute
-  minimum_price: number;   // Prix minimum garanti
-  currency:      string;   // 'EUR' ou 'XOF'
+  base_price:    number;
+  price_per_km:  number;
+  price_per_min: number;
+  minimum_price: number;
+  currency:      string;
   is_active:     boolean;
   created_at:    string;
   updated_at:    string;
   created_by:    string;
 }
 
-// ── Commissions EasyVTC ───────────────────────────────────────────────────────
-// Base de calcul : sur le montant HT de la course
-export interface PricingCommission {
-  id:                  string;
-  country:             PricingCountry;
-  commission_rate:     number;   // % prélevé sur le HT (ex: 15)
-  commission_vat_rate: number;   // TVA sur la commission (ex: 20)
-  currency:            string;
-  is_active:           boolean;
-  created_at:          string;
-  updated_at:          string;
-  created_by:          string;
-}
-
-// ── Suppléments ───────────────────────────────────────────────────────────────
-export interface PricingSupplement {
-  id:             string;
-  country:        PricingCountry;
-  airport_fee:    number;   // Supplément aéroport (montant fixe)
-  night_rate:     number;   // Supplément nocturne 19h–7h (%)
-  currency:       string;
-  is_active:      boolean;
-  created_at:     string;
-  updated_at:     string;
-  created_by:     string;
-}
-
 // ── Forfait itinéraire ────────────────────────────────────────────────────────
+// Backend : prix fixe, aucune surcharge passager (pricing_flat_rates)
 export interface PricingFlatRate {
-  id:                  string;
-  country:             PricingCountry;
-  label:               string;
-  origin_label:        string;
-  destination_label:   string;
-  price:               number;
-  pickup_surcharge?:   number; // Supplément par passager supplémentaire
-  currency:            string;
-  is_active:           boolean;
-  created_at:          string;
-  updated_at:          string;
-  created_by:          string;
+  id:                string;
+  country:           PricingCountry;
+  label:             string;
+  origin_label:      string;
+  destination_label: string;
+  price:             number;
+  currency:          string;
+  is_active:         boolean;
+  created_at:        string;
+  updated_at:        string;
+  created_by:        string;
 }
 
-// ── Config complète d'un pays (agrégat renvoyé par GET /pricing/config/:country) ──
+// ── Config complète d'un pays ────────────────────────────────────────────────
 export interface PricingConfig {
-  country:     PricingCountry;
-  grid:        PricingGrid;
-  // commission:  PricingCommission;
-  // supplement:  PricingSupplement;
+  country: PricingCountry;
+  grid:    PricingGrid;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// DTOs — Mise à jour (PATCH)
+// DTOs — Grilles tarifaires
 // ══════════════════════════════════════════════════════════════════════════════
 
 export interface CreatePricingGridDto {
@@ -117,78 +88,48 @@ export interface UpdatePricingGridDto {
   is_active?:     boolean;
 }
 
-export interface CreatePricingCommissionDto {
-  country:             PricingCountry;
-  currency:            string;
-  // commission_rate:     number;
-  // commission_vat_rate: number;
-}
-
-export interface UpdatePricingCommissionDto {
-  // commission_rate?:     number;
-  // commission_vat_rate?: number;
-  is_active?:           boolean;
-}
-
-export interface CreatePricingSupplementDto {
-  country:      PricingCountry;
-  currency:     string;
-  airport_fee:  number;
-  night_rate:   number;
-}
-
-export interface UpdatePricingSupplementDto {
-  airport_fee?: number;
-  night_rate?:  number;
-  is_active?:   boolean;
-}
-
-// ── Payload global pour l'écran admin (un seul save) ─────────────────────────
+// ── Payload sauvegarde config (un seul save côté admin) ──────────────────────
 export interface SavePricingConfigDto {
-  grid:        UpdatePricingGridDto;
-  // commission:  UpdatePricingCommissionDto;
-  // supplement:  UpdatePricingSupplementDto;
+  grid: UpdatePricingGridDto;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// CALCUL DE PRIX
+// CALCUL DE PRIX — aligné avec pricing.validator.ts backend (priceEstimateSchema)
 // ══════════════════════════════════════════════════════════════════════════════
 
 export interface PriceEstimateDto {
-  country:       PricingCountry;
-  distance_km?:  number;
-  duration_min?: number;
-  flat_rate_id?: string;
+  country:        PricingCountry;
+  distance_km?:   number;
+  duration_min?:  number;
+  flat_rate_id?:  string;
   nb_passengers?: number;
-  is_airport?:   boolean;
-  is_night?:     boolean;
+  vehicle_type?:  string;
 }
 
+// ── Détail interne (stocké en BDD, JAMAIS affiché sur documents — CDC p.26) ──
 export interface PriceBreakdown {
-  base_price?:         number;
-  distance_km?:        number;
-  duration_min?:       number;
-  price_per_km?:       number;
-  price_per_min?:      number;
-  km_cost?:            number;
-  min_cost?:           number;
-  subtotal?:           number;
-  minimum_applied?:    boolean;
-  airport_fee?:        number;
-  night_supplement?:   number;
-  flat_rate_id?:       string;
-  flat_rate_label?:    string;
-  nb_passengers?: number;
-  pickup_surcharge_per_person?: number;
-  pickup_surcharge_total?: number;
+  // Mode formule
+  base_price?:      number;
+  distance_km?:     number;
+  duration_min?:    number;
+  price_per_km?:    number;
+  price_per_min?:   number;
+  km_cost?:         number;
+  min_cost?:        number;
+  subtotal?:        number;
+  minimum_applied?: boolean;
+  // Mode forfait
+  flat_rate_id?:    string;
+  flat_rate_label?: string;
+  nb_passengers?:   number;
 }
 
 export interface PriceEstimateResult {
-  pricing_type:  PricingType;
-  country:       PricingCountry;
-  currency:      string;
-  final_price:   number;
-  breakdown:     PriceBreakdown;
+  pricing_type: PricingType;
+  country:      PricingCountry;
+  currency:     string;
+  final_price:  number;
+  breakdown:    PriceBreakdown;
 }
 
 // ── Filtres liste forfaits ────────────────────────────────────────────────────
@@ -203,30 +144,25 @@ export interface FlatRateListFilters {
 // ÉTAT LOCAL — Formulaire de l'écran admin
 // ══════════════════════════════════════════════════════════════════════════════
 
-// Formulaire éditable (valeurs string pour les inputs React Native)
 export interface PricingFormValues {
-  base_price:          string;
-  price_per_km:        string;
-  price_per_min:       string;
-  minimum_price:       string;
-  // commission_rate:     string;
-  // commission_vat_rate: string;
-  // airport_fee:         string;
-  // night_rate:          string;
+  base_price:    string;
+  price_per_km:  string;
+  price_per_min: string;
+  minimum_price: string;
 }
 
-// Exemple de calcul affiché dynamiquement
+// Exemple de calcul affiché dynamiquement (frontend uniquement, sans appel API)
 export interface PricingExample {
-  distance_km:          number;   // 15 km (fixe)
-  duration_min:         number;   // 25 min (fixe)
-  km_cost:              number;
-  min_cost:             number;
-  subtotal_ht:          number;
-  vat_20:               number;   // TVA 20% sur le HT
-  total_ttc:            number;
-  commission_ht:        number;   // 15% du HT
-  commission_vat:       number;   // TVA 20% sur la commission
-  commission_ttc:       number;
-  net_driver:           number;   // TTC – commission TTC
-  currency_symbol:      string;
+  distance_km:     number;
+  duration_min:    number;
+  km_cost:         number;
+  min_cost:        number;
+  subtotal_ht:     number;
+  vat_20:          number;
+  total_ttc:       number;
+  commission_ht:   number;
+  commission_vat:  number;
+  commission_ttc:  number;
+  net_driver:      number;
+  currency_symbol: string;
 }

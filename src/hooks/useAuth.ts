@@ -19,6 +19,7 @@ export function useAuth() {
     logout:         s.logout,
     changePassword:  s.changePassword,
     forgotPassword: s.forgotPassword,
+    resetPassword:  s.resetPassword,
     clearError:     s.clearError,
     updateProfile:  s.updateProfile,
     uploadAvatar:   s.uploadAvatar,

@@ -2,8 +2,45 @@
 import type { AuthUser } from './auth.types';
 
 export type VehicleType  = 'standard' | 'berline' | 'van';
-export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended';
+export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended' | 'on_trip';
 export type ZoneType     = 'senegal' | 'france'; 
+
+// ── DriverProfile (réponse brute API avant mapApiUser) ──────────
+export interface DriverProfile {
+  id:           string;
+  status:       DriverStatus;
+  vehicle_type: VehicleType | null;
+  siret:        string | null;
+  tva_rate:     number;
+  is_online:    boolean;
+  zone:         ZoneType;
+  created_at:   string;
+  updated_at:   string;
+}
+
+// ── DriverWithUser (réponse backend /admin/drivers) ─────────────
+export interface DriverWithUser {
+  id: string;
+  user_id: string;
+  status: DriverStatus;
+  vehicle_type: VehicleType | null;
+  siret: string | null;
+  tva_rate: number;
+  is_online: boolean;
+  zone: ZoneType;
+  created_at: string;
+  updated_at: string;
+  user: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    phone: string | null;
+    profile_photo_url: string | null;
+    status: string;
+    created_at: string;
+  };
+}
 
 // ── Client ──────────────────────────────────────────────────────
 export interface ClientUser extends AuthUser {

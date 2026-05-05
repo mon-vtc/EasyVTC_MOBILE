@@ -6,10 +6,10 @@
 // le store (déjà insérée par submitBooking) ou via fetchById en fallback.
 // ══════════════════════════════════════════════════════════════════════════════
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Animated, Platform, Easing,
+  View, Text, Image, ScrollView, TouchableOpacity,
+  StyleSheet, Animated, Platform, Easing, Alert,
 } from 'react-native';
 import {
   useNavigation, useRoute,
@@ -19,7 +19,10 @@ import { AppIcon }             from '../../components/common/AppIcon';
 import { Colors }              from '../../theme/colors';
 import { useReservationStore } from '../../store/reservation.store';
 import { useAuthStore }        from '../../store/auth.store';
+import { invoicesApi }         from '../../services/api/invoices.api';
 import type { ClientStackParamList } from '../../types/auth.types';
+import { Logo } from '../../constants/logo';
+import CancelReservationModal from '../../components/common/CancelReservationModal';
 
 // ── Types navigation typés ──────────────────────────────────────────────────
 type ConfirmationNav   = NavigationProp<ClientStackParamList, 'ReservationDetails'>;
@@ -36,89 +39,33 @@ function formatDate(iso: string): string {
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
-function getVehicleLabel(type: string | undefined): string {
+function getVehicleLabel(type: string | null | undefined): string {
   const labels: Record<string, string> = { standard: 'Berline Standard', berline: 'Berline', van: 'Van / Minibus' };
   return labels[type ?? ''] ?? type ?? '—';
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// ANIMATED CHECK
-// ══════════════════════════════════════════════════════════════════════════════
-function AnimatedCheck() {
-  const scale = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-  const ring1 = useRef(new Animated.Value(0)).current;
-  const ring2 = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.delay(200),
-      Animated.parallel([
-        Animated.spring(scale,   { toValue: 1, tension: 60, friction: 6, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      ]),
-      Animated.delay(100),
-      Animated.parallel([
-        Animated.timing(ring1, { toValue: 1, duration: 600, easing: Easing.out(Easing.ease), useNativeDriver: true }),
-        Animated.timing(ring2, { toValue: 1, duration: 800, easing: Easing.out(Easing.ease), useNativeDriver: true }),
-      ]),
-    ]).start();
-  }, []);
-
-  const ringStyle = (anim: Animated.Value, maxScale: number) => ({
-    transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [1, maxScale] }) }],
-    opacity:   anim.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0.6, 0.3, 0] }),
-  });
-
-  return (
-    <View style={check.container}>
-      <Animated.View style={[check.ring, ringStyle(ring2, 2.6)]} />
-      <Animated.View style={[check.ring, ringStyle(ring1, 1.9)]} />
-      <Animated.View style={[check.circle, { transform: [{ scale }], opacity }]}>
-        <AppIcon name="checkmark" size={38} color={Colors.white} />
-      </Animated.View>
-    </View>
-  );
+function getStatusLabel(status: string | undefined): string {
+  const labels: Record<string, string> = {
+    pending: 'En attente',
+    assigned: 'Attribuée',
+    driver_arrived: 'Chauffeur arrivé',
+    in_progress: 'En cours',
+    completed: 'Terminée',
+    cancelled: 'Annulée',
+  };
+  return labels[status ?? ''] ?? '—';
+}
+function getStatusColor(status: string | undefined): string {
+  const colors: Record<string, string> = {
+    pending: '#F59E0B',
+    assigned: '#3B82F6',
+    driver_arrived: '#8B5CF6',
+    in_progress: '#10B981',
+    completed: '#6B7280',
+    cancelled: '#EF4444',
+  };
+  return colors[status ?? ''] ?? '#9CA3AF';
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ROW DÉTAIL
-// ══════════════════════════════════════════════════════════════════════════════
-function DetailRow({ icon, label, value, delay = 0 }: { icon: string; label: string; value: string; delay?: number }) {
-  const anim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(anim, { toValue: 1, duration: 400, delay: 600 + delay, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
-  }, []);
-  return (
-    <Animated.View style={[row.container, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }]}>
-      <View style={row.iconWrap}>
-        <AppIcon name={icon} size={15} color={Colors.bordeaux} />
-      </View>
-      <View style={row.texts}>
-        <Text style={row.label}>{label}</Text>
-        <Text style={row.value}>{value}</Text>
-      </View>
-    </Animated.View>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// NEXT STEP
-// ══════════════════════════════════════════════════════════════════════════════
-function NextStep({ icon, text, delay }: { icon: string; text: string; delay: number }) {
-  const anim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(anim, { toValue: 1, duration: 350, delay: 1000 + delay, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
-  }, []);
-  return (
-    <Animated.View style={[ns.row, { opacity: anim, transform: [{ translateX: anim.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] }) }] }]}>
-      <View style={ns.dot}>
-        <AppIcon name={icon} size={13} color={Colors.bordeaux} />
-      </View>
-      <Text style={ns.text}>{text}</Text>
-    </Animated.View>
-  );
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ÉCRAN PRINCIPAL
@@ -126,26 +73,110 @@ function NextStep({ icon, text, delay }: { icon: string; text: string; delay: nu
 export default function ReservationDetailsScreen() {
   const nav   = useNavigation<ConfirmationNav>();
   const route = useRoute<ConfirmationRoute>();
-  
-  // Accès sécurisé aux paramètres de la route
+
   const reservationId = route.params?.reservationId;
 
-  // Si l'ID est manquant, on ne peut rien afficher
   if (!reservationId) {
-    // Idéalement, afficher un message d'erreur et un bouton pour revenir en arrière
     return <View style={styles.root}><Text style={styles.subtitle}>ID de réservation manquant.</Text></View>;
   }
 
   const accessToken  = useAuthStore(s => s.accessToken);
   const reservations = useReservationStore(s => s.reservations);
   const fetchById    = useReservationStore(s => s.fetchById);
+  const cancel       = useReservationStore(s => s.cancel);
 
-  // Cherche d'abord dans le store (déjà inséré par submitBooking)
   const reservation = reservations.find(r => r.id === reservationId) ?? null;
+  const status = reservation?.status as string | undefined;
+  const ref = reservation?.id.split('-').pop()?.toUpperCase() ?? reservation?.id;
+
+  // ── États et logiques contextuelles ───────────────────────────────────────
+  const isCancellable = ['pending', 'assigned', 'driver_arrived'].includes(status ?? '');
+  const isCompleted = status === 'completed';
+  const isActive = ['assigned', 'driver_arrived', 'in_progress'].includes(status ?? '');
+
+  // ── États du modal d'annulation ────────────────────────────────────────────
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
 
   useEffect(() => {
     if (!reservation && accessToken) fetchById(accessToken, reservationId);
   }, [reservationId, reservation, accessToken, fetchById]);
+
+  // ── Handlers d'actions ──────────────────────────────────────────────────────
+  const handleCall = useCallback(() => {
+    if (reservation?.driver?.user?.phone) {
+      Alert.alert(
+        'Appel',
+        `Appel au chauffeur: ${reservation.driver.user.phone}`,
+        [{ text: 'Fermer', style: 'default' }]
+      );
+      // Débloquer ce code en production :
+      // Linking.openURL(`tel:${reservation.driver.user.phone}`).catch(() => {
+      //   Alert.alert('Erreur', 'Impossible d\'appeler ce numéro');
+      // });
+    } else {
+      Alert.alert('Non disponible', 'Le numéro du chauffeur n\'est pas disponible');
+    }
+  }, [reservation?.driver?.user?.phone]);
+
+  const handleMessage = useCallback(() => {
+    if (reservation?.driver_id) {
+      nav.navigate('Messages' as any);
+    }
+  }, [reservation?.driver_id, nav]);
+
+  const handleViewInvoice = useCallback(async () => {
+    if (!reservation?.id || !accessToken) return;
+    try {
+      const res = await invoicesApi.fetchByReservationId(accessToken, reservation.id);
+      if (res.ok && res.data) {
+        nav.navigate('InvoiceDetails', { invoiceId: res.data.id });
+      } else {
+        Alert.alert(
+          'Facture indisponible',
+          res.message ?? 'La facture n\'est pas encore disponible pour cette course.',
+        );
+      }
+    } catch {
+      Alert.alert('Erreur', 'Impossible de récupérer la facture. Veuillez réessayer.');
+    }
+  }, [reservation?.id, accessToken, nav]);
+
+  const handleEvaluate = useCallback(() => {
+    Alert.alert(
+      'Évaluer le chauffeur',
+      'Quelle note donnez-vous à cette course ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: '⭐⭐⭐⭐⭐ (5)', onPress: () => submitRating(5) },
+        { text: '⭐⭐⭐⭐ (4)', onPress: () => submitRating(4) },
+        { text: '⭐⭐⭐ (3)', onPress: () => submitRating(3) },
+      ],
+    );
+  }, []);
+
+  const submitRating = (rating: number) => {
+    Alert.alert('Merci !', `Vous avez noté la course ${rating}/5`);
+    // Appel API pour soumettre l'évaluation
+  };
+
+  const handleCancel = useCallback(() => {
+    setCancelModalVisible(true);
+  }, []);
+
+  const handleCancelConfirm = async (reason: string) => {
+    try {
+      if (accessToken && reservation?.id) {
+        // Faire l'appel API pour annuler
+        await cancel(reservation.id, reason);
+        setCancelModalVisible(false);
+        Alert.alert('Succès', 'La réservation a été annulée');
+        // Retourner à l'écran précédent
+        nav.goBack();
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur', error?.message ?? 'Impossible d\'annuler la réservation');
+    }
+  };
 
   // ── Animations page ────────────────────────────────────────────────────────
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -174,12 +205,17 @@ export default function ReservationDetailsScreen() {
       {/* Fond bordeaux arrondi en haut */}
       <View style={styles.bgAccent} />
 
+      {/* Bouton Retour */}
+      <TouchableOpacity style={styles.backBtn} onPress={() => nav.goBack()} activeOpacity={0.8}>
+        <AppIcon name="arrow-back" size={24} color={Colors.white} />
+      </TouchableOpacity>
+
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} bounces={false}>
 
         {/* ── Header ── */}
         <Animated.View style={[styles.header, slideUp(headerAnim, 30)]}>
-          <AnimatedCheck />
-          <Text style={styles.title}>Réservation envoyée !</Text>
+          <Image source={Logo.LogoEasyVTC} style={{ width: 64, height: 64, marginBottom: 12 }} resizeMode="contain" />
+          <Text style={styles.title}>Détail de la réservation</Text>
           <Text style={styles.subtitle}>Votre demande est en cours de{'\n'}validation par notre équipe</Text>
         </Animated.View>
 
@@ -187,25 +223,47 @@ export default function ReservationDetailsScreen() {
         {r?.id && (
           <Animated.View style={[styles.refBadge, slideUp(headerAnim)]}>
             <Text style={styles.refLabel}>N° de réservation</Text>
-            <Text style={styles.refValue}  numberOfLines={1} ellipsizeMode="middle">{r.id}</Text>
+            <Text style={styles.refValue} numberOfLines={1} ellipsizeMode="middle">RES-{ref}</Text>
           </Animated.View>
         )}
 
-        {/* ── Carte trajet ── */}
+        {/* ── Statut + Carte trajet ── */}
         <Animated.View style={[styles.card, slideUp(cardAnim)]}>
-          <Text style={styles.cardTitle}>Détails du trajet</Text>
+          {/* Statut */}
+          <View style={styles.statusRow}>
+            <Text style={styles.statusLabel}>Statut</Text>
+            <View style={styles.statusBadge}>
+              <View style={[styles.statusDot, { backgroundColor: getStatusColor(r?.status) }]} />
+              <Text style={styles.statusText}>{getStatusLabel(r?.status)}</Text>
+            </View>
+          </View>
 
+          {/* Date et heure */}
+          <View style={styles.infoRow}>
+            <View style={styles.infoIcon}>
+              <AppIcon name="calendar-outline" size={16} color={BORDEAUX} />
+            </View>
+            <View style={styles.infoTexts}>
+              <Text style={styles.infoLabel}>Date et heure</Text>
+              <Text style={styles.infoValue}>
+                {r?.scheduled_at ? formatDate(r.scheduled_at) : '—'}
+                {r?.scheduled_at && <Text style={styles.infoTime}> à {formatTime(r.scheduled_at)}</Text>}
+              </Text>
+            </View>
+          </View>
+
+          {/* Route */}
           <View style={styles.routeBlock}>
             <View style={styles.routeRow}>
               <View style={[styles.routeDot, { backgroundColor: '#10B981' }]} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.routeTag}>Départ</Text>
+                <Text style={styles.routeTag}>Partir</Text>
                 <Text style={styles.routeAddr}>{r?.pickup_address ?? '—'}</Text>
               </View>
             </View>
             <View style={styles.routeLine} />
             <View style={styles.routeRow}>
-              <View style={[styles.routeDot, { backgroundColor: Colors.bordeaux }]} />
+              <View style={[styles.routeDot, { backgroundColor: BORDEAUX }]} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.routeTag}>Destination</Text>
                 <Text style={styles.routeAddr}>{r?.dest_address ?? '—'}</Text>
@@ -213,77 +271,171 @@ export default function ReservationDetailsScreen() {
             </View>
           </View>
 
-          <View style={styles.divider} />
+          {/* Stats: distance, durée, passagers */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <AppIcon name="map-outline" size={15} color={BORDEAUX} />
+              </View>
+              <Text style={styles.statLabel}>Distance</Text>
+              <Text style={styles.statValue}>{r?.distance_km ? `${r.distance_km} km` : '—'}</Text>
+            </View>
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <AppIcon name="time-outline" size={15} color={BORDEAUX} />
+              </View>
+              <Text style={styles.statLabel}>Durée</Text>
+              <Text style={styles.statValue}>{r?.duration_min ? `${r.duration_min} min` : '—'}</Text>
+            </View>
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <AppIcon name="person-outline" size={15} color={BORDEAUX} />
+              </View>
+              <Text style={styles.statLabel}>Passagers</Text>
+              <Text style={styles.statValue}>{r?.nb_passengers ?? '—'}</Text>
+            </View>
+          </View>
+        </Animated.View>
 
-          <DetailRow icon="calendar-outline"      label="Date"      value={r?.scheduled_at ? formatDate(r.scheduled_at) : '—'} delay={0}   />
-          <DetailRow icon="time-outline"          label="Heure"     value={r?.scheduled_at ? formatTime(r.scheduled_at) : '—'} delay={60}  />
-          <DetailRow icon="car-outline"           label="Véhicule"  value={getVehicleLabel(r?.vehicle_type)}                    delay={120} />
-          <DetailRow
-            icon="person-outline"
-            label="Passagers"
-            value={r?.nb_passengers != null ? `${r.nb_passengers} passager${r.nb_passengers > 1 ? 's' : ''}` : '—'}
-            delay={180}
-          />
-          {r?.driver ? (
-            <DetailRow icon="shield-checkmark-outline" label="Chauffeur" value={`${r.driver?.user?.first_name} ${r.driver?.user?.last_name}`} delay={240} />
-          ) : (
-            <DetailRow icon="person-circle-outline"    label="Chauffeur" value="En attente d'attribution"                       delay={240} />
+        {/* ── Chauffeur ── */}
+        {r?.driver && (
+          <Animated.View style={[styles.card, slideUp(cardAnim, 12)]}>
+            <Text style={styles.cardTitle}>Votre chauffeur</Text>
+            <View style={styles.driverRow}>
+              <View style={[styles.driverAvatar, { backgroundColor: BORDEAUX }]}>
+                {r.driver.user?.profile_photo_url ? (
+                  <Image source={{ uri: r.driver.user.profile_photo_url }} style={styles.driverAvatarImage} />
+                ) : (
+                  <Text style={styles.driverAvatarText}>
+                    {r.driver.user?.first_name?.[0]}{r.driver.user?.last_name?.[0]}
+                  </Text>
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.driverName}>{r.driver.user?.first_name} {r.driver.user?.last_name}</Text>
+                <View style={styles.driverRating}>
+                  <Text style={styles.star}>★</Text>
+                  <Text style={styles.ratingVal}>4.9</Text>
+                  <Text style={styles.ratingCount}>(234 avis)</Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.driverActions}>
+              {isActive && (
+                <>
+                  <TouchableOpacity style={styles.btnCall} activeOpacity={0.75} onPress={handleCall}>
+                    <AppIcon name="call-outline" size={14} color={WHITE} />
+                    <Text style={styles.btnCallText}>Appeler</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.btnMsg} activeOpacity={0.75} onPress={handleMessage}>
+                    <AppIcon name="chatbubble-outline" size={14} color={BORDEAUX} />
+                    <Text style={styles.btnMsgText}>Message</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </Animated.View>
+        )}
+
+        {/* ── Véhicule ── */}
+        {r?.driver && (
+          <Animated.View style={[styles.card, slideUp(cardAnim, 8)]}>
+            <Text style={styles.cardTitle}>Véhicule</Text>
+            <View style={styles.vehicleImageContainer}>
+              {r?.driver?.vehicle?.photo_url ? (
+                <Image source={{ uri: r.driver.vehicle.photo_url }} style={styles.vehicleImage} />
+              ) : (
+                <View style={styles.vehicleImage}>
+                  <AppIcon name="car-outline" size={32} color={BORDEAUX} />
+                </View>
+              )}
+            </View>
+            <View style={styles.vehicleRow}>
+              <Text style={styles.vehicleKey}>Type</Text>
+              <Text style={styles.vehicleVal}>{getVehicleLabel(r?.driver?.vehicle_type)}</Text>
+            </View>
+            <View style={styles.vehicleRow}>
+              <Text style={styles.vehicleKey}>Modèle</Text>
+              <Text style={styles.vehicleVal}>{r?.driver?.vehicle?.model}</Text>
+            </View>
+            <View style={styles.vehicleRow}>
+              <Text style={styles.vehicleKey}>Couleur</Text>
+              <Text style={styles.vehicleVal}>{r?.driver?.vehicle?.color}</Text>
+            </View>
+            <View style={styles.vehicleRow}>
+              <Text style={styles.vehicleKey}>Immatriculation</Text>
+              <Text style={styles.vehicleVal}>{r?.driver?.vehicle?.plate_number}</Text>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* ── Prix estimé/final ── */}
+        <Animated.View style={[styles.priceCard, slideUp(priceAnim)]}>
+          <View>
+            <Text style={styles.priceLabel}>Total</Text>
+          </View>
+          <Text style={styles.priceValue}>{formatPrice(r?.price_final ?? r?.price_estimated)}</Text>
+        </Animated.View>
+
+        {/* ── CTAs — Actions contextuelles ── */}
+        <Animated.View style={[styles.ctas, slideUp(ctaAnim)]}>
+          {/* Réservations complétées */}
+          {isCompleted && (
+            <>
+              <TouchableOpacity
+                style={styles.btnPrimary}
+                activeOpacity={0.85}
+                onPress={handleEvaluate}
+              >
+                <AppIcon name="star-outline" size={18} color={WHITE} />
+                <Text style={styles.btnPrimaryText}>Évaluer le chauffeur</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.btnSecondary}
+                activeOpacity={0.85}
+                onPress={handleViewInvoice}
+              >
+                <AppIcon name="document-text-outline" size={18} color={BORDEAUX} />
+                <Text style={styles.btnSecondaryText}>Voir la facture</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {/* Réservations annulables */}
+          {isCancellable && (
+            <TouchableOpacity
+              style={styles.btnDanger}
+              activeOpacity={0.85}
+              onPress={handleCancel}
+            >
+              <AppIcon name="close-circle-outline" size={18} color="#C0392B" />
+              <Text style={styles.btnDangerText}>Annuler la réservation</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Réservations en cours (non annulables) */}
+          {!isCancellable && !isCompleted && (
+            <TouchableOpacity
+              style={styles.btnSecondary}
+              activeOpacity={0.85}
+              onPress={handleViewInvoice}
+            >
+              <AppIcon name="document-text-outline" size={18} color={BORDEAUX} />
+              <Text style={styles.btnSecondaryText}>Voir les détails</Text>
+            </TouchableOpacity>
           )}
         </Animated.View>
 
-        {/* ── Prix estimé ── */}
-        <Animated.View style={[styles.priceCard, slideUp(priceAnim)]}>
-          <View>
-            <Text style={styles.priceLabel}>Prix estimé</Text>
-            <Text style={styles.priceNote}>Paiement directement auprès du chauffeur</Text>
-          </View>
-          <Text style={styles.priceValue}>{formatPrice(r?.price_estimated)}</Text>
-        </Animated.View>
-
-        {/* ── Prochaines étapes ── */}
-        <Animated.View style={[styles.nextCard, slideUp(priceAnim)]}>
-          <View style={styles.nextHeader}>
-            <AppIcon name="information-circle-outline" size={16} color={Colors.bordeaux} />
-            <Text style={styles.nextTitle}>Prochaines étapes</Text>
-          </View>
-          <NextStep icon="checkmark-circle-outline" text="Validation de votre réservation par notre équipe"  delay={0}   />
-          <NextStep icon="car-outline"              text="Attribution d'un chauffeur disponible"              delay={80}  />
-          <NextStep icon="mail-outline"             text="Notification de confirmation avec les détails"      delay={160} />
-          <NextStep icon="notifications-outline"   text="Rappel 1h avant le départ"                          delay={240} />
-        </Animated.View>
-
-        {/* ── CTAs ── */}
-        <Animated.View style={[styles.ctas, slideUp(ctaAnim)]}>
-
-          <TouchableOpacity
-            style={styles.btnPrimary}
-            activeOpacity={0.85}
-            onPress={() => nav.navigate('CreateReservation')} // Exemple: naviguer vers la liste
-          >
-            <AppIcon name="document-text-outline" size={18} color={Colors.white} />
-            <Text style={styles.btnPrimaryText}>Voir le bon de commande</Text>
-          </TouchableOpacity>
-
-          {/* Retour aux tabs → onglet MyReservations */}
-          <TouchableOpacity
-            style={styles.btnSecondary}
-            activeOpacity={0.85}
-            onPress={() => nav.navigate('ClientTabs', { screen: 'MyReservations' })}
-          >
-            <Text style={styles.btnSecondaryText}>Voir mes réservations</Text>
-          </TouchableOpacity>
-
-          {/* Nouvelle réservation — ouvre le formulaire */}
-          <TouchableOpacity
-            style={styles.btnGhost}
-            activeOpacity={0.75}
-            onPress={() => nav.navigate('CreateReservation')}
-          >
-            <Text style={styles.btnGhostText}>Nouvelle réservation</Text>
-          </TouchableOpacity>
-
-        </Animated.View>
       </ScrollView>
+
+      {/* Modal d'annulation */}
+      <CancelReservationModal
+        visible={cancelModalVisible}
+        reservationRef={`RES-${ref}`}
+        onConfirm={handleCancelConfirm}
+        onClose={() => setCancelModalVisible(false)}
+      />
     </View>
   );
 }
@@ -306,15 +458,20 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 48, borderBottomRightRadius: 48,
   },
   scroll: { paddingTop: Platform.OS === 'ios' ? 60 : 44, paddingBottom: 48, paddingHorizontal: 20 },
+  backBtn: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 58 : 42,
+    left: 16,
+    zIndex: 10,
+    padding: 10,
+  },
 
-  // Header
   header:   { alignItems: 'center', marginBottom: 20 },
   title:    { fontSize: 26, fontWeight: '800', color: WHITE, marginTop: 20, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 8, textAlign: 'center', lineHeight: 20 },
 
-  // Ref badge
   refBadge: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10,
     paddingHorizontal: 16, paddingVertical: 10, marginBottom: 16,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
@@ -322,21 +479,64 @@ const styles = StyleSheet.create({
   refLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
   refValue: { flexShrink: 1, fontSize: 14, color: WHITE, fontWeight: '700', letterSpacing: 0.5, textAlign: 'right' },
 
-  // Carte
   card: {
     backgroundColor: WHITE, borderRadius: 18, padding: 20, marginBottom: 12,
     shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3,
   },
   cardTitle:  { fontSize: 15, fontWeight: '700', color: TEXT_P, marginBottom: 16 },
-  routeBlock: { gap: 0 },
+
+  // Status row
+  statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  statusLabel: { fontSize: 13, color: TEXT_S, fontWeight: '600' },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: '#F3F4F6' },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  statusText: { fontSize: 13, fontWeight: '600', color: TEXT_P },
+
+  // Info row (date/time)
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 16 },
+  infoIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#FDF4F4', alignItems: 'center', justifyContent: 'center' },
+  infoTexts: { flex: 1 },
+  infoLabel: { fontSize: 11, color: TEXT_S, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 3 },
+  infoValue: { fontSize: 14, fontWeight: '600', color: TEXT_P },
+  infoTime: { fontSize: 13, color: TEXT_S, fontWeight: '400' },
+
+  // Route
+  routeBlock: { gap: 0, marginBottom: 16 },
   routeRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   routeDot:   { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
   routeLine:  { width: 1, height: 14, backgroundColor: BORDER, marginLeft: 4, marginVertical: 3 },
   routeTag:   { fontSize: 10, color: TEXT_S, textTransform: 'uppercase', letterSpacing: 0.5 },
   routeAddr:  { fontSize: 14, fontWeight: '500', color: TEXT_P, marginTop: 2, lineHeight: 20 },
-  divider:    { height: 1, backgroundColor: '#F3F4F6', marginVertical: 16 },
 
-  // Prix
+  // Stats row (distance, duration, passengers)
+  statsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
+  statItem: { flex: 1, alignItems: 'center', paddingVertical: 12, backgroundColor: '#F9FAFB', borderRadius: 10 },
+  statIcon: { marginBottom: 6 },
+  statLabel: { fontSize: 11, color: TEXT_S, fontWeight: '500', marginBottom: 3 },
+  statValue: { fontSize: 14, fontWeight: '700', color: TEXT_P },
+
+  // Driver section
+  driverRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  driverAvatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  driverAvatarText: { color: WHITE, fontSize: 16, fontWeight: '700', backgroundColor: BORDEAUX, },
+  driverAvatarImage: { width: 48, height: 48, borderRadius: 24 },
+  driverName: { fontSize: 14, fontWeight: '700', color: TEXT_P },
+  driverRating: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  star: { fontSize: 12, color: '#F59E0B' },
+  ratingVal: { fontSize: 13, fontWeight: '600', color: TEXT_P },
+  ratingCount: { fontSize: 12, color: TEXT_S },
+  driverActions: { flexDirection: 'row', gap: 8 },
+  btnCall: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: BORDEAUX, borderRadius: 10, height: 40 },
+  btnCallText: { color: WHITE, fontSize: 13, fontWeight: '600' },
+  btnMsg: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#F9FAFB', borderRadius: 10, height: 40, borderWidth: 1, borderColor: BORDER },
+  btnMsgText: { color: BORDEAUX, fontSize: 13, fontWeight: '600' },
+
+  // Vehicle section
+  vehicleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  vehicleKey: { fontSize: 13, color: TEXT_S, fontWeight: '500' },
+  vehicleVal: { fontSize: 14, fontWeight: '600', color: TEXT_P },
+  vehicleImageContainer: { alignItems: 'center', marginBottom: 16 },
+  vehicleImage: { width: '100%', height: 200, borderRadius: 12, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
   priceCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: BORDEAUX, borderRadius: 16, padding: 20, marginBottom: 12,
@@ -346,7 +546,6 @@ const styles = StyleSheet.create({
   priceNote:  { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 3, maxWidth: 180 },
   priceValue: { fontSize: 32, fontWeight: '900', color: WHITE, letterSpacing: -1 },
 
-  // Prochaines étapes
   nextCard: {
     backgroundColor: '#FDF4F4', borderRadius: 16, padding: 18, marginBottom: 24,
     borderWidth: 1, borderColor: '#F5DDE0',
@@ -354,24 +553,24 @@ const styles = StyleSheet.create({
   nextHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
   nextTitle:  { fontSize: 13, fontWeight: '700', color: BORDEAUX },
 
-  // CTAs
   ctas:           { gap: 10 },
   btnPrimary: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: BORDEAUX, borderRadius: 14, height: 52,
-    shadowColor: BORDEAUX, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3,
+    height: 50, borderRadius: 14, backgroundColor: BORDEAUX,
   },
-  btnPrimaryText:   { color: WHITE, fontSize: 15, fontWeight: '700' },
+  btnPrimaryText: { color: WHITE, fontSize: 15, fontWeight: '700' },
   btnSecondary: {
-    alignItems: 'center', justifyContent: 'center', height: 52,
-    borderRadius: 14, borderWidth: 1.5, borderColor: BORDEAUX, backgroundColor: WHITE,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    height: 50, borderRadius: 14, borderWidth: 1.5, borderColor: BORDEAUX, backgroundColor: WHITE,
   },
   btnSecondaryText: { color: BORDEAUX, fontSize: 15, fontWeight: '700' },
-  btnGhost:         { alignItems: 'center', justifyContent: 'center', height: 44 },
-  btnGhostText:     { color: TEXT_S, fontSize: 14, fontWeight: '500', textDecorationLine: 'underline' },
+  btnDanger: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    height: 50, borderRadius: 14, backgroundColor: 'transparent',
+  },
+  btnDangerText: { color: '#C0392B', fontSize: 15, fontWeight: '700' },
 });
 
-// ── AnimatedCheck
 const check = StyleSheet.create({
   container: { width: 90, height: 90, alignItems: 'center', justifyContent: 'center' },
   ring:      { position: 'absolute', width: 72, height: 72, borderRadius: 36, borderWidth: 2, borderColor: 'rgba(255,255,255,0.5)' },
@@ -380,20 +579,4 @@ const check = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#10B981', shadowOpacity: 0.5, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 6,
   },
-});
-
-// ── DetailRow
-const row = StyleSheet.create({
-  container: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F9FAFB' },
-  iconWrap:  { width: 32, height: 32, borderRadius: 8, backgroundColor: '#FDF4F4', alignItems: 'center', justifyContent: 'center' },
-  texts:     { flex: 1 },
-  label:     { fontSize: 11, color: Colors.textSecondary ?? '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.4 },
-  value:     { fontSize: 14, fontWeight: '600', color: Colors.textPrimary ?? '#1A1A1A', marginTop: 1 },
-});
-
-// ── NextStep
-const ns = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
-  dot: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(123,31,46,0.08)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  text: { flex: 1, fontSize: 13, color: Colors.textPrimary ?? '#1A1A1A', lineHeight: 19 },
 });

@@ -19,6 +19,7 @@ import type {
   AvailableDriverDto,
 } from '../types/reservations.types';
 import { BOOKING_INITIAL_STATE } from '../types/reservations.types';
+import { vehicleApi } from '../services/api/vehicle.api';
 
 interface ReservationState {
   // ── Liste ──────────────────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ interface ReservationState {
   fetchAll:              (token: string, filters?: ReservationListFilters) => Promise<void>;
   fetchById:             (token: string, id: string)                       => Promise<void>;
   fetchDriverActive:     (token: string)                                   => Promise<void>;
-  fetchAvailableDrivers: (token: string)                                   => Promise<AvailableDriverDto[]>;
+  fetchAvailableDrivers: (token: string, vehicleType?: string)             => Promise<AvailableDriverDto[]>;
   cancel:            (token: string, id: string, reason?: string)      => Promise<void>;
 
   // ── Actions chauffeur ──────────────────────────────────────────────────────
@@ -248,10 +249,10 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       throw err;
     }
   },
-
+ 
   // ── Assignation admin ──────────────────────────────────────────────────────
-  fetchAvailableDrivers: async (token) => {
-    const res = await reservationApi.getAvailableDrivers(token);
+  fetchAvailableDrivers: async (token, vehicleType) => {
+    const res = await reservationApi.getAvailableDrivers(token, vehicleType);
     if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur chargement chauffeurs');
     return res.data;
   },
@@ -276,7 +277,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   fetchVehicleTypes: async (token, country) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await reservationApi.getVehicleTypes(token, country);
+      const res = await vehicleApi.getVehicleTypes(token, country);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur chargement véhicules');
       set({ vehicleTypes: res.data, isLoading: false });
     } catch (err: unknown) {
@@ -312,9 +313,13 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   submitBooking: async (token, country) => {
     const { booking } = get();
 
+    // Avec forfait : origin/destination non obligatoires (l'itinéraire est défini par le forfait).
+    // Sans forfait : origin + destination requis.
+    const hasRoute = !!(booking.origin && booking.destination);
+    const hasForfait = !!booking.flat_rate_id;
+
     if (
-      !booking.origin       ||
-      !booking.destination  ||
+      (!hasRoute && !hasForfait) ||
       !booking.vehicle_type ||
       !booking.date         ||
       !booking.time
@@ -329,16 +334,17 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
 
       // DTO aligné champ par champ avec CreateReservationDto backend
       const dto: CreateReservationDto = {
-        // Trajet — noms backend
-        pickup_address: booking.origin.address,
-        pickup_lat:     booking.origin.latitude,
-        pickup_lng:     booking.origin.longitude,
-        dest_address:   booking.destination.address,
-        dest_lat:       booking.destination.latitude,
-        dest_lng:       booking.destination.longitude,
+        // Trajet — noms backend (adresses saisies ou labels du forfait)
+        pickup_address: booking.origin?.address ?? '',
+        // lat/lng : omis si nuls ou 0 (placeholder forfait) — backend les accepte en optionnel
+        ...(booking.origin?.latitude  ? { pickup_lat: booking.origin.latitude  } : {}),
+        ...(booking.origin?.longitude ? { pickup_lng: booking.origin.longitude } : {}),
+        dest_address:   booking.destination?.address ?? '',
+        ...(booking.destination?.latitude  ? { dest_lat: booking.destination.latitude  } : {}),
+        ...(booking.destination?.longitude ? { dest_lng: booking.destination.longitude } : {}),
 
         // Véhicule & pays
-        vehicle_type: booking.vehicle_type,
+        vehicle_type: booking.vehicle_type!,
         country:      country as any,
 
         // Horaire

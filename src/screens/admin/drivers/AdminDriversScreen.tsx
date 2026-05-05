@@ -41,11 +41,11 @@ function DriverCard({
     driver:  AuthUser;
     onPress: () => void;
   }) {
-  const isOnline   = (driver as any).is_online ?? false;
+  const isOnline   = driver.driver?.is_online ?? false;
   const lastSeen   = (driver as any).last_seen_label ?? (isOnline ? 'En ligne' : 'Hors ligne');
   const rating     = (driver as any).rating ?? 0;
   const trips      = (driver as any).trips_count ?? 0;
-  const vehicle    = (driver as any).vehicle;
+  const vehicle    = driver.driver?.vehicle_type;
   const vehicleStr = vehicle;
 
   const initials = `${driver.first_name?.[0] ?? ''}${driver.last_name?.[0] ?? ''}`.toUpperCase();
@@ -140,7 +140,7 @@ const cardStyles = StyleSheet.create({
 
 // ── Screen ──────────────────────────────────────────────────────
 export default function AdminDriversScreen({ navigation }: Props) {
-  const { fetchDrivers, users, isUsersLoading, usersError } = useAdmin();
+  const { fetchDrivers, drivers, isDriversLoading, driversError } = useAdmin();
 
   const [search,     setSearch]     = useState('');
   const [activeTab,  setActiveTab]  = useState<FilterTab>('tous');
@@ -150,8 +150,10 @@ export default function AdminDriversScreen({ navigation }: Props) {
   useEffect(() => { fetchDriversRef.current = fetchDrivers; });
 
   const load = useCallback(async () => {
-    try { await fetchDriversRef.current(); } catch (_) {}
-  }, []);
+    const params = search.trim() ? { search: search.trim() } : undefined;
+    try { await fetchDriversRef.current(params); } catch (_) {}
+  }, [search]);
+
 
   useEffect(() => { load(); }, [load]);
 
@@ -162,10 +164,10 @@ export default function AdminDriversScreen({ navigation }: Props) {
   };
 
   const filtered = useMemo(() => {
-    return users
+    return drivers
       .filter(d => {
-        if (activeTab === 'actifs')   return (d as any).is_online === true;
-        if (activeTab === 'inactifs') return (d as any).is_online !== true;
+        if (activeTab === 'actifs')   return d.driver?.is_online === true;
+        if (activeTab === 'inactifs') return d.driver?.is_online !== true;
         return true;
       })
       .filter(d =>
@@ -174,7 +176,7 @@ export default function AdminDriversScreen({ navigation }: Props) {
         d.phone?.includes(search) ||
         d.email?.toLowerCase().includes(search.toLowerCase())
       );
-  }, [users, search, activeTab]);
+  }, [drivers, search, activeTab]);
 
   return (
     <View style={styles.flex}>
@@ -238,14 +240,14 @@ export default function AdminDriversScreen({ navigation }: Props) {
         </Text>
 
         {/* Erreur */}
-        {usersError && (
+        {driversError && (
           <View style={styles.errorBanner}>
-            <Text style={styles.errorText}>⚠️ {usersError}</Text>
+            <Text style={styles.errorText}>⚠️ {driversError}</Text>
           </View>
         )}
 
         {/* Liste */}
-        {filtered.length === 0 && !isUsersLoading ? (
+        {filtered.length === 0 && !isDriversLoading ? (
           <View style={styles.empty}>
             <Ionicons name="person-outline" size={48} color={Colors.textMuted} />
             <Text style={styles.emptyText}>Aucun chauffeur trouvé</Text>
@@ -253,10 +255,10 @@ export default function AdminDriversScreen({ navigation }: Props) {
         ) : (
           filtered.map(driver => (
             <DriverCard
-              key={driver.id}
+              key={driver.driver?.id ?? driver.id}
               driver={driver}
-              // ✅ Utiliser le nom du Stack, pas du Drawer
-              onPress={() => navigation.navigate('DriverDetail', { driverId: driver.id })}
+              //  Utiliser l'ID du driver record nested, pas l'ID utilisateur
+              onPress={() => navigation.navigate('DriverDetail', { driverId: driver.driver?.id ?? driver.id })}
             />
           ))
         )}

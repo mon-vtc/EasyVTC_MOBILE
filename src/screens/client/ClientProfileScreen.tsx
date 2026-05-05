@@ -292,6 +292,34 @@ export default function ClientProfileScreen({ navigation }: Props) {
           </View>
         </View>
 
+        {/* ── Documents financiers (S4) ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Documents</Text>
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => navigation.navigate('MyOrders')}
+            >
+              <View style={styles.actionLeft}>
+                <Ionicons name="document-text-outline" size={20} color={Colors.textPrimary} />
+                <Text style={styles.actionLabel}>Mes bons de commande</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => navigation.navigate('MyInvoices')}
+            >
+              <View style={styles.actionLeft}>
+                <Ionicons name="receipt-outline" size={20} color={Colors.textPrimary} />
+                <Text style={styles.actionLabel}>Mes factures</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* ── Actions ── */}
         <View style={styles.actionsSection}>
           <TouchableOpacity

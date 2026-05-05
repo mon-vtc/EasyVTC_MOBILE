@@ -13,8 +13,11 @@ import DriverTripsScreen        from '../screens/driver/DriverTripsScreen';
 import DriverDocumentsScreen    from '../screens/driver/DriverDocumentsScreen';
 import DriverAvailabilityScreen from '../screens/driver/DriverAvailabilityScreen';
 import DriverProfileScreen      from '../screens/driver/DriverProfileScreen';
+import DriverOrdersScreen         from '../screens/driver/DriverOrdersScreen';
+import DriverOrderDetailsScreen   from '../screens/driver/DriverOrderDetailsScreen';
+import DriverInvoicesScreen       from '../screens/driver/DriverInvoicesScreen';
 
-import type { DriverDrawerParamList, DriverReservationsStackParamList } from '../types/auth.types';
+import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList } from '../types/auth.types';
 
 import { Logo }                  from  '../constants/logo';
 
@@ -26,6 +29,17 @@ function DriverReservationsStackScreen() {
       <DriverReservationsStack.Screen name="DriverReservationsList" component={DriverReservationsScreen} />
       <DriverReservationsStack.Screen name="DriverReservationDetail" component={DriverReservationScreen} />
     </DriverReservationsStack.Navigator>
+  );
+}
+
+const DriverOrdersStack = createNativeStackNavigator<DriverOrdersStackParamList>();
+
+function DriverOrdersStackScreen() {
+  return (
+    <DriverOrdersStack.Navigator screenOptions={{ headerShown: false }}>
+      <DriverOrdersStack.Screen name="DriverOrdersList"   component={DriverOrdersScreen} />
+      <DriverOrdersStack.Screen name="DriverOrderDetails" component={DriverOrderDetailsScreen} />
+    </DriverOrdersStack.Navigator>
   );
 }
 
@@ -111,14 +125,6 @@ export default function DriverNavigator() {
       />
 
       <Drawer.Screen
-        name="DriverProfile"
-        component={DriverProfileScreen}
-        options={{
-          drawerLabel: () => <DrawerLabel icon="person-outline" label="Mon compte" />,
-        }}
-      />
-
-      <Drawer.Screen
         name="DriverDocuments"
         component={DriverDocumentsScreen}
         options={{
@@ -141,6 +147,33 @@ export default function DriverNavigator() {
           drawerLabel: () => <DrawerLabel icon="cash-outline" label="Revenus" />,
         }}
       />
+
+      <Drawer.Screen
+        name="DriverOrders"
+        component={DriverOrdersStackScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="document-text-outline" label="Bons de commande" />,
+          headerShown: false,
+        }}
+      />
+
+      <Drawer.Screen
+        name="DriverInvoices"
+        component={DriverInvoicesScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="receipt-outline" label="Factures" />,
+        }}
+      />
+
+           <Drawer.Screen
+        name="DriverProfile"
+        component={DriverProfileScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="person-outline" label="Mon compte" />,
+        }}
+      />
+
+
     </Drawer.Navigator>
   );
 }
@@ -154,5 +187,6 @@ const styles = StyleSheet.create({
   labelText: {
     fontSize: 16,
     color: Colors.textPrimary,
+    flex: 1,
   },
 });

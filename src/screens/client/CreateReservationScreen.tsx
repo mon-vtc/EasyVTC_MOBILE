@@ -3,22 +3,24 @@
 // Sprint 3 — EasyVTC
 // Pays : France — prix en €
 // Recalcul de l'estimation à chaque modification des adresses,
-// du véhicule ou du nombre de passagers
+// du véhicule ou du nombre de passagers.
+// Affichage et sélection des forfaits disponibles (Option 1 + Option 2).
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView,
-  Platform, Image,
+  Platform, Image, Modal,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation }  from '@react-navigation/native';
 import { useReservation } from '../../hooks/useReservation';
 import { AppIcon }        from '../../components/common/AppIcon';
-import { Colors }         from '../../theme/colors';
+import { Colors, Spacing }         from '../../theme/colors';
 import { Logo }           from '../../constants/logo';
 import type { GeoPoint, VehicleTypeOption } from '../../types/reservations.types';
+import type { PricingFlatRate } from '../../types/pricing.types';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VEHICLE ICONS — alignés avec VehicleType backend : standard | berline | van
@@ -33,9 +35,82 @@ const VEHICLE_ICONS: Record<string, string> = {
 // HELPERS
 // ══════════════════════════════════════════════════════════════════════════════
 
-/** Formate un prix en euros avec 2 décimales. */
 function formatPrice(price: number): string {
   return `${price.toFixed(2)} €`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL DÉTAIL FORFAIT
+// ══════════════════════════════════════════════════════════════════════════════
+function ForfaitDetailModal({
+  forfait,
+  onApply,
+  onClose,
+}: {
+  forfait: PricingFlatRate;
+  onApply: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <Modal transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={fdm.overlay} activeOpacity={1} onPress={onClose} />
+      <View style={fdm.sheet}>
+        {/* En-tête */}
+        <View style={fdm.header}>
+          <View style={fdm.handle} />
+          <TouchableOpacity onPress={onClose} style={fdm.closeBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <AppIcon name="close-outline" size={22} color={Colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Icône + label */}
+        <View style={fdm.titleRow}>
+          <View style={fdm.iconWrap}>
+            <AppIcon name="pricetag-outline" size={26} color={Colors.white} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={fdm.label}>{forfait.label}</Text>
+            <Text style={fdm.subtitle}>Tarif forfaitaire</Text>
+          </View>
+        </View>
+
+        {/* Itinéraire */}
+        <View style={fdm.routeCard}>
+          <View style={fdm.routeRow}>
+            <View style={[fdm.dot, { backgroundColor: '#10B981' }]} />
+            <View>
+              <Text style={fdm.routeRole}>Départ</Text>
+              <Text style={fdm.routePlace}>{forfait.origin_label}</Text>
+            </View>
+          </View>
+          <View style={fdm.routeLine} />
+          <View style={fdm.routeRow}>
+            <View style={[fdm.dot, { backgroundColor: Colors.bordeaux }]} />
+            <View>
+              <Text style={fdm.routeRole}>Arrivée</Text>
+              <Text style={fdm.routePlace}>{forfait.destination_label}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Prix */}
+        <View style={fdm.priceRow}>
+          <Text style={fdm.priceLabel}>Tarif de base</Text>
+          <Text style={fdm.priceValue}>{formatPrice(forfait.price)}</Text>
+        </View>
+
+        {/* CTA */}
+        <TouchableOpacity style={fdm.applyBtn} onPress={onApply} activeOpacity={0.85}>
+          <AppIcon name="checkmark-outline" size={18} color={Colors.white} />
+          <Text style={fdm.applyBtnText}>Choisir ce forfait</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={fdm.cancelBtn} onPress={onClose} activeOpacity={0.85}>
+          <Text style={fdm.cancelBtnText}>Annuler</Text>
+        </TouchableOpacity>
+      </View>
+    </Modal>
+  );
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -53,7 +128,6 @@ function BookingHeader({ onBack }: { onBack: () => void }) {
       </TouchableOpacity>
       <View style={hdr.center}>
         <Image source={Logo.LogoEasyVTC} style={hdr.logo} resizeMode="contain" />
-        <Text style={hdr.title}>Easy VTC</Text>
       </View>
       <View style={hdr.placeholder} />
     </View>
@@ -81,17 +155,19 @@ function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ÉTAPE 1 — Lieu / Destination / Véhicule
+// ÉTAPE 1 — Lieu / Destination / Véhicule / Forfaits
 // ══════════════════════════════════════════════════════════════════════════════
 function Step1({
   booking, vehicleTypes, isFetchingPrice,
+  flatRates, suggestedFlatRate,
   setOrigin, setDestination, setVehicleType,
+  setFlatRateId,
   getCurrentLocation, geocodeAddress,
 }: any) {
-  // États locaux pour les champs texte — indépendants du store
   const [originInput, setOriginInput]           = useState<string>(booking.origin?.address ?? '');
   const [destinationInput, setDestinationInput] = useState<string>(booking.destination?.address ?? '');
   const [isGeolocating, setIsGeolocating]       = useState(false);
+  const [detailForfait, setDetailForfait]       = useState<PricingFlatRate | null>(null);
 
   // ── Géolocalisation ────────────────────────────────────────────────────────
   const handleGeolocate = async () => {
@@ -99,7 +175,7 @@ function Step1({
     const point = await getCurrentLocation();
     if (point) {
       setOriginInput(point.address);
-      setOrigin(point); // déclenche fetchEstimate si destination + véhicule présents
+      setOrigin(point);
     } else {
       Alert.alert('Géolocalisation', "Impossible d'obtenir votre position.");
     }
@@ -107,16 +183,9 @@ function Step1({
   };
 
   // ── Géocodage au blur ──────────────────────────────────────────────────────
-  /**
-   * Appelé à chaque fois que l'utilisateur quitte le champ.
-   * Si le texte a changé par rapport à l'adresse déjà stockée, on re-géocode
-   * et on appelle setOrigin() → fetchEstimate() se relance automatiquement.
-   */
   const handleOriginBlur = useCallback(async () => {
     const trimmed = originInput.trim();
     if (!trimmed) return;
-    // Re-géocoder même si l'adresse semble identique : l'utilisateur a peut-être
-    // corrigé une faute sans changer la valeur affichée après le géocodage précédent.
     const point = await geocodeAddress(trimmed);
     if (point) setOrigin({ ...point, address: trimmed });
   }, [originInput, geocodeAddress, setOrigin]);
@@ -128,8 +197,35 @@ function Step1({
     if (point) setDestination({ ...point, address: trimmed });
   }, [destinationInput, geocodeAddress, setDestination]);
 
+  // ── Forfait : ouvre la vue détail avant d'appliquer ───────────────────────
+  const handleFlatRatePress = useCallback((fr: PricingFlatRate) => {
+    if (booking.flat_rate_id === fr.id) {
+      setFlatRateId(null); // désélection directe si déjà actif
+    } else {
+      setDetailForfait(fr); // ouvre la vue détail
+    }
+  }, [booking.flat_rate_id, setFlatRateId]);
+
+  const handleApplyForfait = useCallback(() => {
+    if (detailForfait) {
+      setOriginInput(detailForfait.origin_label);
+      setDestinationInput(detailForfait.destination_label);
+      setFlatRateId(detailForfait.id);
+      setDetailForfait(null);
+    }
+  }, [detailForfait, setFlatRateId]);
+
   return (
     <ScrollView contentContainerStyle={styles.stepContent} keyboardShouldPersistTaps="handled">
+
+      {/* ── Modal détail forfait ── */}
+      {detailForfait && (
+        <ForfaitDetailModal
+          forfait={detailForfait}
+          onApply={handleApplyForfait}
+          onClose={() => setDetailForfait(null)}
+        />
+      )}
 
       {/* ── Lieu de départ ── */}
       <Text style={styles.fieldLabel}>Lieu de départ</Text>
@@ -179,6 +275,29 @@ function Step1({
         </Text>
       )}
 
+      {/* ── Bannière de suggestion de forfait (Option 2) ── */}
+      {suggestedFlatRate && booking.flat_rate_id !== suggestedFlatRate.id && (
+        <TouchableOpacity
+          style={styles.suggestionBanner}
+          onPress={() => setDetailForfait(suggestedFlatRate)}
+          activeOpacity={0.85}
+        >
+          <AppIcon name="pricetag-outline" size={16} color={Colors.bordeaux} />
+          <View style={styles.suggestionTexts}>
+            <Text style={styles.suggestionTitle} numberOfLines={1}>
+              Forfait disponible · {suggestedFlatRate.label}
+            </Text>
+            <Text style={styles.suggestionRoute} numberOfLines={1}>
+              {suggestedFlatRate.origin_label} → {suggestedFlatRate.destination_label}
+            </Text>
+          </View>
+          <Text style={styles.suggestionPrice}>{formatPrice(suggestedFlatRate.price)}</Text>
+          <View style={styles.suggestionApplyBtn}>
+            <Text style={styles.suggestionApplyText}>Appliquer</Text>
+          </View>
+        </TouchableOpacity>
+      )}
+
       {/* ── Type de véhicule ── */}
       <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Type de véhicule</Text>
       <View style={styles.vehicleList}>
@@ -192,7 +311,7 @@ function Step1({
           const isSelected = booking.vehicle_type === v.type;
           return (
             <TouchableOpacity
-              key={v.type}y
+              key={v.type}
               style={[styles.vehicleCard, isSelected && styles.vehicleCardSelected]}
               onPress={() => setVehicleType(v.type)}
               activeOpacity={0.85}
@@ -210,13 +329,76 @@ function Step1({
                 </Text>
                 <Text style={styles.vehicleDesc}>{v.description}</Text>
               </View>
-              <Text style={[styles.vehiclePrice, isSelected && styles.vehiclePriceSelected]}>
-                À partir de {formatPrice(v.base_price)}
-              </Text>
+              {v.base_price > 0 && (
+                <Text style={[styles.vehiclePrice, isSelected && styles.vehiclePriceSelected]}>
+                  À partir de {formatPrice(v.base_price)}
+                </Text>
+              )}
             </TouchableOpacity>
           );
         })}
       </View>
+
+      {/* ── Grille forfaitaire (Option 1) ── */}
+      {flatRates.length > 0 && (
+        <>
+          <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Forfaits disponibles</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.flatRateList}
+          >
+            {flatRates.map((fr: PricingFlatRate) => {
+              const isSelected = booking.flat_rate_id === fr.id;
+              return (
+                <TouchableOpacity
+                  key={fr.id}
+                  style={[styles.flatRateCard, isSelected && styles.flatRateCardSelected]}
+                  onPress={() => handleFlatRatePress(fr)}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.flatRateIconRow}>
+                    <AppIcon
+                      name="pricetag-outline"
+                      size={14}
+                      color={isSelected ? Colors.white : Colors.bordeaux}
+                    />
+                    {isSelected && (
+                      <AppIcon name="checkmark-circle" size={14} color={Colors.white} />
+                    )}
+                  </View>
+                  <Text
+                    style={[styles.flatRateLabel, isSelected && styles.flatRateLabelSelected]}
+                    numberOfLines={1}
+                  >
+                    {fr.label}
+                  </Text>
+                  <Text style={[styles.flatRateRoute, isSelected && styles.flatRateRouteSelected]} numberOfLines={1}>
+                    {fr.origin_label}
+                  </Text>
+                  <AppIcon
+                    name="arrow-forward-outline"
+                    size={10}
+                    color={isSelected ? Colors.white : Colors.textSecondary}
+                  />
+                  <Text style={[styles.flatRateRoute, isSelected && styles.flatRateRouteSelected]} numberOfLines={1}>
+                    {fr.destination_label}
+                  </Text>
+                  <Text style={[styles.flatRatePrice, isSelected && styles.flatRatePriceSelected]}>
+                    {formatPrice(fr.price)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+          {booking.flat_rate_id && (
+            <TouchableOpacity onPress={() => setFlatRateId(null)} style={styles.clearFlatRate}>
+              <AppIcon name="close-circle-outline" size={14} color={Colors.textSecondary} />
+              <Text style={styles.clearFlatRateText}>Retirer le forfait</Text>
+            </TouchableOpacity>
+          )}
+        </>
+      )}
 
       {/* ── Estimation en cours ── */}
       {isFetchingPrice && (
@@ -359,10 +541,15 @@ function Step2({ booking, setDate, setTime, setPassengers, setLuggage, isFetchin
 // ══════════════════════════════════════════════════════════════════════════════
 // ÉTAPE 3 — Récapitulatif + Confirmation
 // ══════════════════════════════════════════════════════════════════════════════
-function Step3({ booking, vehicleTypes, setComment, isFetchingPrice }: any) {
+function Step3({ booking, vehicleTypes, flatRates, setComment, isFetchingPrice }: any) {
   const vehicleLabel =
     vehicleTypes.find((v: VehicleTypeOption) => v.type === booking.vehicle_type)?.label ??
     booking.vehicle_type;
+
+  const selectedForfait: PricingFlatRate | undefined =
+    booking.flat_rate_id
+      ? flatRates.find((fr: PricingFlatRate) => fr.id === booking.flat_rate_id)
+      : undefined;
 
   const scheduledDate = booking.date
     ? new Date(`${booking.date}T${booking.time ?? '00:00'}:00`).toLocaleDateString('fr-FR', {
@@ -419,7 +606,14 @@ function Step3({ booking, vehicleTypes, setComment, isFetchingPrice }: any) {
             <AppIcon name="car-outline" size={14} color={Colors.textSecondary} />
             <Text style={styles.summaryGridValue}>{vehicleLabel}</Text>
           </View>
-          {booking.distance_km != null && (
+          {selectedForfait ? (
+            <View style={styles.summaryGridItem}>
+              <AppIcon name="pricetag-outline" size={14} color={Colors.bordeaux} />
+              <Text style={[styles.summaryGridValue, { color: Colors.bordeaux }]}>
+                {selectedForfait.label}
+              </Text>
+            </View>
+          ) : booking.distance_km != null && (
             <View style={styles.summaryGridItem}>
               <AppIcon name="navigate-outline" size={14} color={Colors.textSecondary} />
               <Text style={styles.summaryGridValue}>~{booking.distance_km} km</Text>
@@ -441,7 +635,10 @@ function Step3({ booking, vehicleTypes, setComment, isFetchingPrice }: any) {
       </View>
       {booking.estimated_price != null && (
         <Text style={styles.priceNote}>
-          Tarif indicatif · France · TVA incluse
+          {selectedForfait
+            ? `Tarif forfaitaire · ${selectedForfait.origin_label} → ${selectedForfait.destination_label}`
+            : 'Tarif indicatif · France · TVA incluse'
+          }
         </Text>
       )}
 
@@ -470,7 +667,9 @@ export default function BookingScreen({ navigation }: any) {
   const {
     booking, vehicleTypes, isSubmitting, isFetchingPrice, error,
     isStep1Valid, isStep2Valid, isStep3Valid,
+    flatRates, suggestedFlatRate,
     setOrigin, setDestination, setVehicleType,
+    setFlatRateId,
     setDate, setTime, setPassengers, setLuggage, setComment,
     goToStep, nextStep, prevStep,
     getCurrentLocation, geocodeAddress,
@@ -494,12 +693,12 @@ export default function BookingScreen({ navigation }: any) {
       Alert.alert('Champs manquants', "Veuillez renseigner la date, l'heure et au moins 1 passager.");
       return;
     }
-    // Transition étape 2 → 3 : forcer un recalcul avec tous les paramètres
-    // courants, même si l'utilisateur n'a rien modifié à l'étape 2.
-    // Garantit que le prix affiché au récapitulatif est toujours à jour.
+    // Transition étape 2 → 3 : forcer un recalcul avec tous les paramètres courants.
     if (booking.step === 2) {
-      const { origin, destination, vehicle_type, nb_passengers } = booking;
-      if (origin && destination && vehicle_type) {
+      const { origin, destination, vehicle_type, nb_passengers, flat_rate_id } = booking;
+      if (flat_rate_id) {
+        setFlatRateId(flat_rate_id); // recalcule avec le forfait et nb_passengers à jour
+      } else if (origin && destination && vehicle_type) {
         fetchEstimate(origin, destination, vehicle_type, nb_passengers);
       }
     }
@@ -510,8 +709,7 @@ export default function BookingScreen({ navigation }: any) {
     try {
       const reservation = await submitBooking();
       resetBooking();
-      nav.replace('ReservationDetails', { reservationId: reservation.id });
-      // L'erreur est dans le store, affichée par l'useEffect ci-dessous
+      nav.replace('BookingConfirmation', { reservationId: reservation.id });
     } catch (err) {
       console.warn('Booking confirmation failed', err);
       Alert.alert('Erreur', "Impossible de confirmer la réservation.");
@@ -544,9 +742,12 @@ export default function BookingScreen({ navigation }: any) {
             booking={booking}
             vehicleTypes={vehicleTypes}
             isFetchingPrice={isFetchingPrice}
+            flatRates={flatRates}
+            suggestedFlatRate={suggestedFlatRate}
             setOrigin={setOrigin}
             setDestination={setDestination}
             setVehicleType={setVehicleType}
+            setFlatRateId={setFlatRateId}
             getCurrentLocation={getCurrentLocation}
             geocodeAddress={geocodeAddress}
           />
@@ -565,6 +766,7 @@ export default function BookingScreen({ navigation }: any) {
           <Step3
             booking={booking}
             vehicleTypes={vehicleTypes}
+            flatRates={flatRates}
             setComment={setComment}
             isFetchingPrice={isFetchingPrice}
           />
@@ -618,7 +820,7 @@ const styles = StyleSheet.create({
   // ── Inputs ─────────────────────────────────────────────────────────────────
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1, borderColor: Colors.border ?? '#E5E7EB',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
     borderRadius: 10, backgroundColor: Colors.white ?? '#fff',
     paddingHorizontal: 12, height: 50,
   },
@@ -626,10 +828,27 @@ const styles = StyleSheet.create({
   geoBtn:     { padding: 4 },
   geoHint:    { fontSize: 12, color: '#10B981', marginTop: 5, marginLeft: 4 },
 
+  // ── Bannière suggestion forfait (Option 2) ─────────────────────────────────
+  suggestionBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginTop: 12, padding: 12, borderRadius: 10,
+    backgroundColor: '#FDF4F4',
+    borderWidth: 1.5, borderColor: Colors.bordeaux,
+  },
+  suggestionTexts: { flex: 1 },
+  suggestionTitle: { fontSize: 13, fontWeight: '700', color: Colors.bordeaux },
+  suggestionRoute: { fontSize: 11, color: Colors.textSecondary, marginTop: 1 },
+  suggestionPrice: { fontSize: 14, fontWeight: '700', color: Colors.bordeaux },
+  suggestionApplyBtn: {
+    backgroundColor: Colors.bordeaux, borderRadius: 6,
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  suggestionApplyText: { fontSize: 12, fontWeight: '700', color: Colors.white },
+
   // ── Date picker ────────────────────────────────────────────────────────────
   datePickerBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1, borderColor: Colors.border ?? '#E5E7EB',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
     borderRadius: 10, backgroundColor: Colors.white ?? '#fff',
     paddingHorizontal: 14, height: 50,
   },
@@ -641,14 +860,14 @@ const styles = StyleSheet.create({
   counterBlock: { flex: 1 },
   counter: {
     flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1, borderColor: Colors.border ?? '#E5E7EB',
-    borderRadius: 10, backgroundColor: Colors.white ?? '#fff', overflow: 'hidden',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+    borderRadius: 10, backgroundColor: Colors.white ?? '#fff', overflow: 'hidden', padding: Spacing.sm,
   },
   counterBtn: {
-    width: 44, height: 46, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Colors.surface ?? '#F9FAFB',
+    width: 30, height: 30, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.bordeauxLight, borderRadius: 20,
   },
-  counterBtnText: { fontSize: 20, fontWeight: '600', color: Colors.bordeaux },
+  counterBtnText: { fontSize: 20, fontWeight: '600', color: Colors.white },
   counterValue: {
     flex: 1, textAlign: 'center',
     fontSize: 16, fontWeight: '700', color: Colors.textPrimary,
@@ -658,10 +877,10 @@ const styles = StyleSheet.create({
   vehicleList:          { gap: 10, marginTop: 4 },
   vehicleCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderWidth: 1.5, borderColor: Colors.border ?? '#E5E7EB',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
     borderRadius: 12, padding: 14, backgroundColor: Colors.white ?? '#fff',
   },
-  vehicleCardSelected:  { borderColor: Colors.bordeaux, backgroundColor: '#FDF4F4' },
+  vehicleCardSelected:  { borderWidth: 1.5, borderColor: Colors.bordeauxLight, backgroundColor: '#FDF4F4' },
   vehicleIcon: {
     width: 44, height: 44, borderRadius: 22,
     backgroundColor: '#FDF4F4', alignItems: 'center', justifyContent: 'center',
@@ -674,6 +893,28 @@ const styles = StyleSheet.create({
   vehiclePrice:         { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   vehiclePriceSelected: { color: Colors.bordeaux },
   emptyVehicles:        { paddingVertical: 20, alignItems: 'center', gap: 8 },
+
+  // ── Forfaits — défilement horizontal (Option 1) ────────────────────────────
+  flatRateList: { gap: 10, paddingVertical: 4 },
+  flatRateCard: {
+    width: 130, padding: 12, borderRadius: 12, gap: 3,
+    backgroundColor: Colors.white ?? '#fff',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+    borderWidth: 1.5, borderColor: 'transparent',
+  },
+  flatRateCardSelected: { borderColor: Colors.bordeaux, backgroundColor: Colors.bordeaux },
+  flatRateIconRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  flatRateLabel:         { fontSize: 13, fontWeight: '700', color: Colors.textPrimary },
+  flatRateLabelSelected: { color: Colors.white },
+  flatRateRoute:         { fontSize: 11, color: Colors.textSecondary },
+  flatRateRouteSelected: { color: 'rgba(255,255,255,0.8)' },
+  flatRatePrice:         { fontSize: 15, fontWeight: '800', color: Colors.bordeaux, marginTop: 4 },
+  flatRatePriceSelected: { color: Colors.white },
+  clearFlatRate: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    alignSelf: 'flex-start', marginTop: 6, paddingVertical: 4,
+  },
+  clearFlatRateText: { fontSize: 12, color: Colors.textSecondary, textDecorationLine: 'underline' },
 
   // ── Estimation ─────────────────────────────────────────────────────────────
   estimateLoading:     { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
@@ -707,7 +948,7 @@ const styles = StyleSheet.create({
 
   // ── Commentaire ────────────────────────────────────────────────────────────
   commentInput: {
-    borderWidth: 1, borderColor: Colors.border ?? '#E5E7EB',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
     borderRadius: 10, backgroundColor: Colors.white ?? '#fff',
     padding: 14, fontSize: 14, color: Colors.textPrimary, minHeight: 100,
   },
@@ -718,7 +959,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', gap: 12, padding: 16,
     paddingBottom: Platform.OS === 'ios' ? 32 : 16,
     backgroundColor: Colors.white ?? '#fff',
-    borderTopWidth: 1, borderTopColor: Colors.border ?? '#F3F4F6',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
   backBtn: {
     flex: 1, height: 50, borderRadius: 10,
@@ -746,7 +987,7 @@ const hdr = StyleSheet.create({
   },
   back:        { width: 40, alignItems: 'flex-start' },
   center:      { flex: 1, alignItems: 'center', gap: 2 },
-  logo:        { width: 32, height: 32 },
+  logo:        { width: 40, height: 40 },
   title:       { color: Colors.white, fontSize: 11, fontWeight: '600', letterSpacing: 0.5 },
   placeholder: { width: 40 },
 });
@@ -757,7 +998,7 @@ const si = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 16, paddingHorizontal: 40,
     backgroundColor: Colors.white ?? '#fff',
-    borderBottomWidth: 1, borderBottomColor: Colors.border ?? '#F3F4F6',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
   circle: {
     width: 30, height: 30, borderRadius: 15, borderWidth: 2,
@@ -770,4 +1011,92 @@ const si = StyleSheet.create({
   circleTextActive: { color: Colors.white },
   line:             { flex: 1, height: 2, backgroundColor: Colors.border ?? '#D1D5DB', marginHorizontal: 6 },
   lineActive:       { backgroundColor: Colors.bordeaux },
+});
+
+// ── ForfaitDetailModal styles ──────────────────────────────────────────────────
+const fdm = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  sheet: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: Colors.white ?? '#fff',
+    borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    paddingHorizontal: 20, paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+    elevation: 20,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: -4 },
+  },
+  header: {
+    alignItems: 'center', paddingTop: 12, marginBottom: 16,
+    flexDirection: 'row', justifyContent: 'center',
+  },
+  handle: {
+    position: 'absolute', top: 0,
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: Colors.border ?? '#D1D5DB',
+  },
+  closeBtn: {
+    position: 'absolute', right: 0, top: -4,
+    padding: 4,
+  },
+  titleRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 20,
+  },
+  iconWrap: {
+    width: 50, height: 50, borderRadius: 25,
+    backgroundColor: Colors.bordeaux,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  label: {
+    fontSize: 17, fontWeight: '700', color: Colors.textPrimary,
+  },
+  subtitle: {
+    fontSize: 12, color: Colors.textSecondary, marginTop: 2,
+  },
+  routeCard: {
+    backgroundColor: '#F9FAFB', borderRadius: 12, padding: 14, marginBottom: 16,
+  },
+  routeRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+  },
+  dot: {
+    width: 10, height: 10, borderRadius: 5, marginTop: 3,
+  },
+  routeLine: {
+    width: 1, height: 14, backgroundColor: Colors.border ?? '#D1D5DB',
+    marginLeft: 4, marginVertical: 4,
+  },
+  routeRole: {
+    fontSize: 10, color: Colors.textSecondary,
+    textTransform: 'uppercase', letterSpacing: 0.5,
+  },
+  routePlace: {
+    fontSize: 14, fontWeight: '600', color: Colors.textPrimary, marginTop: 1,
+  },
+  priceRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 10,
+  },
+  priceLabel: {
+    fontSize: 14, color: Colors.textSecondary, fontWeight: '500',
+  },
+  priceValue: {
+    fontSize: 22, fontWeight: '800', color: Colors.bordeaux,
+  },
+  applyBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: Colors.bordeaux, borderRadius: 12,
+    height: 50, marginBottom: 10,
+  },
+  applyBtnText: {
+    color: Colors.white, fontSize: 15, fontWeight: '700',
+  },
+  cancelBtn: {
+    alignItems: 'center', justifyContent: 'center',
+    height: 44,
+  },
+  cancelBtnText: {
+    color: Colors.textSecondary, fontSize: 14, fontWeight: '500',
+  },
 });

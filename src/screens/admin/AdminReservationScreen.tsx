@@ -15,7 +15,7 @@ import { useRoute, useNavigation, RouteProp, NavigationProp } from '@react-navig
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 import DriverPickerModal from './DriverPickerModal';
-import  CancelReservationModal from './CancelReservationModal';
+import  CancelReservationModal from '../../components/common/CancelReservationModal';
 import type { Reservation , AvailableDriverDto} from '../../types/reservations.types';
 
 type ScreenRoute = RouteProp<{ AdminReservationDetail: { reservationId: string } }, 'AdminReservationDetail'>;
@@ -106,10 +106,13 @@ function DetailsTab({ reservation }: { reservation: Reservation }) {
         </View>
         <HistoryItem color="#2196F3" label="Réservation créée" date={reservation.created_at} />
         {['assigned', 'driver_arrived', 'in_progress', 'completed'].includes(reservation.status) && (
-          <HistoryItem color="#4CAF50" label="Chauffeur assigné" date={reservation.assigned_at} />
+          <HistoryItem color="#4CAF50" label="Chauffeur assigné" date={reservation.driver_id ? reservation.updated_at : undefined} />
+        )}
+        {reservation.status === 'driver_arrived' && (
+          <HistoryItem color="#7B1FA2" label="Chauffeur arrivé" date={reservation.driver_arrived_at} />
         )}
         {reservation.status === 'completed' && (
-          <HistoryItem color="#9C27B0" label="Course terminée" date={reservation.completed_at} />
+          <HistoryItem color="#9C27B0" label="Course terminée" date={reservation.updated_at} />
         )}
       </View>
     </>
@@ -290,7 +293,9 @@ function DriverTab({
 
 /* ── PAYMENT TAB ── */
 function PaymentTab({ reservation }: { reservation: Reservation }) {
-  const total = reservation.price_final ?? reservation.price_estimated ?? 0;
+  const total     = reservation.price_final ?? reservation.price_estimated ?? 0;
+  const b         = reservation.price_breakdown;
+  const isFlatRate = reservation.pricing_type === 'flat_rate';
 
   return (
     <View style={S.card}>
@@ -299,26 +304,51 @@ function PaymentTab({ reservation }: { reservation: Reservation }) {
         <Text style={S.paymentTitle}>Détails du paiement</Text>
       </View>
 
-      <View style={S.paymentRow}>
-        <Text style={S.paymentLabel}>Prix de base</Text>
-        <Text style={S.paymentValue}>
-          {(reservation.price_base ?? reservation.price_estimated ?? 0).toFixed(2)} €
-        </Text>
-      </View>
-
-      {reservation.distance_km != null && reservation.price_per_km != null && (
+      {isFlatRate ? (
         <View style={S.paymentRow}>
-          <Text style={S.paymentLabel}>Distance ({reservation.distance_km} km)</Text>
-          <Text style={S.paymentValue}>
-            {(reservation.distance_km * reservation.price_per_km).toFixed(2)} €
-          </Text>
+          <Text style={S.paymentLabel}>{b?.flat_rate_label ?? 'Forfait'}</Text>
+          <Text style={S.paymentValue}>{reservation.price_estimated.toFixed(2)} €</Text>
         </View>
+      ) : (
+        <>
+          <View style={S.paymentRow}>
+            <Text style={S.paymentLabel}>
+              {b?.vehicle_type ? `Prise en charge (${b.vehicle_type})` : 'Prise en charge'}
+            </Text>
+            <Text style={S.paymentValue}>
+              {(b?.vehicle_base_price ?? b?.base_price ?? 0).toFixed(2)} €
+            </Text>
+          </View>
+          {b?.km_cost != null && (
+            <View style={S.paymentRow}>
+              <Text style={S.paymentLabel}>
+                Distance{reservation.distance_km != null ? ` (${reservation.distance_km} km)` : ''}
+              </Text>
+              <Text style={S.paymentValue}>{b.km_cost.toFixed(2)} €</Text>
+            </View>
+          )}
+          {b?.min_cost != null && (
+            <View style={S.paymentRow}>
+              <Text style={S.paymentLabel}>
+                Durée{reservation.duration_min != null ? ` (${reservation.duration_min} min)` : ''}
+              </Text>
+              <Text style={S.paymentValue}>{b.min_cost.toFixed(2)} €</Text>
+            </View>
+          )}
+          {b?.minimum_applied && (
+            <View style={S.paymentRow}>
+              <Text style={[S.paymentLabel, { fontStyle: 'italic', color: Colors.textMuted ?? Colors.textSecondary }]}>
+                Minimum tarifaire appliqué
+              </Text>
+            </View>
+          )}
+        </>
       )}
 
-      {reservation.price_final && reservation.price_estimated && (
+      {reservation.price_adjusted != null && (
         <View style={S.paymentRow}>
-          <Text style={S.paymentLabel}>Prix estimé</Text>
-          <Text style={S.paymentValue}>{reservation.price_estimated.toFixed(2)} €</Text>
+          <Text style={S.paymentLabel}>Ajustement</Text>
+          <Text style={S.paymentValue}>{reservation.price_adjusted.toFixed(2)} €</Text>
         </View>
       )}
 
@@ -509,6 +539,7 @@ export default function AdminReservationScreen() {
       <DriverPickerModal
         visible={pickerVisible}
         reservationRef={reservationRef}
+        vehicleType={reservation?.vehicle_type}
         onConfirm={handleAssignConfirm}
         onClose={() => setPickerVisible(false)}
       />

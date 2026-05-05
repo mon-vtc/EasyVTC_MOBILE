@@ -23,10 +23,15 @@ import { Colors, Radius, Spacing }    from '../theme/colors';
 
 import ClientHomeScreen           from '../screens/client/ClientHomeScreen';
 import MyReservationsScreen       from '../screens/client/MyReservationsScreen';
+import CreateReservationScreen    from '../screens/client/CreateReservationScreen';
 import MessagesScreen             from '../screens/client/MessagesScreen';
 import ClientProfileScreen        from '../screens/client/ClientProfileScreen';
-import CreateReservationScreen              from '../screens/client/CreateReservationScreen';
-import ReservationDetailsScreen  from '../screens/client/ReservationDetailsScreen';
+import MyOrdersScreen             from '../screens/client/MyOrdersScreen';
+import MyInvoicesScreen           from '../screens/client/MyInvoicesScreen';
+import BookingConfirmationScreen  from '../screens/client/BookingConfirmationScreen';
+import ReservationDetailsScreen   from '../screens/client/ReservationDetailsScreen';
+import OrderDetailsScreen         from '../screens/client/OrderDetailsScreen';
+import InvoiceDetailsScreen       from '../screens/client/InvoiceDetailsScreen';
 
 import type { ClientTabParamList, ClientStackParamList } from '../types/auth.types';
 
@@ -141,6 +146,23 @@ function ClientTabs() {
           ),
         }}
       />
+
+      {/* S4 — Écrans cachés de la tab bar, accessibles via navigation.navigate() */}
+      <Tab.Screen
+        name="MyOrders"
+        component={MyOrdersScreen}
+        options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
+      />
+      <Tab.Screen
+        name="MyInvoices"
+        component={MyInvoicesScreen}
+        options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
+      />
+      <Tab.Screen
+        name="OrderDetails"
+        component={OrderDetailsScreen}
+        options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
+      />
     </Tab.Navigator>
   );
 }
@@ -169,16 +191,42 @@ export default function ClientNavigator() {
         }}
       />
 
-      {/* Page de succès — replace() depuis CreateReservationScreen empêche le retour */}
+      {/* Page de succès après réservation — replace() depuis CreateReservationScreen empêche le retour */}
       <Stack.Screen
-        name="ReservationDetails"
-        component={ReservationDetailsScreen} // Garde le même composant pour l'instant
+        name="BookingConfirmation"
+        component={BookingConfirmationScreen}
         options={{
           animation:      'fade',
-          gestureEnabled: false,   // pas de swipe-back sur la confirmation
+          gestureEnabled: false,
         }}
       />
 
+      {/* Détail d'une réservation existante */}
+      <Stack.Screen
+        name="ReservationDetails"
+        component={ReservationDetailsScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+
+      {/* Détail d'un bon de commande */}
+      <Stack.Screen
+        name="OrderDetails"
+        component={OrderDetailsScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+
+      {/* Détail d'une facture */}
+      <Stack.Screen
+        name="InvoiceDetails"
+        component={InvoiceDetailsScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
     </Stack.Navigator>
   );
 }

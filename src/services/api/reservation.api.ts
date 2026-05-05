@@ -11,8 +11,7 @@ import type {
   ReservationListFilters,
   ReservationListResult,
   CreateReservationDto,
-  VehicleTypeOption,
-  AvailableDriverDto
+  AvailableDriverDto,
 } from '../../types/reservations.types';
 
 export const reservationApi = {
@@ -185,57 +184,12 @@ export const reservationApi = {
   // UTILITAIRES
   // ══════════════════════════════════════════════════════════════════════════
 
-  /**
-   * GET /vehicle-types?country=<country>
-   * Types de véhicule disponibles avec tarifs de base.
-   *
-   * ⚠️  L'endpoint /vehicle-types n'est pas encore implémenté côté backend.
-   *     Le mock ci-dessous simule la réponse attendue avec les VehicleType
-   *     reconnus par le backend ('standard' | 'berline' | 'van').
-   *     Remplacer par l'appel réel dès que la route est disponible.
-   */
-  getVehicleTypes: async (
-    _token:   string,
-    country?: string,
-  ): Promise<ApiResponse<VehicleTypeOption[]>> => {
-    // TODO: remplacer par → api.get(`/vehicle-types${country ? `?country=${country}` : ''}`, _token)
-    await new Promise(resolve => setTimeout(resolve, 400));
-
-    const isSenegal = country === 'senegal';
-
-    const mockData: VehicleTypeOption[] = [
-      {
-        type:        'standard',
-        label:       'Économique',
-        description: '1-3 passagers • Compacte',
-        base_price:  isSenegal ? 3000 : 12.50,
-        icon:        'car-outline',
-        capacity:    3,
-      },
-      {
-        type:        'berline',
-        label:       'Confort',
-        description: '1-4 passagers • Berline',
-        base_price:  isSenegal ? 5000 : 18.00,
-        icon:        'car-outline',
-        capacity:    4,
-      },
-      {
-        type:        'van',
-        label:       'Van',
-        description: '1-7 passagers • Familial',
-        base_price:  isSenegal ? 9000 : 35.00,
-        icon:        'bus-outline',
-        capacity:    7,
-      },
-    ];
-
-    return { ok: true, data: mockData, message: 'Success' };
-  },
-
   getAvailableDrivers: (
     token: string,
-  ): Promise<ApiResponse<AvailableDriverDto[]>> =>
-    api.get('/reservations/drivers/available', token),
+    vehicleType?: string,
+  ): Promise<ApiResponse<AvailableDriverDto[]>> => {
+    const qs = vehicleType ? `?vehicle_type=${encodeURIComponent(vehicleType)}` : '';
+    return api.get(`/reservations/drivers/available${qs}`, token);
+  },
   
 };
