@@ -33,12 +33,14 @@ function round2(n: number): number {
 }
 
 export function usePricing() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isManager } = useAuth();
+  const isAdminOrManager = isAdmin || isManager;
   const accessToken = useAuthStore(s => s.accessToken);
 
-  if (!isAdmin) {
-    throw new Error('usePricing() ne peut être utilisé que par un administrateur.');
+  if (!isAdminOrManager) {
+    throw new Error('usePricing() ne peut être utilisé que par un administrateur ou un manager.');
   }
+
 
   const config        = usePricingStore(s => s.config);
   const activeCountry = usePricingStore(s => s.activeCountry);

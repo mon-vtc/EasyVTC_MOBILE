@@ -13,9 +13,9 @@ import type {
 export function useAdminDocuments() {
   const { isAdmin }   = useAuth();
   const accessToken   = useAuthStore(s => s.accessToken);
-
-  if (!isAdmin) {
-    throw new Error('useAdminDocuments() ne peut être utilisé que par un administrateur.');
+  const isAdminOrManager = useAuth().isAdmin || useAuth().isManager;
+  if (!isAdminOrManager) {
+    throw new Error('useAdminDocuments() ne peut être utilisé que par un administrateur ou un manager.');
   }
 
   const [documents,  setDocuments]  = useState<AdminDocument[]>([]);

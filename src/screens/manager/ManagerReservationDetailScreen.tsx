@@ -14,11 +14,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp, NavigationProp } from '@react-navigation/native';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
-import DriverPickerModal from './DriverPickerModal';
+import DriverPickerModal from '../admin/DriverPickerModal';
 import  CancelReservationModal from '../../components/common/CancelReservationModal';
 import type { Reservation , AvailableDriverDto} from '../../types/reservations.types';
 
-type ScreenRoute = RouteProp<{ AdminReservationDetail: { reservationId: string } }, 'AdminReservationDetail'>;
+type ScreenRoute = RouteProp<{ ManagerReservationDetail: { reservationId: string } }, 'ManagerReservationDetail'>;
 type ScreenNav = NavigationProp<any>;
 
 type TabKeys = 'details' | 'client' | 'driver' | 'payment';
@@ -317,10 +317,10 @@ function PaymentTab({ reservation }: { reservation: Reservation }) {
         <>
           <View style={S.paymentRow}>
             <Text style={S.paymentLabel}>
-              {b?.vehicle_type ? `Prise en charge (${b.vehicle_type})` : 'Prise en charge'}
+              {b?.vehicle_type  ? `Prise en charge (${b.vehicle_type})` : 'Prise en charge'}
             </Text>
             <Text style={S.paymentValue}>
-              {(b?.vehicle_base_price ?? b?.price_breakdown.base_price ?? 0).toFixed(2)} €
+              {(b?.price_breakdown?.vehicle_base_price ?? b?.price_breakdown.base_price ?? 0).toFixed(2)} €
             </Text>
           </View>
           {b?.price_breakdown.km_cost != null && (
@@ -369,7 +369,7 @@ function PaymentTab({ reservation }: { reservation: Reservation }) {
 /* ══════════════════════════════════════
    MAIN SCREEN
 ══════════════════════════════════════ */
-export default function AdminReservationScreen() {
+export default function ManagerReservationDetailScreen() {
   const route      = useRoute<ScreenRoute>();
   const navigation = useNavigation<ScreenNav>();
   const { reservations, selected, fetchById, assign, isLoading, cancel } = useReservation();
@@ -417,10 +417,10 @@ export default function AdminReservationScreen() {
         return { label: 'Assigner un chauffeur', cb: () => setPickerVisible(true) };
       // case 'assigned':
       //   return { label: 'Modifier réservation', cb: () => Alert.alert('Action', 'Modifier') };
-      case 'cancelled':
-        return null; // Pas d'action principale si annulé
       case 'completed':
         return { label: 'Voir facture', cb: () => Alert.alert('Action', 'Voir Facture') };
+      case 'cancelled':
+        return null; // Pas d'action principale si annulé
       default:
         return null;
     }
@@ -471,6 +471,7 @@ export default function AdminReservationScreen() {
         <DriverTab
           driver={reservation.driver || null}
           onAssign={() => setPickerVisible(true)}
+          status={reservation.status}
         />
       );
       case 'payment': return <PaymentTab reservation={reservation} />;
