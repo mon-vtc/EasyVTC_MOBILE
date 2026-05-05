@@ -148,10 +148,11 @@ function InvoiceRow({ invoice, token, onAdjust }: {
   const snap = invoice.trip_snapshot;
 
   const openPdf = async () => {
-    if (!invoice.pdf_url) { Alert.alert('PDF non disponible'); return; }
     setOpening(true);
     try {
-      await Linking.openURL(`${invoicesApi.getPdfUrl(token, invoice.id)}?token=${encodeURIComponent(token)}`);
+      const res = await invoicesApi.fetchPdfUrl(token, invoice.id);
+      if (!res.ok || !res.data?.url) throw new Error(res.message ?? 'URL indisponible');
+      await Linking.openURL(res.data.url);
     } catch { Alert.alert('Erreur', 'Impossible d\'ouvrir la facture.'); }
     finally { setOpening(false); }
   };
@@ -199,9 +200,9 @@ function InvoiceRow({ invoice, token, onAdjust }: {
       {/* Actions */}
       <View style={styles.actions}>
         <TouchableOpacity
-          style={[styles.actionBtn, !invoice.pdf_url && styles.actionBtnOff]}
+          style={styles.actionBtn}
           onPress={openPdf}
-          disabled={opening || !invoice.pdf_url}
+          disabled={opening}
         >
           {opening
             ? <ActivityIndicator size="small" color={Colors.white} />

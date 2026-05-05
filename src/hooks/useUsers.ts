@@ -2,7 +2,7 @@ import { useUsersStore } from '../store';
 import { useAuth }       from './useAuth';
 import type { ListUsersParams, UpdateUserStatusPayload } from '../types';
 
-// ✅ Hook réservé Admin/Manager — expose les actions avec le token automatiquement
+//  Hook réservé Admin/Manager — expose les actions avec le token automatiquement
 export function useUsers() {
   const { accessToken } = useAuth() as any;
 

@@ -257,7 +257,7 @@ export default function AdminDriversScreen({ navigation }: Props) {
             <DriverCard
               key={driver.driver?.id ?? driver.id}
               driver={driver}
-              // ✅ Utiliser l'ID du driver record nested, pas l'ID utilisateur
+              //  Utiliser l'ID du driver record nested, pas l'ID utilisateur
               onPress={() => navigation.navigate('DriverDetail', { driverId: driver.driver?.id ?? driver.id })}
             />
           ))

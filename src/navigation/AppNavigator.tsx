@@ -8,6 +8,7 @@ import AuthNavigator           from './AuthNavigator';
 import ClientNavigator         from './ClientNavigator';
 import DriverNavigator         from './DriverNavigator';
 import AdminNavigator          from './AdminNavigator';
+import ManagerNavigator        from './ManagerNavigator';
 import { Colors }              from '../theme/colors';
 
 export default function AppNavigator() {
@@ -37,9 +38,10 @@ export default function AppNavigator() {
   // Routage selon rôle
   const renderNavigator = () => {
     if (!user) return <AuthNavigator />;
-    if (user.role === 'driver') return <DriverNavigator />;
-    else if (user.role === 'admin') return <AdminNavigator />; // admin → driver nav pour l'instant
-    return <ClientNavigator />; // client | admin | manager → client nav pour l'instant
+    if (user.role === 'driver')  return <DriverNavigator />;
+    if (user.role === 'admin')   return <AdminNavigator />;
+    if (user.role === 'manager') return <ManagerNavigator />;
+    return <ClientNavigator />;
   };
 
 

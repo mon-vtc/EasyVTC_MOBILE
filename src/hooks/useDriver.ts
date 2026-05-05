@@ -1,10 +1,13 @@
 // hooks/useDriver.ts
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { useAuth }        from './useAuth';
 import { useAuthStore }   from '../store/auth.store';
+import { mapApiUser }     from '../store/auth.store';
 import { driverApi }      from '../services/api/drivers.api';
 import { vehicleApi }     from '../services/api/vehicle.api';
-import type { DriverUser, Vehicle }                                    from '../types/user.types';
+import { authApi }        from '../services/api/auth.api';
+import type { DriverUser, Vehicle }                          from '../types/user.types';
 import type { UpdateUserMePayload, UpdateDriverMePayload }             from '../types/payload.types';
 import type { CreateVehiclePayload, UpdateVehiclePayload }             from '../services/api/vehicle.api';
 
@@ -20,6 +23,11 @@ export function useDriver() {
 
   // ── Véhicule actif local ────────────────────────────────────
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(driver?.vehicle ?? null);
+
+  // ── Références pour synchronisation ─────────────────────────
+  const appStateSubscriptionRef = useRef<any>(null);
+  const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSyncRef = useRef<number>(Date.now());
 
   // ── Résoudre le token ou throw ──────────────────────────────
   const token = () => {
@@ -75,12 +83,83 @@ export function useDriver() {
   // dans le store Zustand. Sans ce patch, le store conserve l'ancienne valeur
   // et tous les composants abonnés (Switch, StatusCard…) ne se re-rendent pas.
   const setOnlineStatus = useCallback(async (is_online: boolean) => {
-    await driverApi.setOnlineStatus(token(), is_online);
+    const res = await driverApi.setOnlineStatus(token(), is_online);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur statut en ligne');
 
+    // Sync status + is_online depuis la réponse backend
     useAuthStore.setState(state => ({
-      user: state.user ? { ...state.user, is_online } : state.user,
+      user: state.user ? {
+        ...state.user,
+        is_online: res.data!.is_online,
+        status:    (res.data as any).status ?? state.user.status,
+      } : state.user,
     }));
   }, [accessToken]);
+
+  // ── Synchronisation du statut chauffeur avec le serveur ──────
+  // Cette fonction récupère le profil actuel du serveur et met à jour le store
+  // En cas d'erreur réseau, elle échoue silencieusement pour ne pas perturber l'UX
+  const syncDriverStatus = useCallback(async () => {
+    try {
+      const now = Date.now();
+      // Éviter les syncs trop fréquentes (max 1 par 5 secondes)
+      if (now - lastSyncRef.current < 5000) return;
+      lastSyncRef.current = now;
+
+      const res = await authApi.me(token());
+      if (!res.ok || !res.data) {
+        console.warn('[useDriver] Sync échouée: réponse invalide');
+        return;
+      }
+
+      const mappedUser = mapApiUser(res.data);
+      // Mettre à jour le store avec les données fraîches du serveur
+      useAuthStore.setState({
+        user: mappedUser,
+      });
+
+      console.log('[useDriver] Sync réussie:', { 
+        is_online: (mappedUser as any).is_online, 
+        status: (mappedUser as any).driverStatus 
+      });
+    } catch (err: any) {
+      console.warn('[useDriver] Erreur sync statut:', err?.message ?? 'Erreur inconnue');
+      // Ne pas lever l'erreur - on continue simplement
+    }
+  }, [accessToken]);
+
+  // ── AppState listener: synchroniser quand l'app revient au premier plan ────
+  const handleAppStateChange = useCallback((nextAppState: AppStateStatus) => {
+    if (nextAppState === 'active') {
+      console.log('[useDriver] App est passée en avant-plan, synchronisation en cours...');
+      syncDriverStatus();
+    }
+  }, [syncDriverStatus]);
+
+  // ── Setup: listeners et polling ──────────────────────────────
+  useEffect(() => {
+    // Écouter les changements d'AppState (foreground/background)
+    appStateSubscriptionRef.current = AppState.addEventListener('change', handleAppStateChange);
+
+    // Polling léger: toutes les 30 secondes (quand l'app est en avant-plan)
+    pollingTimerRef.current = setInterval(() => {
+      const currentAppState = AppState.currentState;
+      if (currentAppState === 'active') {
+        console.log('[useDriver] Polling du statut chauffeur...');
+        syncDriverStatus();
+      }
+    }, 30 * 1000); // 30 secondes
+
+    // Cleanup
+    return () => {
+      if (appStateSubscriptionRef.current) {
+        appStateSubscriptionRef.current.remove();
+      }
+      if (pollingTimerRef.current) {
+        clearInterval(pollingTimerRef.current);
+      }
+    };
+  }, [handleAppStateChange, syncDriverStatus]);
 
   return {
     user:           driver,
@@ -96,7 +175,7 @@ export function useDriver() {
     zone:        driver?.zone         ?? null,
     vehicleType: driver?.vehicle_type ?? null,
     isOnline:    driver?.is_online    ?? false,
-    status:      driver?.status       ?? null,
+    status:      driver?.driverStatus       ?? null,
 
     // Véhicule actif
     vehicle:     activeVehicle,
@@ -106,6 +185,7 @@ export function useDriver() {
     uploadAvatar:   auth.uploadAvatar,
     changePassword: auth.changePassword,
     setOnlineStatus,
+    syncDriverStatus,
     login:  auth.login,
     logout: auth.logout,
 

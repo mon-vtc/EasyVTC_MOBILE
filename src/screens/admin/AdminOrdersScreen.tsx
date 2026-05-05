@@ -10,97 +10,10 @@ import {
 } from 'react-native';
 import { Ionicons }        from '@expo/vector-icons';
 import { useOrdersStore }  from '../../store/orders.store';
-import { useAuthStore }    from '../../store/auth.store';
-import { ordersApi }       from '../../services/api/orders.api';
-import type { Order }      from '../../types/orders.types';
+import { useAuthStore } from '../../store/auth.store';
+import type { Order } from '../../types/orders.types';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
-function fmtDateTime(iso: string) {
-  return new Date(iso).toLocaleDateString('fr-FR', {
-    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  });
-}
-
-const vehicleLabel: Record<string, string> = { standard: 'Standard', berline: 'Berline', van: 'Van' };
-
-function OrderRow({ order, token }: { order: Order; token: string }) {
-  const [opening, setOpening] = useState(false);
-  const snap = order.trip_snapshot;
-
-  const openPdf = async () => {
-    if (!order.pdf_url) { Alert.alert('PDF non disponible'); return; }
-    setOpening(true);
-    try {
-      await Linking.openURL(`${ordersApi.getPdfUrl(token, order.id)}?token=${encodeURIComponent(token)}`);
-    } catch { Alert.alert('Erreur', 'Impossible d\'ouvrir le PDF.'); }
-    finally { setOpening(false); }
-  };
-
-  return (
-    <View style={styles.card}>
-      {/* Numéro + date */}
-      <View style={styles.rowBetween}>
-        <Text style={styles.orderNum}>{order.order_number}</Text>
-        <Text style={styles.dateSmall}>{fmtDate(order.issued_at)}</Text>
-      </View>
-
-      {/* Chauffeur */}
-      <View style={styles.infoRow}>
-        <Ionicons name="person-circle-outline" size={15} color={Colors.bordeaux} />
-        <Text style={styles.infoText}>
-          {order.driver_snapshot.first_name} {order.driver_snapshot.last_name}
-        </Text>
-      </View>
-
-      {/* Passager */}
-      <View style={styles.infoRow}>
-        <Ionicons name="people-outline" size={15} color={Colors.textMuted} />
-        <Text style={styles.infoText}>
-          {order.passenger_snapshot.first_name} {order.passenger_snapshot.last_name}
-        </Text>
-      </View>
-
-      {/* Trajet */}
-      <View style={styles.infoRow}>
-        <Ionicons name="navigate-outline" size={15} color={Colors.textMuted} />
-        <Text style={styles.infoText} numberOfLines={1}>
-          {snap.pickup_address.split(',')[0]} → {snap.dest_address.split(',')[0]}
-        </Text>
-      </View>
-
-      {/* Date course + véhicule */}
-      <View style={styles.rowBetween}>
-        <Text style={styles.dateSmall}>{fmtDateTime(snap.scheduled_at)}</Text>
-        <Text style={styles.vehicleTag}>{vehicleLabel[snap.vehicle_type] ?? snap.vehicle_type}</Text>
-      </View>
-
-      {snap.pricing_type === 'flat_rate' && snap.final_price !== null && (
-        <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Forfait</Text>
-          <Text style={styles.priceValue}>
-            {snap.final_price.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {snap.currency}
-          </Text>
-        </View>
-      )}
-
-      <TouchableOpacity
-        style={[styles.pdfBtn, !order.pdf_url && styles.pdfBtnOff]}
-        onPress={openPdf}
-        disabled={opening || !order.pdf_url}
-      >
-        {opening
-          ? <ActivityIndicator size="small" color={Colors.white} />
-          : <Ionicons name="document-text-outline" size={14} color={Colors.white} />
-        }
-        <Text style={styles.pdfBtnText}>{opening ? 'Ouverture…' : 'Voir le bon PDF'}</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
+import { OrderCard } from '../../components/common/OrderCard';
 
 export default function AdminOrdersScreen() {
   const { orders, total, isLoading, error, fetchAll, clearError } = useOrdersStore();
@@ -150,7 +63,7 @@ export default function AdminOrdersScreen() {
       <FlatList
         data={filtered}
         keyExtractor={(o) => o.id}
-        renderItem={({ item }) => <OrderRow order={item} token={token} />}
+        renderItem={({ item }) => <OrderCard order={item} token={token} role="admin" />}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
         ListEmptyComponent={
@@ -180,33 +93,6 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: Fonts.size.sm, color: Colors.textPrimary },
   list:        { paddingHorizontal: Spacing.md, paddingBottom: Spacing.md, gap: Spacing.sm },
-  card: {
-    backgroundColor: Colors.surface, borderRadius: Radius.md,
-    padding: Spacing.md, borderWidth: 1, borderColor: Colors.border,
-    shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 3, elevation: 1,
-    gap: 6,
-  },
-  rowBetween:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  orderNum:    { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeaux },
-  dateSmall:   { fontSize: Fonts.size.xs, color: Colors.textMuted },
-  infoRow:     { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  infoText:    { fontSize: Fonts.size.sm, color: Colors.textPrimary, flex: 1 },
-  vehicleTag: {
-    backgroundColor: Colors.beigeLight, paddingHorizontal: 8, paddingVertical: 2,
-    borderRadius: Radius.sm, fontSize: Fonts.size.xs, color: Colors.bordeaux,
-    fontWeight: '600',
-  },
-  priceRow:  { flexDirection: 'row', justifyContent: 'space-between', paddingTop: Spacing.xs, borderTopWidth: 1, borderTopColor: Colors.border },
-  priceLabel:{ fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '600' },
-  priceValue:{ fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.bordeaux },
-  pdfBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, marginTop: 4, backgroundColor: Colors.bordeaux,
-    paddingVertical: 8, borderRadius: Radius.sm,
-  },
-  pdfBtnOff:  { backgroundColor: Colors.textMuted },
-  pdfBtnText: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.white },
   empty:      { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
   emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },
 });

@@ -2,8 +2,8 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 
 // ── Rôles & Statuts ─────────────────────────────────────────────
 export type UserRole   = 'client' | 'driver' | 'admin' | 'manager';
-export type UserStatus = 'active' | 'inactive' | 'locked';
-export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended';
+export type UserStatus = 'active' | 'inactive' | 'locked' ;
+export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended' | 'on_trip';
 
 // ── Entité de base ───────────────────────────────────────────────
 export interface AuthUser {
@@ -27,6 +27,8 @@ export interface AuthUser {
   // Profil chauffeur (présent dans la réponse API si role === 'driver')
   driver?:   import('./user.types').DriverProfile | null;
   vehicle?:  import('./user.types').Vehicle | null;
+  // Permissions RBAC — tableau vide pour tous les rôles sauf manager
+  permissions?: import('./admin.types').ManagerPermission[];
 }
 
 // ── Tokens ───────────────────────────────────────────────────────
@@ -56,7 +58,9 @@ export type ClientTabParamList = {
   ReservationDetails:  { reservationId: string };
   // S4 — Documents financiers
   MyOrders:            undefined;
-  MyInvoices:          undefined;
+  MyInvoices:          { reservationId?: string } | undefined;
+  OrderDetails:        { orderId: string };
+  InvoiceDetails:      { invoiceId: string };
 };
 
 /**
@@ -71,13 +75,21 @@ export type ClientTabParamList = {
  */
 export type ClientStackParamList = {
   ClientTabs:           NavigatorScreenParams<ClientTabParamList>;
-  CreateReservation:              undefined;
-  ReservationDetails:  { reservationId: string };
+  CreateReservation:    undefined;
+  ReservationDetails:   { reservationId: string };
+  BookingConfirmation:  { reservationId: string };
+  OrderDetails:         { orderId: string };
+  InvoiceDetails:       { invoiceId: string };
 };
 
 export type DriverReservationsStackParamList = {
   DriverReservationsList:  undefined;
   DriverReservationDetail: { reservationId: string };
+};
+
+export type DriverOrdersStackParamList = {
+  DriverOrdersList:   undefined;
+  DriverOrderDetails: { orderId: string };
 };
 
 export type DriverDrawerParamList = {
@@ -88,14 +100,35 @@ export type DriverDrawerParamList = {
   DriverAvailability: undefined;
   DriverProfile:      undefined;
   // S4 — Documents financiers
-  DriverOrders:       undefined;
+  DriverOrders:       NavigatorScreenParams<DriverOrdersStackParamList>;
   DriverInvoices:     undefined;
 };
 
+
+export type ManagerReservationsStackParamList = {
+  ManagerReservationsList: undefined;
+  ManagerReservationDetail: { reservationId: string; };
+};
+
 export type ManagerDrawerParamList = {
-  ManagerHome:    undefined;
-  ManagerReports: undefined;
-  ManagerProfile: undefined;
+  ManagerHome:         undefined;  
+  ManagerReservations: NavigatorScreenParams<ManagerReservationsStackParamList>;
+  ManagerDrivers:      undefined;
+  ManagerClients:      undefined;
+  ManagerOrders:       undefined;
+  ManagerInvoices:     undefined;
+  ManagerDocuments:    undefined;
+  ManagerProfile:      undefined;
+  // Tarification (sous-écrans accessibles via accordion drawer)
+  BaseGrid:            undefined;
+  FlatRates:           undefined;
+};
+
+
+// ── Stack interne Clients (dans le Drawer Admin) ─────────────────
+export type ClientsStackParamList = {
+  ClientsList:  undefined;
+  ClientDetail: { clientId: string };
 };
 
 // ── Stack interne Chauffeurs (dans le Drawer Admin) ──────────────
@@ -104,11 +137,21 @@ export type DriversStackParamList = {
   DriverDetail: { driverId: string };
 };
 
+// ── Stack interne Gestionnaires (dans le Drawer Admin) ───────────
+export type ManagersStackParamList = {
+  ManagersList:        undefined;
+  CreateManager:       undefined;
+  ManagerDetail:       { managerId: string };
+  EditManager:         { managerId: string };
+  ManagerPermissions:  { managerId: string };
+};
+
 // ── Stack interne Réservations (dans le Drawer Admin) ────────────
 export type ReservationsStackParamList = {
   ReservationsList:     undefined;
   AdminReservationDetail: { reservationId: string };
 };
+
 
 // ── Drawer Admin ─────────────────────────────────────────────────
 // AdminDrivers pointe vers le stack imbriqué DriversStackParamList
@@ -117,12 +160,14 @@ export type AdminDrawerParamList = {
   AdminDrivers:   NavigatorScreenParams<DriversStackParamList>;
   AdminReservations: NavigatorScreenParams<ReservationsStackParamList>;
   AdminDocuments: undefined;
+  AdminManagers:  NavigatorScreenParams<ManagersStackParamList>;
   AdminProfile:   undefined;
-  AdminUsers:        undefined;
+  AdminClients:      NavigatorScreenParams<ClientsStackParamList>;
   AdminAvailability: undefined;
   AdminReviews:      undefined;
   BaseGrid:          undefined;
   FlatRates:         undefined;
+  AdminVehicleTypes: undefined;
   // S4 — Documents financiers
   AdminOrders:       undefined;
   AdminInvoices:     undefined;

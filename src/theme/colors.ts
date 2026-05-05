@@ -88,3 +88,7 @@ export const Radius = {
   xl:   32,
   full: 999,
 } as const;
+
+export const Background = {
+  in_progress: '#21C25C',
+}

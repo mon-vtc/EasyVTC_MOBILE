@@ -18,13 +18,24 @@ import AdminPricingScreen from '../screens/admin/AdminPricingScreen';
 import AdminFlatRatesScreen from '../screens/admin/AdminFlatRatesScreen';
 import AdminOrdersScreen from '../screens/admin/AdminOrdersScreen';
 import AdminInvoicesScreen from '../screens/admin/AdminInvoicesScreen';
-import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
+import AdminClientsScreen from '../screens/admin/clients/AdminClientsScreen';
+import AdminClientDetailScreen from '../screens/admin/clients/AdminClientDetailScreen';
+import AdminVehicleTypesScreen from '../screens/admin/AdminVehicleTypesScreen';
+
+import ManagersListScreen from '../screens/admin/managers/ManagersListScreen';
+import ManagerDetailScreen from '../screens/admin/managers/ManagerDetailScreen';
+import CreateManagerScreen from '../screens/admin/managers/CreateManagerScreen';
+import EditManagerScreen from '../screens/admin/managers/Editmanagerscreen';
+import ManagerPermissionsScreen from '../screens/admin/managers/ManagerPermissionsScreen';
 
 import type {
   AdminDrawerParamList,
   DriversStackParamList,
   ReservationsStackParamList,
+  ClientsStackParamList,
 } from '../types/auth.types';
+
+import type { ManagersStackParamList } from '../types';
 
 const DriversStack = createNativeStackNavigator<DriversStackParamList>();
 const ReservationsStack = createNativeStackNavigator<ReservationsStackParamList>();
@@ -69,6 +80,35 @@ function AdminDocumentsStack() {
       />
       {/* Tu pourras ajouter ici une page de détail spécifique plus tard si besoin */}
     </DocumentsStack.Navigator>
+  );
+}
+
+const ClientsStack = createNativeStackNavigator<ClientsStackParamList>();
+
+function AdminClientsNavigator() {
+  return (
+    <ClientsStack.Navigator screenOptions={{ headerShown: false }}>
+      <ClientsStack.Screen name="ClientsList"  component={AdminClientsScreen}       />
+      <ClientsStack.Screen name="ClientDetail" component={AdminClientDetailScreen}  />
+    </ClientsStack.Navigator>
+  );
+}
+
+const ManagersStack = createNativeStackNavigator<ManagersStackParamList>();
+
+function AdminManagersNavigator() {
+  return (
+    <ManagersStack.Navigator
+      initialRouteName="ManagersList"
+      screenOptions={{ headerShown: false }}
+    >
+      <ManagersStack.Screen name="ManagersList"        component={ManagersListScreen} />
+      <ManagersStack.Screen name="CreateManager"       component={CreateManagerScreen} />
+      <ManagersStack.Screen name="EditManager"         component={EditManagerScreen} />
+      <ManagersStack.Screen name="ManagerDetail"       component={ManagerDetailScreen} />
+      <ManagersStack.Screen name="ManagerPermissions"  component={ManagerPermissionsScreen} />
+     
+    </ManagersStack.Navigator>
   );
 }
 
@@ -144,6 +184,26 @@ export default function AdminNavigator() {
       />
 
       <Drawer.Screen
+        name="AdminManagers"
+        component={AdminManagersNavigator}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="people-outline" label="Gestionnaires" />,
+          headerShown: false,
+        }}
+      />
+
+
+     <Drawer.Screen
+        name="AdminClients"
+        component={AdminClientsNavigator}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="people-outline" label="Clients" />,
+          headerShown: false,
+        }}
+      />
+
+
+      <Drawer.Screen
         name="AdminDocuments"
         component={AdminDocumentsStack}
         options={{
@@ -152,14 +212,6 @@ export default function AdminNavigator() {
         }}
       />
 
-      <Drawer.Screen
-        name="AdminUsers"
-        component={AdminUsersScreen}
-        options={{
-          drawerLabel: () => <DrawerLabel icon="people-outline" label="Utilisateurs" />,
-          title: 'Gestion des utilisateurs',
-        }}
-      />
 
       <Drawer.Screen
         name="BaseGrid"
@@ -175,6 +227,15 @@ export default function AdminNavigator() {
         component={AdminFlatRatesScreen}
         options={{
           drawerItemStyle: { display: 'none' }, // Masqué de la liste principale
+          headerShown: false,
+        }}
+      />
+
+      <Drawer.Screen
+        name="AdminVehicleTypes"
+        component={AdminVehicleTypesScreen}
+        options={{
+          drawerItemStyle: { display: 'none' },
           headerShown: false,
         }}
       />
@@ -201,6 +262,6 @@ export default function AdminNavigator() {
 }
 
 const styles = StyleSheet.create({
-  labelRow:  { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  labelText: { fontSize: 16, color: Colors.textPrimary },
+  labelRow:  { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  labelText: { fontSize: 16, color: Colors.textPrimary, flex: 1 },
 });

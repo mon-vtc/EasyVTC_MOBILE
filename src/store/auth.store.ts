@@ -5,7 +5,7 @@
   import type { AuthUser, LoginPayload, RegisterPayload, UpdateProfilePayload } from '../types';
 
   // ── Utilitaire : aplatir la réponse API → AuthUser/DriverUser ──
-  function mapApiUser(raw: any): AuthUser {
+  export function mapApiUser(raw: any): AuthUser {
     if (raw?.role !== 'driver') return raw;
 
     return {
@@ -24,6 +24,7 @@
       vehicle:      raw.vehicle               ?? null,
     };
   }
+
 
   interface AuthState {
     user:           AuthUser  | null;

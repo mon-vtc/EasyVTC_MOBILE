@@ -9,6 +9,7 @@ export interface DriverBillingSnapshot {
   first_name: string;
   last_name:  string;
   phone:      string | null;
+  email:      string | null;
   siret:      string | null;
   tva_rate:   number;
   zone:       string;
@@ -61,6 +62,11 @@ export interface Invoice {
   issued_at:       string;
   created_at:      string;
   updated_at:      string;
+  // Relation avec le trip et la réservation
+  trip?: {
+    id: string;
+    reservation_id: string;
+  };
 }
 
 // ── Liste paginée ─────────────────────────────────────────────────────────────
