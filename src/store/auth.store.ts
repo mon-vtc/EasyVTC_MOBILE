@@ -161,14 +161,14 @@
       const { accessToken } = get();
       try { if (accessToken) await authApi.logout(accessToken); } catch (_) {}
       await secureStorage.clearTokens();
-      set({ user: null, accessToken: null, refreshToken: null, error: null });
+      set({ user: null, accessToken: null, refreshToken: null, error: null, localAvatarUri: null });
       
     },
 
     // ── Force logout (pour token expiré — pas d'appel API) ──────────────────
     forceLogout: async () => {
       await secureStorage.clearTokens();
-      set({ user: null, accessToken: null, refreshToken: null, error: null });
+      set({ user: null, accessToken: null, refreshToken: null, error: null, localAvatarUri: null });
     },
 
     // ── Forgot Password ─────────────────────────────────────────────────────
@@ -225,22 +225,13 @@
         const res = await userApi.updateMe(accessToken, payload);
         if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la mise à jour');
 
-        const updatedUser: AuthUser = {
-          ...res.data,
-          // Le backend retourne AuthUser de base — on réinjecte les champs driver si présents
-          ...(user?.role === 'driver' && {
-            vtc_license: (user as any).vtc_license,
-            iban: (payload as any).iban ?? (user as any).iban,
-            vehicle: {
-              ...(user as any).vehicle,
-              ...(payload as any).vehicle_model && { model: (payload as any).vehicle_model },
-              ...(payload as any).vehicle_color && { color: (payload as any).vehicle_color },
-              ...(payload as any).vehicle_brand && { brand: (payload as any).vehicle_brand },
-            },
-          }),
-        };
+        // Fusionner l'ancien utilisateur avec les nouvelles données pour préserver
+        // les champs spécifiques au rôle (permissions, driver, vehicle, etc.)
+        set(state => ({
+          user: state.user ? { ...state.user, ...res.data } : res.data,
+          isLoading: false,
+        }));
 
-        set({ user: updatedUser, isLoading: false });
       } catch (err: unknown) {
         set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
         throw err;
