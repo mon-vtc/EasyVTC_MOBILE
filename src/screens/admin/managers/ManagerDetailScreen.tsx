@@ -1,11 +1,11 @@
 // screens/admin/managers/ManagerDetailScreen.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   ActivityIndicator, Linking, Platform, Image, Modal,
-  TextInput, Alert,
+  TextInput, Alert, 
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useAdmin } from '../../../hooks/useAdmin';
@@ -40,11 +40,14 @@ function ChangeStatusModal({
   const reset = () => { setChosen(null); setReason(''); };
   const handleClose = () => { reset(); onClose(); };
 
-  const ACTIONS: { status: NextStatus; label: string; icon: string; color: string }[] = [
-    { status: 'active',   label: 'Activer',    icon: 'checkmark-circle-outline', color: '#2E7D32' },
-    { status: 'inactive', label: 'Désactiver', icon: 'pause-circle-outline',     color: '#E65100' },
-    { status: 'locked',   label: 'Suspendre',  icon: 'ban-outline',              color: '#C62828' },
+  // Define all possible actions with 'as const' to preserve literal types
+  const ALL_ACTIONS = [
+    { status: 'active' as const,   label: 'Activer',    icon: 'checkmark-circle-outline', color: '#2E7D32' },
+    { status: 'inactive' as const, label: 'Désactiver', icon: 'pause-circle-outline',     color: '#E65100' },
+    { status: 'locked' as const,   label: 'Suspendre',  icon: 'ban-outline',              color: '#C62828' },
   ].filter(a => a.status !== manager?.status);
+
+  const ACTIONS: { status: NextStatus; label: string; icon: string; color: string }[] = ALL_ACTIONS;
 
   if (!manager) return null;
 
@@ -155,16 +158,14 @@ export default function ManagerDetailScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [actionLoading,setActionLoading]= useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await fetchManagerById(managerId);
-        setManager(data);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, [managerId]);
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoading(true);
+      fetchManagerById(managerId)
+        .then(data => setManager(data))
+        .finally(() => setIsLoading(false));
+    }, [managerId])
+  );
 
   const handleStatusConfirm = async (status: NextStatus, reason: string) => {
     if (!manager) return;
@@ -172,6 +173,7 @@ export default function ManagerDetailScreen() {
     try {
       const updated = await changeManagerStatus(manager.id, { status, reason });
       if (updated) setManager(updated);
+      await fetchManagerById(manager.id); // Re-fetch to ensure all data is fresh
       setModalVisible(false);
     } catch (err: any) {
       Alert.alert('Erreur', err.message ?? 'Impossible de modifier le statut.');

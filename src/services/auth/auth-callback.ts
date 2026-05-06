@@ -6,6 +6,7 @@ export function setOnUnauthorized(callback: () => void) {
 }
 
 export function handleUnauthorized() {
+  console.log("UNAUTHORIZED TRIGGERED");
   if (onUnauthorizedCallback) {
     onUnauthorizedCallback();
   }

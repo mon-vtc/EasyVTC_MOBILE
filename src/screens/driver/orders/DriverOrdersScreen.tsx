@@ -11,13 +11,13 @@ import {
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Logo }    from '../../constants/logo';
-import { useOrdersStore } from '../../store/orders.store';
-import { useAuthStore } from '../../store/auth.store';
-import type { Order } from '../../types/orders.types';
-import type { DriverOrdersStackParamList } from '../../types/auth.types';
-import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
-import { OrderCard } from '../../components/common/OrderCard';
+import { Logo }    from '../../../constants/logo';
+import { useOrdersStore } from '../../../store/orders.store';
+import { useAuthStore } from '../../../store/auth.store';
+import type { Order } from '../../../types/orders.types';
+import type { DriverOrdersStackParamList } from '../../../types/auth.types';
+import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
+import { OrderCard } from '../../../components/common/OrderCard';
 
 export default function DriverOrdersScreen() {
   const navigation = useNavigation<NavigationProp<DriverOrdersStackParamList>>();
@@ -41,20 +41,19 @@ export default function DriverOrdersScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        {/* Barre de navigation : hamburger | logo | notif */}
-        <View style={styles.headerNav}>
-          <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={styles.navBtn}>
-            <Ionicons name="menu-outline" size={28} color={Colors.white} />
-          </TouchableOpacity>
-          <Image source={Logo.LogoEasyVTC} style={styles.logo} resizeMode="contain" />
-          <TouchableOpacity style={styles.navBtn}>
-            <Ionicons name="notifications-outline" size={24} color={Colors.white} />
-          </TouchableOpacity>
+      {/* Header */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        >
+          <Ionicons name="menu-outline" size={26} color={Colors.white} />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Bons de commande</Text>
+          <Text style={styles.headerCount}>{total} document{total > 1 ? 's' : ''}</Text>
         </View>
-        {/* Sous-header : titre + compteur */}
-        <Text style={styles.headerTitle}>Bons de commande</Text>
-        <Text style={styles.headerCount}>{total} document{total > 1 ? 's' : ''}</Text>
+        <View style={styles.headerBtn} />
       </View>
 
       <FlatList
@@ -80,22 +79,19 @@ export default function DriverOrdersScreen() {
 const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: Colors.background },
   centered:   { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
-  header: {
-    backgroundColor: Colors.bordeaux,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  headerNav: {
+  headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: 44,
+    backgroundColor: Colors.bordeaux,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
+    paddingBottom: Spacing.md,
   },
-  navBtn:      { padding: 4, width: 36, alignItems: 'center' },
-  logo:        { width: 40, height: 40 },
-  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white, marginTop: Spacing.md },
-  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: Spacing.xs },
+  headerCenter: { alignItems: 'center' },
+  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white, textAlign: 'center' },
+  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2,  },
+  headerBtn: { width: 40 },
   list:        { padding: Spacing.md, gap: Spacing.md },
   empty:      { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
   emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },

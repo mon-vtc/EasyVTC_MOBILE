@@ -17,6 +17,7 @@ import { useReservation } from '../../hooks/useReservation';
 import DriverPickerModal from '../admin/DriverPickerModal';
 import  CancelReservationModal from '../../components/common/CancelReservationModal';
 import type { Reservation , AvailableDriverDto} from '../../types/reservations.types';
+import { AppIcon } from '../../components/common/AppIcon';
 
 type ScreenRoute = RouteProp<{ ManagerReservationDetail: { reservationId: string } }, 'ManagerReservationDetail'>;
 type ScreenNav = NavigationProp<any>;
@@ -58,6 +59,11 @@ function DetailsTab({ reservation }: { reservation: Reservation }) {
   return (
     <>
       <View style={S.card}>
+        <View style={[S.card, {flex: 1, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md}]} >
+          <Text style={S.itineraryValue}>Véhicule demandé</Text>
+          <AppIcon name={reservation.vehicle_type === 'van' ? 'bus-outline' : 'car-outline'} size={20} color={Colors.bordeaux} />
+          <Text style={S.itineraryLabel}> {reservation.vehicle_type} </Text>
+        </View>
         <View style={S.itineraryRow}>
           <View style={S.track}>
             <View style={[S.dot, { backgroundColor: '#4CAF50' }]} />
@@ -319,9 +325,9 @@ function PaymentTab({ reservation }: { reservation: Reservation }) {
             <Text style={S.paymentLabel}>
               {b?.vehicle_type  ? `Prise en charge (${b.vehicle_type})` : 'Prise en charge'}
             </Text>
-            <Text style={S.paymentValue}>
+            {/* <Text style={S.paymentValue}>
               {(b?.price_breakdown?.vehicle_base_price ?? b?.price_breakdown.base_price ?? 0).toFixed(2)} €
-            </Text>
+            </Text> */}
           </View>
           {b?.price_breakdown.km_cost != null && (
             <View style={S.paymentRow}>

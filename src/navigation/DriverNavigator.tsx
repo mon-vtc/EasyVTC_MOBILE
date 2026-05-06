@@ -13,9 +13,10 @@ import DriverTripsScreen        from '../screens/driver/DriverTripsScreen';
 import DriverDocumentsScreen    from '../screens/driver/DriverDocumentsScreen';
 import DriverAvailabilityScreen from '../screens/driver/DriverAvailabilityScreen';
 import DriverProfileScreen      from '../screens/driver/DriverProfileScreen';
-import DriverOrdersScreen         from '../screens/driver/DriverOrdersScreen';
-import DriverOrderDetailsScreen   from '../screens/driver/DriverOrderDetailsScreen';
-import DriverInvoicesScreen       from '../screens/driver/DriverInvoicesScreen';
+import DriverOrdersScreen         from '../screens/driver/orders/DriverOrdersScreen';
+import DriverOrderDetailsScreen   from '../screens/driver/orders/DriverOrderDetailsScreen';
+import DriverInvoiceDetailScreen   from '../screens/driver/invoices/DriverInvoiceDetailsScreen';
+import DriverInvoicesScreen       from '../screens/driver/invoices/DriverInvoicesScreen';
 
 import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList } from '../types/auth.types';
 
@@ -40,6 +41,17 @@ function DriverOrdersStackScreen() {
       <DriverOrdersStack.Screen name="DriverOrdersList"   component={DriverOrdersScreen} />
       <DriverOrdersStack.Screen name="DriverOrderDetails" component={DriverOrderDetailsScreen} />
     </DriverOrdersStack.Navigator>
+  );
+}
+
+const DriverInvoicesStack = createNativeStackNavigator();
+
+function DriverInvoicesStackScreen() {
+  return (
+    <DriverInvoicesStack.Navigator screenOptions={{ headerShown: false }}>
+      <DriverInvoicesStack.Screen name="DriverInvoicesList" component={DriverInvoicesScreen} />
+      <DriverInvoicesStack.Screen name="DriverInvoiceDetails" component={DriverInvoiceDetailScreen} />
+    </DriverInvoicesStack.Navigator>
   );
 }
 
@@ -159,13 +171,14 @@ export default function DriverNavigator() {
 
       <Drawer.Screen
         name="DriverInvoices"
-        component={DriverInvoicesScreen}
+        component={DriverInvoicesStackScreen}
         options={{
           drawerLabel: () => <DrawerLabel icon="receipt-outline" label="Factures" />,
+          headerShown: false,
         }}
       />
 
-           <Drawer.Screen
+      <Drawer.Screen
         name="DriverProfile"
         component={DriverProfileScreen}
         options={{

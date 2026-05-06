@@ -4,16 +4,18 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl,
+  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, Platform,
 } from 'react-native';
 import { Ionicons }         from '@expo/vector-icons';
-import { useInvoicesStore } from '../../store/invoices.store';
-import { useAuthStore }     from '../../store/auth.store';
-import { invoicesApi }      from '../../services/api/invoices.api';
-import type { Invoice }     from '../../types/invoices.types';
-import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import { useInvoicesStore } from '../../../store/invoices.store';
+import { useAuthStore }     from '../../../store/auth.store';
+import { invoicesApi }      from '../../../services/api/invoices.api';
+import type { Invoice }     from '../../../types/invoices.types';
+import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -23,7 +25,7 @@ function fmtAmount(n: number) {
   return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function InvoiceCard({ invoice, token }: { invoice: Invoice; token: string }) {
+function InvoiceCard({ invoice, token, onPress }: { invoice: Invoice; token: string; onPress: (invoice: Invoice) => void }) {
   const [opening, setOpening] = useState(false);
   const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
   const snap = invoice.trip_snapshot;
@@ -39,7 +41,7 @@ function InvoiceCard({ invoice, token }: { invoice: Invoice; token: string }) {
   };
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={() => onPress(invoice)} activeOpacity={0.8}>
       <View style={styles.row}>
         <Text style={styles.invNum}>{invoice.invoice_number}</Text>
         <Text style={styles.dateText}>Émise le {fmtDate(invoice.issued_at)}</Text>
@@ -84,11 +86,12 @@ function InvoiceCard({ invoice, token }: { invoice: Invoice; token: string }) {
         }
         <Text style={styles.pdfBtnText}>{opening ? 'Ouverture…' : 'Facture PDF'}</Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 export default function DriverInvoicesScreen() {
+  const navigation = useNavigation<NavigationProp<any>>();
   const { invoices, total, isLoading, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
 
@@ -103,17 +106,31 @@ export default function DriverInvoicesScreen() {
     return <View style={styles.centered}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>;
   }
 
+  const handleViewInvoice = (invoice: Invoice) => {
+      navigation.navigate('DriverInvoiceDetails', { invoiceId: invoice.id });
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mes factures</Text>
-        <Text style={styles.headerCount}>{total} facture{total > 1 ? 's' : ''}</Text>
+      {/* Header */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        >
+          <Ionicons name="menu-outline" size={26} color={Colors.white} />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Mes factures</Text>
+          <Text style={styles.headerCount}>{total} facture{total > 1 ? 's' : ''}</Text>
+        </View>
+        <View style={styles.headerBtn} />
       </View>
 
       <FlatList
         data={invoices}
         keyExtractor={(i) => i.id}
-        renderItem={({ item }) => <InvoiceCard invoice={item} token={token} />}
+        renderItem={({ item }) => <InvoiceCard invoice={item} token={token} onPress={handleViewInvoice} />}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
         ListEmptyComponent={
@@ -133,14 +150,19 @@ export default function DriverInvoicesScreen() {
 const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: Colors.background },
   centered:   { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
-  header: {
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: Colors.bordeaux,
     paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xl,
+    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
     paddingBottom: Spacing.md,
   },
-  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white },
-  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2 },
+  headerCenter: { alignItems: 'center' },
+  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white, textAlign: 'center' },
+  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2,  },
+  headerBtn: { width: 40 },
   list:        { padding: Spacing.md, gap: Spacing.md },
   card: {
     backgroundColor: Colors.surface, borderRadius: Radius.md,

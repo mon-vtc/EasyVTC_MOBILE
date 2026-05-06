@@ -92,6 +92,11 @@ export type DriverOrdersStackParamList = {
   DriverOrderDetails: { orderId: string };
 };
 
+export type DriverInvoicesStackParamList = {
+  DriverInvoicesList:   undefined;
+  DriverInvoiceDetails: { invoiceId: string };
+};
+
 export type DriverDrawerParamList = {
   DriverHome:         undefined;
   DriverReservations: NavigatorScreenParams<DriverReservationsStackParamList>;
@@ -101,7 +106,8 @@ export type DriverDrawerParamList = {
   DriverProfile:      undefined;
   // S4 — Documents financiers
   DriverOrders:       NavigatorScreenParams<DriverOrdersStackParamList>;
-  DriverInvoices:     undefined;
+  DriverInvoices:     NavigatorScreenParams<DriverInvoicesStackParamList>;
+
 };
 
 
@@ -152,6 +158,17 @@ export type ReservationsStackParamList = {
   AdminReservationDetail: { reservationId: string };
 };
 
+export type AdminInvoicesStackParamList = {
+    AdminInvoicesList:   undefined;
+    InvoiceDetails:      { invoiceId: string };
+}
+
+export type AdminOrderStackParamList = {
+    AdminOrdersList:     undefined;
+    OrderDetails:        { orderId: string };
+}
+
+
 
 // ── Drawer Admin ─────────────────────────────────────────────────
 // AdminDrivers pointe vers le stack imbriqué DriversStackParamList
@@ -169,6 +186,6 @@ export type AdminDrawerParamList = {
   FlatRates:         undefined;
   AdminVehicleTypes: undefined;
   // S4 — Documents financiers
-  AdminOrders:       undefined;
-  AdminInvoices:     undefined;
+  AdminOrders:       NavigatorScreenParams<AdminOrderStackParamList>;
+  AdminInvoices:     NavigatorScreenParams<AdminInvoicesStackParamList>;
 };
