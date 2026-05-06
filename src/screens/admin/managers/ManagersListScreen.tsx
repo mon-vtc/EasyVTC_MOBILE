@@ -71,10 +71,10 @@ export default function ManagersListScreen() {
   const renderItem = ({ item }: { item: UserProfile }) => (
     <ManagerListItem
       manager={item}
-      onPress={() => navigation.navigate('ManagerDetail',      { managerId: item.id })}
-      onEdit={()  => navigation.navigate('EditManager',        { managerId: item.id })}
-      onView={() => navigation.navigate('ManagerDetail',       { managerId: item.id })}
-      onPermissions={() => navigation.navigate('ManagerPermissions', { managerId: item.id })}
+      onPress={() => { setSearch(''); navigation.navigate('ManagerDetail',      { managerId: item.id })}}
+      onEdit={()  => { setSearch(''); navigation.navigate('EditManager',        { managerId: item.id })}}
+      onView={() => { setSearch(''); navigation.navigate('ManagerDetail',       { managerId: item.id })}}
+      onPermissions={() => { setSearch(''); navigation.navigate('ManagerPermissions', { managerId: item.id })}}
     />
   );
 

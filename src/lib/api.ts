@@ -25,9 +25,18 @@ async function request<T>(
     headers,
   });
   
-
+  const skipAuthRedirect = [
+    '/auth/login',
+    '/auth/refresh',
+    '/auth/google/token',
+    '/auth/register',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/auth/change-password',
+    '/users/me/avatar',
+  ]
   // Intercepter les 401 (token expiré) et rediriger vers connexion
-  if (res.status === 401) {
+  if (res.status === 401 && !skipAuthRedirect.includes(endpoint)) {
     handleUnauthorized();
     // Essayer de parser le JSON d'erreur, sinon retourner un message générique
     try {

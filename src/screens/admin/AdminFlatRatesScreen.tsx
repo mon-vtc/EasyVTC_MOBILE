@@ -16,6 +16,7 @@ import { Logo }          from '../../constants/logo';
 import { AppIcon }       from '../../components/common/AppIcon';
 import { Colors, Spacing, Radius } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
+import type {AppIconProps}  from '../../types/app-icon-props.types';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES LOCAUX
@@ -205,7 +206,7 @@ function ThreeDotMenu({
               style={menu.item}
               onPress={() => { onClose(); onAction(a.key); }}
             >
-              <AppIcon name={a.icon} size={18} color={a.color ?? Colors.textPrimary} />
+              <AppIcon name={a.icon as AppIconProps['name']} size={18} color={a.color ?? Colors.textPrimary} />
               <Text style={[menu.itemText, a.color ? { color: a.color } : undefined]}>
                 {a.label}
               </Text>
