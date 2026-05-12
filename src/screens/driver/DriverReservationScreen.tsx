@@ -10,6 +10,14 @@ import type { Reservation, ReservationStatus } from '../../types/reservations.ty
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriverReservationsStackParamList } from '../../types/auth.types';
 import { Logo } from '../../constants/logo';
+import { AppIcon } from '../../components/common/AppIcon';
+import type { ClientStackParamList, DriverInvoicesStackParamList } from '../../types/auth.types';
+import {
+  useNavigation, useRoute,
+  type RouteProp, type NavigationProp,
+} from '@react-navigation/native';
+import { useAuthStore }        from '../../store/auth.store';
+import { invoicesApi }         from '../../services/api/invoices.api';
 
 type Props = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationDetail'>;
 
@@ -47,13 +55,16 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
   const { selected, fetchById, start, complete, cancel } = useReservation();
   const [isLoading, setIsLoading]                       = useState(false);
   const [confirmModal, setConfirmModal]                 = useState(false);
-
+  type ConfirmationNav   = NavigationProp<DriverInvoicesStackParamList, 'DriverInvoiceDetails'>;
   const reservation = selected;
 
   const refresh = useCallback(async () => {
     try { setIsLoading(true); await fetchById(reservationId); }
     finally { setIsLoading(false); }
   }, [fetchById, reservationId]);
+
+  const accessToken  = useAuthStore(s => s.accessToken);
+  const nav   = useNavigation<ConfirmationNav>();
 
   useEffect(() => { void refresh(); }, [refresh]);
 
@@ -128,6 +139,23 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
       Alert.alert('Support', 'Contactez le support au +33 9 00 00 00 00')
     );
   };
+
+  const handleViewInvoice = useCallback(async () => {
+    if (!reservation?.id || !accessToken) return;
+    try {
+      const res = await invoicesApi.fetchByReservationId(accessToken, reservation.id);
+      if (res.ok && res.data) {
+        nav.navigate('DriverInvoiceDetails', { invoiceId: res.data.id });
+      } else {
+        Alert.alert(
+          'Facture indisponible',
+          res.message ?? 'La facture n\'est pas encore disponible pour cette course.',
+        );
+      }
+    } catch {
+      Alert.alert('Erreur', 'Impossible de récupérer la facture. Veuillez réessayer.');
+    }
+  }, [reservation?.id, accessToken, nav]);
 
   if (isLoading || !reservation) {
     return (
@@ -309,6 +337,17 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
             </TouchableOpacity>
           )}
 
+          {status === 'completed' && (
+            <TouchableOpacity
+              style={styles.btnSecondary}
+              activeOpacity={0.85}
+              onPress={handleViewInvoice}
+            >
+              <AppIcon name="document-text-outline" size={18} color={Colors.white} />
+              <Text style={styles.btnSecondaryText}>Voir la facture</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity style={styles.supportBtn} onPress={handleSupport}>
             <Ionicons name="headset-outline" size={18} color={Colors.textSecondary} />
             <Text style={styles.supportBtnText}>Contacter le support</Text>
@@ -428,7 +467,8 @@ const styles = StyleSheet.create({
   secondaryBtnText: { color: Colors.bordeaux, fontWeight: '700', fontSize: Fonts.size.md },
   supportBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm },
   supportBtnText:{ color: Colors.textSecondary, fontSize: Fonts.size.sm, fontWeight: '600' },
-
+  btnSecondary:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm, borderWidth: 1, borderColor: Colors.bordeaux, borderRadius: Radius.md, backgroundColor: Colors.bordeaux },
+  btnSecondaryText: { color: Colors.white, fontSize: Fonts.size.sm, fontWeight: '600' },
   // Modal
   modalOverlay:   { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
   modalBox:       { width: '85%', backgroundColor: Colors.white, borderRadius: Radius.lg, padding: Spacing.lg },

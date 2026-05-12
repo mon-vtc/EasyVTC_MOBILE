@@ -214,21 +214,32 @@ export default function BookingConfirmationScreen() {
   // Tente de récupérer l'ordre lié à la réservation. L'ordre peut ne pas exister
   // encore (généré après attribution du chauffeur). Si trouvé → OrderDetails
   // directement. Sinon → liste MyOrders.
-  const handleViewOrder = async () => {
-    if (!reservationId || !accessToken || isLoadingOrder) return;
-    setIsLoadingOrder(true);
-    try {
-      const res = await ordersApi.getByReservation(accessToken, reservationId);
-      if (res.ok && res.data) {
-        nav.navigate('OrderDetails', { orderId: res.data.id });
-      } else {
-        nav.navigate('ClientTabs', { screen: 'MyOrders' });
+  const handleViewOrderWithRetry = async (retries = 3, delay = 2500) => {
+    if (!reservationId || !accessToken) return;
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        const res = await ordersApi.getByReservation(accessToken, reservationId);
+        if (res.ok && res.data) {
+          nav.navigate('OrderDetails', { orderId: res.data.id });
+          return; // Succès, on arrête les tentatives
+        }
+      } catch (e) {
+        console.warn(`Attempt ${i + 1} failed:`, e);
       }
-    } catch {
-      nav.navigate('ClientTabs', { screen: 'MyOrders' });
-    } finally {
-      setIsLoadingOrder(false);
+      // Attendre avant de réessayer
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
+    // Si toutes les tentatives échouent, rediriger vers la liste
+    nav.navigate('ClientTabs', { screen: 'MyOrders' });
+  };
+
+  const handleViewOrder = async () => {
+    setIsLoadingOrder(true);
+    await handleViewOrderWithRetry();
+    setIsLoadingOrder(false);
   };
 
   // ── Animations entrée page ────────────────────────────────────────────────

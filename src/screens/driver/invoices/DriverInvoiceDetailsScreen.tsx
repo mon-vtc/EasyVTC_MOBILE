@@ -30,13 +30,13 @@ import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useInvoicesStore }       from '../../../store/invoices.store';
 import { useAuthStore }           from '../../../store/auth.store';
 import { invoicesApi }            from '../../../services/api/invoices.api';
-import type { ClientStackParamList } from '../../../types/auth.types';
+import type { DriverInvoicesStackParamList } from '../../../types/auth.types';
 import type { InvoiceAdjustment } from '../../../types/invoices.types';
 import { Logo }                   from '../../../constants/logo';
 
 // ── Types navigation ───────────────────────────────────────────────────────────
-type NavRoute = RouteProp<ClientStackParamList, 'InvoiceDetails'>;
-type NavProp  = NavigationProp<ClientStackParamList, 'InvoiceDetails'>;
+type NavRoute = RouteProp<DriverInvoicesStackParamList, 'DriverInvoiceDetails'>;
+type NavProp  = NavigationProp<DriverInvoicesStackParamList, 'DriverInvoiceDetails'>;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function fmtDate(iso: string): string {

@@ -4,10 +4,10 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Linking,
-  RefreshControl,
+  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useOrdersStore } from '../../store/orders.store';
@@ -22,6 +22,8 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
   const { orders, total, isLoading, error, fetchMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const load = useCallback(async () => {
     try { await fetchMine(token); } catch { /* handled in store */ }
   }, [token]);
@@ -34,6 +36,18 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
       clearError();
     }
   }, [error]);
+
+  const filteredOrders = useMemo(() => {
+    if (!searchQuery) return orders;
+    const query = searchQuery.toLowerCase();
+    return orders.filter(order =>
+      order.order_number.toLowerCase().includes(query) ||
+      order.trip_snapshot.pickup_address.toLowerCase().includes(query) ||
+      order.trip_snapshot.dest_address.toLowerCase().includes(query) ||
+      order.passenger_snapshot.first_name.toLowerCase().includes(query) ||
+      order.passenger_snapshot.last_name.toLowerCase().includes(query)
+    );
+  }, [orders, searchQuery]);
 
   const handleCardPress = (order: Order) => {
     navigation.navigate('OrderDetails', { orderId: order.id });
@@ -52,11 +66,25 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Mes bons de commande</Text>
-        <Text style={styles.headerCount}>{total} document{total > 1 ? 's' : ''}</Text>
+        <Text style={styles.headerCount}>{filteredOrders.length} document{filteredOrders.length > 1 ? 's' : ''}</Text>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Rechercher par n°, adresse, client..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          clearButtonMode="while-editing"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}><Ionicons name="close-circle" size={20} color={Colors.textMuted} /></TouchableOpacity>
+        )}
       </View>
 
       <FlatList
-        data={orders}
+        data={filteredOrders}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <OrderCard order={item} token={token} role="client" onPress={handleCardPress} />
@@ -65,7 +93,7 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />
         }
-        ListEmptyComponent={
+        ListEmptyComponent={filteredOrders.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="document-outline" size={48} color={Colors.textMuted} />
             <Text style={styles.emptyTitle}>Aucun bon de commande</Text>
@@ -73,7 +101,7 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
               Les bons sont générés automatiquement après l'attribution d'un chauffeur.
             </Text>
           </View>
-        }
+        ) : null}
       />
     </View>
   );
@@ -126,4 +154,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: Spacing.lg,
   },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.sm,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  searchIcon: { marginRight: Spacing.sm },
+  searchInput: { flex: 1, fontSize: Fonts.size.md, color: Colors.textPrimary, padding: 0 },
 });

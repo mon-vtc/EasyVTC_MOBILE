@@ -3,12 +3,12 @@
 // Sprint 4 — EazyVTC
 // ══════════════════════════════════════════════════════════════════════════════
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, Platform,
+  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { Ionicons }         from '@expo/vector-icons';
 import { useInvoicesStore } from '../../../store/invoices.store';
@@ -95,6 +95,8 @@ export default function DriverInvoicesScreen() {
   const { invoices, total, isLoading, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const load = useCallback(async () => {
     try { await fetch(token); } catch { /* handled */ }
   }, [token]);
@@ -106,6 +108,17 @@ export default function DriverInvoicesScreen() {
     return <View style={styles.centered}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>;
   }
 
+  const filteredInvoices = useMemo(() => {
+    if (!searchQuery) return invoices;
+    const query = searchQuery.toLowerCase();
+    return invoices.filter(invoice =>
+      invoice.invoice_number.toLowerCase().includes(query) ||
+      invoice.trip_snapshot.pickup_address.toLowerCase().includes(query) ||
+      invoice.trip_snapshot.dest_address.toLowerCase().includes(query) ||
+      invoice.driver_billing.first_name.toLowerCase().includes(query) ||
+      invoice.driver_billing.last_name.toLowerCase().includes(query)
+    );
+  }, [invoices, searchQuery]);
   const handleViewInvoice = (invoice: Invoice) => {
       navigation.navigate('DriverInvoiceDetails', { invoiceId: invoice.id });
   };
@@ -127,13 +140,27 @@ export default function DriverInvoicesScreen() {
         <View style={styles.headerBtn} />
       </View>
 
+      {/* Search Bar */}
+      <View style={searchAndListStyles.searchContainer}>
+        <Ionicons name="search" size={20} color={Colors.textMuted} style={searchAndListStyles.searchIcon} />
+        <TextInput
+          style={searchAndListStyles.searchInput}
+          placeholder="Rechercher par numéro, adresse, client..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          clearButtonMode="while-editing"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}><Ionicons name="close-circle" size={20} color={Colors.textMuted} /></TouchableOpacity>
+        )}
+      </View>
       <FlatList
-        data={invoices}
+        data={filteredInvoices}
         keyExtractor={(i) => i.id}
         renderItem={({ item }) => <InvoiceCard invoice={item} token={token} onPress={handleViewInvoice} />}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
-        ListEmptyComponent={
+        ListEmptyComponent={filteredInvoices.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="receipt-outline" size={48} color={Colors.textMuted} />
             <Text style={styles.emptyTitle}>Aucune facture</Text>
@@ -141,7 +168,7 @@ export default function DriverInvoicesScreen() {
               Les factures sont générées automatiquement à la clôture de chaque course.
             </Text>
           </View>
-        }
+        ) : null}
       />
     </View>
   );
@@ -196,3 +223,21 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },
   emptySubtitle: { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: Spacing.lg },
 });
+
+const searchAndListStyles = StyleSheet.create({
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  searchIcon: { marginRight: Spacing.sm },
+  searchInput: { flex: 1, fontSize: Fonts.size.md, color: Colors.textPrimary, padding: 0 },
+  list: { padding: Spacing.md, paddingTop: Spacing.sm },
+});
+Object.assign(styles, searchAndListStyles);
