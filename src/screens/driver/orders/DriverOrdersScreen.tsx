@@ -4,9 +4,10 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, Image,
-  StyleSheet, ActivityIndicator, Alert, RefreshControl, Platform,
+  StyleSheet, ActivityIndicator, Alert, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
@@ -24,6 +25,8 @@ export default function DriverOrdersScreen() {
   const { orders, total, isLoading, error, fetchDriverMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const load = useCallback(async () => {
     try { await fetchDriverMine(token); } catch { /* handled */ }
   }, [token]);
@@ -34,6 +37,18 @@ export default function DriverOrdersScreen() {
   const handleViewOrder = (order: Order) => {
     navigation.navigate('DriverOrderDetails', { orderId: order.id });
   };
+
+  const filteredOrders = useMemo(() => {
+    if (!searchQuery) return orders;
+    const query = searchQuery.toLowerCase();
+    return orders.filter(order =>
+      order.order_number.toLowerCase().includes(query) ||
+      order.trip_snapshot.pickup_address.toLowerCase().includes(query) ||
+      order.trip_snapshot.dest_address.toLowerCase().includes(query) ||
+      order.passenger_snapshot.first_name.toLowerCase().includes(query) ||
+      order.passenger_snapshot.last_name.toLowerCase().includes(query)
+    );
+  }, [orders, searchQuery]);
 
   if (isLoading && orders.length === 0) {
     return <View style={styles.centered}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>;
@@ -51,26 +66,40 @@ export default function DriverOrdersScreen() {
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Bons de commande</Text>
-          <Text style={styles.headerCount}>{total} document{total > 1 ? 's' : ''}</Text>
+          <Text style={styles.headerCount}>{filteredOrders.length} document{filteredOrders.length > 1 ? 's' : ''}</Text>
         </View>
         <View style={styles.headerBtn} />
       </View>
 
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Rechercher par n°, adresse, client..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          clearButtonMode="while-editing"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}><Ionicons name="close-circle" size={20} color={Colors.textMuted} /></TouchableOpacity>
+        )}
+      </View>
+
       <FlatList
-        data={orders}
+        data={filteredOrders}
         keyExtractor={(o) => o.id}
         renderItem={({ item }) => (
           <OrderCard order={item} token={token} role="driver" onPress={handleViewOrder} />
         )}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
-        ListEmptyComponent={
+        ListEmptyComponent={filteredOrders.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="document-outline" size={48} color={Colors.textMuted} />
             <Text style={styles.emptyTitle}>Aucun bon de commande</Text>
             <Text style={styles.emptySubtitle}>Les bons apparaissent ici après attribution d'une course.</Text>
           </View>
-        }
+        ) : null}
       />
     </View>
   );
@@ -96,4 +125,18 @@ const styles = StyleSheet.create({
   empty:      { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
   emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },
   emptySubtitle: { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: Spacing.lg },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  searchIcon: { marginRight: Spacing.sm },
+  searchInput: { flex: 1, fontSize: Fonts.size.md, color: Colors.textPrimary, padding: 0 },
 });

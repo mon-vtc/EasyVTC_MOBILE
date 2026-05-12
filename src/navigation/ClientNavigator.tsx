@@ -158,11 +158,6 @@ function ClientTabs() {
         component={MyInvoicesScreen}
         options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
       />
-      <Tab.Screen
-        name="OrderDetails"
-        component={OrderDetailsScreen}
-        options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
-      />
     </Tab.Navigator>
   );
 }
