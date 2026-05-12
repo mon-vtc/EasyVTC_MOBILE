@@ -32,6 +32,7 @@ type FormValues = {
   capacity:          string;
   icon:              string;
   base_price_france: string;
+  base_price_senegal: string;
   is_active:         boolean;
   sort_order:        string;
 };
@@ -44,6 +45,7 @@ function emptyForm(): FormValues {
     capacity:          '4',
     icon:              'car-outline',
     base_price_france: '',
+    base_price_senegal: '',
     is_active:         true,
     sort_order:        '0',
   };
@@ -57,6 +59,7 @@ function recordToForm(r: VehicleTypeRecord): FormValues {
     capacity:          String(r.capacity),
     icon:              r.icon ?? 'car-outline',
     base_price_france: String(r.base_price_france),
+    base_price_senegal: String(r.base_price_senegal),
     is_active:         r.is_active,
     sort_order:        String(r.sort_order),
   };
@@ -280,6 +283,7 @@ function VehicleTypeFormModal({
             <Field label="Capacité (passagers) *" value={form.capacity} onChange={set('capacity')} keyboardType="numeric" placeholder="4" />
             <Field label="Icône Ionicons" value={form.icon} onChange={set('icon')} placeholder="car-outline" />
             <Field label="Prix de base (€) *" value={form.base_price_france} onChange={set('base_price_france')} keyboardType="decimal-pad" placeholder="18.00" />
+            {/* <Field label="Prix de base (€) - Sénégal" value={form.base_price_senegal} onChange={set('base_price_senegal')} keyboardType="decimal-pad" placeholder="18.00"  /> */}
             <Field label="Ordre d'affichage" value={form.sort_order} onChange={set('sort_order')} keyboardType="numeric" placeholder="0" />
 
             <View style={modal.switchRow}>
@@ -359,6 +363,7 @@ export default function AdminVehicleTypesScreen() {
           icon:               values.icon.trim() || null,
           base_price_france:  toFloat(values.base_price_france),
           // base_price_senegal: toInt(values.base_price_senegal),
+          base_price_senegal: toFloat(values.base_price_senegal),
           is_active:          values.is_active,
           sort_order:         toInt(values.sort_order),
         };
@@ -372,7 +377,7 @@ export default function AdminVehicleTypesScreen() {
           capacity:           toInt(values.capacity),
           icon:               values.icon.trim() || null,
           base_price_france:  toFloat(values.base_price_france),
-          // base_price_senegal: toInt(values.base_price_senegal),
+          base_price_senegal: toFloat(values.base_price_senegal),
           is_active:          values.is_active,
           sort_order:         toInt(values.sort_order),
         };
@@ -420,15 +425,18 @@ export default function AdminVehicleTypesScreen() {
           text: 'Supprimer',
           style: 'destructive',
           onPress: async () => {
+            setSaving(true); // Activer l'indicateur de chargement si nécessaire
             try {
               await deleteType(item.id);
+              Alert.alert('Succès', `Le type "${item.label}" a été supprimé.`);
             } catch (err: unknown) {
               const msg = err instanceof Error ? err.message : 'Erreur lors de la suppression.';
               Alert.alert('Impossible de supprimer', msg);
             }
           },
         },
-      ]
+      ],
+      { cancelable: false } // Empêche la fermeture de l'alerte en dehors des boutons
     );
   }, [deleteType]);
 
