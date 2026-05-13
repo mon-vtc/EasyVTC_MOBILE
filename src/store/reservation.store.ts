@@ -56,14 +56,13 @@ interface ReservationState {
   // ── Actions chauffeur ──────────────────────────────────────────────────────
   arrive: (token: string, id: string) => Promise<void>;
   start:  (token: string, id: string) => Promise<void>;
-  complete: (
-    token:                string,
-    id:                   string,
-    actual_distance_km?:  number,
-    actual_duration_min?: number,
-    driver_notes?:        string,
-    price_adjusted?:      number,
-  ) => Promise<void>;
+  complete: (token: string, id: string, payload?: {
+    actual_distance_km?:  number;
+    actual_duration_min?: number;
+    driver_notes?:        string;
+    price_adjusted?:      number;
+  }) => Promise<void>;
+
 
   // ── Actions admin ──────────────────────────────────────────────────────────
   assign: (token: string, id: string, driverId: string) => Promise<void>;
@@ -232,17 +231,19 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     }
   },
 
-  complete: async (token, id, actual_distance_km, actual_duration_min, driver_notes, price_adjusted) => {
+  complete: async (token, id, payload) => {
     set({ isLoading: true, error: null });
+    console.log('Completing ride with:', { id, ...payload });
     try {
       const res = await reservationApi.complete(
         token, id,
-        actual_distance_km,
-        actual_duration_min,
-        driver_notes,
-        price_adjusted,
+        payload?.actual_distance_km,
+        payload?.actual_duration_min,
+        payload?.driver_notes,
+        payload?.price_adjusted,
       );
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur complétion');
+      console.log('Ride completed, response:', res.data);
       set({ activeRide: null, isLoading: false });
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });

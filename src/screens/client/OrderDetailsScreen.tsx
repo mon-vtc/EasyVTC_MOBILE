@@ -91,7 +91,7 @@ export default function OrderDetailsScreen() {
   const handleOpenPdf = async () => {
     setOpeningPdf(true);
     try {
-      const res = await ordersApi.fetchPdfUrl(token, order.id);
+      const res = await ordersApi.fetchPdfUrl(token, order!.id);
       if (!res.ok || !res.data?.url) throw new Error(res.message ?? 'URL indisponible');
       await Linking.openURL(res.data.url);
     } catch {

@@ -186,6 +186,22 @@ export default function DriverNavigator() {
         }}
       />
 
+      <Drawer.Screen
+        name="DriverOrderDetails"
+        component={DriverOrderDetailsScreen}
+        options={{
+          drawerItemStyle: { display: 'none' },
+          headerShown: false,
+        }}
+      />
+      <Drawer.Screen
+        name="DriverInvoiceDetails"
+        component={DriverInvoiceDetailScreen}
+        options={{
+          drawerItemStyle: { display: 'none' },
+          headerShown: false,
+        }}
+      />
 
     </Drawer.Navigator>
   );

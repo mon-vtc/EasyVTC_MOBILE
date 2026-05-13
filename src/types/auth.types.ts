@@ -107,6 +107,8 @@ export type DriverDrawerParamList = {
   // S4 — Documents financiers
   DriverOrders:       NavigatorScreenParams<DriverOrdersStackParamList>;
   DriverInvoices:     NavigatorScreenParams<DriverInvoicesStackParamList>;
+  DriverOrderDetails: { orderId: string };
+  DriverInvoiceDetails: { invoiceId: string };
 
 };
 

@@ -456,8 +456,18 @@ export function useReservation() {
     cancel:   useCallback((id: string, reason?: string)                                                             => _cancel(accessTokenRef.current!, id, reason), []),
     arrive:   useCallback((id: string)                                                                               => _arrive(accessTokenRef.current!, id), []),
     start:    useCallback((id: string)                                                                               => _start(accessTokenRef.current!, id), []),
-    complete: useCallback((id: string, actual_distance_km?: number, actual_duration_min?: number, driver_notes?: string, price_adjusted?: number) =>
-      _complete(accessTokenRef.current!, id, actual_distance_km, actual_duration_min, driver_notes, price_adjusted), []),
+    complete: useCallback(
+      (
+        id: string,
+        payload?: {
+          actual_distance_km?: number;
+          actual_duration_min?: number;
+          driver_notes?: string;
+          price_adjusted?: number;
+        },
+      ) => _complete(accessTokenRef.current!, id, payload),
+      [],
+    ),
     assign:   useCallback((id: string, driverId: string)                                                            => _assign(accessTokenRef.current!, id, driverId), []),
 
   };
