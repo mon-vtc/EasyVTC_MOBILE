@@ -36,7 +36,7 @@ const DRIVER_STATUS_CONFIG: Record<string, { label: string; bg: string; color: s
 };
 
 // ── Ligne info ──────────────────────────────────────────────────
-function InfoRow({ icon, value }: { icon: keyof typeof Ionicons.glyphMap; value: string }) {
+function InfoRow({ icon, value }: { icon: keyof typeof Ionicons.glyphMap; value: string | null }) {
   return (
     <View style={infoStyles.row}>
       <Ionicons name={icon} size={16} color={Colors.textMuted} />
@@ -67,7 +67,7 @@ function TabInformations({ driver }: { driver: DriverUser }) {
     { label: 'Type de véhicule', value: vehicleTypeLabel },
     ...(vehicle ? [
       { label: 'Marque / Modèle', value: [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || '—' },
-      { label: 'Immatriculation',  value: vehicle.plate_number },
+      { label: 'Immatriculation',  value: vehicle.plate_number ?? '—' },
       { label: 'Couleur',          value: vehicle.color ?? '—' },
       { label: 'Année',            value: vehicle.year ? String(vehicle.year) : '—' },
     ] : []),
@@ -355,7 +355,7 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
           style: status === 'rejected' ? 'destructive' : 'default',
           onPress: async () => {
             try {
-              await changeDriverStatus(driver.driver.id, {
+              await changeDriverStatus(driver.driver!.id, {
                 status,
                 reason: `Changement de statut par l'administrateur : ${labels[status]}.`,
               });
