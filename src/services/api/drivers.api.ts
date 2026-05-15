@@ -35,4 +35,6 @@ export const driverApi = {
   /** PATCH /admin/drivers/:id/status — changement de statut chauffeur */
   changeDriverStatus: (token: string, driverId: string, payload: ChangeDriverStatusPayload): Promise<ApiResponse<DriverWithUser>> =>
     api.patch(`/admin/drivers/${driverId}/status`, payload, token),
+
+  
 };

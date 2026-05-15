@@ -38,7 +38,7 @@ function StatusCard({
   driverStatus: string | null;
   onToggle:     (v: boolean) => void;
 }) {
-  const canGoOnline = driverStatus === 'active';
+  const canGoOnline = driverStatus === 'active' || driverStatus === 'probationary';
   const isOnTrip = driverStatus === 'on_trip';
 
   return (
@@ -249,7 +249,7 @@ export default function DriverHomeScreen({ navigation }: any) {
 
   // ── Toggle disponibilité ──────────────────────────────────────────────────
   const handleToggle = useCallback(async (value: boolean) => {
-    if (value && status !== 'active') {
+    if (value && status !== 'active' && status !== 'probationary') {
       Alert.alert(
         'Profil non validé',
         'Votre profil chauffeur doit être validé par un administrateur avant de pouvoir passer en ligne.',

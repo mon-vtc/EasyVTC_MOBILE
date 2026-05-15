@@ -392,6 +392,9 @@ export function useReservation() {
     return _submitBooking(accessTokenRef.current!, COUNTRY);
   }, [_submitBooking]);
 
+  const homeReservations       = useReservationStore(s => s.homeReservations);
+  const _fetchHomeReservations = useReservationStore(s => s.fetchHomeReservations);
+
   return {
     // État formulaire
     booking,
@@ -441,6 +444,13 @@ export function useReservation() {
     // Soumission
     submitBooking,
     resetBooking: _resetBooking,
+
+    //
+    homeReservations,
+    fetchHomeReservations: useCallback(
+      () => _fetchHomeReservations(accessTokenRef.current!),
+      [],
+    ),
 
     // Mes réservations
     reservations,

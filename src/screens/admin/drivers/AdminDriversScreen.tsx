@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Platform, RefreshControl, Image,
+  TextInput, Platform, RefreshControl, Image, Alert
 } from 'react-native';
 
 import { Ionicons }  from '@expo/vector-icons';
@@ -19,6 +19,7 @@ import type {
     AdminDrawerParamList,
     DriversStackParamList,
 } from '../../../types/auth.types'; // ← une seule source
+import errorMap from 'zod/v3/locales/en.cjs';
 
 type Props = CompositeScreenProps<
   NativeStackScreenProps<DriversStackParamList, 'DriversList'>,
@@ -37,11 +38,31 @@ const TABS: { key: FilterTab; label: string }[] = [
 function DriverCard({
   driver,
   onPress,
+  onChangeDriverStatus, // Nouvelle prop
+  onRefresh,
   }: {
     driver:  AuthUser;
     onPress: () => void;
+    onChangeDriverStatus: (driverId: string, dto: { status: 'active' | 'rejected' | 'suspended' | 'probationary' | 'pending'; reason: string; }) => Promise<AuthUser | null>;
+    onRefresh: () => void;
   }) {
   const isOnline   = driver.driver?.is_online ?? false;
+
+  const handleChangeStatus = async (status: 'probationary' | 'pending') => {
+    const driverId = driver.driver?.id ?? driver.id;
+    const reason = status === 'probationary' 
+      ? 'Passage en probationnaire depuis la liste' 
+      : 'Retour en attente depuis la liste';
+
+    try {
+      const updatedDriver = await onChangeDriverStatus(driverId, { status, reason });
+      if (!updatedDriver) throw new Error('Mise à jour du statut du chauffeur a échoué');
+      Alert.alert('Succès', 'Le statut du chauffeur a été mis à jour.');
+      onRefresh();
+    } catch (error: any) {
+      Alert.alert('Erreur', error?.message ?? 'Une erreur est survenue.');
+    }
+  };
   const lastSeen   = (driver as any).last_seen_label ?? (isOnline ? 'En ligne' : 'Hors ligne');
   const rating     = (driver as any).rating ?? 0;
   const trips      = (driver as any).trips_count ?? 0;
@@ -96,6 +117,17 @@ function DriverCard({
             {lastSeen}
           </Text>
         </View>
+        {driver.driver?.status === 'pending'  && (
+          <TouchableOpacity style={{ padding: Spacing.xs, backgroundColor: Colors.warningLight, borderRadius: Radius.sm }} onPress={() => handleChangeStatus('probationary')}>
+            <Text style={{ color: Colors.warning, fontSize: Fonts.size.xs, fontWeight: '500' }}>Probationnaire</Text>
+          </TouchableOpacity>
+        )}
+        {driver.driver?.status === 'probationary'  && (
+          <TouchableOpacity style={{ padding: Spacing.xs, backgroundColor: '#E3F2FD', borderRadius: Radius.sm }} onPress={() => handleChangeStatus('pending')}>
+            <Text style={{ color: '#1976D2', fontSize: Fonts.size.xs, fontWeight: '500' }}>Retour en attente</Text>
+          </TouchableOpacity>
+        )}
+
         <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
       </View>
     </TouchableOpacity>
@@ -140,7 +172,7 @@ const cardStyles = StyleSheet.create({
 
 // ── Screen ──────────────────────────────────────────────────────
 export default function AdminDriversScreen({ navigation }: Props) {
-  const { fetchDrivers, drivers, isDriversLoading, driversError } = useAdmin();
+  const { fetchDrivers, drivers, isDriversLoading, driversError, changeDriverStatus } = useAdmin();
 
   const [search,     setSearch]     = useState('');
   const [activeTab,  setActiveTab]  = useState<FilterTab>('tous');
@@ -259,6 +291,8 @@ export default function AdminDriversScreen({ navigation }: Props) {
               driver={driver}
               //  Utiliser l'ID du driver record nested, pas l'ID utilisateur
               onPress={() => navigation.navigate('DriverDetail', { driverId: driver.driver?.id ?? driver.id })}
+              onChangeDriverStatus={changeDriverStatus} // Passage de la prop
+              onRefresh={load}
             />
           ))
         )}

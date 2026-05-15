@@ -43,6 +43,8 @@ interface ReservationState {
   isSubmitting:    boolean;
   isFetchingPrice: boolean;
   error:           string | null;
+  homeReservations: Reservation[];
+
 
   // ── Actions liste ──────────────────────────────────────────────────────────
   fetchMine:             (token: string, filters?: ReservationListFilters) => Promise<void>;
@@ -51,6 +53,7 @@ interface ReservationState {
   fetchById:             (token: string, id: string)                       => Promise<void>;
   fetchDriverActive:     (token: string)                                   => Promise<void>;
   fetchAvailableDrivers: (token: string, vehicleType?: string)             => Promise<AvailableDriverDto[]>;
+  fetchHomeReservations: (token: string) => Promise<void>;
   cancel:            (token: string, id: string, reason?: string)      => Promise<void>;
 
   // ── Actions chauffeur ──────────────────────────────────────────────────────
@@ -95,6 +98,7 @@ interface ReservationState {
 
 export const useReservationStore = create<ReservationState>((set, get) => ({
   reservations:      [],
+  homeReservations: [],
   myReservations:    [],
   currentReservation:null,
   total:             0,
@@ -283,6 +287,22 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       set({ vehicleTypes: res.data, isLoading: false });
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+    }
+  },
+
+    // Nouvelle action (charge uniquement pending + assigned, sans filtre statut partagé) :
+  fetchHomeReservations: async (token) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await reservationApi.listMine(token, { limit: 10 });
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
+      set({
+        homeReservations: res.data.reservations,
+        isLoading: false,
+      });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      throw err;
     }
   },
 
