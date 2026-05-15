@@ -68,7 +68,7 @@ function TabInformations({ driver }: { driver: DriverUser }) {
     { label: 'Type de véhicule', value: vehicleTypeLabel },
     ...(vehicle ? [
       { label: 'Marque / Modèle', value: [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || '—' },
-      { label: 'Immatriculation',  value: vehicle.plate_number },
+      { label: 'Immatriculation',  value: vehicle.plate_number ?? '—' },
       { label: 'Couleur',          value: vehicle.color ?? '—' },
       { label: 'Année',            value: vehicle.year ? String(vehicle.year) : '—' },
     ] : []),
