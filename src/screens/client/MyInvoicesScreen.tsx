@@ -4,10 +4,10 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Linking,
-  RefreshControl,
+  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import type { NavigationProp }      from '@react-navigation/native';
@@ -166,6 +166,8 @@ export default function MyInvoicesScreen({
   const { invoices, isLoading, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const load = useCallback(async () => {
     try { await fetch(token); } catch { /* handled in store */ }
   }, [token, fetch]);
@@ -176,7 +178,17 @@ export default function MyInvoicesScreen({
     if (error) { Alert.alert('Erreur', error); clearError(); }
   }, [error, clearError]);
 
-  const displayedInvoices = invoices;
+  const filteredInvoices = useMemo(() => {
+    if (!searchQuery) return invoices;
+    const query = searchQuery.toLowerCase();
+    return invoices.filter(invoice =>
+      invoice.invoice_number.toLowerCase().includes(query) ||
+      invoice.trip_snapshot.pickup_address.toLowerCase().includes(query) ||
+      invoice.trip_snapshot.dest_address.toLowerCase().includes(query) ||
+      invoice.client_snapshot.first_name.toLowerCase().includes(query) ||
+      invoice.client_snapshot.last_name.toLowerCase().includes(query)
+    );
+  }, [invoices, searchQuery]);
 
   if (isLoading && invoices.length === 0) {
     return (
@@ -191,12 +203,26 @@ export default function MyInvoicesScreen({
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Mes factures</Text>
         <Text style={styles.headerCount}>
-          {displayedInvoices.length} facture{displayedInvoices.length > 1 ? 's' : ''}
+          {filteredInvoices.length} facture{filteredInvoices.length > 1 ? 's' : ''}
         </Text>
       </View>
 
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Rechercher par n°, adresse, client..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          clearButtonMode="while-editing"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}><Ionicons name="close-circle" size={20} color={Colors.textMuted} /></TouchableOpacity>
+        )}
+      </View>
+
       <FlatList
-        data={displayedInvoices}
+        data={filteredInvoices}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <InvoiceCard
@@ -209,7 +235,7 @@ export default function MyInvoicesScreen({
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />
         }
-        ListEmptyComponent={
+        ListEmptyComponent={filteredInvoices.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="receipt-outline" size={48} color={Colors.textMuted} />
             <Text style={styles.emptyTitle}>Aucune facture</Text>
@@ -217,7 +243,7 @@ export default function MyInvoicesScreen({
               Les factures sont générées automatiquement à la clôture de chaque course.
             </Text>
           </View>
-        }
+        ) : null}
       />
     </View>
   );
@@ -300,4 +326,19 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
   emptyTitle:    { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },
   emptySubtitle: { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: Spacing.lg },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+    marginVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  searchIcon: { marginRight: Spacing.sm },
+  searchInput: { flex: 1, fontSize: Fonts.size.md, color: Colors.textPrimary, padding: 0 },
 });

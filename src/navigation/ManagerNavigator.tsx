@@ -5,6 +5,7 @@ import {
   DrawerContentScrollView,
   DrawerItem,
 } from '@react-navigation/drawer';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { AppIcon } from '../components/common/AppIcon';
 import { Colors, Fonts, Spacing } from '../theme/colors';
@@ -14,6 +15,7 @@ import { usePermissions } from '../hooks/usePermissions';
 
 import ManagerHomeScreen         from '../screens/manager/ManagerHomeScreen';
 import ManagerReservationsScreen from '../screens/manager/ManagerReservationsScreen';
+import ManagerReservationDetailScreen from '../screens/manager/ManagerReservationDetailScreen';
 import ManagerProfileScreen      from '../screens/manager/ManagerProfileScreen';
 
 // Réutilisation des écrans admin en lecture seule pour les gestionnaires
@@ -21,13 +23,24 @@ import AdminDriversScreen        from '../screens/admin/drivers/AdminDriversScre
 import AdminClientsScreen        from '../screens/admin/clients/AdminClientsScreen';
 import AdminPricingScreen        from '../screens/admin/AdminPricingScreen';
 import AdminFlatRatesScreen      from '../screens/admin/AdminFlatRatesScreen';
-import AdminOrdersScreen         from '../screens/admin/AdminOrdersScreen';
-import AdminInvoicesScreen       from '../screens/admin/AdminInvoicesScreen';
+import AdminOrdersScreen         from '../screens/admin/orders/AdminOrdersScreen';
+import AdminInvoicesScreen       from '../screens/admin/invoices/AdminInvoicesScreen';
 import AdminDocumentsScreen      from '../screens/admin/AdminDocumentsScreen';
 
-import type { ManagerDrawerParamList } from '../types';
+import type { ManagerDrawerParamList, ManagerReservationsStackParamList } from '../types';
 
 const Drawer = createDrawerNavigator<ManagerDrawerParamList>();
+const ReservationsStack = createNativeStackNavigator<ManagerReservationsStackParamList>();
+
+// ── Stack pour la section Réservations ──────────────────────────
+function ManagerReservationsStack() {
+  return (
+    <ReservationsStack.Navigator screenOptions={{ headerShown: false }}>
+      <ReservationsStack.Screen name="ManagerReservationsList" component={ManagerReservationsScreen} />
+      <ReservationsStack.Screen name="ManagerReservationDetail" component={ManagerReservationDetailScreen} />
+    </ReservationsStack.Navigator>
+  );
+}
 
 // ── Drawer custom avec items conditionnels selon permissions ─────
 
@@ -78,7 +91,7 @@ function ManagerDrawerContent(props: DrawerContentComponentProps) {
 
         {hasPermission('view_reservations') && (
           <DrawerItem
-            label={() => <DrawerLabel icon="car-outline" label="Réservations" />}
+            label={() => <DrawerLabel icon="car-outline" label="Réservations" />} 
             onPress={() => props.navigation.navigate('ManagerReservations')}
             style={styles.item}
           />
@@ -181,6 +194,11 @@ const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions =>
       <AppIcon name="menu-outline" size={28} color={Colors.white} />
     </TouchableOpacity>
   ),
+    headerRight: () => (
+      <TouchableOpacity onPress={() => console.log('Notifications')} style={{ marginRight: 20 }}>
+        <AppIcon name="notifications-outline" size={24} color={Colors.white} />
+      </TouchableOpacity>
+    ),
   drawerStyle: { backgroundColor: Colors.surface, width: 280 },
   drawerActiveTintColor:       Colors.bordeaux,
   drawerInactiveTintColor:     Colors.textSecondary,
@@ -196,15 +214,15 @@ export default function ManagerNavigator() {
       screenOptions={getDrawerScreenOptions}
     >
       <Drawer.Screen name="ManagerHome"         component={ManagerHomeScreen}         options={{ drawerItemStyle: { display: 'none' } }} />
-      <Drawer.Screen name="ManagerReservations" component={ManagerReservationsScreen} options={{ drawerItemStyle: { display: 'none' } }} />
-      <Drawer.Screen name="ManagerDrivers"      component={AdminDriversScreen as React.ComponentType<any>}  options={{ drawerItemStyle: { display: 'none' } }} />
-      <Drawer.Screen name="ManagerClients"      component={AdminClientsScreen as React.ComponentType<any>}  options={{ drawerItemStyle: { display: 'none' } }} />
-      <Drawer.Screen name="ManagerOrders"       component={AdminOrdersScreen}         options={{ drawerItemStyle: { display: 'none' } }} />
-      <Drawer.Screen name="ManagerInvoices"     component={AdminInvoicesScreen}       options={{ drawerItemStyle: { display: 'none' } }} />
-      <Drawer.Screen name="ManagerDocuments"    component={AdminDocumentsScreen}      options={{ drawerItemStyle: { display: 'none' } }} />
-      <Drawer.Screen name="ManagerProfile"      component={ManagerProfileScreen}      options={{ drawerItemStyle: { display: 'none' } }} />
-      <Drawer.Screen name="BaseGrid"            component={AdminPricingScreen}        options={{ drawerItemStyle: { display: 'none' } }} />
-      <Drawer.Screen name="FlatRates"           component={AdminFlatRatesScreen}      options={{ drawerItemStyle: { display: 'none' } }} />
+      <Drawer.Screen name="ManagerReservations" component={ManagerReservationsStack} options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
+      <Drawer.Screen name="ManagerDrivers"      component={AdminDriversScreen as React.ComponentType<any>}  options={{ drawerItemStyle: { display: 'none' }, headerShown: false, }} />
+      <Drawer.Screen name="ManagerClients"      component={AdminClientsScreen as React.ComponentType<any>}  options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
+      <Drawer.Screen name="ManagerOrders"       component={AdminOrdersScreen  as React.ComponentType<any>}         options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
+      <Drawer.Screen name="ManagerInvoices"     component={AdminInvoicesScreen as React.ComponentType<any>}       options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
+      <Drawer.Screen name="ManagerDocuments"    component={AdminDocumentsScreen as React.ComponentType<any>}      options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
+      <Drawer.Screen name="ManagerProfile"      component={ManagerProfileScreen as React.ComponentType<any>}      options={{ drawerItemStyle: { display: 'none' }}} />
+      <Drawer.Screen name="BaseGrid"            component={AdminPricingScreen as React.ComponentType<any>}        options={{ drawerItemStyle: { display: 'none' }, headerShown: false, }} />
+      <Drawer.Screen name="FlatRates"           component={AdminFlatRatesScreen as React.ComponentType<any>}      options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
     </Drawer.Navigator>
   );
 }

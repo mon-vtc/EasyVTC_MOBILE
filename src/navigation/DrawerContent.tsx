@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   logoutText:      { color: Colors.error, fontSize: Fonts.size.md, fontWeight: '600' },
   labelRow:        { flexDirection: 'row', alignItems: 'center', gap: 12 },
   labelText:       { fontSize: 16, color: Colors.textPrimary, fontWeight: '500', flex: 1 },
-  accordionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 12 },
+  accordionHeader: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingHorizontal: 26, marginLeft: Spacing.sm, paddingVertical: 12 },
   accordionBody:   { paddingLeft: Spacing.xl },
   subItem:         { marginLeft: 26, marginVertical: -4 },
   subItemLabel:    { fontSize: 15, color: Colors.textPrimary, fontWeight: '500' },

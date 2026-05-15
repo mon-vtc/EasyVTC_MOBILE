@@ -114,17 +114,18 @@ const cardStyles = StyleSheet.create({
 // ── Screen ──────────────────────────────────────────────────────
 export default function ClientHomeScreen({ navigation }: Props) {
   const { user } = useAuth();
-  const { reservations, fetchMine } = useReservation();
+  const { homeReservations, fetchHomeReservations } = useReservation();
   const firstName = user?.first_name ?? 'Marie';
 
+  // useEffect :
   useEffect(() => {
-    fetchMine(); // Load all reservations once on mount
+    fetchHomeReservations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const upcomingRides = useMemo(() => {
     const now = new Date();
-    return reservations
+    return homeReservations
       .filter(r => new Date(r.scheduled_at) > now && ['pending', 'assigned'].includes(r.status))
       .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
       .slice(0, 2)
@@ -145,7 +146,7 @@ export default function ClientHomeScreen({ navigation }: Props) {
         driver: r.driver ? `${r.driver.user.first_name} ${r.driver.user.last_name}` : 'Non assigné',
         vehicle: r.vehicle_type || '—',
       }));
-  }, [reservations]);
+  }, [homeReservations]);
 
   return (
     <LinearGradient 

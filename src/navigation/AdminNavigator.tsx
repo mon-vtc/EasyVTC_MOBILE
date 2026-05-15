@@ -16,8 +16,10 @@ import AdminReservationsScreen from '../screens/admin/AdminReservationsScreen';
 import AdminReservationScreen from '../screens/admin/AdminReservationScreen';
 import AdminPricingScreen from '../screens/admin/AdminPricingScreen';
 import AdminFlatRatesScreen from '../screens/admin/AdminFlatRatesScreen';
-import AdminOrdersScreen from '../screens/admin/AdminOrdersScreen';
-import AdminInvoicesScreen from '../screens/admin/AdminInvoicesScreen';
+import AdminOrdersScreen from '../screens/admin/orders/AdminOrdersScreen';
+import AdminInvoicesScreen from '../screens/admin/invoices/AdminInvoicesScreen';
+import AdminOrdersDetailScreen from '../screens/admin/orders/OrderDetailsScreen';
+import AdminInvoicesDetailScreen from '../screens/admin/invoices/InvoiceDetailsScreen';
 import AdminClientsScreen from '../screens/admin/clients/AdminClientsScreen';
 import AdminClientDetailScreen from '../screens/admin/clients/AdminClientDetailScreen';
 import AdminVehicleTypesScreen from '../screens/admin/AdminVehicleTypesScreen';
@@ -33,12 +35,17 @@ import type {
   DriversStackParamList,
   ReservationsStackParamList,
   ClientsStackParamList,
+  AdminInvoicesStackParamList,
+  AdminOrderStackParamList,
 } from '../types/auth.types';
 
 import type { ManagersStackParamList } from '../types';
 
+
 const DriversStack = createNativeStackNavigator<DriversStackParamList>();
 const ReservationsStack = createNativeStackNavigator<ReservationsStackParamList>();
+const InvoicesStack = createNativeStackNavigator<AdminInvoicesStackParamList>();
+const OrderStack = createNativeStackNavigator<AdminOrderStackParamList>();
 
 // ── Stack pour la section Chauffeurs ────────────────────────────
 // Permet de naviguer de la liste vers le détail sans quitter le drawer
@@ -62,6 +69,23 @@ function AdminReservationsStack() {
   );
 }
 
+function AdminInvoicesStack() {
+  return (
+    <InvoicesStack.Navigator screenOptions={{ headerShown: false }}>
+      <InvoicesStack.Screen name="AdminInvoicesList" component={AdminInvoicesScreen} />
+      <InvoicesStack.Screen name="InvoiceDetails" component={AdminInvoicesDetailScreen} />
+    </InvoicesStack.Navigator>
+  );
+}
+
+function AdminOrdersStack() {
+  return (
+    <OrderStack.Navigator screenOptions={{ headerShown: false }}>
+      <OrderStack.Screen name="AdminOrdersList" component={AdminOrdersScreen} />
+      <OrderStack.Screen name="OrderDetails" component={AdminOrdersDetailScreen} />
+    </OrderStack.Navigator>
+  );
+}
 
 // 1. Ajoute les types si nécessaire (dans tes types ou ici)
 const DocumentsStack = createNativeStackNavigator();
@@ -242,14 +266,20 @@ export default function AdminNavigator() {
 
       <Drawer.Screen
         name="AdminOrders"
-        component={AdminOrdersScreen}
-        options={{ drawerLabel: () => <DrawerLabel icon="document-text-outline" label="Bons de commande" /> }}
+        component={AdminOrdersStack}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="document-text-outline" label="Bons de commande" />,
+          headerShown: false,
+        }}
       />
 
       <Drawer.Screen
         name="AdminInvoices"
-        component={AdminInvoicesScreen}
-        options={{ drawerLabel: () => <DrawerLabel icon="receipt-outline" label="Factures" /> }}
+        component={AdminInvoicesStack}
+        options={{ 
+          drawerLabel: () => <DrawerLabel icon="receipt-outline" label="Factures" /> ,
+          headerShown: false,
+        }}
       />
 
       <Drawer.Screen

@@ -8,12 +8,14 @@ import {
   View, Text, FlatList, TouchableOpacity, Modal, TextInput,
   StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
 import { Ionicons }         from '@expo/vector-icons';
-import { useInvoicesStore } from '../../store/invoices.store';
-import { useAuthStore }     from '../../store/auth.store';
-import { invoicesApi }      from '../../services/api/invoices.api';
-import type { Invoice }     from '../../types/invoices.types';
-import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import { useInvoicesStore } from '../../../store/invoices.store';
+import { useAuthStore }     from '../../../store/auth.store';
+import { invoicesApi }      from '../../../services/api/invoices.api';
+import type { Invoice }     from '../../../types/invoices.types';
+import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -138,10 +140,11 @@ function AdjustPriceModal({ invoice, token, onClose }: {
 
 // ── Carte facture ─────────────────────────────────────────────────────────────
 
-function InvoiceRow({ invoice, token, onAdjust }: {
+function InvoiceRow({ invoice, token, onAdjust, onPress }: {
   invoice:  Invoice;
   token:    string;
   onAdjust: (inv: Invoice) => void;
+  onPress: (inv: Invoice) => void;
 }) {
   const [opening, setOpening] = useState(false);
   const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
@@ -158,7 +161,7 @@ function InvoiceRow({ invoice, token, onAdjust }: {
   };
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={() => onPress(invoice)} activeOpacity={0.8}>
       <View style={styles.rowBetween}>
         <Text style={styles.invNum}>{invoice.invoice_number}</Text>
         <View style={styles.rowGap}>
@@ -219,13 +222,14 @@ function InvoiceRow({ invoice, token, onAdjust }: {
           <Text style={styles.actionBtnText}>Ajuster</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function AdminInvoicesScreen() {
+  const navigation = useNavigation<NavigationProp<any>>();
   const { invoices, total, isLoading, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const [adjustTarget, setAdjustTarget] = useState<Invoice | null>(null);
@@ -246,11 +250,25 @@ export default function AdminInvoicesScreen() {
       )
     : invoices;
 
+  const handleViewInvoice = (invoice: Invoice) => {
+    navigation.navigate('InvoiceDetails', { invoiceId: invoice.id });
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Factures</Text>
-        <Text style={styles.headerCount}>{total} facture{total > 1 ? 's' : ''}</Text>
+      {/* Header */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        >
+          <Ionicons name="menu-outline" size={26} color={Colors.white} />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Factures</Text>
+          <Text style={styles.headerCount}>{total} facture{total > 1 ? 's' : ''}</Text>
+        </View>
+        <View style={styles.headerBtn} />
       </View>
 
       <View style={styles.searchBox}>
@@ -273,7 +291,7 @@ export default function AdminInvoicesScreen() {
         data={filtered}
         keyExtractor={(i) => i.id}
         renderItem={({ item }) => (
-          <InvoiceRow invoice={item} token={token} onAdjust={setAdjustTarget} />
+          <InvoiceRow invoice={item} token={token} onAdjust={setAdjustTarget} onPress={handleViewInvoice} />
         )}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
@@ -301,12 +319,18 @@ export default function AdminInvoicesScreen() {
 
 const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: Colors.background },
-  header: {
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: Colors.bordeaux,
-    paddingHorizontal: Spacing.md, paddingTop: Spacing.xl, paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
+    paddingBottom: Spacing.md,
   },
-  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white },
-  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2 },
+  headerCenter: { alignItems: 'center' },
+  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white, textAlign: 'center' },
+  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2,  },
   searchBox: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
     backgroundColor: Colors.surface, margin: Spacing.md, borderRadius: Radius.md,
@@ -341,6 +365,7 @@ const styles = StyleSheet.create({
   actionBtnOff:    { backgroundColor: Colors.textMuted },
   actionBtnAdjust: { backgroundColor: Colors.beigeDark },
   actionBtnText:   { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.white },
+  headerBtn: { width: 40 },
   empty:      { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
   emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },
 

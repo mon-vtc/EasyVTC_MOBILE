@@ -36,8 +36,6 @@ export default function LoginScreen({ navigation }: Props) {
   });
 
   const onSubmit = async (data: FormData) => {
-    clearError();
-    clearGoogleError();
     try {
       await login({
         email: data.email.trim().toLowerCase(),

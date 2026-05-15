@@ -33,10 +33,11 @@ const DRIVER_STATUS_CONFIG: Record<string, { label: string; bg: string; color: s
   active:    { label: 'Validé',     bg: '#E8F5E9', color: '#2E7D32' },
   rejected:  { label: 'Rejeté',     bg: '#FCE4EC', color: '#C62828' },
   suspended: { label: 'Suspendu',   bg: '#EDE7F6', color: '#5E35B1' },
+  probationary: { label: 'Probationnaire', bg: '#FFF3E0', color: '#E65100' },
 };
 
 // ── Ligne info ──────────────────────────────────────────────────
-function InfoRow({ icon, value }: { icon: keyof typeof Ionicons.glyphMap; value: string | null }) {
+function InfoRow({ icon, value }: { icon: keyof typeof Ionicons.glyphMap; value: string | null}) {
   return (
     <View style={infoStyles.row}>
       <Ionicons name={icon} size={16} color={Colors.textMuted} />
@@ -330,19 +331,23 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
     );
   };
 
-  const handleDriverStatusChange = (status: 'active' | 'rejected' | 'suspended') => {
+  const handleDriverStatusChange = (status: 'pending' | 'probationary' | 'active' | 'rejected' | 'suspended' ) => {
     if (!driver?.driver) return;
 
     const labels = {
-      active: 'Valider',
-      rejected: 'Rejeter',
-      suspended: 'Suspendre',
+      pending:      'Remettre en attente',
+      probationary: 'Passer en probationnaire',
+      active:       'Valider',
+      rejected:     'Rejeter',
+      suspended:    'Suspendre',
     } as const;
 
     const messages = {
-      active: 'Le chauffeur pourra reprendre son activité.',
-      rejected: 'Le chauffeur sera refusé et son compte ne pourra pas être activé sans nouvelle validation.',
-      suspended: 'Le chauffeur sera temporairement suspendu.',
+      pending:      'Le profil du chauffeur sera remis en attente de validation.',
+      probationary: 'Le chauffeur pourra se connecter et prendre des courses en attendant la validation complète de son dossier.',
+      active:       'Le chauffeur pourra reprendre son activité.',
+      rejected:     'Le chauffeur sera refusé et son compte ne pourra pas être activé sans nouvelle validation.',
+      suspended:    'Le chauffeur sera temporairement suspendu.',
     } as const;
 
     Alert.alert(
@@ -352,13 +357,14 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
         { text: 'Annuler', style: 'cancel' },
         {
           text: labels[status],
-          style: status === 'rejected' ? 'destructive' : 'default',
+          style: (status === 'rejected' || status === 'pending') ? 'destructive' : 'default',
           onPress: async () => {
             try {
               await changeDriverStatus(driver.driver!.id, {
                 status,
                 reason: `Changement de statut par l'administrateur : ${labels[status]}.`,
               });
+              Alert.alert('Succès', 'Le statut du chauffeur a été mis à jour.');
               await load();
             } catch (_) {}
           },
@@ -386,6 +392,7 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
   const statusConfig = STATUS_CONFIG[driver.status] ?? STATUS_CONFIG.active;
   const driverStatusConfig = DRIVER_STATUS_CONFIG[driver.driver?.status ?? 'pending'] ?? DRIVER_STATUS_CONFIG.pending;
   const initials     = `${driver.first_name?.[0] ?? ''}${driver.last_name?.[0] ?? ''}`.toUpperCase();
+  // FIX: driver.rating and driver.trips_count are not directly on AuthUser. They are on DriverUser.
   const rating       = (driver as any).rating     ?? 0;
   const tripsCount   = (driver as any).trips_count ?? 0;
   const createdAt    = new Date(driver.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -434,11 +441,11 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
           </View>
 
           {/* Contacts */}
-          <InfoRow icon="call-outline"     value={driver.phone}                                  />
+          <InfoRow icon="call-outline"     value={driver!.phone}                                  />
           <InfoRow icon="mail-outline"     value={driver.email}                                  />
           <InfoRow icon="calendar-outline" value={`Inscrit le ${createdAt}`}                     />
 
-          {/* Actions admin */}
+          {/* Actions admin
           <View style={styles.adminActions}>
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: driver.status === 'active' ? Colors.errorLight : '#E8F5E9' }]}
@@ -461,6 +468,128 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
               <Ionicons name="lock-closed-outline" size={16} color="#E65100" />
               <Text style={[styles.actionBtnText, { color: '#E65100' }]}>Verrouiller</Text>
             </TouchableOpacity>
+          </View> */}
+
+          {/* ── Actions pour le statut du chauffeur (pending/probationary/active/rejected/suspended) ── */}
+          {/* {driver.driver && (
+            <View style={styles.driverStatusActions}>
+              {driver.driver.status === 'pending' && (
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: Colors.warningLight }]}
+                  onPress={() => handleDriverStatusChange('probationary')}
+                >
+                  <Ionicons name="hourglass-outline" size={16} color={Colors.warning} />
+                  <Text style={[styles.actionBtnText, { color: Colors.warning }]}>
+                    Passer en probationnaire
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {driver.driver.status === 'probationary' && (
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: '#E3F2FD' }]}
+                  onPress={() => handleDriverStatusChange('pending')}
+                >
+                  <Ionicons name="arrow-back-circle-outline" size={16} color= '#1976D2'/>
+                  <Text style={[styles.actionBtnText, { color:'#1976D2' }]}>
+                    Retour en attente
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {driver.driver.status !== 'active' && driver.driver.status !== 'pending' && driver.driver.status !== 'probationary' && (
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: Colors.successLight }]}
+                  onPress={() => handleDriverStatusChange('active')}
+                >
+                  <Ionicons name="checkmark-circle-outline" size={16} color={Colors.success} />
+                  <Text style={[styles.actionBtnText, { color: Colors.success }]}>
+                    Valider le profil
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {driver.driver.status !== 'rejected' && driver.driver.status !== 'pending' && (
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: Colors.errorLight }]}
+                  onPress={() => handleDriverStatusChange('rejected')}
+                >
+                  <Ionicons name="close-circle-outline" size={16} color={Colors.error} />
+                  <Text style={[styles.actionBtnText, { color: Colors.error }]}>
+                    Rejeter le profil
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )} */}
+          {/* Actions de gestion */}
+          <View style={styles.actionsContainer}>
+            {/* Gestion du compte utilisateur */}
+            <View style={styles.actionGroup}>
+              <Text style={styles.actionGroupTitle}>Gestion du compte utilisateur</Text>
+              <View style={styles.adminActions}>
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: driver.status === 'active' ? Colors.errorLight : '#E8F5E9' }]}
+                  onPress={handleStatusChange}
+                >
+                  <Ionicons
+                    name={driver.status === 'active' ? 'pause-circle-outline' : 'play-circle-outline'}
+                    size={16}
+                    color={driver.status === 'active' ? Colors.error : '#2E7D32'}
+                  />
+                  <Text style={[styles.actionBtnText, { color: driver.status === 'active' ? Colors.error : '#2E7D32' }]}>
+                    {driver.status === 'active' ? 'Désactiver' : 'Réactiver'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: '#FFF3E0' }]}
+                  onPress={handleLock}
+                >
+                  <Ionicons name="lock-closed-outline" size={16} color="#E65100" />
+                  <Text style={[styles.actionBtnText, { color: '#E65100' }]}>Verrouiller</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Gestion du profil chauffeur */}
+            {driver.driver && (
+              <View style={styles.actionGroup}>
+                <Text style={styles.actionGroupTitle}>Gestion du profil chauffeur</Text>
+                <View style={styles.driverStatusActions}>
+                  {driver.driver.status === 'pending' && (
+                    <TouchableOpacity
+                      style={[styles.actionBtn, { backgroundColor: Colors.warningLight }]}
+                      onPress={() => handleDriverStatusChange('probationary')}
+                    >
+                      <Ionicons name="hourglass-outline" size={16} color={Colors.warning} />
+                      <Text style={[styles.actionBtnText, { color: Colors.warning }]}>
+                        Probationnaire
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  {driver.driver.status === 'probationary' && (
+                    <TouchableOpacity
+                      style={[styles.actionBtn, { backgroundColor: '#E3F2FD' }]}
+                      onPress={() => handleDriverStatusChange('pending')}
+                    >
+                      <Ionicons name="arrow-back-circle-outline" size={16} color='#1976D2' />
+                      <Text style={[styles.actionBtnText, { color: '#1976D2' }]}>
+                        Retour en attente
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  {driver.driver.status !== 'active' && (
+                    <TouchableOpacity
+                      style={[styles.actionBtn, { backgroundColor: Colors.successLight }]}
+                      onPress={() => handleDriverStatusChange('active')}
+                    >
+                      <Ionicons name="checkmark-circle-outline" size={16} color={Colors.success} />
+                      <Text style={[styles.actionBtnText, { color: Colors.success }]}>
+                        Valider le profil
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            )}
           </View>
         </View>
 
@@ -478,6 +607,7 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
             </TouchableOpacity>
           ))}
         </View>
+
 
         {/* ── Contenu du tab ── */}
         <View style={styles.tabContent}>
@@ -529,11 +659,23 @@ const styles = StyleSheet.create({
   rating:        { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
   tripsCount:    { fontSize: Fonts.size.sm, color: Colors.textMuted },
 
-  adminActions: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.md },
+  actionsContainer: { gap: Spacing.md, marginVertical: Spacing.md },
+  actionGroup: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.sm,
+    gap: Spacing.md,
+    elevation: 2,
+    shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }
+  },
+  actionGroupTitle: { fontSize: Fonts.size.md, fontWeight: '400', color: Colors.textSecondary },
+  driverStatusActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs, marginTop: Spacing.xs },
+  adminActions: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.xs },
   actionBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: Spacing.xs, paddingVertical: Spacing.sm,
     borderRadius: Radius.md,
+    minWidth: '48%', // Pour s'assurer que les boutons ne deviennent pas trop petits
   },
   actionBtnText: { fontSize: Fonts.size.sm, fontWeight: '600' },
 

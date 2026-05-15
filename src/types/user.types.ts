@@ -2,7 +2,7 @@
 import type { AuthUser } from './auth.types';
 
 export type VehicleType  = 'standard' | 'berline' | 'van';
-export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended' | 'on_trip';
+export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended' | 'on_trip' | 'probationary' | 'on_trip_probationary';
 export type ZoneType     = 'senegal' | 'france'; 
 
 // ── DriverProfile (réponse brute API avant mapApiUser) ──────────
