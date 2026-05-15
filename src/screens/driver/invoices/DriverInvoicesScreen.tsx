@@ -104,10 +104,6 @@ export default function DriverInvoicesScreen() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (error) { Alert.alert('Erreur', error); clearError(); } }, [error]);
 
-  if (isLoading && invoices.length === 0) {
-    return <View style={styles.centered}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>;
-  }
-
   const filteredInvoices = useMemo(() => {
     if (!searchQuery) return invoices;
     const query = searchQuery.toLowerCase();
@@ -122,6 +118,10 @@ export default function DriverInvoicesScreen() {
   const handleViewInvoice = (invoice: Invoice) => {
       navigation.navigate('DriverInvoiceDetails', { invoiceId: invoice.id });
   };
+
+  if (isLoading && invoices.length === 0) {
+    return <View style={styles.centered}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>;
+  }
 
   return (
     <View style={styles.container}>

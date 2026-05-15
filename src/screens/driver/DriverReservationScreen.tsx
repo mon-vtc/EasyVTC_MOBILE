@@ -9,15 +9,15 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { Reservation, ReservationStatus } from '../../types/reservations.types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriverReservationsStackParamList } from '../../types/auth.types';
-import { Logo } from '../../constants/logo';
 import { AppIcon } from '../../components/common/AppIcon';
-import type { ClientStackParamList, DriverInvoicesStackParamList } from '../../types/auth.types';
+import type { DriverInvoicesStackParamList } from '../../types/auth.types';
 import {
-  useNavigation, useRoute,
-  type RouteProp, type NavigationProp,
+  useNavigation,
+  type NavigationProp,
 } from '@react-navigation/native';
-import { useAuthStore }        from '../../store/auth.store';
-import { invoicesApi }         from '../../services/api/invoices.api';
+import { useAuthStore }   from '../../store/auth.store';
+import { invoicesApi }    from '../../services/api/invoices.api';
+import { Logo } from '../../constants/logo';
 
 type Props = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationDetail'>;
 
@@ -31,7 +31,7 @@ const STATUS_CONFIG: Record<ReservationStatus, { label: string; bg: string; colo
   cancelled:      { label: 'Annulée',     color: '#FFFFFF', bg: '#C62828' },
 };
 
-// ── Icône steering wheel selon statut ───────────────────────────
+// ── Icône selon statut ───────────────────────────────────────────
 const STATUS_ICON: Partial<Record<ReservationStatus, string>> = {
   in_progress:    'car-sport-outline',
   assigned:       'time-outline',
@@ -53,42 +53,80 @@ function formatTime(iso?: string | null): string {
 export default function DriverReservationScreen({ navigation, route }: Props) {
   const { reservationId } = route.params;
   const { selected, fetchById, start, complete, cancel } = useReservation();
-  const [isLoading, setIsLoading]                       = useState(false);
-  const [confirmModal, setConfirmModal]                 = useState(false);
-  type ConfirmationNav   = NavigationProp<DriverInvoicesStackParamList, 'DriverInvoiceDetails'>;
-  const reservation = selected;
+  const [isLoading, setIsLoading]     = useState(false);
+  const [confirmModal, setConfirmModal] = useState(false);
+
+  // Map choice modal state
+  const [mapChoiceModalVisible, setMapChoiceModalVisible]     = useState(false);
+  const [mapOriginAddress, setMapOriginAddress]               = useState('');
+  const [mapDestinationAddress, setMapDestinationAddress]     = useState('');
+  const [mapDestinationLat, setMapDestinationLat]             = useState<number | null | undefined>(null);
+  const [mapDestinationLng, setMapDestinationLng]             = useState<number | null | undefined>(null);
+
+  type ConfirmationNav = NavigationProp<DriverInvoicesStackParamList, 'DriverInvoiceDetails'>;
+
+  const reservation  = selected;
+  const accessToken  = useAuthStore(s => s.accessToken);
+  const nav          = useNavigation<ConfirmationNav>();
 
   const refresh = useCallback(async () => {
     try { setIsLoading(true); await fetchById(reservationId); }
     finally { setIsLoading(false); }
   }, [fetchById, reservationId]);
 
-  const accessToken  = useAuthStore(s => s.accessToken);
-  const nav   = useNavigation<ConfirmationNav>();
-
   useEffect(() => { void refresh(); }, [refresh]);
 
-  const status    = reservation?.status;
-  const statusCfg = status ? STATUS_CONFIG[status] : null;
+  const status     = reservation?.status;
+  const statusCfg  = status ? STATUS_CONFIG[status] : null;
   const statusIcon = status ? (STATUS_ICON[status] ?? 'car-outline') : 'car-outline';
 
   const heroValues = useMemo(() => {
+    console.log("**************************************************************************",reservation);
     if (!reservation) return { distance: '—', duration: '—', amount: '—' };
     return {
-      distance: reservation.distance_km  != null ? `${reservation.distance_km.toFixed(0)} km`   : '—',
-      duration: reservation.duration_min != null ? `${reservation.duration_min.toFixed(0)} min`  : '—',
+      distance: reservation.distance_km  != null ? `${reservation.distance_km.toFixed(0)} km`  : '—',
+      duration: reservation.duration_min != null ? `${reservation.duration_min.toFixed(0)} min` : '—',
       amount:   reservation.price_final  != null
         ? `${reservation.price_final.toFixed(0)} €`
         : `${reservation.price_estimated.toFixed(0)} €`,
     };
   }, [reservation]);
 
-  // ── Actions ──────────────────────────────────────────────────────
-  const handleOpenMaps = (origin: string, destination: string) => {
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
-    Linking.openURL(url).catch(() => Alert.alert('Erreur', 'Impossible d\'ouvrir Maps.'));
+  // ── Map helpers ──────────────────────────────────────────────────
+  const handleOpenMaps = (
+    originAddress: string,
+    destinationAddress: string,
+    destinationLat: number | null | undefined,
+    destinationLng: number | null | undefined,
+  ) => {
+    setMapOriginAddress(originAddress);
+    setMapDestinationAddress(destinationAddress);
+    setMapDestinationLat(destinationLat);
+    setMapDestinationLng(destinationLng);
+    setMapChoiceModalVisible(true);
   };
 
+  const openGoogleMaps = () => {
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(mapOriginAddress)}&destination=${encodeURIComponent(mapDestinationAddress)}`;
+    Linking.openURL(url).catch(() =>
+      Alert.alert('Erreur', "Impossible d'ouvrir Google Maps.")
+    );
+    setMapChoiceModalVisible(false);
+  };
+
+  const openWaze = () => {
+    if (mapDestinationLat != null && mapDestinationLng != null) {
+      const wazeUrl = `waze://?ll=${mapDestinationLat},${mapDestinationLng}&navigate=yes`;
+      Linking.openURL(wazeUrl).catch(() =>
+        Alert.alert('Erreur', "Impossible d'ouvrir Waze. Assurez-vous que l'application est installée.")
+      );
+    } else {
+      Alert.alert('Erreur', 'Coordonnées de destination non disponibles pour Waze.');
+    }
+    setMapChoiceModalVisible(false);
+  };
+
+  // ── Actions ──────────────────────────────────────────────────────
   const handleStart = async () => {
     if (!reservation) return;
     try {
@@ -105,7 +143,16 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
     if (!reservation) return;
     try {
       setIsLoading(true);
-      await complete(reservation.id);
+      console.log('Terminer la course avec les données :', {
+        reservationId: reservation.id,
+        actual_distance_km: reservation.distance_km,
+        actual_duration_min: reservation.duration_min,
+      });
+      await complete(reservation.id, {
+        actual_distance_km: reservation.distance_km ?? undefined,
+        actual_duration_min: reservation.duration_min ?? undefined,
+        // TODO: Ajouter un champ pour les notes du chauffeur dans le modal de confirmation
+      });
       await refresh();
       setConfirmModal(false);
       Alert.alert('Succès', 'Course terminée.');
@@ -127,7 +174,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
             await refresh();
             Alert.alert('Succès', 'Course annulée.');
           } catch (err: any) {
-            Alert.alert('Erreur', err?.message || 'Impossible d\'annuler la course.');
+            Alert.alert('Erreur', err?.message || "Impossible d'annuler la course.");
           } finally { setIsLoading(false); }
         },
       },
@@ -149,7 +196,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
       } else {
         Alert.alert(
           'Facture indisponible',
-          res.message ?? 'La facture n\'est pas encore disponible pour cette course.',
+          res.message ?? "La facture n'est pas encore disponible pour cette course.",
         );
       }
     } catch {
@@ -165,24 +212,24 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
     );
   }
 
-  const refNumber   = `BC-${reservation.id.slice(-8).toUpperCase()}`;
-  const clientName  = reservation.client
+  const refNumber  = `BC-${reservation.id.slice(-8).toUpperCase()}`;
+  const clientName = reservation.client
     ? `${reservation.client.first_name} ${reservation.client.last_name}`
     : 'Client inconnu';
   const departTime  = formatTime(reservation.scheduled_at);
-  // Arrivée estimée = départ + durée (si disponible)
   const arrivalTime = reservation.duration_min && reservation.scheduled_at
     ? formatTime(new Date(new Date(reservation.scheduled_at).getTime() + reservation.duration_min * 60000).toISOString())
     : '—';
 
   return (
     <View style={styles.flex}>
+
       {/* ── Header ─────────────────────────────────────────── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cours  {refNumber}</Text>
+        <Text style={styles.headerTitle}>Course {refNumber}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -249,7 +296,6 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
             )}
           </View>
 
-          {/* Passagers */}
           {reservation.nb_passengers > 0 && (
             <View style={styles.clientMeta}>
               <View style={styles.metaItem}>
@@ -266,7 +312,6 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Itinéraire</Text>
 
-          {/* Départ */}
           <View style={styles.routeRow}>
             <View style={styles.routeDotCol}>
               <View style={[styles.routeDot, { backgroundColor: '#22C55E' }]} />
@@ -275,17 +320,9 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
             <View style={styles.routeContent}>
               <Text style={styles.routeTime}>Départ · {departTime}</Text>
               <Text style={styles.routeAddress}>{reservation.pickup_address}</Text>
-              <TouchableOpacity
-                onPress={() => handleOpenMaps(reservation.pickup_address, reservation.dest_address)}
-                style={styles.mapsLink}
-              >
-                <Ionicons name="navigate-outline" size={13} color={Colors.bordeaux} />
-                <Text style={styles.mapsLinkText}>Ouvrir dans Maps</Text>
-              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Arrivée */}
           <View style={styles.routeRow}>
             <View style={styles.routeDotCol}>
               <View style={[styles.routeDot, { backgroundColor: '#EF4444' }]} />
@@ -293,15 +330,21 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
             <View style={styles.routeContent}>
               <Text style={styles.routeTime}>Arrivée · {arrivalTime}</Text>
               <Text style={styles.routeAddress}>{reservation.dest_address}</Text>
-              <TouchableOpacity
-                onPress={() => handleOpenMaps(reservation.pickup_address, reservation.dest_address)}
-                style={styles.mapsLink}
-              >
-                <Ionicons name="navigate-outline" size={13} color={Colors.bordeaux} />
-                <Text style={styles.mapsLinkText}>Ouvrir dans Maps</Text>
-              </TouchableOpacity>
             </View>
           </View>
+          {/* ── Bouton Ouvrir l'itinéraire ───────────────────── */}
+          <TouchableOpacity
+            style={styles.openMapsButton}
+            onPress={() => handleOpenMaps(
+              reservation.pickup_address,
+              reservation.dest_address,
+              reservation.dest_lat,
+              reservation.dest_lng,
+            )}
+          >
+            <Ionicons name="navigate-outline" size={20} color={Colors.white} />
+            <Text style={styles.openMapsButtonText}>Ouvrir l'itinéraire</Text>
+          </TouchableOpacity>
         </View>
 
         {/* ── Notes importantes ────────────────────────────── */}
@@ -317,7 +360,8 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
 
         {/* ── Actions ──────────────────────────────────────── */}
         <View style={styles.actions}>
-          {status === 'assigned' && (
+          {/* FIX: driver_arrived also needs a start button to allow transitioning to in_progress */}
+          {(status === 'assigned' || status === 'driver_arrived') && (
             <TouchableOpacity style={styles.primaryBtn} onPress={handleStart} disabled={isLoading}>
               <Ionicons name="play" size={18} color={Colors.white} />
               <Text style={styles.primaryBtnText}>Démarrer la course</Text>
@@ -327,13 +371,13 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
           {status === 'in_progress' && (
             <TouchableOpacity style={styles.primaryBtn} onPress={() => setConfirmModal(true)} disabled={isLoading}>
               <Ionicons name="checkmark" size={20} color={Colors.white} />
-              <Text style={styles.primaryBtnText}>Terminer le cours</Text>
+              <Text style={styles.primaryBtnText}>Terminer la course</Text>
             </TouchableOpacity>
           )}
 
           {status !== 'completed' && status !== 'cancelled' && (
             <TouchableOpacity style={styles.secondaryBtn} onPress={handleCancel} disabled={isLoading}>
-              <Text style={styles.secondaryBtnText}>Annuler le cours</Text>
+              <Text style={styles.secondaryBtnText}>Annuler la course</Text>
             </TouchableOpacity>
           )}
 
@@ -357,19 +401,24 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
         <View style={{ height: 32 }} />
       </ScrollView>
 
-      {/* ── Modal confirmation terminer ─────────────────── */}
+      {/* ── Modal confirmation terminer ──────────────────── */}
       <Modal transparent visible={confirmModal} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Terminer la course ?</Text>
             <Text style={styles.modalMessage}>Le client a bien été déposé ?</Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={[styles.modalBtn, styles.modalCancel]}
-                onPress={() => setConfirmModal(false)}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalCancel]}
+                onPress={() => setConfirmModal(false)}
+              >
                 <Text style={styles.modalCancelText}>Annuler</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtn, styles.modalConfirm]}
-                onPress={handleComplete} disabled={isLoading}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalConfirm]}
+                onPress={handleComplete}
+                disabled={isLoading}
+              >
                 {isLoading
                   ? <ActivityIndicator color={Colors.white} size="small" />
                   : <Text style={styles.modalConfirmText}>Confirmer</Text>
@@ -379,6 +428,39 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
           </View>
         </View>
       </Modal>
+
+      {/* ── Modal choix de navigation ────────────────────── */}
+      {/* FIX: was declared in state and handlers but never rendered */}
+      <Modal
+        transparent
+        visible={mapChoiceModalVisible}
+        animationType="fade"
+        onRequestClose={() => setMapChoiceModalVisible(false)}
+      >
+        <View style={styles.mapChoiceOverlay}>
+          <View style={styles.mapChoiceBox}>
+            <Text style={styles.mapChoiceTitle}>Ouvrir avec</Text>
+            <Text style={styles.mapChoiceSubtitle}>Choisissez votre application de navigation</Text>
+            <View style={styles.mapChoiceButtonsRow}>
+              <TouchableOpacity style={styles.mapChoiceAppButton} onPress={openGoogleMaps}>
+                <Image source={Logo.LogoGoogleMaps} style={styles.mapChoiceAppIcon} />
+                <Text style={styles.mapChoiceAppButtonText}>Google Maps</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.mapChoiceAppButton} onPress={openWaze}>
+                <Image source={Logo.LogoWaze} style={styles.mapChoiceAppIcon} />
+                <Text style={styles.mapChoiceAppButtonText}>Waze</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={styles.mapChoiceCancelButton}
+              onPress={() => setMapChoiceModalVisible(false)}
+            >
+              <Text style={styles.mapChoiceCancelButtonText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
@@ -397,8 +479,8 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xxl,
     paddingBottom: Spacing.md, paddingHorizontal: Spacing.md,
   },
-  headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontSize: Fonts.size.lg, fontWeight: '800' },
+  headerBtn:    { padding: Spacing.sm, width: 40 },
+  headerTitle:  { color: Colors.white, fontSize: Fonts.size.lg, fontWeight: '800' },
 
   scroll: { padding: Spacing.md, gap: Spacing.sm },
 
@@ -427,16 +509,16 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.sm },
 
   // Client
-  clientRow:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  clientAvatar:{ width: 52, height: 52, borderRadius: 26, backgroundColor: Colors.border },
-  clientInfo:  { flex: 1, gap: 3 },
-  clientName:  { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
-  ratingRow:   { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  ratingText:  { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '600' },
-  phoneBtn:    { width: 40, height: 40, borderRadius: 20, backgroundColor: '#22C55E', alignItems: 'center', justifyContent: 'center' },
-  clientMeta:  { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border },
-  metaItem:    { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  metaText:    { fontSize: Fonts.size.sm, color: Colors.textSecondary },
+  clientRow:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  clientAvatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: Colors.border },
+  clientInfo:   { flex: 1, gap: 3 },
+  clientName:   { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
+  ratingRow:    { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  ratingText:   { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '600' },
+  phoneBtn:     { width: 40, height: 40, borderRadius: 20, backgroundColor: '#22C55E', alignItems: 'center', justifyContent: 'center' },
+  clientMeta:   { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border },
+  metaItem:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  metaText:     { fontSize: Fonts.size.sm, color: Colors.textSecondary },
 
   // Itinéraire
   routeRow:     { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
@@ -460,24 +542,55 @@ const styles = StyleSheet.create({
   notesText:   { fontSize: Fonts.size.sm, color: '#1E3A8A', lineHeight: 20 },
 
   // Actions
-  actions:       { gap: Spacing.sm, marginTop: Spacing.xs },
-  primaryBtn:    { backgroundColor: Colors.bordeaux, borderRadius: Radius.md, paddingVertical: Spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs },
-  primaryBtnText:{ color: Colors.white, fontWeight: '800', fontSize: Fonts.size.md },
-  secondaryBtn:  { borderRadius: Radius.md, paddingVertical: Spacing.md, alignItems: 'center', borderWidth: 1.5, borderColor: Colors.bordeaux },
+  actions:          { gap: Spacing.sm, marginTop: Spacing.xs },
+  primaryBtn:       { backgroundColor: Colors.bordeaux, borderRadius: Radius.md, paddingVertical: Spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs },
+  primaryBtnText:   { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.md },
+  secondaryBtn:     { borderRadius: Radius.md, paddingVertical: Spacing.md, alignItems: 'center', borderWidth: 1.5, borderColor: Colors.bordeaux },
   secondaryBtnText: { color: Colors.bordeaux, fontWeight: '700', fontSize: Fonts.size.md },
-  supportBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm },
-  supportBtnText:{ color: Colors.textSecondary, fontSize: Fonts.size.sm, fontWeight: '600' },
-  btnSecondary:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm, borderWidth: 1, borderColor: Colors.bordeaux, borderRadius: Radius.md, backgroundColor: Colors.bordeaux },
+  supportBtn:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm },
+  supportBtnText:   { color: Colors.textSecondary, fontSize: Fonts.size.sm, fontWeight: '600' },
+  btnSecondary:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm, borderWidth: 1, borderColor: Colors.bordeaux, borderRadius: Radius.md, backgroundColor: Colors.bordeaux },
   btnSecondaryText: { color: Colors.white, fontSize: Fonts.size.sm, fontWeight: '600' },
-  // Modal
-  modalOverlay:   { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
-  modalBox:       { width: '85%', backgroundColor: Colors.white, borderRadius: Radius.lg, padding: Spacing.lg },
-  modalTitle:     { fontSize: Fonts.size.lg, fontWeight: '800', marginBottom: Spacing.xs, textAlign: 'center' },
-  modalMessage:   { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginBottom: Spacing.md, textAlign: 'center' },
-  modalButtons:   { flexDirection: 'row', gap: Spacing.sm },
-  modalBtn:       { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.md, alignItems: 'center' },
-  modalCancel:    { backgroundColor: Colors.surface },
-  modalConfirm:   { backgroundColor: Colors.bordeaux },
-  modalCancelText:  { color: Colors.bordeaux, fontWeight: '700' },
-  modalConfirmText: { color: Colors.white, fontWeight: '700' },
+
+  // Modal confirmation
+  modalOverlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  modalBox:        { width: '85%', backgroundColor: Colors.white, borderRadius: Radius.lg, padding: Spacing.lg },
+  modalTitle:      { fontSize: Fonts.size.lg, fontWeight: '800', marginBottom: Spacing.xs, textAlign: 'center' },
+  modalMessage:    { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginBottom: Spacing.md, textAlign: 'center' },
+  modalButtons:    { flexDirection: 'row', gap: Spacing.sm },
+  modalBtn:        { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.md, alignItems: 'center' },
+  modalCancel:     { backgroundColor: Colors.surface },
+  modalConfirm:    { backgroundColor: Colors.bordeaux },
+  modalCancelText:   { color: Colors.bordeaux, fontWeight: '700' },
+  modalConfirmText:  { color: Colors.white, fontWeight: '700' },
+
+  // Bouton ouvrir dans maps
+  openMapsButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.textLight, borderRadius: Radius.md,
+    paddingVertical: Spacing.sm, marginTop: Spacing.md, gap: Spacing.xs,
+  },
+  openMapsButtonText: { color: Colors.white, fontSize: Fonts.size.md, fontWeight: '500' },
+
+  // Modal choix de navigation
+  mapChoiceOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  mapChoiceBox: {
+    backgroundColor: Colors.white, borderRadius: Radius.lg,
+    padding: Spacing.lg, width: '85%', alignItems: 'center',
+  },
+  mapChoiceTitle:      { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs, textAlign: 'center' },
+  mapChoiceSubtitle:   { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginBottom: Spacing.md, textAlign: 'center' },
+  mapChoiceButtonsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginBottom: Spacing.md },
+  mapChoiceAppButton:  {
+    alignItems: 'center', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md,
+    borderRadius: Radius.md, backgroundColor: Colors.surface,
+    borderWidth: 1, borderColor: Colors.border, minWidth: 120,
+  },
+  mapChoiceAppButtonText:    { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary, marginTop: Spacing.xs },
+  mapChoiceCancelButton:     { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md },
+  mapChoiceCancelButtonText: { fontSize: Fonts.size.md, fontWeight: '600', color: Colors.textSecondary },
+  mapChoiceAppIcon:          { width: 40, height: 40, marginBottom: Spacing.xs },
 });
