@@ -288,7 +288,7 @@ describe('useReservationStore › complete', () => {
     mockReservationApi.complete.mockResolvedValue({ ok: true, data: completed, message: 'OK' });
 
     await act(async () => {
-      await useReservationStore.getState().complete(TOKEN, 'resa-1', 12.5, 25, 'RAS', 42.0);
+      await useReservationStore.getState().complete(TOKEN, 'resa-1', { actual_distance_km: 12.5, actual_duration_min: 25, driver_notes: 'RAS', price_adjusted: 42.0 });
     });
 
     expect(useReservationStore.getState().activeRide).toBeNull();

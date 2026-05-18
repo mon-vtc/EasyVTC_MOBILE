@@ -19,7 +19,7 @@ const mockOrder = {
   trip_snapshot: {
     pickup_address: '10 rue de la Paix', dest_address: 'CDG',
     vehicle_type: 'berline', country: 'france' as PricingCountry, scheduled_at: '2024-06-01T10:00:00Z',
-    comment: null, via: '', pricing_type: 'formula' as PricingType,
+    nb_passengers: 2, comment: null, via: '', pricing_type: 'formula' as PricingType,
     final_price: 45.0, currency: 'EUR' as TripSnapshot['currency'],
   },
   issued_at: '2024-01-01T00:00:00Z',

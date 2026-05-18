@@ -113,7 +113,7 @@ describe('authApi.register', () => {
     mockErrorResponse('Un compte existe déjà avec cet email');
     const res = await authApi.register({
       email: 'dup@test.com', password: 'Test1234', first_name: 'A',
-      last_name: 'B', phone: '+33611111111', role: 'client', accept_terms: true,
+      last_name: 'B', phone: '+33611111111', role: 'client', accept_terms: true, rgpd_consent: true,
     });
     expect(res.ok).toBe(false);
     expect(res.message).toContain('existe déjà');
