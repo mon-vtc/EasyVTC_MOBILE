@@ -32,7 +32,8 @@ export type {
 } from './document.types';
 
 export type {
-  AvailableDriverDto
+  AvailableDriverDto,
+  Reservation
 } from './reservations.types';
 
 export type {
@@ -51,5 +52,6 @@ export type {
   ManagerPermission,
   SetManagerPermissionsDto,
   ManagerPermissionsResult,
+  AdminStats
 } from './admin.types';
 export { MANAGER_PERMISSIONS, PERMISSION_LABELS } from './admin.types';
