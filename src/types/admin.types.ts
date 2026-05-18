@@ -182,3 +182,24 @@ export interface ClientTripsResult {
   total_pages: number;
 }
 
+export interface AdminStats {
+  reservations: {
+    total: number;
+    by_status:   Record<string, number>;
+  };
+  revenue: {
+    total_eur: number;
+    total_xof: number;
+  };
+  drivers: {
+    total:       number;
+    active:      number;
+    online:      number;
+    on_trip:     number;
+  };
+  clients: {
+    total: number;
+    active: number;
+  };
+  vehicle_type_distribution: Record<string, number>;
+}

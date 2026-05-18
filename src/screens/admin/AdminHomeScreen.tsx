@@ -1,8 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import { useAdmin } from '../../hooks/useAdmin';
+import { useReservation } from '../../hooks/useReservation';
+import type { AdminStats, Reservation } from '../../types';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES & MOCK DATA
@@ -17,6 +20,12 @@ type Booking = {
   price: number;
 };
 
+type DashboardData = {
+  stats: AdminStats | null;
+  bookings: Booking[];
+  drivers: Driver[];
+};
+
 type Driver = {
   id: string;
   name: string;
@@ -24,49 +33,6 @@ type Driver = {
   rating: number;
   isOnline: boolean;
   avatarUrl?: string;
-};
-
-type DashboardData = {
-  stats: {
-    pending: number;
-    activeDrivers: number;
-    revenue: number;
-    rides: number;
-  };
-  bookings: Booking[];
-  drivers: Driver[];
-};
-
-const mockData: DashboardData = {
-  stats: {
-    pending: 5,
-    activeDrivers: 12,
-    revenue: 2450,
-    rides: 28,
-  },
-  bookings: [
-    {
-      id: '1',
-      bookingCode: 'BC-2025-00145',
-      clientName: 'Marie Dubois',
-      route: 'Massy, 91300 → Aéroport Paris-Orly',
-      dateTime: '15 janvier 2026 à 14h30',
-      price: 65,
-    },
-    {
-      id: '2',
-      bookingCode: 'BC-2025-00148',
-      clientName: 'Jean Dupont',
-      route: 'Paris 15ème → Gare Montparnasse',
-      dateTime: '15 janvier 2026 à 18:00',
-      price: 28,
-    },
-  ],
-  drivers: [
-    { id: '1', name: 'Mohamed Diallo', vehicleType: 'Berline', rating: 4.8, isOnline: true },
-    { id: '2', name: 'Fatima Zahra', vehicleType: 'Van', rating: 4.9, isOnline: true },
-    { id: '3', name: 'Pierre Martin', vehicleType: 'Standard', rating: 4.7, isOnline: true },
-  ],
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -135,29 +101,101 @@ const DriverItem = ({ driver }: { driver: Driver }) => (
 // ÉCRAN PRINCIPAL
 // ══════════════════════════════════════════════════════════════════════════════
 
-export default function AdminHomeScreen({ navigation } : any) {
-  const { stats, bookings, drivers } = mockData;
+export default function AdminHomeScreen({ navigation }: any) {
+  const { fetchDashboardStats, drivers, fetchDrivers } = useAdmin();
+  const { reservations, fetchAll: fetchReservations } = useReservation();
+
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const mapApiDriverToLocal = (apiDriver: any): Driver => ({
+    id: apiDriver.id,
+    name: `${apiDriver.first_name} ${apiDriver.last_name}`,
+    vehicleType: apiDriver.driver.vehicle_type,
+    rating: apiDriver.rating ?? 0,
+    isOnline: apiDriver.driver.is_online,
+    avatarUrl: apiDriver.profile_photo_url,
+  });
+
+  const loadData = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    try {
+      // On lance les chargements, mais on n'attend pas leur retour ici
+      const statsPromise = fetchDashboardStats();
+      const bookingsPromise = fetchReservations({ status: 'pending', limit: 2, page: 1 });
+      const driversPromise = fetchDrivers({ is_online: true, limit: 5 });
+
+      // On attend uniquement les stats, car elles ne sont pas dans un store
+      const [stats] = await Promise.all([
+        fetchDashboardStats(),
+        bookingsPromise,
+        driversPromise,
+      ]);
+
+      // On met à jour le state local avec les stats
+      setData({
+        stats,
+        // Les réservations et chauffeurs seront lus directement depuis les hooks
+        bookings: [],
+        drivers: [],
+      });
+    } catch (error) {
+      console.error("Failed to load dashboard data:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [fetchDashboardStats, fetchReservations, fetchDrivers]);
+
+  // On utilise les données des stores, qui sont mises à jour par les hooks
+  const dashboardBookings = reservations
+    .filter(r => r.status === 'pending')
+    .slice(0, 5)
+    .map((r: Reservation) => ({
+          id: r.id,
+          bookingCode: `BC-${r.id.split('-').pop()?.toUpperCase()}`,
+          clientName: `${r.client?.first_name} ${r.client?.last_name}`,
+          route: `${r.pickup_address} → ${r.dest_address}`,
+          dateTime: new Date(r.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }),
+          price: r.price_estimated,
+    }));
+
+  const dashboardDrivers = drivers.filter(d => d.driver?.is_online).slice(0, 5).map(mapApiDriverToLocal);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  if (loading) {
+    return <View style={styles.container}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>;
+  }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadData(true)} />}
+    >
       {/* Section KPI */}
       <View style={styles.statsGrid}>
-        <StatCard icon="time-outline" value={String(stats.pending)} label="En attente" colors={['#4A90E2', '#2C6DA9']} />
-        <StatCard icon="person-outline" value={String(stats.activeDrivers)} label="Chauffeurs actifs" colors={['#50E3C2', '#34A88A']} />
-        <StatCard icon="logo-euro" value={`${stats.revenue} €`} label="CA du jour" colors={[Colors.bordeaux, '#A12C32']} />
-        <StatCard icon="car-sport-outline" value={String(stats.rides)} label="Courses du jour" colors={['#BD10E0', '#8A0B9E']} />
+        <StatCard icon="time-outline" value={String(data?.stats?.reservations?.by_status?.pending ?? 0)} label="En attente" colors={['#4A90E2', '#2C6DA9']} />
+        <StatCard icon="person-outline" value={String(data?.stats?.drivers?.online ?? 0)} label="Chauffeurs en ligne" colors={['#50E3C2', '#34A88A']} />
+        <StatCard icon="logo-euro" value={`${(data?.stats?.revenue?.total_eur ?? 0).toFixed(0)} €`} label="CA du jour" colors={[Colors.bordeaux, '#A12C32']} />
+        <StatCard icon="car-sport-outline" value={String(data?.stats?.reservations?.by_status?.assigned ?? 0)} label="Courses du jour" colors={['#BD10E0', '#8A0B9E']} />
       </View>
 
       {/* Section Réservations en attente */}
       <View style={styles.section}>
         <SectionHeader title="Réservations en attente" actionText="Voir tout" actionOnPress={() => navigation.navigate('AdminReservations')} />
-        {bookings.map(booking => <BookingCard key={booking.id} booking={booking} />)}
+        {dashboardBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)}
       </View>
 
       {/* Section Chauffeurs disponibles */}
       <View style={styles.section}>
-        <SectionHeader title="Chauffeurs disponibles" actionText={`${drivers.filter(d => d.isOnline).length} en ligne`} />
-        {drivers.map(driver => <DriverItem key={driver.id} driver={driver} />)}
+        <SectionHeader title="Chauffeurs disponibles" actionText={`${dashboardDrivers.length} en ligne`} />
+        {dashboardDrivers.map(driver => <DriverItem key={driver.id} driver={driver} />)}
       </View>
     </ScrollView>
   );

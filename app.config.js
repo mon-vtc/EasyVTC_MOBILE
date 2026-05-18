@@ -7,8 +7,8 @@ export default {
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
   splash: {
-    image: "./assets/splash-icon.png",
-    resizeMode: "contain",
+    image: "./assets/logo.png",
+    resizeMode: "native",
     backgroundColor: "#ffffff",
   },
   ios: {

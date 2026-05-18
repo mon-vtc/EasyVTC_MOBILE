@@ -41,7 +41,6 @@ export function useReservation() {
   const isSubmitting     = useReservationStore(s => s.isSubmitting);
   const isFetchingPrice  = useReservationStore(s => s.isFetchingPrice);
   const error            = useReservationStore(s => s.error);
-
   const _fetchVehicleTypes = useReservationStore(s => s.fetchVehicleTypes);
   const _fetchMine         = useReservationStore(s => s.fetchMine);
   const _fetchDriverReservations = useReservationStore(s => s.fetchDriverReservations);
@@ -455,11 +454,11 @@ export function useReservation() {
     // Mes réservations
     reservations,
     selected,
-    fetchMine:             useCallback((filters?: ReservationListFilters) => _fetchMine(accessTokenRef.current!, filters), []),
-    fetchDriverReservations: useCallback((filters?: ReservationListFilters) => _fetchDriverReservations(accessTokenRef.current!, filters), []),
-    fetchAll:              useCallback((filters?: ReservationListFilters) => _fetchAll(accessTokenRef.current!, filters), []),
-    fetchById:             useCallback((id: string)                       => _fetchById(accessTokenRef.current!, id), []),
-    fetchDriverActive:     useCallback(()                               => _fetchDriverActive(accessTokenRef.current!), []),
+    fetchMine:             useCallback((filters?: ReservationListFilters) => _fetchMine(accessTokenRef.current!, filters), [_fetchMine]),
+    fetchDriverReservations: useCallback((filters?: ReservationListFilters) => _fetchDriverReservations(accessTokenRef.current!, filters), [_fetchDriverReservations]),
+    fetchAll:              useCallback((filters?: ReservationListFilters) => _fetchAll(accessTokenRef.current!, filters), [_fetchAll]),
+    fetchById:             useCallback((id: string)                       => _fetchById(accessTokenRef.current!, id), [_fetchById]),
+    fetchDriverActive:     useCallback(()                               => _fetchDriverActive(accessTokenRef.current!), [_fetchDriverActive]),
     fetchDriverUserActive: useCallback((vehicleType?: string) => _fetchAvailableDrivers(accessTokenRef.current!, vehicleType), []),
 
     // Actions fournisseurs
