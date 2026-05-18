@@ -1,12 +1,14 @@
-import { useAuth }       from './useAuth';
+import { useAuth } from './useAuth';
 import { useAuthStore, useUsersStore, useDriversStore, useManagersStore, useClientsStore } from '../store';
 import { managersApi }  from '../services/api/managers.api';
+import { adminApi } from '../services/api/admin.api';
 import type {
   AdminUser, ListUsersParams, ListDriversParams,
   UpdateUserStatusPayload, ChangeDriverStatusPayload, UserRole,
-  CreateManagerDto, UpdateManagerDto, ChangeManagerStatusDto, ManagerListFilters,
+  CreateManagerDto, UpdateManagerDto, ChangeManagerStatusDto, ManagerListFilters, AdminStats,
   ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult,
 } from '../types';
+import { useCallback, useEffect, useRef } from 'react';
 
 //  Réservé aux admins
 export function useAdmin() {
@@ -17,6 +19,12 @@ export function useAdmin() {
   if (!isAdminOrManager) {
     throw new Error('useAdmin() ne peut être utilisé que par un administrateur ou un manager.');
   }
+
+  // ── Ref stable pour accessToken (évite les boucles dans useCallback) ──────
+  const accessTokenRef = useRef(accessToken);
+  useEffect(() => {
+    accessTokenRef.current = accessToken;
+  }, [accessToken]);
 
   // ── Store Utilisateurs (clients, autres admins, managers) ─────
   const users            = useUsersStore(s => s.users);
@@ -68,6 +76,116 @@ export function useAdmin() {
   const _changeManagerStatus = useManagersStore(s => s.changeStatus);
   const clearManagersError  = useManagersStore(s => s.clearError);
 
+  // ── Refs stables pour les actions store (évite les re-renders en cascade) ─
+  const _fetchUsersRef          = useRef(_fetchUsers);
+  const _fetchUserByIdRef       = useRef(_fetchUserById);
+  const _updateStatusRef        = useRef(_updateStatus);
+  const _fetchDriversRef        = useRef(_fetchDrivers);
+  const _fetchDriverByIdRef     = useRef(_fetchDriverById);
+  const _changeDriverStatusRef  = useRef(_changeDriverStatus);
+  const _fetchClientsRef        = useRef(_fetchClients);
+  const _fetchClientByIdRef     = useRef(_fetchClientById);
+  const _fetchClientTripsRef    = useRef(_fetchClientTrips);
+  const _changeClientStatusRef  = useRef(_changeClientStatus);
+  const _fetchManagersRef       = useRef(_fetchManagers);
+  const _createManagerRef       = useRef(_createManager);
+  const _updateManagerRef       = useRef(_updateManager);
+  const _fetchManagerByIdRef    = useRef(_fetchManagerById);
+  const _changeManagerStatusRef = useRef(_changeManagerStatus);
+
+  useEffect(() => { _fetchUsersRef.current         = _fetchUsers; },         [_fetchUsers]);
+  useEffect(() => { _fetchUserByIdRef.current       = _fetchUserById; },      [_fetchUserById]);
+  useEffect(() => { _updateStatusRef.current        = _updateStatus; },       [_updateStatus]);
+  useEffect(() => { _fetchDriversRef.current        = _fetchDrivers; },       [_fetchDrivers]);
+  useEffect(() => { _fetchDriverByIdRef.current     = _fetchDriverById; },    [_fetchDriverById]);
+  useEffect(() => { _changeDriverStatusRef.current  = _changeDriverStatus; }, [_changeDriverStatus]);
+  useEffect(() => { _fetchClientsRef.current        = _fetchClients; },       [_fetchClients]);
+  useEffect(() => { _fetchClientByIdRef.current     = _fetchClientById; },    [_fetchClientById]);
+  useEffect(() => { _fetchClientTripsRef.current    = _fetchClientTrips; },   [_fetchClientTrips]);
+  useEffect(() => { _changeClientStatusRef.current  = _changeClientStatus; }, [_changeClientStatus]);
+  useEffect(() => { _fetchManagersRef.current       = _fetchManagers; },      [_fetchManagers]);
+  useEffect(() => { _createManagerRef.current       = _createManager; },      [_createManager]);
+  useEffect(() => { _updateManagerRef.current       = _updateManager; },      [_updateManager]);
+  useEffect(() => { _fetchManagerByIdRef.current    = _fetchManagerById; },   [_fetchManagerById]);
+  useEffect(() => { _changeManagerStatusRef.current = _changeManagerStatus; },[_changeManagerStatus]);
+
+  // ── Actions stables (useCallback avec [] — lisent les valeurs via ref) ────
+
+  const fetchUsers = useCallback((params?: ListUsersParams) =>
+    _fetchUsersRef.current(accessTokenRef.current!, params), []);
+
+  const fetchClients = useCallback((params?: Omit<ListUsersParams, 'role'>) =>
+    _fetchUsersRef.current(accessTokenRef.current!, { ...params, role: 'client' }), []);
+
+  const fetchUsersByRole = useCallback((role: UserRole, params?: Omit<ListUsersParams, 'role'>) =>
+    _fetchUsersRef.current(accessTokenRef.current!, { ...params, role }), []);
+
+  const fetchUserById = useCallback((userId: string) =>
+    _fetchUserByIdRef.current(accessTokenRef.current!, userId), []);
+
+  const activateUser = useCallback((userId: string, reason: string) =>
+    _updateStatusRef.current(accessTokenRef.current!, userId, { status: 'active', reason }), []);
+
+  const deactivateUser = useCallback((userId: string, reason: string) =>
+    _updateStatusRef.current(accessTokenRef.current!, userId, { status: 'inactive', reason }), []);
+
+  const lockUser = useCallback((userId: string, reason: string) =>
+    _updateStatusRef.current(accessTokenRef.current!, userId, { status: 'locked', reason }), []);
+
+  const fetchDrivers = useCallback((params?: ListDriversParams) =>
+    _fetchDriversRef.current(accessTokenRef.current!, params), []);
+
+  const fetchDriverById = useCallback((driverId: string) =>
+    _fetchDriverByIdRef.current(accessTokenRef.current!, driverId), []);
+
+  const changeDriverStatus = useCallback((driverId: string, payload: ChangeDriverStatusPayload) =>
+    _changeDriverStatusRef.current(accessTokenRef.current!, driverId, payload), []);
+
+  const fetchManagers = useCallback((params?: ManagerListFilters) =>
+    _fetchManagersRef.current(accessTokenRef.current!, params), []);
+
+  const createManager = useCallback((dto: CreateManagerDto) =>
+    _createManagerRef.current(accessTokenRef.current!, dto), []);
+
+  const updateManager = useCallback((managerId: string, dto: UpdateManagerDto) =>
+    _updateManagerRef.current(accessTokenRef.current!, managerId, dto), []);
+
+  const fetchManagerById = useCallback((managerId: string) =>
+    _fetchManagerByIdRef.current(accessTokenRef.current!, managerId), []);
+
+  const changeManagerStatus = useCallback((managerId: string, payload: ChangeManagerStatusDto) =>
+    _changeManagerStatusRef.current(accessTokenRef.current!, managerId, payload), []);
+
+  const getManagerPermissions = useCallback(async (managerId: string): Promise<ManagerPermissionsResult> => {
+    const res = await managersApi.getPermissions(accessTokenRef.current!, managerId);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la récupération des permissions');
+    return res.data;
+  }, []);
+
+  const setManagerPermissions = useCallback(async (managerId: string, dto: SetManagerPermissionsDto): Promise<ManagerPermissionsResult> => {
+    const res = await managersApi.setPermissions(accessTokenRef.current!, managerId, dto);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la mise à jour des permissions');
+    return res.data;
+  }, []);
+
+  const fetchAdminClients = useCallback((params?: ClientListFilters) =>
+    _fetchClientsRef.current(accessTokenRef.current!, params), []);
+
+  const fetchAdminClientById = useCallback((clientId: string) =>
+    _fetchClientByIdRef.current(accessTokenRef.current!, clientId), []);
+
+  const fetchAdminClientTrips = useCallback((clientId: string, params?: { page?: number; limit?: number }) =>
+    _fetchClientTripsRef.current(accessTokenRef.current!, clientId, params), []);
+
+  const changeClientStatus = useCallback((clientId: string, payload: UpdateUserStatusPayload) =>
+    _changeClientStatusRef.current(accessTokenRef.current!, clientId, payload), []);
+
+  const fetchDashboardStats = useCallback(async (): Promise<AdminStats> => {
+    const res = await adminApi.getStats(accessTokenRef.current!);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la récupération des statistiques');
+    return res.data;
+  }, []);
+
   return {
     // Profil admin
     user:       auth.user as AdminUser,
@@ -102,62 +220,28 @@ export function useAdmin() {
     managersError,
     clearManagersError,
 
-    // Actions admin — gestion users (deprecated, utiliser les actions spécifiques par rôle)
-    fetchUsers: (params?: ListUsersParams) =>
-      _fetchUsers(accessToken!, params),
+    // Actions admin — gestion users
+    fetchUsers,
+    fetchClients,
+    fetchUsersByRole,
+    fetchUserById,
+    activateUser,
+    deactivateUser,
+    lockUser,
 
-    fetchClients: (params?: Omit<ListUsersParams, 'role'>) =>
-      _fetchUsers(accessToken!, { ...params, role: 'client' }),
-
-    fetchUsersByRole: (role: UserRole, params?: Omit<ListUsersParams, 'role'>) =>
-      _fetchUsers(accessToken!, { ...params, role }),
-
-    fetchUserById: (userId: string) =>
-      _fetchUserById(accessToken!, userId),
-
-    activateUser: (userId: string, reason: string) =>
-      _updateStatus(accessToken!, userId, { status: 'active', reason }),
-
-    deactivateUser: (userId: string, reason: string) =>
-      _updateStatus(accessToken!, userId, { status: 'inactive', reason }),
-
-    lockUser: (userId: string, reason: string) =>
-      _updateStatus(accessToken!, userId, { status: 'locked', reason }),
-
-    // Actions admin — gestion chauffeurs (utiliser /admin/drivers)
-    fetchDrivers: (params?: ListDriversParams) =>
-      _fetchDrivers(accessToken!, params),
-
-    fetchDriverById: (driverId: string) =>
-      _fetchDriverById(accessToken!, driverId),
-
-    changeDriverStatus: (driverId: string, payload: ChangeDriverStatusPayload) =>
-      _changeDriverStatus(accessToken!, driverId, payload),
+    // Actions admin — gestion chauffeurs
+    fetchDrivers,
+    fetchDriverById,
+    changeDriverStatus,
 
     // Actions admin — gestion managers
-    fetchManagers: (params?: ManagerListFilters) =>
-      _fetchManagers(accessToken!, params),
-    createManager: (dto: CreateManagerDto) =>
-      _createManager(accessToken!, dto),
-    updateManager: (managerId: string, dto: UpdateManagerDto) =>
-      _updateManager(accessToken!, managerId, dto),
-    fetchManagerById: (managerId: string) =>
-      _fetchManagerById(accessToken!, managerId),
-    changeManagerStatus: (managerId: string, payload: ChangeManagerStatusDto) =>
-      _changeManagerStatus(accessToken!, managerId, payload),
-
-    getManagerPermissions: async (managerId: string): Promise<ManagerPermissionsResult> => {
-      const res = await managersApi.getPermissions(accessToken!, managerId);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la récupération des permissions');
-      return res.data;
-    },
-
-    setManagerPermissions: async (managerId: string, dto: SetManagerPermissionsDto): Promise<ManagerPermissionsResult> => {
-      const res = await managersApi.setPermissions(accessToken!, managerId, dto);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la mise à jour des permissions');
-      return res.data;
-    },
-
+    fetchManagers,
+    createManager,
+    updateManager,
+    fetchManagerById,
+    changeManagerStatus,
+    getManagerPermissions,
+    setManagerPermissions,
 
     // Gestion des clients (endpoint /admin/clients)
     clients,
@@ -166,15 +250,13 @@ export function useAdmin() {
     isClientsLoading,
     clientsError,
     clearClientsError,
+    fetchAdminClients,
+    fetchAdminClientById,
+    fetchAdminClientTrips,
+    changeClientStatus,
 
-    fetchAdminClients: (params?: ClientListFilters) =>
-      _fetchClients(accessToken!, params),
-    fetchAdminClientById: (clientId: string) =>
-      _fetchClientById(accessToken!, clientId),
-    fetchAdminClientTrips: (clientId: string, params?: { page?: number; limit?: number }) =>
-      _fetchClientTrips(accessToken!, clientId, params),
-    changeClientStatus: (clientId: string, payload: UpdateUserStatusPayload) =>
-      _changeClientStatus(accessToken!, clientId, payload),
+    // Stats dashboard
+    fetchDashboardStats,
 
     // Actions sur son propre compte
     updateProfile: auth.updateProfile,

@@ -18,6 +18,7 @@ import type {
   VehicleTypeOption,
   AvailableDriverDto,
 } from '../types/reservations.types';
+import { useAuthStore } from './auth.store';
 import { BOOKING_INITIAL_STATE } from '../types/reservations.types';
 import { vehicleApi } from '../services/api/vehicle.api';
 
@@ -197,10 +198,13 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   },
 
   // ── Annulation ─────────────────────────────────────────────────────────────
-  cancel: async (token, id, reason) => {
+  cancel: async (id, reason) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await reservationApi.cancel(token, id, reason);
+      const token = useAuthStore.getState().accessToken;
+      if (!token) throw new Error('Non authentifié');
+
+      const res = await reservationApi.cancel(token, id,  reason );
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur annulation');
       set(state => ({
         reservations: state.reservations.map(r => r.id === id ? res.data! : r),
@@ -283,6 +287,8 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await vehicleApi.getVehicleTypes(token, country);
+      console.log(res.data);
+      
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur chargement véhicules');
       set({ vehicleTypes: res.data, isLoading: false });
     } catch (err: unknown) {

@@ -165,9 +165,9 @@ export default function ReservationDetailsScreen() {
 
   const handleCancelConfirm = async (reason: string) => {
     try {
-      if (accessToken && reservation?.id) {
+      if (reservation?.id) {
         // Faire l'appel API pour annuler
-        await cancel(reservation.id, reason);
+        await cancel(reservation.id, reason); // Cet appel est maintenant correct
         setCancelModalVisible(false);
         Alert.alert('Succès', 'La réservation a été annulée');
         // Retourner à l'écran précédent
