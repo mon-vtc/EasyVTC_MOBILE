@@ -29,6 +29,8 @@ import ManagerDetailScreen from '../screens/admin/managers/ManagerDetailScreen';
 import CreateManagerScreen from '../screens/admin/managers/CreateManagerScreen';
 import EditManagerScreen from '../screens/admin/managers/Editmanagerscreen';
 import ManagerPermissionsScreen from '../screens/admin/managers/ManagerPermissionsScreen';
+import NotificationDetailsScreen from '../screens/notifications/NotificationDetailsScreen';
+import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 
 import type {
   AdminDrawerParamList,
@@ -37,6 +39,7 @@ import type {
   ClientsStackParamList,
   AdminInvoicesStackParamList,
   AdminOrderStackParamList,
+  AdminNotificationsStackParamList,
 } from '../types/auth.types';
 
 import type { ManagersStackParamList } from '../types';
@@ -46,6 +49,7 @@ const DriversStack = createNativeStackNavigator<DriversStackParamList>();
 const ReservationsStack = createNativeStackNavigator<ReservationsStackParamList>();
 const InvoicesStack = createNativeStackNavigator<AdminInvoicesStackParamList>();
 const OrderStack = createNativeStackNavigator<AdminOrderStackParamList>();
+const NotificationsStack = createNativeStackNavigator<AdminNotificationsStackParamList>();
 
 // ── Stack pour la section Chauffeurs ────────────────────────────
 // Permet de naviguer de la liste vers le détail sans quitter le drawer
@@ -68,6 +72,18 @@ function AdminReservationsStack() {
     </ReservationsStack.Navigator>
   );
 }
+
+// ── Stack pour la section Notifications ──────────────────────────
+function AdminNotificationsStack() {
+  return (
+    <NotificationsStack.Navigator screenOptions={{ headerShown: false }}>
+      <NotificationsStack.Screen name="AdminNotificationList" component={NotificationsScreen} />
+      <NotificationsStack.Screen name="NotificationDetails" component={NotificationDetailsScreen} />
+    </NotificationsStack.Navigator>
+  );
+}
+
+// ── Stack pour la section Factures ────────────────────────────
 
 function AdminInvoicesStack() {
   return (
@@ -157,7 +173,7 @@ const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions =>
   ),
 
   headerRight: () => (
-    <TouchableOpacity onPress={() => console.log('Notifications')} style={{ marginRight: 20 }}>
+    <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={{ marginRight: 20 }}>
       <AppIcon name="notifications-outline" size={24} color={Colors.white} />
     </TouchableOpacity>
   ),
@@ -178,6 +194,7 @@ function DrawerLabel({ icon, label }: { icon: React.ComponentProps<typeof AppIco
 }
 
 export default function AdminNavigator() {
+  
   return (
     <Drawer.Navigator
       drawerContent={(props) => <DrawerContent {...props} />}
@@ -187,6 +204,12 @@ export default function AdminNavigator() {
         name="AdminHome"
         component={AdminHomeScreen}
         options={{ drawerLabel: () => <DrawerLabel icon="home-outline" label="Accueil" /> }}
+      />
+
+      <Drawer.Screen
+        name="Notifications"
+        component={AdminNotificationsStack}
+        options={{ drawerLabel: () => <DrawerLabel icon="notifications-outline" label="Notifications" /> }}
       />
 
       <Drawer.Screen
@@ -281,7 +304,7 @@ export default function AdminNavigator() {
           headerShown: false,
         }}
       />
-
+      
       <Drawer.Screen
         name="AdminProfile"
         component={AdminProfileScreen}

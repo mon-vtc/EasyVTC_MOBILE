@@ -32,7 +32,8 @@ import BookingConfirmationScreen  from '../screens/client/BookingConfirmationScr
 import ReservationDetailsScreen   from '../screens/client/ReservationDetailsScreen';
 import OrderDetailsScreen         from '../screens/client/OrderDetailsScreen';
 import InvoiceDetailsScreen       from '../screens/client/InvoiceDetailsScreen';
-
+import NotificationsScreen        from '../screens/notifications/NotificationsScreen';
+import NotificationDetailsScreen from '../screens/notifications/NotificationDetailsScreen';
 import type { ClientTabParamList, ClientStackParamList } from '../types/auth.types';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -158,6 +159,11 @@ function ClientTabs() {
         component={MyInvoicesScreen}
         options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
       />
+      <Tab.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
+      />
     </Tab.Navigator>
   );
 }
@@ -209,6 +215,13 @@ export default function ClientNavigator() {
       <Stack.Screen
         name="OrderDetails"
         component={OrderDetailsScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="NotificationDetails"
+        component={NotificationDetailsScreen}
         options={{
           animation: 'slide_from_right',
         }}

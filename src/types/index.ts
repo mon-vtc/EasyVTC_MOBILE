@@ -1,7 +1,8 @@
 export type { UserRole, UserStatus, AuthUser, AuthTokens,
               AuthStackParamList, ClientTabParamList,
               DriverDrawerParamList, AdminDrawerParamList,
-              ManagerDrawerParamList, ManagerReservationsStackParamList,
+              ManagerDrawerParamList, ManagerReservationsStackParamList, 
+              ManagerNotificationsStackParamList,
               ManagersStackParamList,
               ClientsStackParamList,
             } from './auth.types';
@@ -55,3 +56,11 @@ export type {
   AdminStats
 } from './admin.types';
 export { MANAGER_PERMISSIONS, PERMISSION_LABELS } from './admin.types';
+
+export type {
+  Notification,
+  NotificationType,
+  NotificationListFilters,
+  RealtimeNotificationPayload,
+} from './notifications.types';
+export { NOTIFICATION_ICONS, NOTIFICATION_ACTION_LABELS , NotificationIconConfig} from './notifications.types';

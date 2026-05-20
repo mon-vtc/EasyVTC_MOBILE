@@ -155,7 +155,7 @@ export default function AdminHomeScreen({ navigation }: any) {
     .slice(0, 5)
     .map((r: Reservation) => ({
           id: r.id,
-          bookingCode: `BC-${r.id.split('-').pop()?.toUpperCase()}`,
+          bookingCode: `RES-${r.id.split('-').pop()?.toUpperCase()}`,
           clientName: `${r.client?.first_name} ${r.client?.last_name}`,
           route: `${r.pickup_address} → ${r.dest_address}`,
           dateTime: new Date(r.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }),

@@ -48,6 +48,7 @@ export default function AppNavigator() {
   // Ajouter cette ligne comme attribut de la balise NavigationContainer pour un meilleur debug
   // onStateChange={(state) => console.log('Nouvel État de Navigation:', JSON.stringify(state, null, 2))}
   return (
+    
     <NavigationContainer
     >
       {renderNavigator()}

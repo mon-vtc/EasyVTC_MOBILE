@@ -10,6 +10,7 @@ import { useReservation } from '../../hooks/useReservation';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { ClientTabParamList }   from '../../types/auth.types';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNotifications } from '../../hooks/useNotifications';  
 
 type Props = BottomTabScreenProps<ClientTabParamList, 'ClientHome'>;
 
@@ -116,6 +117,7 @@ export default function ClientHomeScreen({ navigation }: Props) {
   const { user } = useAuth();
   const { homeReservations, fetchHomeReservations } = useReservation();
   const firstName = user?.first_name ?? 'Marie';
+  const { notifications, unreadCount } = useNotifications();
 
   // useEffect :
   useEffect(() => {
@@ -177,14 +179,14 @@ export default function ClientHomeScreen({ navigation }: Props) {
               </View>
               <View style={styles.headerIcons}>
                 {/* Cloche avec badge */}
-                <TouchableOpacity style={styles.iconBtn}>
+                <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Notifications')}>
                   <Ionicons name="notifications-outline" size={26} color={Colors.white} />
                   <View style={styles.notifBadge}>
-                    <Text style={styles.notifText}>3</Text>
+                    <Text style={styles.notifText}>{ unreadCount}</Text>
                   </View>
                 </TouchableOpacity>
                 {/* Profil */}
-                <TouchableOpacity style={styles.iconBtn}>
+                <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('ClientProfile')}>
                   <Ionicons name="person-circle-outline" size={26} color={Colors.white} />
                 </TouchableOpacity>
               </View>

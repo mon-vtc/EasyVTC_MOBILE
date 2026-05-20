@@ -331,7 +331,7 @@ const priceSt = StyleSheet.create({
 
 /** CTA bouton(s) */
 const ctaSt = StyleSheet.create({
-  btn:      { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginHorizontal: Spacing.md, marginTop: Spacing.md, backgroundColor: Colors.bordeauxDark, borderRadius: Radius.lg, paddingVertical: 15 },
+  btn:      { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginHorizontal: Spacing.md, marginTop: Spacing.md, backgroundColor: Colors.bordeauxLight, borderRadius: Radius.lg, paddingVertical: 15 },
   btnGreen: { backgroundColor: '#22C55E' },
   btnText:  { color: '#fff', fontWeight: '700', fontSize: 15 },
   row:      { flexDirection: 'row', gap: Spacing.sm, marginHorizontal: Spacing.md, marginTop: Spacing.md },
@@ -472,7 +472,7 @@ const TripAssignedDetails: React.FC<{
         icon="car-outline" iconColor={Colors.bordeauxLight}
         borderColor="#E8D5D5" bg="#FDF8F8"
         title="Nouvelle course assignée"
-        body="Une course vous a été attribuée. Consultez les détails ci-dessous."
+        body="Une course vous a été attribuée à un chauffeur. Consultez les détails ci-dessous."
       />
     )}
     {(user)?.role === 'client' && ( 

@@ -19,7 +19,7 @@ import { useAuthStore }   from '../../store/auth.store';
 import { invoicesApi }    from '../../services/api/invoices.api';
 import { Logo } from '../../constants/logo';
 
-type Props = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationDetail'>;
+type Props = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationDetails'>;
 
 // ── Statuts ─────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<ReservationStatus, { label: string; bg: string; color: string }> = {
