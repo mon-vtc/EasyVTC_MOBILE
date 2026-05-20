@@ -17,8 +17,11 @@ import DriverOrdersScreen         from '../screens/driver/orders/DriverOrdersScr
 import DriverOrderDetailsScreen   from '../screens/driver/orders/DriverOrderDetailsScreen';
 import DriverInvoiceDetailScreen   from '../screens/driver/invoices/DriverInvoiceDetailsScreen';
 import DriverInvoicesScreen       from '../screens/driver/invoices/DriverInvoicesScreen';
+import NotificationsScreen from '../screens/notifications/NotificationsScreen';
+import NotificationDetailsScreen from '../screens/notifications/NotificationDetailsScreen';
 
-import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList } from '../types/auth.types';
+
+import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList, DriverNotificationsStackParamList } from '../types/auth.types';
 
 import { Logo }                  from  '../constants/logo';
 
@@ -28,11 +31,19 @@ function DriverReservationsStackScreen() {
   return (
     <DriverReservationsStack.Navigator screenOptions={{ headerShown: false }}>
       <DriverReservationsStack.Screen name="DriverReservationsList" component={DriverReservationsScreen} />
-      <DriverReservationsStack.Screen name="DriverReservationDetail" component={DriverReservationScreen} />
+      <DriverReservationsStack.Screen name="DriverReservationDetails" component={DriverReservationScreen} />
     </DriverReservationsStack.Navigator>
   );
 }
-
+const DriverNotificationsStack = createNativeStackNavigator<DriverNotificationsStackParamList>();
+function DriverNotificationsStackScreen() {
+  return (
+    <DriverNotificationsStack.Navigator screenOptions={{ headerShown: false }}>
+      <DriverNotificationsStack.Screen name="NotificationsList" component={NotificationsScreen} />
+      <DriverNotificationsStack.Screen name="NotificationDetails" component={NotificationDetailsScreen} />
+    </DriverNotificationsStack.Navigator>
+  );
+}
 const DriverOrdersStack = createNativeStackNavigator<DriverOrdersStackParamList>();
 
 function DriverOrdersStackScreen() {
@@ -89,7 +100,7 @@ const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions =>
   // --- Bouton Notification à Droite ---
   headerRight: () => (
     <TouchableOpacity 
-      onPress={() => console.log('Notifications cliquées')} 
+      onPress={() => navigation.navigate('Notifications')}
       style={{ marginRight: 20 }}
     >
       <AppIcon name="notifications-outline" size={24} color={Colors.white} />
@@ -124,6 +135,15 @@ export default function DriverNavigator() {
         component={DriverHomeScreen}
         options={{
           drawerLabel: () => <DrawerLabel icon="home-outline" label="Accueil" />,
+        }}
+      />
+
+      <Drawer.Screen
+        name="Notifications"
+        component={DriverNotificationsStackScreen}
+        options={{ 
+          drawerLabel: () => <DrawerLabel icon="notifications-outline" label="Notifications" /> ,
+          
         }}
       />
 
@@ -168,7 +188,7 @@ export default function DriverNavigator() {
           headerShown: false,
         }}
       />
-
+     
       <Drawer.Screen
         name="DriverInvoices"
         component={DriverInvoicesStackScreen}
@@ -189,6 +209,14 @@ export default function DriverNavigator() {
       <Drawer.Screen
         name="DriverOrderDetails"
         component={DriverOrderDetailsScreen}
+        options={{
+          drawerItemStyle: { display: 'none' },
+          headerShown: false,
+        }}
+      />
+      <Drawer.Screen
+        name="DriverReservationDetails"
+        component={DriverReservationScreen}
         options={{
           drawerItemStyle: { display: 'none' },
           headerShown: false,

@@ -61,6 +61,8 @@ export type ClientTabParamList = {
   MyInvoices:          { reservationId?: string } | undefined;
   OrderDetails:        { orderId: string };
   InvoiceDetails:      { invoiceId: string };
+  Notifications:       undefined; // Add NotificationsScreen to ClientTabParamList
+  NotificationDetails: { notificationId: string }; // Add NotificationDetails to ClientTabParamList
 };
 
 /**
@@ -80,12 +82,18 @@ export type ClientStackParamList = {
   BookingConfirmation:  { reservationId: string };
   OrderDetails:         { orderId: string };
   InvoiceDetails:       { invoiceId: string };
+  NotificationDetails:   { notification: Notification }; // Add NotificationDetails to ClientStackParamList
 };
 
 export type DriverReservationsStackParamList = {
   DriverReservationsList:  undefined;
-  DriverReservationDetail: { reservationId: string };
+  DriverReservationDetails: { reservationId: string };
 };
+
+export type DriverNotificationsStackParamList = {
+  NotificationsList: undefined; 
+  NotificationDetails: { notification: Notification };
+}
 
 export type DriverOrdersStackParamList = {
   DriverOrdersList:   undefined;
@@ -100,23 +108,31 @@ export type DriverInvoicesStackParamList = {
 export type DriverDrawerParamList = {
   DriverHome:         undefined;
   DriverReservations: NavigatorScreenParams<DriverReservationsStackParamList>;
+  DriverReservationDetails: { reservationId: string };
   DriverTrips:        undefined;
   DriverDocuments:    undefined;
   DriverAvailability: undefined;
   DriverProfile:      undefined;
+  Notifications:     NavigatorScreenParams<DriverNotificationsStackParamList>; // Add NotificationsScreen to AdminDrawerParamList
+
   // S4 — Documents financiers
   DriverOrders:       NavigatorScreenParams<DriverOrdersStackParamList>;
   DriverInvoices:     NavigatorScreenParams<DriverInvoicesStackParamList>;
   DriverOrderDetails: { orderId: string };
   DriverInvoiceDetails: { invoiceId: string };
-
+  NotificationDetails: { notification: Notification }; // Add NotificationDetails to DriverDrawerParamList
 };
 
 
 export type ManagerReservationsStackParamList = {
   ManagerReservationsList: undefined;
-  ManagerReservationDetail: { reservationId: string; };
+  ManagerReservationDetail: { reservationId: string; };// Add NotificationDetails to ManagerReservationsStackParamList
 };
+
+export type ManagerNotificationsStackParamList = {
+  ManagerNotificationList: undefined;
+  NotificationDetails: { notification: Notification };
+}
 
 export type ManagerDrawerParamList = {
   ManagerHome:         undefined;  
@@ -130,6 +146,7 @@ export type ManagerDrawerParamList = {
   // Tarification (sous-écrans accessibles via accordion drawer)
   BaseGrid:            undefined;
   FlatRates:           undefined;
+  ManagerNotifications : NavigatorScreenParams<ManagerNotificationsStackParamList>;
 };
 
 
@@ -170,6 +187,10 @@ export type AdminOrderStackParamList = {
     OrderDetails:        { orderId: string };
 }
 
+export type AdminNotificationsStackParamList = {
+    AdminNotificationList: undefined;
+    NotificationDetails: { notification: Notification };
+}
 
 
 // ── Drawer Admin ─────────────────────────────────────────────────
@@ -187,6 +208,7 @@ export type AdminDrawerParamList = {
   BaseGrid:          undefined;
   FlatRates:         undefined;
   AdminVehicleTypes: undefined;
+  Notifications:     NavigatorScreenParams<AdminNotificationsStackParamList>; // Add NotificationsScreen to AdminDrawerParamList
   // S4 — Documents financiers
   AdminOrders:       NavigatorScreenParams<AdminOrderStackParamList>;
   AdminInvoices:     NavigatorScreenParams<AdminInvoicesStackParamList>;

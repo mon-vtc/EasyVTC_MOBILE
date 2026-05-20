@@ -198,12 +198,10 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   },
 
   // ── Annulation ─────────────────────────────────────────────────────────────
-  cancel: async (id, reason) => {
+  cancel: async (token, id, reason) => {
     set({ isLoading: true, error: null });
     try {
-      const token = useAuthStore.getState().accessToken;
       if (!token) throw new Error('Non authentifié');
-
       const res = await reservationApi.cancel(token, id,  reason );
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur annulation');
       set(state => ({
