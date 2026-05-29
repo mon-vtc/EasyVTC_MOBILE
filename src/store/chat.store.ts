@@ -156,14 +156,16 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
     set({ isLoadingMessages: true, error: null });
     try {
       const response = await chatApi.getMessages(token, reservationId, page, limit);
-      if (response.ok && response.data) {
+      const data = response.data;
+          
+      if (response.ok && data) {
         set(state => ({
           activeConversationMessages: append
-            ? [...state.activeConversationMessages, ...response.data.messages]
-            : response.data.messages,
-          activeConversationMessagesPage: response.data.page,
-          activeConversationMessagesTotal: response.data.total,
-          activeConversationMessagesTotalPages: response.data.total_pages,
+            ? [...state.activeConversationMessages, ...data.messages]
+            : data.messages,
+          activeConversationMessagesPage: data.page,
+          activeConversationMessagesTotal: data.total,
+          activeConversationMessagesTotalPages: data.total_pages,
         }));
       } else {
         throw new Error(response.message || 'Erreur lors du chargement des messages.');
@@ -295,12 +297,16 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
     try {
       const response = await chatApi.updateSupportTicketStatus(token, ticketId, status);
       if (response.ok && response.data) {
+        const updatedTicketInfo = response.data;
         set(state => ({
           activeSupportTicket: state.activeSupportTicket?.id === ticketId
-            ? response.data
+            ? { // On fusionne les nouvelles infos avec les messages existants
+                ...state.activeSupportTicket,
+                ...updatedTicketInfo,
+              }
             : state.activeSupportTicket,
           supportTickets: state.supportTickets.map(ticket =>
-            ticket.id === ticketId ? response.data : ticket,
+            ticket.id === ticketId ? { ...ticket, ...updatedTicketInfo } : ticket,
           ) as SupportTicketRow[],
         }));
         return response.data;
