@@ -37,6 +37,8 @@ function DriverReservationsStackScreen() {
       <DriverReservationsStack.Screen name="DriverReservationDetails" component={DriverReservationScreen} />
       <DriverReservationsStack.Screen name="ChatScreen" component={ChatScreen} />
       <DriverReservationsStack.Screen name="DriverInvoiceDetails" component={DriverInvoiceDetailScreen} />
+      <DriverReservationsStack.Screen name="SupportList" component={SupportListScreen} />
+      <DriverReservationsStack.Screen name="SupportChat" component={SupportChatScreen} />
 
     </DriverReservationsStack.Navigator>
   );

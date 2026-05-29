@@ -1,15 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Image, Platform, Modal, TextInput, Pressable, Alert, RefreshControl,
+  ActivityIndicator, Image, Platform, Modal, TextInput, Pressable, Alert, RefreshControl, Linking, ScrollView
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useChat } from '../../hooks/useChat';
 import { useAuth } from '../../hooks/useAuth';
-import { Colors, Fonts, Spacing } from '../../theme/colors';
+import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
 import TicketCard from '../../components/support/TicketCard';
 import { Logo } from '../../constants/logo';
+import { AppIconProps } from '../../types/app-icon-props.types';
 
 import type { SupportTicketRow, SupportTicketStatus, CreateSupportTicketDto, SupportTicketCategory} from '../../types/chats.type';
 
@@ -26,12 +28,11 @@ const PRIORITY_LABELS: Record<string, string> = {
   urgent: 'Urgent',
 };
 
-
-
 export default function SupportListScreen({ navigation }: any) {
   const { user } = useAuth();
   const { supportTickets, isLoadingSupportTickets, fetchSupportTickets, createSupportTicket, fetchSupportTicketsRaw } = useChat();
   const [activeTab, setActiveTab] = useState<SupportTicketStatus>('pending');
+  const [helpModalVisible, setHelpModalVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [allTickets, setAllTickets] = useState<SupportTicketRow[]>([]);
 
@@ -119,7 +120,18 @@ export default function SupportListScreen({ navigation }: any) {
             <Image source={Logo.LogoEasyVTC} style={styles.logo} resizeMode="contain" />
           </View>
 
-          <View style={styles.headerBtn} />
+          <View style={styles.headerBtn}>
+            {user?.role !== 'admin' && user?.role !== 'manager' && (
+              <>
+                <TouchableOpacity onPress={() => setHelpModalVisible(true)} style={styles.headerBtn}>
+                  <AppIcon name="help-circle-outline" size={24} color={Colors.white} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.headerBtn}>
+                  <AppIcon name="add" size={24} color={Colors.white} />
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
         </View>
 
         <View style={styles.supportStatusPill}>
@@ -175,6 +187,12 @@ export default function SupportListScreen({ navigation }: any) {
           }
         }}
       />
+      <HelpModal
+        visible={helpModalVisible}
+        onClose={() => setHelpModalVisible(false)}
+        role={user?.role}
+      />
+
     </View>
   );
 }
@@ -206,12 +224,35 @@ function SupportTicketModal({
       setLoading(false);
     }
   };
+  const categories = useMemo(() => {
+    return [
+      { key: 'reservation', label: 'Réservation', icon: 'calendar' },
+      { key: 'payment', label: 'Paiement', icon: 'card' },
+      { key: 'driver', label: 'Chauffeur', icon: 'car' },
+      { key: 'account', label: 'Compte', icon: 'person' },
+      { key: 'technical', label: 'Technique', icon: 'settings' },
+      { key: 'other', label: 'Autre', icon: 'help-circle' },
+    ] as { key: SupportTicketCategory, label: string , icon: AppIconProps['name']}[];
+  }, []);
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={modalStyles.backdrop}>
         <View style={modalStyles.container}>
           <Text style={modalStyles.title}>Nouveau ticket</Text>
+          
+            <View style={modalStyles.categoryRow}>
+            {categories.map((c) => (
+              <Pressable
+                key={c.key}
+                onPress={() => setCategory(c.key as any)}
+                style={[modalStyles.categoryBtn, category === c.key && modalStyles.categoryActive]}
+              >
+                <AppIcon name={c.icon} size={20} color={category === c.key ? Colors.white : Colors.bordeaux} />
+                <Text style={category === c.key ? modalStyles.categoryActiveText : modalStyles.categoryText}>{c.label}</Text>
+              </Pressable>
+            ))}
+          </View>
           <TextInput
             style={modalStyles.input}
             placeholder="Sujet"
@@ -225,18 +266,6 @@ function SupportTicketModal({
             onChangeText={setMessage}
             multiline
           />
-
-          <View style={modalStyles.categoryRow}>
-            {['reservation','payment','driver','account','technical','other'].map((c) => (
-              <Pressable
-                key={c}
-                onPress={() => setCategory(c as any)}
-                style={[modalStyles.categoryBtn, category === c && modalStyles.categoryActive]}
-              >
-                <Text style={category === c ? modalStyles.categoryActiveText : modalStyles.categoryText}>{c}</Text>
-              </Pressable>
-            ))}
-          </View>
 
           <View style={modalStyles.actionsRow}>
             <TouchableOpacity style={[modalStyles.actionBtn, { backgroundColor: Colors.surface }]} onPress={onClose} disabled={loading}>
@@ -252,18 +281,151 @@ function SupportTicketModal({
   );
 }
 
+const FAQ_DATA_CLIENT = [
+  { question: 'Comment annuler une réservation ?', answer: 'Vous pouvez annuler une réservation depuis l\'écran "Mes Réservations". Des frais peuvent s\'appliquer selon le délai d\'annulation.' },
+  { question: 'Où puis-je trouver ma facture ?', answer: 'Vos factures sont disponibles dans la section "Mes Courses" une fois la course terminée. Vous pouvez les télécharger en PDF.' },
+  { question: 'Comment contacter mon chauffeur ?', answer: 'Une fois votre course attribuée, vous pouvez appeler ou envoyer un message à votre chauffeur directement depuis les détails de la réservation.' },
+  { question: 'Le prix peut-il changer ?', answer: 'Le prix est fixe pour les forfaits. Pour les courses à la demande, le prix final est calculé à la fin de la course et peut varier légèrement de l\'estimation.' },
+];
+
+const FAQ_DATA_DRIVER = [
+  { question: "Comment recevoir mes paiements ?", answer: "Les paiements sont effectués par virement bancaire chaque semaine. Assurez-vous que vos informations bancaires sont à jour dans votre profil." },
+  { question: "Comment modifier mes disponibilités ?", answer: "Vous pouvez gérer vos disponibilités depuis l'écran d'accueil de l'application en activant ou désactivant le mode 'En ligne'." },
+  { question: "Que faire en cas d'accident ?", answer: "Assurez votre sécurité et celle du passager, puis contactez immédiatement le support via le bouton d'urgence et les autorités si nécessaire." },
+  { question: "Comment annuler une course ?", answer: "Si vous ne pouvez pas effectuer une course qui vous est assignée, veuillez contacter le support client le plus rapidement possible pour qu'un autre chauffeur soit assigné." },
+];
+
+function FaqItem({ item }: { item: { question: string, answer: string } }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <View style={helpModalStyles.faqItem}>
+      <TouchableOpacity style={helpModalStyles.faqQuestionRow} onPress={() => setExpanded(!expanded)}>
+        <Text style={helpModalStyles.faqQuestion}>{item.question}</Text>
+        <AppIcon name={expanded ? "chevron-up-outline" : "chevron-down-outline"} size={20} color={Colors.bordeaux} />
+      </TouchableOpacity>
+      {expanded && (
+        <Text style={helpModalStyles.faqAnswer}>{item.answer}</Text>
+      )}
+    </View>
+  );
+}
+
+function HelpModal({ visible, onClose, role }: { visible: boolean, onClose: () => void, role?: string }) {
+  const handleCall = () => {
+    Linking.openURL('tel:0123456789');
+  };
+
+  const handleEmail = () => {
+    Linking.openURL('mailto:support@eazyvtc.com');
+  };
+
+  const FAQ_DATA = role === 'driver' ? FAQ_DATA_DRIVER : FAQ_DATA_CLIENT;
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={helpModalStyles.backdrop} onPress={onClose} />
+      <View style={helpModalStyles.sheet}>
+        <View style={helpModalStyles.handle} />
+        <Text style={helpModalStyles.title}>Support {role === 'driver' ? 'Chauffeur' : 'Client'}</Text>
+        <Text style={helpModalStyles.subtitle}>Nous sommes là pour vous aider.</Text>
+
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <LinearGradient
+            colors={[Colors.bordeaux, Colors.bordeauxLight]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={helpModalStyles.contactCard}
+          >
+            <View style={helpModalStyles.contactTop}>
+              <View style={helpModalStyles.contactIconBg}>
+                <AppIcon name="headset-outline" size={28} color={Colors.white} />
+              </View>
+              <View style={helpModalStyles.contactTextContainer}>
+                <Text style={helpModalStyles.contactTitle}>Besoin d'aide immédiate?</Text>
+                <Text style={helpModalStyles.contactPhone}>Appelez-nous au 01 23 45 67 89</Text>
+              </View>
+            </View>
+            <View style={helpModalStyles.contactActions}>
+              <TouchableOpacity style={helpModalStyles.contactButton} onPress={handleCall}>
+                <AppIcon name="call-outline" size={18} color={Colors.white} />
+                <Text style={helpModalStyles.contactButtonText}>Appeler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={helpModalStyles.contactButton} onPress={handleEmail}>
+                <AppIcon name="mail-outline" size={18} color={Colors.white} />
+                <Text style={helpModalStyles.contactButtonText}>Email</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+
+          <View style={helpModalStyles.faqContainer}>
+            <Text style={helpModalStyles.faqTitle}>Questions fréquentes</Text>
+            {FAQ_DATA.map((item, index) => <FaqItem key={index} item={item} />)}
+          </View>
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
+const helpModalStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  sheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '85%',
+    backgroundColor: Colors.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: Spacing.md,
+  },
+  handle: {
+    width: 40,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: Colors.bordeauxLight,
+    alignSelf: 'center',
+    marginBottom: Spacing.md,
+  },
+  title: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.textPrimary, textAlign: 'center' },
+  subtitle: { fontSize: Fonts.size.md, color: Colors.textMuted, textAlign: 'center', marginBottom: Spacing.lg },
+  contactCard: {
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  contactTop: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  contactIconBg: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  contactTextContainer: { flex: 1 },
+  contactTitle: { color: Colors.white, fontSize: Fonts.size.md, fontWeight: '700' },
+  contactPhone: { color: Colors.white, opacity: 0.8, fontSize: Fonts.size.sm, marginTop: 4 },
+  contactActions: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.lg },
+  contactButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, backgroundColor: 'rgba(255,255,255,0.1)', paddingVertical: Spacing.sm, borderRadius: Radius.md },
+  contactButtonText: { color: Colors.white, fontWeight: '600' },
+  faqContainer: { gap: Spacing.sm, paddingBottom: Spacing.sm },
+  faqTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.sm },
+  faqItem: { backgroundColor: Colors.white, borderRadius: Radius.md, padding: Spacing.md, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5, elevation: 2 },
+  faqQuestionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  faqQuestion: { flex: 1, fontSize: Fonts.size.md, fontWeight: '600', color: Colors.textPrimary, marginRight: Spacing.sm },
+  faqAnswer: { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginTop: Spacing.sm, lineHeight: 20, borderTopWidth: 1, borderTopColor: Colors.bordeauxLight, paddingTop: Spacing.sm },
+});
+
 const modalStyles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 20 },
-  container: { backgroundColor: Colors.surface, borderRadius: 12, padding: 16 },
+  container: { backgroundColor: Colors.background, borderRadius: 12, padding: 16 },
   title: { fontSize: Fonts.size.lg, fontWeight: '800', marginBottom: 12 },
-  input: { backgroundColor: Colors.background, borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: Colors.border },
-  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12, justifyContent: 'space-between' },
-  categoryBtn: { paddingVertical: 8, paddingHorizontal: 10, borderRadius: 8, backgroundColor: Colors.background, margin: 4, minWidth: 80, alignItems: 'center' },
+  input: { backgroundColor: Colors.white, borderRadius: 8, padding: 10, marginBottom: 10, elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12, justifyContent: 'space-between' },
+  categoryBtn: { paddingVertical: 8, paddingHorizontal: 10, borderRadius: 8, backgroundColor: Colors.beigeLight, margin: 4, minWidth: 80, alignItems: 'center', elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
   categoryActive: { backgroundColor: Colors.bordeaux },
   categoryText: { color: Colors.textSecondary, textTransform: 'capitalize' },
   categoryActiveText: { color: Colors.white, fontWeight: '700', textTransform: 'capitalize' },
   actionsRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  actionBtn: { flex: 1, padding: 12, borderRadius: 8, alignItems: 'center', marginHorizontal: 6 },
+  actionBtn: { flex: 1, padding: 12, borderRadius: 8, alignItems: 'center', marginHorizontal: 6 , elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
   actionText: { color: Colors.white, fontWeight: '700' },
 });
 
@@ -293,7 +455,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontWeight: '800',
     fontSize: Fonts.size.lg,
-  },
+  },  
   brandContainer: {
     alignItems: 'center',
   },
@@ -354,7 +516,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.md,
     marginBottom: Spacing.md,
     backgroundColor: Colors.surface,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   tab: {
     flex: 1,
@@ -363,7 +525,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     backgroundColor: Colors.bordeaux,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   tabText: {
     fontSize: Fonts.size.sm,

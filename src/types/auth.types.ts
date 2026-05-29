@@ -85,6 +85,8 @@ export type DriverReservationsStackParamList = {
   DriverReservationDetails: { reservationId: string };
   ChatScreen:    { reservationId?: string };
   DriverInvoiceDetails: { invoiceId: string };
+  SupportList: undefined;
+  SupportChat: { ticketId: string, subject: string };
 };
 
 export type DriverTripsStackParamList = {

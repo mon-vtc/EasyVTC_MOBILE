@@ -176,9 +176,8 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
   };
 
   const handleSupport = () => {
-    Linking.openURL('tel:+33900000000').catch(() =>
-      Alert.alert('Support', 'Contactez le support au +33 9 00 00 00 00')
-    );
+    
+    navigation.navigate('SupportList');
   };
 
   const handleViewInvoice = useCallback(async () => {
