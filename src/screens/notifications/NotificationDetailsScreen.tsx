@@ -564,14 +564,32 @@ const NotificationDetailsScreen: React.FC = () => {
     }
   }, [reservationId, needsReservation, fetchById]);
 
-  // FIX 6 : utilisation de ROLE_ROUTES (constante stable) au lieu d'un objet littéral
-  // recréé à chaque rendu ; suppression de la dépendance instable.
   const navigateToReservation = useCallback(() => {
     if (!reservationId) return;
-    navigation.navigate(
-      ROLE_ROUTES[user?.role ?? ''] ?? 'ReservationDetails',
-      { reservationId },
-    );
+
+    switch (user?.role) {
+      case 'driver':
+        navigation.navigate('DriverReservations' as any, {
+          screen: 'DriverReservationDetails',
+          params: { reservationId },
+        });
+        break;
+      case 'admin':
+        navigation.navigate('AdminReservations' as any, {
+          screen: 'AdminReservationDetail',
+          params: { reservationId },
+        });
+        break;
+      case 'manager':
+        navigation.navigate('ManagerReservations' as any, {
+          screen: 'ManagerReservationDetail',
+          params: { reservationId },
+        });
+        break;
+      case 'client':
+      default:
+        navigation.navigate('ReservationDetails', { reservationId });
+    }
   }, [reservationId, user?.role, navigation]);
 
   const callDriver = useCallback(() => {

@@ -34,6 +34,7 @@ async function request<T>(
     '/auth/reset-password',
     '/auth/change-password',
     '/users/me/avatar',
+    '/admin/chat'
   ]
   // Intercepter les 401 (token expiré) et rediriger vers connexion
   if (res.status === 401 && !skipAuthRedirect.includes(endpoint)) {

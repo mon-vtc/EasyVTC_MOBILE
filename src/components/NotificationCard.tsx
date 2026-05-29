@@ -40,13 +40,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
     <TouchableOpacity onPress={() => onPress(notification)} activeOpacity={0.7}>
       <View style={[styles.card, isRead ? styles.cardRead : styles.cardUnread]}>
       {!isRead && <View style={styles.unreadIndicator} />}
-      <View style={[styles.iconContainer, { backgroundColor: iconConfig.background }]}>
-        <Ionicons
-          name={iconConfig.icon as NotificationIconConfig['icon']}
-          size={24}
-          color={iconConfig.color}
-        />
-      </View>
+      
       <View style={styles.contentContainer}>
         <Text style={styles.title}>{notification.title}</Text>
         <Text style={styles.body}>{notification.body}</Text>
@@ -54,6 +48,13 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
           <Text style={styles.actionButtonText}>{actionLabel}</Text>
         </TouchableOpacity>
         <View style={styles.metadataContainer}>
+          <View style={[styles.iconContainer, { backgroundColor: iconConfig.background }]}>
+            <Ionicons
+              name={iconConfig.icon as NotificationIconConfig['icon']}
+              size={20}
+              color={iconConfig.color}
+            />
+          </View>
           <Text style={styles.timeAgo}>{timeAgo}</Text>
           {!isRead && (
             <TouchableOpacity onPress={() => onMarkAsRead(notification.id)} style={styles.secondaryActionButton}>
@@ -61,7 +62,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
             </TouchableOpacity>
           )}
           <TouchableOpacity onPress={() => onDelete(notification.id)} style={styles.secondaryActionButton}>
-            <Text style={styles.secondaryActionButtonText}>Supprimer</Text>
+            <Text style={styles.deleteActionButton}>Supprimer</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -98,8 +99,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bordeauxLight,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
+    width: 30,
+    height: 30,
     borderRadius: 22,          // cercle parfait
     marginRight: 15,
     justifyContent: 'center',
@@ -152,6 +153,11 @@ const styles = StyleSheet.create({
   secondaryActionButtonText: {
     fontSize: 12,
     color: Colors.bordeauxLight,
+    fontWeight: '400',
+  },
+  deleteActionButton: {
+    fontSize: 12,
+    color: 'red',
     fontWeight: '400',
   },
 });

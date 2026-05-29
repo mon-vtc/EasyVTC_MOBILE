@@ -83,6 +83,18 @@ export const NOTIFICATION_ICONS: NotificationIconMap = {
     color:      Colors.bordeauxLight,
     background: '#EFEAEA',
   },
+  new_message : {
+    icon: 'mail',
+    color: Colors.bordeauxLight,
+    background: '#EFEAEA',
+  
+  } ,    // Destinataire : nouveau message reçu dans le chat course
+  support_reply: {
+    icon : 'mail-sharp',
+    color: Colors.bordeauxLight,
+    background: '#EFEAEA'
+  }
+
 };
 
 // Define action labels for buttons

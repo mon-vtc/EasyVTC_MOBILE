@@ -127,7 +127,7 @@ const reservations = useReservationStore(s => s.reservations);
 
   const handleMessage = useCallback(() => {
     if (reservation?.driver_id) {
-      nav.navigate('Messages' as any);
+      (nav as any).navigate('ChatScreen', { reservationId: reservation.id });
     }
   }, [reservation?.driver_id, nav]);
 

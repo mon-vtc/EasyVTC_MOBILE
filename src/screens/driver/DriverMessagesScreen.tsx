@@ -43,17 +43,19 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       {/* Avatar */}
       <View style={styles.avatar}>
-        {other_party?.profile_photo_url  && (
+        {other_party?.profile_photo_url  ? (
           <Image
             source={{ uri: other_party.profile_photo_url }}
             style={styles.avatarImage}
           />
-        )}
-        <AppIcon
-          name={other_party?.role === 'driver' ? 'car-sport-outline' : 'person-outline'}
-          size={24}
-          color={Colors.textSecondary}
-        />
+        ) : 
+            <AppIcon
+              name={other_party?.role === 'driver' ? 'car-sport-outline' : 'person-outline'}
+              size={24}
+              color={Colors.textSecondary}
+            />
+        }
+        
       </View>
 
       <View style={styles.content}>
@@ -80,10 +82,10 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MessagesScreen
+// DriverMessagesScreen
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function MessagesScreen({ navigation }: any) {
+export default function DriverMessagesScreen({ navigation }: any) {
   const { user } = useAuth();
   const { conversations, isLoadingConversations, fetchConversations } = useChat();
   
@@ -109,7 +111,7 @@ export default function MessagesScreen({ navigation }: any) {
           <AppIcon name="arrow-back" size={24} color={Colors.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Messages</Text>
-        <View style={styles.headerBtn} />
+        
       </View>
       <FlatList
         data={conversations}
@@ -151,7 +153,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: '50%',
   },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.lg, paddingHorizontal: Spacing.md },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
   headerBtn: { padding: Spacing.sm, width: 40 },
   headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
   

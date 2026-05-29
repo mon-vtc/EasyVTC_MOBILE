@@ -122,7 +122,7 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
   }, [reservations, activeTab]);
 
   const handleDetails = (id: string) => {
-    navigation.navigate('DriverReservationDetail', { reservationId: id });
+    navigation.navigate('DriverReservationDetails', { reservationId: id });
   };
 
   const handleAction = async (id: string, status: ReservationStatus) => {
@@ -130,7 +130,7 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
       try {
         await start(id);
         await load();
-        navigation.navigate('DriverReservationDetail', { reservationId: id });
+        navigation.navigate('DriverReservationDetails', { reservationId: id });
       } catch (err: any) {
         console.error(err);
       }
