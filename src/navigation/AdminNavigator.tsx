@@ -31,6 +31,10 @@ import EditManagerScreen from '../screens/admin/managers/Editmanagerscreen';
 import ManagerPermissionsScreen from '../screens/admin/managers/ManagerPermissionsScreen';
 import NotificationDetailsScreen from '../screens/notifications/NotificationDetailsScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
+import SupportListScreen from '../screens/support/SupportListScreen';
+import SupportChatScreen from '../screens/support/SupportChatScreen';
+import AdminDiscussionScreen from '../screens/admin/AdminDiscussionScreen';
+import AdminChatScreen from '../screens/admin/AdminChatScreen';
 
 import type {
   AdminDrawerParamList,
@@ -40,6 +44,8 @@ import type {
   AdminInvoicesStackParamList,
   AdminOrderStackParamList,
   AdminNotificationsStackParamList,
+  SupportStackParamList,
+  DiscussionStackParamList,
 } from '../types/auth.types';
 
 import type { ManagersStackParamList } from '../types';
@@ -50,6 +56,10 @@ const ReservationsStack = createNativeStackNavigator<ReservationsStackParamList>
 const InvoicesStack = createNativeStackNavigator<AdminInvoicesStackParamList>();
 const OrderStack = createNativeStackNavigator<AdminOrderStackParamList>();
 const NotificationsStack = createNativeStackNavigator<AdminNotificationsStackParamList>();
+const SupportStack = createNativeStackNavigator<SupportStackParamList>();
+
+// Stack pour les discussions (supervision)
+const DiscussionStack = createNativeStackNavigator<DiscussionStackParamList>();
 
 // ── Stack pour la section Chauffeurs ────────────────────────────
 // Permet de naviguer de la liste vers le détail sans quitter le drawer
@@ -152,6 +162,26 @@ function AdminManagersNavigator() {
   );
 }
 
+// ── Stack pour la section Support ───────────────────────────────
+function AdminSupportStack() {
+  return (
+    <SupportStack.Navigator screenOptions={{ headerShown: false }}>
+      <SupportStack.Screen name="SupportList" component={SupportListScreen} />
+      <SupportStack.Screen name="SupportChat" component={SupportChatScreen} />
+    </SupportStack.Navigator>
+  );
+}
+
+// ── Stack pour la section Discussions (Supervision) ───────────────
+function AdminDiscussionStack() {
+  return (
+    <DiscussionStack.Navigator screenOptions={{ headerShown: false }}>
+      <DiscussionStack.Screen name="AdminDiscussionList" component={AdminDiscussionScreen} />
+      <DiscussionStack.Screen name="AdminChatScreen" component={AdminChatScreen} />
+    </DiscussionStack.Navigator>
+  );
+}
+
 
 
 // ── Drawer ──────────────────────────────────────────────────────
@@ -222,6 +252,14 @@ export default function AdminNavigator() {
       />
 
       <Drawer.Screen
+        name="AdminDiscussions"
+        component={AdminDiscussionStack}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="chatbubbles-outline" label="Supervision chats" />,
+        }}
+      />
+
+      <Drawer.Screen
         name="AdminDrivers"
         component={AdminDriversStack}
         options={{
@@ -249,6 +287,15 @@ export default function AdminNavigator() {
         }}
       />
 
+
+      <Drawer.Screen
+        name="AdminSupport"
+        component={AdminSupportStack}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="headset-outline" label="Support" />,
+          headerShown: false,
+        }}
+      />
 
       <Drawer.Screen
         name="AdminDocuments"

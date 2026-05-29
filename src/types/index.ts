@@ -64,3 +64,12 @@ export type {
   RealtimeNotificationPayload,
 } from './notifications.types';
 export { NOTIFICATION_ICONS, NOTIFICATION_ACTION_LABELS , NotificationIconConfig} from './notifications.types';
+
+export type {
+  ChatMessage,
+  ChatSenderRole,
+  SendMessageDto,
+  ChatMessageListResult,
+  ActiveConversation,
+  chatMessageListFilters
+} from './chats.type';

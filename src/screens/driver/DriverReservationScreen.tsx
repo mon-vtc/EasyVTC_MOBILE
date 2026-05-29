@@ -63,7 +63,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
   const [mapDestinationLat, setMapDestinationLat]             = useState<number | null | undefined>(null);
   const [mapDestinationLng, setMapDestinationLng]             = useState<number | null | undefined>(null);
 
-  type ConfirmationNav = NavigationProp<DriverInvoicesStackParamList, 'DriverInvoiceDetails'>;
+  type ConfirmationNav = NavigationProp<DriverInvoicesStackParamList, 'DriverInvoiceDetails', 'ChatScreen'>;
 
   const reservation  = selected;
   const accessToken  = useAuthStore(s => s.accessToken);
@@ -81,7 +81,6 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
   const statusIcon = status ? (STATUS_ICON[status] ?? 'car-outline') : 'car-outline';
 
   const heroValues = useMemo(() => {
-    console.log("**************************************************************************",reservation);
     if (!reservation) return { distance: '—', duration: '—', amount: '—' };
     return {
       distance: reservation.distance_km  != null ? `${reservation.distance_km.toFixed(0)} km`  : '—',
@@ -143,11 +142,6 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
     if (!reservation) return;
     try {
       setIsLoading(true);
-      console.log('Terminer la course avec les données :', {
-        reservationId: reservation.id,
-        actual_distance_km: reservation.distance_km,
-        actual_duration_min: reservation.duration_min,
-      });
       await complete(reservation.id, {
         actual_distance_km: reservation.distance_km ?? undefined,
         actual_duration_min: reservation.duration_min ?? undefined,
@@ -192,7 +186,12 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
     try {
       const res = await invoicesApi.fetchByReservationId(accessToken, reservation.id);
       if (res.ok && res.data) {
-        nav.navigate('DriverInvoiceDetails', { invoiceId: res.data.id });
+        // Le screen `DriverInvoiceDetails` vit dans la pile `DriverInvoices`
+        // qui est soeur de la pile `DriverReservations` sous le Drawer.
+        // On remonte au parent (Drawer) et on navigue vers la pile imbriquée.
+        navigation.navigate(
+          'DriverInvoiceDetails', { invoiceId: res.data.id },
+        );
       } else {
         Alert.alert(
           'Facture indisponible',
@@ -294,6 +293,12 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
                 <Ionicons name="call" size={18} color={Colors.white} />
               </TouchableOpacity>
             )}
+            <TouchableOpacity
+              style={styles.messageBtn}
+              onPress={() => nav.getParent()?.navigate('DriverReservationDetails', {screen : 'ChatScreen', param : { reservationId: reservation.id }})}
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.white} />
+            </TouchableOpacity>
           </View>
 
           {reservation.nb_passengers > 0 && (
@@ -516,6 +521,7 @@ const styles = StyleSheet.create({
   ratingRow:    { flexDirection: 'row', alignItems: 'center', gap: 3 },
   ratingText:   { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '600' },
   phoneBtn:     { width: 40, height: 40, borderRadius: 20, backgroundColor: '#22C55E', alignItems: 'center', justifyContent: 'center' },
+  messageBtn:   { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center' },
   clientMeta:   { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border },
   metaItem:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
   metaText:     { fontSize: Fonts.size.sm, color: Colors.textSecondary },

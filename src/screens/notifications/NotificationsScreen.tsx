@@ -81,47 +81,93 @@ const NotificationsScreen: React.FC = () => {
   }, [removeNotificationLocally]);
 
   const handleViewAction = useCallback((notification: Notification) => {
-    // Implement navigation logic based on notification.type and notification.data
-    // Example: navigate to reservation details if data.reservation_id exists
-    if (notification.type === 'reservation_confirmed' || notification.type === 'trip_assigned' || notification.type === 'trip_reminder' || notification.type === 'driver_arrived' || notification.type === 'reservation_cancelled') {
-      if (notification.data?.reservation_id) {
-        // Assuming a route named 'ReservationDetails' exists in your navigation stack
-        // @ts-ignore - Type checking for navigation can be complex with nested navigators
+    const reservationId = notification.data?.reservation_id;
+    const invoiceId = notification.data?.invoice_id;
 
-        if (user?.role === 'client') {
-          navigation.navigate('ReservationDetails', { reservationId: notification.data.reservation_id });
-        } else { if (user?.role === 'driver') {
-           navigation.navigate('DriverReservationDetails', { reservationId: notification.data.reservation_id });
-          } else if (user?.role === 'admin') {
-            navigation.navigate('AdminReservationDetails', { reservationId: notification.data.reservation_id });
-          } else if (user?.role === 'manager') {
-            navigation.navigate('ManagerReservationDetails', { reservationId: notification.data.reservation_id });
+    const navigateToNested = (route: string, nested: { screen: string; params: Record<string, unknown> }) => {
+      navigation.navigate(route as any, nested as any);
+    };
+
+    const shipToRole = () => {
+      switch (user?.role) {
+        case 'driver':
+          if (reservationId) {
+            navigateToNested('DriverReservations', { screen: 'DriverReservationDetails', params: { reservationId } });
+            return true;
           }
-        }
+          if (invoiceId) {
+            navigateToNested('DriverInvoices', { screen: 'DriverInvoiceDetails', params: { invoiceId } });
+            return true;
+          }
+          navigation.navigate('DriverDocuments');
+          return true;
+
+        case 'admin':
+          if (reservationId) {
+            navigateToNested('AdminReservations', { screen: 'AdminReservationDetail', params: { reservationId } });
+            return true;
+          }
+          if (invoiceId) {
+            navigateToNested('AdminInvoices', { screen: 'InvoiceDetails', params: { invoiceId } });
+            return true;
+          }
+          navigation.navigate('AdminDocuments');
+          return true;
+
+        case 'manager':
+          if (reservationId) {
+            navigateToNested('ManagerReservations', { screen: 'ManagerReservationDetail', params: { reservationId } });
+            return true;
+          }
+          if (invoiceId) {
+            navigateToNested('ManagerInvoices', { screen: 'InvoiceDetails', params: { invoiceId } });
+            return true;
+          }
+          navigation.navigate('ManagerDocuments');
+          return true;
+
+        case 'client':
+        default:
+          if (reservationId) {
+            navigation.navigate('ReservationDetails', { reservationId });
+            return true;
+          }
+          if (invoiceId) {
+            navigation.navigate('InvoiceDetails', { invoiceId });
+            return true;
+          }
+          return false;
+      }
+    };
+
+    if (
+      notification.type === 'reservation_confirmed' ||
+      notification.type === 'trip_assigned' ||
+      notification.type === 'trip_reminder' ||
+      notification.type === 'driver_arrived' ||
+      notification.type === 'reservation_cancelled'
+    ) {
+      if (!reservationId) {
+        navigation.navigate('NotificationDetails', { notification });
       } else {
-        // Fallback for reservation-related types if no reservation_id
-        navigation.navigate('NotificationDetails', { notification: notification });
+        shipToRole();
       }
     } else if (notification.type === 'invoice_available') {
-      if (notification.data?.invoice_id) {
-        // @ts-ignore
-        navigation.navigate('InvoiceDetails', { invoiceId: notification.data.invoice_id });
+      if (!invoiceId) {
+        navigation.navigate('NotificationDetails', { notification });
       } else {
-        // Fallback for invoice-related types if no invoice_id
-        navigation.navigate('NotificationDetails', { notification: notification });
+        shipToRole();
       }
     } else if (notification.type === 'document_expiry') {
-      // @ts-ignore
-      navigation.navigate('DriverDocuments'); // Assuming a route for driver documents
+      shipToRole();
     } else {
-      // Default navigation for any other notification type
-      navigation.navigate('NotificationDetails', { notification: notification });
+      navigation.navigate('NotificationDetails', { notification });
     }
-    // Mark as read if not already
+
     if (!notification.read_at) {
       handleMarkAsRead(notification.id);
     }
-  }, [navigation, handleMarkAsRead]);
+  }, [navigation, handleMarkAsRead, user]);
 
   const handleViewDetails = useCallback((notification: Notification) => {
     navigation.navigate('NotificationDetails', { notification: notification });

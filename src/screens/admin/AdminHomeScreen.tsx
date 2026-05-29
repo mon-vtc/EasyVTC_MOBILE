@@ -103,7 +103,7 @@ const DriverItem = ({ driver }: { driver: Driver }) => (
 
 export default function AdminHomeScreen({ navigation }: any) {
   const { fetchDashboardStats, drivers, fetchDrivers } = useAdmin();
-  const { reservations, fetchAll: fetchReservations } = useReservation();
+  const { adminHomeReservations, fetchAdminHomeReservations } = useReservation();
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -124,7 +124,7 @@ export default function AdminHomeScreen({ navigation }: any) {
     try {
       // On lance les chargements, mais on n'attend pas leur retour ici
       const statsPromise = fetchDashboardStats();
-      const bookingsPromise = fetchReservations({ status: 'pending', limit: 2, page: 1 });
+      const bookingsPromise = fetchAdminHomeReservations();
       const driversPromise = fetchDrivers({ is_online: true, limit: 5 });
 
       // On attend uniquement les stats, car elles ne sont pas dans un store
@@ -147,11 +147,10 @@ export default function AdminHomeScreen({ navigation }: any) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [fetchDashboardStats, fetchReservations, fetchDrivers]);
+  }, [fetchDashboardStats, fetchAdminHomeReservations, fetchDrivers]);
 
   // On utilise les données des stores, qui sont mises à jour par les hooks
-  const dashboardBookings = reservations
-    .filter(r => r.status === 'pending')
+  const dashboardBookings = adminHomeReservations
     .slice(0, 5)
     .map((r: Reservation) => ({
           id: r.id,
