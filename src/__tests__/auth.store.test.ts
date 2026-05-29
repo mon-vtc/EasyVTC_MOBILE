@@ -146,7 +146,7 @@ describe('register()', () => {
     await act(async () => {
       await getStore().register({
         email: 'new@test.com', password: 'Test1234', first_name: 'Jean',
-        last_name: 'Dupont', phone: '+33612345678', role: 'client', accept_terms: true,
+        last_name: 'Dupont', phone: '+33612345678', role: 'client', accept_terms: true, rgpd_consent: true,
       });
     });
 
@@ -160,7 +160,7 @@ describe('register()', () => {
     await expect(
       act(async () => getStore().register({
         email: 'dup@test.com', password: 'Test1234', first_name: 'A',
-        last_name: 'B', phone: '+33611111111', role: 'client', accept_terms: true,
+        last_name: 'B', phone: '+33611111111', role: 'client', accept_terms: true, rgpd_consent: true,
       }))
     ).rejects.toThrow();
 

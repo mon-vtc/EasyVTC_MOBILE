@@ -45,11 +45,11 @@ function StatusModal({
   const reset = () => { setChosen(null); setReason(''); };
   const handleClose = () => { reset(); onClose(); };
 
-  const ACTIONS: { status: NextStatus; label: string; icon: string; color: string }[] = [
-    { status: 'active',   label: 'Activer',    icon: 'checkmark-circle-outline', color: '#2E7D32' },
-    { status: 'inactive', label: 'Désactiver', icon: 'pause-circle-outline',     color: '#E65100' },
-    { status: 'locked',   label: 'Suspendre',  icon: 'ban-outline',              color: '#C62828' },
-  ].filter(a => a.status !== client?.status);
+  const ACTIONS: { status: NextStatus; label: string; icon: string; color: string }[] = ([
+    { status: 'active' as NextStatus,   label: 'Activer',    icon: 'checkmark-circle-outline', color: '#2E7D32' },
+    { status: 'inactive' as NextStatus, label: 'Désactiver', icon: 'pause-circle-outline',     color: '#E65100' },
+    { status: 'locked' as NextStatus,   label: 'Suspendre',  icon: 'ban-outline',              color: '#C62828' },
+  ]).filter(a => a.status !== client?.status);
 
   if (!client) return null;
 

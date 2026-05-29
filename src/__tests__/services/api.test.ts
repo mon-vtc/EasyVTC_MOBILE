@@ -6,6 +6,7 @@ import { reservationApi }   from '../../services/api/reservation.api';
 import { invoicesApi }      from '../../services/api/invoices.api';
 import { ordersApi }        from '../../services/api/orders.api';
 import { pricingApi }       from '../../services/api/pricing.api';
+import { vehicleApi }       from '../../services/api/vehicle.api';
 import { api }              from '../../lib/api';
 import { PricingCountry, PriceEstimateDto } from '../../types/pricing.types';
 import { AdjustInvoicePriceDto } from '../../types/invoices.types';
@@ -171,31 +172,31 @@ describe('reservationApi › complete', () => {
   });
 });
 
-describe('reservationApi › getVehicleTypes (mock)', () => {
+describe('vehicleApi › getVehicleTypes (mock)', () => {
   beforeEach(() => {
-    jest.spyOn(reservationApi, 'getVehicleTypes').mockResolvedValue({
+    jest.spyOn(vehicleApi, 'getVehicleTypes').mockResolvedValue({
       ok: true,
       message: 'OK',
       data: [
         {
           type:       'standard' ,
           label:       'Standard' ,
-          description: '1-2 passagers',// ex: "1-3 passagers"
+          description: '1-2 passagers',
           base_price:  18.0 ,
-          icon:       'car-outline' ,// nom Ionicons
+          icon:       'car-outline' ,
           capacity:    2,
         },
-        { 
-          type: 'berline',  
-          label: 'Berline',  base_price: 6.5,  
+        {
+          type: 'berline',
+          label: 'Berline',  base_price: 6.5,
           icon: 'car-sport-outline',
           capacity: 4,
           description: '1-4 passagers',
         },
-        { 
-          type: 'van',      
-          label: 'Van',      
-          base_price: 8,    
+        {
+          type: 'van',
+          label: 'Van',
+          base_price: 8,
           icon: 'car-side-outline',
           capacity: 6,
           description: '1-6 passagers',
@@ -205,7 +206,7 @@ describe('reservationApi › getVehicleTypes (mock)', () => {
   });
 
   it('retourne les 3 types de véhicule pour la france', async () => {
-    const result = await reservationApi.getVehicleTypes(TOKEN, 'france' as PricingCountry);
+    const result = await vehicleApi.getVehicleTypes(TOKEN, 'france' as PricingCountry);
     expect(result.ok).toBe(true);
     expect(result.data).toHaveLength(3);
     const types = result.data!.map(v => v.type);
@@ -215,7 +216,7 @@ describe('reservationApi › getVehicleTypes (mock)', () => {
   });
 
   it('retourne des prix en XOF pour le sénégal', async () => {
-    jest.spyOn(reservationApi, 'getVehicleTypes').mockResolvedValue({
+    jest.spyOn(vehicleApi, 'getVehicleTypes').mockResolvedValue({
       ok: true,
       message: 'OK',
       data: [
@@ -224,7 +225,7 @@ describe('reservationApi › getVehicleTypes (mock)', () => {
         { type: 'van',      label: 'Van',      base_price: 4800, icon: 'car-outline', capacity: 6, description: '1-6 passagers' },
       ],
     });
-    const result = await reservationApi.getVehicleTypes(TOKEN, 'senegal' as PricingCountry);
+    const result = await vehicleApi.getVehicleTypes(TOKEN, 'senegal' as PricingCountry);
     const standard = result.data!.find(v => v.type === 'standard' as VehicleType);
     expect(standard?.base_price).toBe(3000);
   });

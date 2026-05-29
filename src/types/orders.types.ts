@@ -28,6 +28,7 @@ export interface TripSnapshot {
   comment:        string | null;
   via:            string;
   pricing_type:   'formula' | 'flat_rate';
+  distance_km?:   number;
   final_price:    number | null;
   currency:       'EUR' | 'XOF';
 }
