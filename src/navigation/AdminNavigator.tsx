@@ -23,6 +23,7 @@ import AdminInvoicesDetailScreen from '../screens/admin/invoices/InvoiceDetailsS
 import AdminClientsScreen from '../screens/admin/clients/AdminClientsScreen';
 import AdminClientDetailScreen from '../screens/admin/clients/AdminClientDetailScreen';
 import AdminVehicleTypesScreen from '../screens/admin/AdminVehicleTypesScreen';
+import AdminReviewsScreen      from '../screens/admin/AdminReviewsScreen';
 
 import ManagersListScreen from '../screens/admin/managers/ManagersListScreen';
 import ManagerDetailScreen from '../screens/admin/managers/ManagerDetailScreen';
@@ -280,6 +281,12 @@ export default function AdminNavigator() {
           drawerLabel: () => <DrawerLabel icon="receipt-outline" label="Factures" /> ,
           headerShown: false,
         }}
+      />
+
+      <Drawer.Screen
+        name="AdminReviews"
+        component={AdminReviewsScreen}
+        options={{ drawerLabel: () => <DrawerLabel icon="star-outline" label="Évaluations" /> }}
       />
 
       <Drawer.Screen

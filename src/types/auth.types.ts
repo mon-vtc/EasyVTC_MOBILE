@@ -109,7 +109,8 @@ export type DriverDrawerParamList = {
   DriverInvoices:     NavigatorScreenParams<DriverInvoicesStackParamList>;
   DriverOrderDetails: { orderId: string };
   DriverInvoiceDetails: { invoiceId: string };
-
+  // S6 — Évaluations
+  DriverReviews:      undefined;
 };
 
 

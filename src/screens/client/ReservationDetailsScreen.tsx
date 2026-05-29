@@ -19,10 +19,12 @@ import { AppIcon }             from '../../components/common/AppIcon';
 import { Colors }              from '../../theme/colors';
 import { useReservationStore } from '../../store/reservation.store';
 import { useAuthStore }        from '../../store/auth.store';
+import { useRatingsStore }     from '../../store/ratings.store';
 import { invoicesApi }         from '../../services/api/invoices.api';
 import type { ClientStackParamList } from '../../types/auth.types';
-import { Logo } from '../../constants/logo';
+import { Logo }                      from '../../constants/logo';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
+import RatingModal            from '../../components/common/RatingModal';
 
 // ── Types navigation typés ──────────────────────────────────────────────────
 type ConfirmationNav   = NavigationProp<ClientStackParamList, 'ReservationDetails'>;
@@ -97,6 +99,12 @@ export default function ReservationDetailsScreen() {
   // ── États du modal d'annulation ────────────────────────────────────────────
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
 
+  // ── États du modal de notation ─────────────────────────────────────────────
+  const [ratingModalVisible, setRatingModalVisible] = useState(false);
+  const [alreadyRated,       setAlreadyRated]       = useState(false);
+  const isSubmitting  = useRatingsStore(s => s.isSubmitting);
+  const submitRating  = useRatingsStore(s => s.submitRating);
+
   useEffect(() => {
     if (!reservation && accessToken) fetchById(accessToken, reservationId);
   }, [reservationId, reservation, accessToken, fetchById]);
@@ -142,22 +150,31 @@ export default function ReservationDetailsScreen() {
   }, [reservation?.id, accessToken, nav]);
 
   const handleEvaluate = useCallback(() => {
-    Alert.alert(
-      'Évaluer le chauffeur',
-      'Quelle note donnez-vous à cette course ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: '⭐⭐⭐⭐⭐ (5)', onPress: () => submitRating(5) },
-        { text: '⭐⭐⭐⭐ (4)', onPress: () => submitRating(4) },
-        { text: '⭐⭐⭐ (3)', onPress: () => submitRating(3) },
-      ],
-    );
-  }, []);
+    if (alreadyRated) {
+      Alert.alert('Déjà évalué', 'Vous avez déjà soumis une évaluation pour cette course.');
+      return;
+    }
+    setRatingModalVisible(true);
+  }, [alreadyRated]);
 
-  const submitRating = (rating: number) => {
-    Alert.alert('Merci !', `Vous avez noté la course ${rating}/5`);
-    // Appel API pour soumettre l'évaluation
-  };
+  const handleRatingSubmit = useCallback(async (note: number) => {
+    if (!accessToken || !reservation?.id) return;
+    try {
+      await submitRating(accessToken, reservation.id, note);
+      setRatingModalVisible(false);
+      setAlreadyRated(true);
+      Alert.alert('Merci !', `Votre note de ${note}/5 a bien été enregistrée.`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
+      if (msg.includes('déjà')) {
+        setRatingModalVisible(false);
+        setAlreadyRated(true);
+        Alert.alert('Déjà évalué', 'Vous avez déjà noté cette course.');
+      } else {
+        Alert.alert('Erreur', msg);
+      }
+    }
+  }, [accessToken, reservation?.id, submitRating]);
 
   const handleCancel = useCallback(() => {
     setCancelModalVisible(true);
@@ -383,12 +400,14 @@ export default function ReservationDetailsScreen() {
           {isCompleted && (
             <>
               <TouchableOpacity
-                style={styles.btnPrimary}
+                style={[styles.btnPrimary, alreadyRated && styles.btnPrimaryDone]}
                 activeOpacity={0.85}
                 onPress={handleEvaluate}
               >
-                <AppIcon name="star-outline" size={18} color={WHITE} />
-                <Text style={styles.btnPrimaryText}>Évaluer le chauffeur</Text>
+                <AppIcon name={alreadyRated ? 'star' : 'star-outline'} size={18} color={WHITE} />
+                <Text style={styles.btnPrimaryText}>
+                  {alreadyRated ? 'Course évaluée' : 'Évaluer le chauffeur'}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -435,6 +454,19 @@ export default function ReservationDetailsScreen() {
         reservationRef={`RES-${ref}`}
         onConfirm={handleCancelConfirm}
         onClose={() => setCancelModalVisible(false)}
+      />
+
+      {/* Modal de notation */}
+      <RatingModal
+        visible={ratingModalVisible}
+        driverName={
+          r?.driver?.user
+            ? `${r.driver.user.first_name} ${r.driver.user.last_name}`
+            : undefined
+        }
+        isSubmitting={isSubmitting}
+        onConfirm={handleRatingSubmit}
+        onClose={() => setRatingModalVisible(false)}
       />
     </View>
   );
@@ -558,6 +590,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     height: 50, borderRadius: 14, backgroundColor: BORDEAUX,
   },
+  btnPrimaryDone: { backgroundColor: '#6B7280' },
   btnPrimaryText: { color: WHITE, fontSize: 15, fontWeight: '700' },
   btnSecondary: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,

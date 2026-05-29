@@ -6,17 +6,18 @@ import { AppIcon } from '../components/common/AppIcon';
 import DrawerContent from './DrawerContent';
 import { Colors } from '../theme/colors';
 
-import DriverHomeScreen         from '../screens/driver/DriverHomeScreen';
-import DriverReservationsScreen from '../screens/driver/DriverReservationsScreen';
-import DriverReservationScreen  from '../screens/driver/DriverReservationScreen';
-import DriverTripsScreen        from '../screens/driver/DriverTripsScreen';
-import DriverDocumentsScreen    from '../screens/driver/DriverDocumentsScreen';
-import DriverAvailabilityScreen from '../screens/driver/DriverAvailabilityScreen';
-import DriverProfileScreen      from '../screens/driver/DriverProfileScreen';
-import DriverOrdersScreen         from '../screens/driver/orders/DriverOrdersScreen';
-import DriverOrderDetailsScreen   from '../screens/driver/orders/DriverOrderDetailsScreen';
-import DriverInvoiceDetailScreen   from '../screens/driver/invoices/DriverInvoiceDetailsScreen';
-import DriverInvoicesScreen       from '../screens/driver/invoices/DriverInvoicesScreen';
+import DriverHomeScreen          from '../screens/driver/DriverHomeScreen';
+import DriverReservationsScreen  from '../screens/driver/DriverReservationsScreen';
+import DriverReservationScreen   from '../screens/driver/DriverReservationScreen';
+import DriverTripsScreen         from '../screens/driver/DriverTripsScreen';
+import DriverDocumentsScreen     from '../screens/driver/DriverDocumentsScreen';
+import DriverAvailabilityScreen  from '../screens/driver/DriverAvailabilityScreen';
+import DriverProfileScreen       from '../screens/driver/DriverProfileScreen';
+import DriverReviewScreen        from '../screens/driver/DriverReviewScreen';
+import DriverOrdersScreen        from '../screens/driver/orders/DriverOrdersScreen';
+import DriverOrderDetailsScreen  from '../screens/driver/orders/DriverOrderDetailsScreen';
+import DriverInvoiceDetailScreen from '../screens/driver/invoices/DriverInvoiceDetailsScreen';
+import DriverInvoicesScreen      from '../screens/driver/invoices/DriverInvoicesScreen';
 
 import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList } from '../types/auth.types';
 
@@ -175,6 +176,14 @@ export default function DriverNavigator() {
         options={{
           drawerLabel: () => <DrawerLabel icon="receipt-outline" label="Factures" />,
           headerShown: false,
+        }}
+      />
+
+      <Drawer.Screen
+        name="DriverReviews"
+        component={DriverReviewScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="star-outline" label="Mes évaluations" />,
         }}
       />
 

@@ -6,3 +6,4 @@ export { useClientsStore }   from './clients.store';
 export { useDocumentsStore } from './document.store';
 export { useOrdersStore }    from './orders.store';
 export { useInvoicesStore }  from './invoices.store';
+export { useRatingsStore }   from './ratings.store';
