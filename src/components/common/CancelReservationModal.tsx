@@ -112,7 +112,7 @@ export default function CancelReservationModal({ visible, reservationRef, onConf
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'center',
     paddingHorizontal: Spacing.md,
   },

@@ -10,6 +10,8 @@ import { invoicesApi }      from '../../services/api/invoices.api';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { Reservation, ReservationStatus } from '../../types/reservations.types';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
+import RatingModal            from '../../components/common/RatingModal';
+import { useRatingsStore } from '../../store';
 
 type FilterTab = 'all' | 'invoices' | 'pending' | 'assigned' | 'completed' | 'cancelled';
 
@@ -223,6 +225,7 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     reservations, isLoading, error,
     fetchMine, clearError, cancel,
   } = useReservation();
+  const accessToken  = useAuthStore(s => s.accessToken);
 
   const token = useAuthStore(s => s.accessToken) ?? '';
 
@@ -231,6 +234,8 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
   const [refreshing, setRefreshing] = useState(false);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [selectedForCancel, setSelectedForCancel] = useState<Reservation | null>(null);
+  const [selectedForRating, setSelectedForRating] = useState<Reservation | null>(null);
+  const [ratingModalVisible, setRatingModalVisible] = useState(false);
 
   const activeTabRef = useRef(activeTab);
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
@@ -274,25 +279,37 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     }
     return filtered;
   }, [reservations, searchQuery]);
+  
+    // ── États du modal de notation ─────────────────────────────────────────────
+    const [alreadyRated,       setAlreadyRated]       = useState(false);
+    const isSubmitting  = useRatingsStore(s => s.isSubmitting);
+    const submitRating  = useRatingsStore(s => s.submitRating);
 
-  const handleEvaluate = (reservation: Reservation) => {
-    // Naviguer vers un écran d'évaluation ou afficher une modal
-    Alert.alert(
-      'Évaluer le chauffeur',
-      'Quelle note donnez-vous à cette course ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: '⭐⭐⭐⭐⭐ (5)', onPress: () => submitRating(reservation.id, 5) },
-        { text: '⭐⭐⭐⭐ (4)', onPress: () => submitRating(reservation.id, 4) },
-        { text: '⭐⭐⭐ (3)', onPress: () => submitRating(reservation.id, 3) },
-      ],
-    );
-  };
+  const handleEvaluate = useCallback((reservation: Reservation) => {
+    if (alreadyRated) {
+      Alert.alert('Déjà évalué', 'Vous avez déjà soumis une évaluation pour cette course.');
+      return;
+    }
+    setSelectedForRating(reservation);
+    setRatingModalVisible(true);
+  }, [alreadyRated]);
 
-  const submitRating = (reservationId: string, rating: number) => {
-    // Appel API pour soumettre l'évaluation
-    Alert.alert('Merci !', `Vous avez noté la course ${rating}/5`);
-  };
+    const handleRatingSubmit = useCallback(async (note: number) => {
+      if (!accessToken || !selectedForRating?.id) return;
+      try {
+        await submitRating(accessToken, selectedForRating.id, note);
+        setRatingModalVisible(false);
+        setSelectedForRating(null);
+        Alert.alert('Merci !', `Votre note de ${note}/5 a bien été enregistrée.`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
+        setRatingModalVisible(false);
+        setSelectedForRating(null);
+        // Affiche l'erreur, qu'elle soit "déjà noté" ou autre.
+        Alert.alert('Erreur', msg);
+      }
+    }, [accessToken, selectedForRating, submitRating]);
+
 
   const handleViewInvoice = async (reservation: Reservation) => {
     try {
@@ -431,6 +448,20 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
           setSelectedForCancel(null);
         }}
       />
+
+      {/* Modal de notation */}
+      <RatingModal
+        visible={ratingModalVisible}
+        driverName={
+          selectedForRating?.driver?.user
+            ? `${selectedForRating.driver.user.first_name} ${selectedForRating.driver.user.last_name}`
+            : undefined
+        }
+        isSubmitting={isSubmitting}
+        onConfirm={handleRatingSubmit}
+        onClose={() => setRatingModalVisible(false)}
+      />
+
     </View>
   );
 }
