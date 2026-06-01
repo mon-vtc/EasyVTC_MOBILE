@@ -121,6 +121,7 @@ export type SupportStackParamList = {
 
 export type DriverDrawerParamList = {
   DriverHome:         undefined;
+  DriverReservationDetails: { reservationId: string };
   DriverReservations: NavigatorScreenParams<DriverReservationsStackParamList>;
   DriverTrips:        undefined;
   DriverDocuments:    undefined;

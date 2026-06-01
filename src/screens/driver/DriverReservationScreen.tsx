@@ -4,6 +4,7 @@ import {
   ActivityIndicator, Alert, Modal, Linking, Platform, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { format } from 'date-fns';
 import { useReservation } from '../../hooks/useReservation';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { Reservation, ReservationStatus } from '../../types/reservations.types';
@@ -323,7 +324,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
             </View>
             <View style={styles.metaItem}>
               <Ionicons name="time-outline" size={15} color={Colors.textSecondary} />
-                <Text style={styles.metaText}>{new Date(reservation.scheduled_at).toLocaleString()}</Text>
+                <Text style={styles.metaText}>{format(new Date(reservation.scheduled_at), "dd MMM yyyy, HH:mm")}</Text> 
             </View>
           </View>
           <View style={styles.routeRow}>

@@ -283,16 +283,7 @@ export default function DriverHomeScreen({ navigation }: any) {
   }, [status, setOnlineStatus]);
 
   const handleRideDetails = useCallback((id: string) => {
-    navigation?.navigate('DriverReservationDetails', { reservationId: id });
-    // Exemple d'utilisation de startTrip (à adapter à votre logique de bouton "Démarrer")
-    /*
-    try {
-      await startTrip(id);
-      navigation?.navigate('RideInProgress', { rideId: id });
-    } catch (err) {
-      Alert.alert('Erreur', 'Impossible de démarrer la course.');
-    }
-    */
+    navigation.navigate('DriverReservations', { screen: 'DriverReservationDetails', params: { reservationId: id } });
   }, [navigation]);
 
   // ── Rendu ─────────────────────────────────────────────────────────────────
