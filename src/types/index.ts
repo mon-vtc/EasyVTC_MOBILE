@@ -38,6 +38,12 @@ export type {
 } from './reservations.types';
 
 export type {
+  DriverPlanningResult,
+  PlanningPeriod,
+  PlanningReservation,
+} from './drivers.types';
+
+export type {
   UserProfile,
   CreateManagerDto,
   UpdateManagerDto,

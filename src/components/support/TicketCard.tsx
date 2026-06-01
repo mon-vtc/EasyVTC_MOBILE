@@ -5,8 +5,10 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { SupportTicketRow } from '../../types/chats.type';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketRow; onPress: () => void }) {
+  const { user } = useAuth();
   const isPending = ticket.status === 'pending';
   const isResolved = ticket.status === 'resolved';
 
@@ -16,6 +18,8 @@ export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketR
      addSuffix: true,
      locale: fr,
    });
+
+  const isOwnTicket = user?.id === ticket.user_id;
 
   const getButtonLabel = () => {
     switch (ticket.status) {
@@ -32,7 +36,7 @@ export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketR
       onPress={onPress}
       activeOpacity={0.8}
       accessibilityRole="button"
-      accessibilityLabel={`${ticket.user?.first_name ?? ''} ${ticket.user?.last_name ?? ''}, ${ticket.subject}, ${ticket.status}`}
+      accessibilityLabel={`${isOwnTicket ? 'Votre ticket' : `${ticket.user?.first_name ?? ''} ${ticket.user?.last_name ?? ''}`}, ${ticket.subject}, ${ticket.status}`}
     >
       <View style={cardStyles.headerRow}>
         <View style={cardStyles.leftRow}>
@@ -47,10 +51,17 @@ export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketR
             {isPending && <View style={cardStyles.badge} />}
           </View>
           <View style={cardStyles.nameCol}>
-            <Text style={cardStyles.nameText}>{`${ticket.user?.first_name ?? ''} ${ticket.user?.last_name ?? 'Utilisateur'}`}</Text>
+            <Text style={cardStyles.nameText} numberOfLines={1}>
+              {isOwnTicket ? 
+                `${ticket.subject && ticket.subject.length > 20 
+                  ? `${ticket.subject.substring(0, 20)}...` 
+                  : ticket.subject}`
+               : `${ticket.user?.first_name ?? ''} ${ticket.user?.last_name ?? 'Utilisateur'}`}
+            </Text>
             <View style={cardStyles.badgesRow}>
-              {/* Role badge (client/driver) and priority */}
-              <View style={cardStyles.roleBadge}><Text style={cardStyles.roleBadgeText}>{ticket.user_role === 'client' ? 'Client' : ticket.user_role === 'driver' ? 'Chauffeur' : ticket.user_role}</Text></View>
+              {!isOwnTicket && (
+                <View style={cardStyles.roleBadge}><Text style={cardStyles.roleBadgeText}>{ticket.user_role === 'client' ? 'Client' : ticket.user_role === 'driver' ? 'Chauffeur' : ticket.user_role}</Text></View>
+              )}
               <View style={isUrgent ? cardStyles.urgentBadge : cardStyles.normalBadge}>
                 <Text style={isUrgent ? cardStyles.urgentBadgeText : cardStyles.normalBadgeText}>{priorityLabel}</Text>
               </View>
@@ -61,7 +72,9 @@ export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketR
         <Text style={cardStyles.timeText}>{timeAgo}</Text>
       </View>
 
-      <Text style={cardStyles.preview} numberOfLines={1} ellipsizeMode="tail">{ticket.subject}</Text>
+      <Text style={cardStyles.preview} numberOfLines={1} ellipsizeMode="tail">
+        {isOwnTicket ? ticket.last_message_preview : ticket.subject}
+      </Text>
 
       <TouchableOpacity
         style={[cardStyles.cta, isResolved && cardStyles.ctaDisabled]}

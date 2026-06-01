@@ -1,9 +1,12 @@
-// services/api/drivers.api.ts
+// ══════════════════════════════════════════════════════════════════════════════
+// API — Module Drivers
+// ══════════════════════════════════════════════════════════════════════════════
+
 import { api } from '../../lib/api';
-import type { ApiResponse, PaginatedDrivers, ListDriversParams } from '../../types';
+import type { ApiResponse, PaginatedDrivers, ListDriversParams, DriverPlanningResult } from '../../types';
 import type { DriverUser, DriverWithUser }         from '../../types/user.types';
 import type { UpdateDriverMePayload, ChangeDriverStatusPayload } from '../../types/payload.types';
-
+import type { PlanningPeriod, PlanningReservation } from '../../types';
 export const driverApi = {
 
   /** PATCH /drivers/me — siret, zone, vehicle_type */
@@ -36,5 +39,14 @@ export const driverApi = {
   changeDriverStatus: (token: string, driverId: string, payload: ChangeDriverStatusPayload): Promise<ApiResponse<DriverWithUser>> =>
     api.patch(`/admin/drivers/${driverId}/status`, payload, token),
 
+  getMyPlanning: (
+    token: string,
+    period: PlanningPeriod,
+    date?: string,
+  ): Promise<ApiResponse<DriverPlanningResult>> => {
+    const params = new URLSearchParams({ period });
+    if (date) params.set('date', date);
+    return api.get(`/drivers/me/planning?${params.toString()}`, token);
+  },
   
 };

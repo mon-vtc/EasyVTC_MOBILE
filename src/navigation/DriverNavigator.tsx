@@ -24,7 +24,7 @@ import MessagesScreen from '../screens/client/MessagesScreen'; // Réutilisé po
 import SupportListScreen from '../screens/support/SupportListScreen';
 import SupportChatScreen from '../screens/support/SupportChatScreen';
 
-import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList, DriverNotificationsStackParamList, DriverMessagesStackParamList, SupportStackParamList } from '../types/auth.types';
+import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList, DriverNotificationsStackParamList, DriverMessagesStackParamList, SupportStackParamList, DriverTripsStackParamList } from '../types/auth.types';
 
 import { Logo }                  from  '../constants/logo';
 
@@ -41,6 +41,16 @@ function DriverReservationsStackScreen() {
       <DriverReservationsStack.Screen name="SupportChat" component={SupportChatScreen} />
 
     </DriverReservationsStack.Navigator>
+  );
+}
+const DriverTripsStack = createNativeStackNavigator<DriverTripsStackParamList>();
+
+function DriverTripsStackScreen() {
+  return (
+    <DriverTripsStack.Navigator screenOptions={{ headerShown: false }}>
+      <DriverTripsStack.Screen name="DriverTripsList" component={DriverTripsScreen} />
+      <DriverTripsStack.Screen name="DriverReservationDetails" component={DriverReservationScreen} />
+    </DriverTripsStack.Navigator>
   );
 }
 const DriverNotificationsStack = createNativeStackNavigator<DriverNotificationsStackParamList>();
@@ -207,11 +217,14 @@ export default function DriverNavigator() {
 
       <Drawer.Screen
         name="DriverTrips"
-        component={DriverTripsScreen}
+        component={DriverTripsStackScreen}
         options={{
           drawerLabel: () => <DrawerLabel icon="calendar-outline" label="Planning" />,
+          headerShown: false,
         }}
       />
+
+
 
       <Drawer.Screen
         name="DriverAvailability"

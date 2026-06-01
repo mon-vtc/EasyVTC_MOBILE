@@ -128,7 +128,6 @@ export default function SupportChatScreen() {
           await updateSupportTicketStatus(ticketId, 'in_progress');
         }
         await sendSupportMessage(ticketId, content);
-        await fetchSupportTicketDetail(ticketId);
       } catch (error) {
         console.error('Failed to send support message:', error);
       } finally {

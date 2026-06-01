@@ -241,7 +241,7 @@ function SupportTicketModal({
         <View style={modalStyles.container}>
           <Text style={modalStyles.title}>Nouveau ticket</Text>
           
-            <View style={modalStyles.categoryRow}>
+          <View style={modalStyles.categoryRow}>
             {categories.map((c) => (
               <Pressable
                 key={c.key}
@@ -253,19 +253,27 @@ function SupportTicketModal({
               </Pressable>
             ))}
           </View>
-          <TextInput
-            style={modalStyles.input}
-            placeholder="Sujet"
-            value={subject}
-            onChangeText={setSubject}
-          />
-          <TextInput
-            style={[modalStyles.input, { height: 100 }]}
-            placeholder="Décrivez votre problème..."
-            value={message}
-            onChangeText={setMessage}
-            multiline
-          />
+          <View>
+            <TextInput
+              style={modalStyles.input}
+              placeholder="Sujet"
+              value={subject}
+              onChangeText={setSubject}
+              maxLength={200}
+            />
+            <Text style={modalStyles.charCount}>{`${subject.length} / 200`}</Text>
+          </View>
+          <View>
+            <TextInput
+              style={[modalStyles.input, { height: 100, textAlignVertical: 'top' }]}
+              placeholder="Décrivez votre problème..."
+              value={message}
+              onChangeText={setMessage}
+              multiline
+              maxLength={500}
+            />
+            <Text style={modalStyles.charCount}>{`${message.length} / 500`}</Text>
+          </View>
 
           <View style={modalStyles.actionsRow}>
             <TouchableOpacity style={[modalStyles.actionBtn, { backgroundColor: Colors.surface }]} onPress={onClose} disabled={loading}>
@@ -417,14 +425,21 @@ const helpModalStyles = StyleSheet.create({
 const modalStyles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 20 },
   container: { backgroundColor: Colors.background, borderRadius: 12, padding: 16 },
-  title: { fontSize: Fonts.size.lg, fontWeight: '800', marginBottom: 12 },
-  input: { backgroundColor: Colors.white, borderRadius: 8, padding: 10, marginBottom: 10, elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
-  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12, justifyContent: 'space-between' },
-  categoryBtn: { paddingVertical: 8, paddingHorizontal: 10, borderRadius: 8, backgroundColor: Colors.beigeLight, margin: 4, minWidth: 80, alignItems: 'center', elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
+  title: { fontSize: Fonts.size.lg, fontWeight: '800', marginBottom: 16, textAlign: 'center' },
+  input: { backgroundColor: Colors.white, borderRadius: 8, padding: 12, elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 2, marginBottom: 12, justifyContent: 'space-between' },
+  categoryBtn: {width: '30%',   alignItems: 'center', justifyContent: 'center',padding: 2, borderRadius: 8, backgroundColor: Colors.beigeLight, margin: 4, minWidth: 80, elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
   categoryActive: { backgroundColor: Colors.bordeaux },
-  categoryText: { color: Colors.textSecondary, textTransform: 'capitalize' },
+  categoryText: { color: Colors.textSecondary, textTransform: 'capitalize', fontSize: Fonts.size.xs },
   categoryActiveText: { color: Colors.white, fontWeight: '700', textTransform: 'capitalize' },
-  actionsRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  charCount: {
+    fontSize: Fonts.size.xs,
+    color: Colors.textMuted,
+    textAlign: 'right',
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  actionsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.sm },
   actionBtn: { flex: 1, padding: 12, borderRadius: 8, alignItems: 'center', marginHorizontal: 6 , elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
   actionText: { color: Colors.white, fontWeight: '700' },
 });
