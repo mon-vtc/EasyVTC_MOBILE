@@ -53,6 +53,8 @@ export type ClientTabParamList = {
   CreateReservationTab: undefined; // FAB tab button, redirige vers le stack racine
   Messages:            undefined;
   ClientProfile:       undefined;
+  Notifications:        undefined;
+  NotificationDetails:  { notification: Notification };
 };
 /**
  * Stack racine du client — enveloppe les tabs et expose les écrans
@@ -71,10 +73,8 @@ export type ClientStackParamList = {
   ReservationDetails:   { reservationId: string };
   OrderDetails:         { orderId: string };
   InvoiceDetails:       { invoiceId: string };
-  MyOrders:             undefined;
-  MyInvoices:           { reservationId?: string } | undefined;
-  Notifications:        undefined;
-  NotificationDetails:  { notification: Notification };
+  MyOrders:             undefined; // Note: Peut-être à déplacer dans les onglets aussi
+  MyInvoices:           { reservationId?: string } | undefined; // Note: Peut-être à déplacer dans les onglets aussi
   SupportList:          undefined;
   SupportChat:          { ticketId: string; subject: string };
   ChatScreen:           { reservationId?: string };
