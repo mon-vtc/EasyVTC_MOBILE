@@ -7,6 +7,7 @@ import { mapApiUser }     from '../store/auth.store';
 import { driverApi }      from '../services/api/drivers.api';
 import { vehicleApi }     from '../services/api/vehicle.api';
 import { authApi }        from '../services/api/auth.api';
+import type { DriverPlanningResult, PlanningPeriod } from '../types/drivers.types';
 import type { DriverUser, Vehicle }                          from '../types/user.types';
 import type { UpdateUserMePayload, UpdateDriverMePayload }             from '../types/payload.types';
 import type { CreateVehiclePayload, UpdateVehiclePayload }             from '../services/api/vehicle.api';
@@ -161,6 +162,12 @@ export function useDriver() {
     };
   }, [handleAppStateChange, syncDriverStatus]);
 
+  const getMyPlanning = useCallback(async (period: PlanningPeriod, date?: string): Promise<DriverPlanningResult | null> => {
+    const res = await driverApi.getMyPlanning(token(), period, date);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur récupération planning');
+    return res.data;
+  }, [accessToken]);
+
   return {
     user:           driver,
     localAvatarUri: auth.localAvatarUri,
@@ -194,5 +201,8 @@ export function useDriver() {
     uploadVehiclePhoto,
     updateVehicle,
     deleteVehicle,
+
+    // Planning
+    getMyPlanning,
   };
 }

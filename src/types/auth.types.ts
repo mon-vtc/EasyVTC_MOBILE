@@ -91,6 +91,7 @@ export type DriverReservationsStackParamList = {
 
 export type DriverTripsStackParamList = {
   DriverTripsList:  undefined;
+  DriverReservationDetails: { reservationId: string };
 };
 
 export type DriverNotificationsStackParamList = {

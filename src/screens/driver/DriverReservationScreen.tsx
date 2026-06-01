@@ -315,7 +315,17 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
         {/* ── Itinéraire ───────────────────────────────────── */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Itinéraire</Text>
-
+          {/* ── Date de passage ────────────────────────────── */}
+          <View style={styles.clientMeta}>
+            <View style={styles.metaItem}>
+              <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
+              <Text >Date de passage</Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Ionicons name="time-outline" size={15} color={Colors.textSecondary} />
+                <Text style={styles.metaText}>{new Date(reservation.scheduled_at).toLocaleString()}</Text>
+            </View>
+          </View>
           <View style={styles.routeRow}>
             <View style={styles.routeDotCol}>
               <View style={[styles.routeDot, { backgroundColor: '#22C55E' }]} />
@@ -521,7 +531,7 @@ const styles = StyleSheet.create({
   ratingText:   { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '600' },
   phoneBtn:     { width: 40, height: 40, borderRadius: 20, backgroundColor: '#22C55E', alignItems: 'center', justifyContent: 'center' },
   messageBtn:   { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center' },
-  clientMeta:   { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border },
+  clientMeta:   { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.sm, marginBottom: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border },
   metaItem:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
   metaText:     { fontSize: Fonts.size.sm, color: Colors.textSecondary },
 
