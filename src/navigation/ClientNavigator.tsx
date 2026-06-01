@@ -154,6 +154,24 @@ function ClientTabs() {
           ),
         }}
       />
+
+      {/* Écrans cachés dans les onglets mais accessibles depuis la navigation */}
+      <Tab.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{
+          tabBarButton: () => null, // Masqué de la barre d'onglets
+        }}
+      />
+
+      <Tab.Screen
+        name="NotificationDetails"
+        component={NotificationDetailsScreen}
+        options={{
+          tabBarButton: () => null, // Masqué de la barre d'onglets
+        }}
+      />
+
     </Tab.Navigator>
   );
 }
@@ -215,13 +233,6 @@ export default function ClientNavigator() {
         }}
       />
       <Stack.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{
-          animation: 'slide_from_right',
-        }}
-      />
-      <Stack.Screen
         name="SupportList"
         component={SupportListScreen}
         options={{
@@ -244,15 +255,6 @@ export default function ClientNavigator() {
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen
-        name="NotificationDetails"
-        component={NotificationDetailsScreen}
-        options={{
-          animation: 'slide_from_right',
-        }}
-      />
-
-      {/* Détail d'une facture */}
       <Stack.Screen
         name="InvoiceDetails"
         component={InvoiceDetailsScreen}

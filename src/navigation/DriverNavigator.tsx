@@ -23,6 +23,7 @@ import ChatScreen from '../screens/chats/ChatScreen';
 import MessagesScreen from '../screens/client/MessagesScreen'; // Réutilisé pour les chats de réservation
 import SupportListScreen from '../screens/support/SupportListScreen';
 import SupportChatScreen from '../screens/support/SupportChatScreen';
+import DriverReviewScreen        from '../screens/driver/DriverReviewScreen';
 
 import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList, DriverNotificationsStackParamList, DriverMessagesStackParamList, SupportStackParamList, DriverTripsStackParamList } from '../types/auth.types';
 
@@ -249,6 +250,14 @@ export default function DriverNavigator() {
         options={{
           drawerLabel: () => <DrawerLabel icon="receipt-outline" label="Factures" />,
           headerShown: false,
+        }}
+      />
+
+      <Drawer.Screen
+        name="DriverReviews"
+        component={DriverReviewScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="star-outline" label="Mes évaluations" />,
         }}
       />
 

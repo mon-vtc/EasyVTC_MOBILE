@@ -1,24 +1,23 @@
 // ══════════════════════════════════════════════════════════════════════════════
-// SCREEN — Mes évaluations (Driver)
+// SCREEN — Gestion des évaluations (Admin)
 // Sprint 6 — EazyVTC
-// Permet au chauffeur de consulter toutes les notes reçues et sa moyenne.
+// Liste toutes les évaluations avec possibilité de suppression.
 // ══════════════════════════════════════════════════════════════════════════════
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
-  TouchableOpacity, RefreshControl, Platform,
+  TouchableOpacity, RefreshControl, Alert, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuthStore }    from '../../store/auth.store';
 import { useRatingsStore } from '../../store/ratings.store';
-import type { RatingWithClient } from '../../types/ratings.types';
+import type { RatingAdmin } from '../../types/ratings.types';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function StarRow({ note }: { note: number }) {
@@ -28,7 +27,7 @@ function StarRow({ note }: { note: number }) {
         <Ionicons
           key={i}
           name={i <= note ? 'star' : 'star-outline'}
-          size={14}
+          size={12}
           color={i <= note ? '#F59E0B' : Colors.border}
         />
       ))}
@@ -37,55 +36,74 @@ function StarRow({ note }: { note: number }) {
 }
 
 // ── Carte d'une évaluation ────────────────────────────────────────────────────
-function RatingCard({ rating }: { rating: RatingWithClient }) {
+function RatingCard({
+  rating,
+  onDelete,
+  isDeleting,
+}: {
+  rating:     RatingAdmin;
+  onDelete:   (id: string) => void;
+  isDeleting: boolean;
+}) {
   const clientName = [rating.client_first_name, rating.client_last_name]
-    .filter(Boolean).join(' ') || 'Client anonyme';
+    .filter(Boolean).join(' ') || 'Client inconnu';
+  const driverName = [rating.driver_first_name, rating.driver_last_name]
+    .filter(Boolean).join(' ') || 'Chauffeur inconnu';
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Supprimer l\'évaluation',
+      `Êtes-vous sûr de vouloir supprimer cette évaluation de ${clientName} (${rating.note}/5) ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Supprimer', style: 'destructive', onPress: () => onDelete(rating.id) },
+      ],
+    );
+  };
 
   return (
     <View style={styles.card}>
-      <View style={styles.cardTop}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {(rating.client_first_name?.[0] ?? '?').toUpperCase()}
-          </Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.clientName}>{clientName}</Text>
-          <Text style={styles.dateText}>{formatDate(rating.reservation_scheduled_at ?? rating.created_at)}</Text>
-        </View>
+      {/* Ligne principale */}
+      <View style={styles.cardHeader}>
         <View style={styles.noteBadge}>
-          <Ionicons name="star" size={12} color="#F59E0B" />
+          <Ionicons name="star" size={13} color="#F59E0B" />
           <Text style={styles.noteText}>{rating.note}/5</Text>
         </View>
+        <Text style={styles.dateText}>{formatDate(rating.created_at)}</Text>
+        <TouchableOpacity
+          onPress={handleDelete}
+          disabled={isDeleting}
+          style={styles.deleteBtn}
+          activeOpacity={0.7}
+        >
+          {isDeleting ? (
+            <ActivityIndicator size="small" color={Colors.error} />
+          ) : (
+            <Ionicons name="trash-outline" size={18} color={Colors.error} />
+          )}
+        </TouchableOpacity>
       </View>
-      <StarRow note={rating.note} />
-    </View>
-  );
-}
 
-// ── Résumé en tête ────────────────────────────────────────────────────────────
-function AvgHeader({ avg, total }: { avg: number | null; total: number }) {
-  return (
-    <View style={styles.avgCard}>
-      <View style={styles.avgLeft}>
-        <Text style={styles.avgNumber}>{avg != null ? avg.toFixed(1) : '—'}</Text>
-        <View style={styles.avgStars}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <Ionicons
-              key={i}
-              name={avg != null && i <= Math.round(avg) ? 'star' : 'star-outline'}
-              size={20}
-              color={avg != null && i <= Math.round(avg) ? '#F59E0B' : Colors.border}
-            />
-          ))}
+      <StarRow note={rating.note} />
+
+      {/* Participants */}
+      <View style={styles.row}>
+        <Ionicons name="person-outline" size={13} color={Colors.textMuted} />
+        <Text style={styles.label}>Client :</Text>
+        <Text style={styles.value}>{clientName}</Text>
+      </View>
+      <View style={styles.row}>
+        <Ionicons name="car-outline" size={13} color={Colors.textMuted} />
+        <Text style={styles.label}>Chauffeur :</Text>
+        <Text style={styles.value}>{driverName}</Text>
+      </View>
+      {rating.reservation_scheduled_at && (
+        <View style={styles.row}>
+          <Ionicons name="calendar-outline" size={13} color={Colors.textMuted} />
+          <Text style={styles.label}>Course du :</Text>
+          <Text style={styles.value}>{formatDate(rating.reservation_scheduled_at)}</Text>
         </View>
-        <Text style={styles.avgSub}>{total} évaluation{total !== 1 ? 's' : ''}</Text>
-      </View>
-      <View style={styles.avgDivider} />
-      <View style={styles.avgRight}>
-        <Ionicons name="ribbon-outline" size={32} color={Colors.beige} style={{ marginBottom: 6 }} />
-        <Text style={styles.avgRightLabel}>Votre note{'\n'}moyenne</Text>
-      </View>
+      )}
     </View>
   );
 }
@@ -93,29 +111,47 @@ function AvgHeader({ avg, total }: { avg: number | null; total: number }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // ÉCRAN PRINCIPAL
 // ══════════════════════════════════════════════════════════════════════════════
-export default function DriverReviewScreen() {
-  const accessToken    = useAuthStore(s => s.accessToken);
-  const myRatings      = useRatingsStore(s => s.myRatings);
-  const myAvgNote      = useRatingsStore(s => s.myAvgNote);
-  const myTotal        = useRatingsStore(s => s.myTotal);
-  const myPage         = useRatingsStore(s => s.myPage);
-  const myTotalPages   = useRatingsStore(s => s.myTotalPages);
-  const isLoading      = useRatingsStore(s => s.isLoading);
-  const fetchMyRatings = useRatingsStore(s => s.fetchMyRatings);
+export default function AdminReviewsScreen() {
+  const accessToken  = useAuthStore(s => s.accessToken);
+  const allRatings   = useRatingsStore(s => s.allRatings);
+  const allTotal     = useRatingsStore(s => s.allTotal);
+  const allPage      = useRatingsStore(s => s.allPage);
+  const allTotalPages = useRatingsStore(s => s.allTotalPages);
+  const isLoading    = useRatingsStore(s => s.isLoading);
+  const listAll      = useRatingsStore(s => s.listAll);
+  const deleteRating = useRatingsStore(s => s.deleteRating);
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async (page = 1) => {
     if (!accessToken) return;
-    try { await fetchMyRatings(accessToken, page); } catch { /* géré dans le store */ }
-  }, [accessToken, fetchMyRatings]);
+    try { await listAll(accessToken, page); } catch { /* géré dans le store */ }
+  }, [accessToken, listAll]);
 
   useEffect(() => { load(1); }, [load]);
 
   const handleLoadMore = () => {
-    if (!isLoading && myPage < myTotalPages) load(myPage + 1);
+    if (!isLoading && allPage < allTotalPages) load(allPage + 1);
   };
 
-  const renderItem = ({ item }: { item: RatingWithClient }) => (
-    <RatingCard rating={item} />
+  const handleDelete = async (ratingId: string) => {
+    if (!accessToken) return;
+    setDeletingId(ratingId);
+    try {
+      await deleteRating(accessToken, ratingId);
+    } catch (err: unknown) {
+      Alert.alert('Erreur', err instanceof Error ? err.message : 'Impossible de supprimer cette évaluation');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const renderItem = ({ item }: { item: RatingAdmin }) => (
+    <RatingCard
+      rating={item}
+      onDelete={handleDelete}
+      isDeleting={deletingId === item.id}
+    />
   );
 
   const renderEmpty = () => {
@@ -124,13 +160,13 @@ export default function DriverReviewScreen() {
       <View style={styles.emptyState}>
         <Ionicons name="star-outline" size={48} color={Colors.border} />
         <Text style={styles.emptyTitle}>Aucune évaluation</Text>
-        <Text style={styles.emptyText}>Les clients peuvent noter vos courses{'\n'}une fois celles-ci terminées.</Text>
+        <Text style={styles.emptyText}>Les évaluations apparaîtront ici{'\n'}une fois soumises par les clients.</Text>
       </View>
     );
   };
 
   const renderFooter = () => {
-    if (!isLoading || myRatings.length === 0) return null;
+    if (!isLoading || allRatings.length === 0) return null;
     return (
       <ActivityIndicator size="small" color={Colors.bordeaux} style={{ marginVertical: Spacing.md }} />
     );
@@ -138,28 +174,30 @@ export default function DriverReviewScreen() {
 
   return (
     <View style={styles.root}>
-      {/* En-tête bordeaux */}
+      {/* Bandeau en-tête */}
       <View style={styles.topBar}>
-        <Text style={styles.topTitle}>Mes évaluations</Text>
+        <Text style={styles.topTitle}>Évaluations</Text>
+        <View style={styles.countBadge}>
+          <Text style={styles.countText}>{allTotal}</Text>
+        </View>
       </View>
 
-      {isLoading && myRatings.length === 0 ? (
+      {isLoading && allRatings.length === 0 ? (
         <View style={styles.loader}>
           <ActivityIndicator size="large" color={Colors.bordeaux} />
         </View>
       ) : (
         <FlatList
-          data={myRatings}
+          data={allRatings}
           keyExtractor={item => item.id}
           renderItem={renderItem}
-          ListHeaderComponent={<AvgHeader avg={myAvgNote} total={myTotal} />}
           ListEmptyComponent={renderEmpty}
           ListFooterComponent={renderFooter}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.3}
           refreshControl={
             <RefreshControl
-              refreshing={isLoading && myPage === 1}
+              refreshing={isLoading && allPage === 1}
               onRefresh={() => load(1)}
               tintColor={Colors.bordeaux}
             />
@@ -183,75 +221,64 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 0 : Spacing.md,
     paddingBottom: Spacing.lg,
     paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.sm,
   },
-  topTitle: {
-    fontSize: Fonts.size.lg,
-    fontWeight: '700',
-    color: Colors.white,
+  topTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white, flex: 1 },
+  countBadge: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
   },
+  countText: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.white },
 
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   list: { padding: Spacing.md, paddingBottom: Spacing.xxl },
 
-  // ── Carte résumé ──────────────────────────────────────────────────────────
-  avgCard: {
-    backgroundColor: Colors.white,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  avgLeft:   { flex: 1, alignItems: 'center' },
-  avgNumber: { fontSize: 52, fontWeight: '900', color: Colors.bordeaux, lineHeight: 58 },
-  avgStars:  { flexDirection: 'row', gap: 3, marginVertical: Spacing.xs },
-  avgSub:    { fontSize: Fonts.size.sm, color: Colors.textMuted, marginTop: 2 },
-  avgDivider: { width: 1, height: 80, backgroundColor: Colors.border, marginHorizontal: Spacing.lg },
-  avgRight:  { flex: 1, alignItems: 'center' },
-  avgRightLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 18 },
-
-  // ── Carte évaluation ──────────────────────────────────────────────────────
+  // ── Carte ─────────────────────────────────────────────────────────────────
   card: {
     backgroundColor: Colors.white,
     borderRadius: Radius.md,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     shadowColor: '#000',
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.05,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  cardTop:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.xs },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.bordeaux,
+  cardHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
-  avatarText:  { color: Colors.white, fontSize: Fonts.size.md, fontWeight: '700' },
-  clientName:  { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary },
-  dateText:    { fontSize: Fonts.size.xs, color: Colors.textMuted, marginTop: 2 },
   noteBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
     backgroundColor: '#FEF3C7',
     paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    paddingVertical: 3,
     borderRadius: Radius.full,
   },
   noteText: { fontSize: Fonts.size.xs, fontWeight: '700', color: '#92400E' },
-  starRow:  { flexDirection: 'row', gap: 3 },
+  dateText: { flex: 1, fontSize: Fonts.size.xs, color: Colors.textMuted },
+  deleteBtn: { padding: Spacing.xs },
+
+  starRow: { flexDirection: 'row', gap: 2, marginBottom: Spacing.sm },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
+  },
+  label: { fontSize: Fonts.size.xs, color: Colors.textMuted, width: 72 },
+  value: { flex: 1, fontSize: Fonts.size.sm, fontWeight: '500', color: Colors.textPrimary },
 
   // ── État vide ─────────────────────────────────────────────────────────────
   emptyState: { alignItems: 'center', paddingTop: Spacing.xxl },
