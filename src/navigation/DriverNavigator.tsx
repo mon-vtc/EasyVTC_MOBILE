@@ -6,20 +6,26 @@ import { AppIcon } from '../components/common/AppIcon';
 import DrawerContent from './DrawerContent';
 import { Colors } from '../theme/colors';
 
-import DriverHomeScreen          from '../screens/driver/DriverHomeScreen';
-import DriverReservationsScreen  from '../screens/driver/DriverReservationsScreen';
-import DriverReservationScreen   from '../screens/driver/DriverReservationScreen';
-import DriverTripsScreen         from '../screens/driver/DriverTripsScreen';
-import DriverDocumentsScreen     from '../screens/driver/DriverDocumentsScreen';
-import DriverAvailabilityScreen  from '../screens/driver/DriverAvailabilityScreen';
-import DriverProfileScreen       from '../screens/driver/DriverProfileScreen';
+import DriverHomeScreen         from '../screens/driver/DriverHomeScreen';
+import DriverReservationsScreen from '../screens/driver/DriverReservationsScreen';
+import DriverReservationScreen  from '../screens/driver/DriverReservationScreen';
+import DriverTripsScreen        from '../screens/driver/DriverTripsScreen';
+import DriverDocumentsScreen    from '../screens/driver/DriverDocumentsScreen';
+import DriverAvailabilityScreen from '../screens/driver/DriverAvailabilityScreen';
+import DriverProfileScreen      from '../screens/driver/DriverProfileScreen';
+import DriverOrdersScreen         from '../screens/driver/orders/DriverOrdersScreen';
+import DriverOrderDetailsScreen   from '../screens/driver/orders/DriverOrderDetailsScreen';
+import DriverInvoiceDetailScreen   from '../screens/driver/invoices/DriverInvoiceDetailsScreen';
+import DriverInvoicesScreen       from '../screens/driver/invoices/DriverInvoicesScreen';
+import NotificationsScreen from '../screens/notifications/NotificationsScreen';
+import NotificationDetailsScreen from '../screens/notifications/NotificationDetailsScreen';
+import ChatScreen from '../screens/chats/ChatScreen';
+import MessagesScreen from '../screens/client/MessagesScreen'; // Réutilisé pour les chats de réservation
+import SupportListScreen from '../screens/support/SupportListScreen';
+import SupportChatScreen from '../screens/support/SupportChatScreen';
 import DriverReviewScreen        from '../screens/driver/DriverReviewScreen';
-import DriverOrdersScreen        from '../screens/driver/orders/DriverOrdersScreen';
-import DriverOrderDetailsScreen  from '../screens/driver/orders/DriverOrderDetailsScreen';
-import DriverInvoiceDetailScreen from '../screens/driver/invoices/DriverInvoiceDetailsScreen';
-import DriverInvoicesScreen      from '../screens/driver/invoices/DriverInvoicesScreen';
 
-import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList } from '../types/auth.types';
+import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList, DriverNotificationsStackParamList, DriverMessagesStackParamList, SupportStackParamList, DriverTripsStackParamList } from '../types/auth.types';
 
 import { Logo }                  from  '../constants/logo';
 
@@ -29,11 +35,34 @@ function DriverReservationsStackScreen() {
   return (
     <DriverReservationsStack.Navigator screenOptions={{ headerShown: false }}>
       <DriverReservationsStack.Screen name="DriverReservationsList" component={DriverReservationsScreen} />
-      <DriverReservationsStack.Screen name="DriverReservationDetail" component={DriverReservationScreen} />
+      <DriverReservationsStack.Screen name="DriverReservationDetails" component={DriverReservationScreen} />
+      <DriverReservationsStack.Screen name="ChatScreen" component={ChatScreen} />
+      <DriverReservationsStack.Screen name="DriverInvoiceDetails" component={DriverInvoiceDetailScreen} />
+      <DriverReservationsStack.Screen name="SupportList" component={SupportListScreen} />
+      <DriverReservationsStack.Screen name="SupportChat" component={SupportChatScreen} />
+
     </DriverReservationsStack.Navigator>
   );
 }
+const DriverTripsStack = createNativeStackNavigator<DriverTripsStackParamList>();
 
+function DriverTripsStackScreen() {
+  return (
+    <DriverTripsStack.Navigator screenOptions={{ headerShown: false }}>
+      <DriverTripsStack.Screen name="DriverTripsList" component={DriverTripsScreen} />
+      <DriverTripsStack.Screen name="DriverReservationDetails" component={DriverReservationScreen} />
+    </DriverTripsStack.Navigator>
+  );
+}
+const DriverNotificationsStack = createNativeStackNavigator<DriverNotificationsStackParamList>();
+function DriverNotificationsStackScreen() {
+  return (
+    <DriverNotificationsStack.Navigator screenOptions={{ headerShown: false }}>
+      <DriverNotificationsStack.Screen name="NotificationsList" component={NotificationsScreen} />
+      <DriverNotificationsStack.Screen name="NotificationDetails" component={NotificationDetailsScreen} />
+    </DriverNotificationsStack.Navigator>
+  );
+}
 const DriverOrdersStack = createNativeStackNavigator<DriverOrdersStackParamList>();
 
 function DriverOrdersStackScreen() {
@@ -44,6 +73,30 @@ function DriverOrdersStackScreen() {
     </DriverOrdersStack.Navigator>
   );
 }
+
+const DriverMessagesStack = createNativeStackNavigator<DriverMessagesStackParamList>();
+ 
+function DriverMessagesStackScreen () {
+  return (
+    <DriverMessagesStack.Navigator screenOptions={{ headerShown: false }}>
+      <DriverMessagesStack.Screen name="DriverMessagesList" component={MessagesScreen} />
+      <DriverMessagesStack.Screen name="ChatScreen" component={ChatScreen} />
+    </DriverMessagesStack.Navigator>
+  );
+}
+
+const DriverSupportStack = createNativeStackNavigator<SupportStackParamList>();
+
+function  DriverSupportStackScreen() {
+  return (
+    <DriverSupportStack.Navigator screenOptions={{ headerShown: false }}>
+      <DriverSupportStack.Screen name="SupportList" component={SupportListScreen} />
+      <DriverSupportStack.Screen name="SupportChat" component={SupportChatScreen} />
+    </DriverSupportStack.Navigator>
+  );
+}
+  
+
 
 const DriverInvoicesStack = createNativeStackNavigator();
 
@@ -90,7 +143,7 @@ const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions =>
   // --- Bouton Notification à Droite ---
   headerRight: () => (
     <TouchableOpacity 
-      onPress={() => console.log('Notifications cliquées')} 
+      onPress={() => navigation.navigate('DriverNotifications')}
       style={{ marginRight: 20 }}
     >
       <AppIcon name="notifications-outline" size={24} color={Colors.white} />
@@ -129,6 +182,24 @@ export default function DriverNavigator() {
       />
 
       <Drawer.Screen
+        name="DriverNotifications"
+        component={DriverNotificationsStackScreen}
+        options={{ 
+          drawerLabel: () => <DrawerLabel icon="notifications-outline" label="Notifications" /> ,
+          
+        }}
+      />
+
+      <Drawer.Screen
+        name="DriverMessages"
+        component={DriverMessagesStackScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="chatbubble-outline" label="Messages" />,
+          headerShown: false,
+        }}
+      />
+
+      <Drawer.Screen
         name="DriverReservations"
         component={DriverReservationsStackScreen}
         options={{
@@ -147,11 +218,14 @@ export default function DriverNavigator() {
 
       <Drawer.Screen
         name="DriverTrips"
-        component={DriverTripsScreen}
+        component={DriverTripsStackScreen}
         options={{
           drawerLabel: () => <DrawerLabel icon="calendar-outline" label="Planning" />,
+          headerShown: false,
         }}
       />
+
+
 
       <Drawer.Screen
         name="DriverAvailability"
@@ -169,7 +243,7 @@ export default function DriverNavigator() {
           headerShown: false,
         }}
       />
-
+     
       <Drawer.Screen
         name="DriverInvoices"
         component={DriverInvoicesStackScreen}
@@ -195,20 +269,13 @@ export default function DriverNavigator() {
         }}
       />
 
+
       <Drawer.Screen
-        name="DriverOrderDetails"
-        component={DriverOrderDetailsScreen}
+        name="DriverSupport"
+        component={DriverSupportStackScreen}
         options={{
-          drawerItemStyle: { display: 'none' },
-          headerShown: false,
-        }}
-      />
-      <Drawer.Screen
-        name="DriverInvoiceDetails"
-        component={DriverInvoiceDetailScreen}
-        options={{
-          drawerItemStyle: { display: 'none' },
-          headerShown: false,
+            drawerLabel: () => <DrawerLabel icon="headset-outline" label="Support" />,
+            headerShown: false,
         }}
       />
 

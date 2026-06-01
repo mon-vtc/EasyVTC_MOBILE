@@ -2,8 +2,7 @@
 // SCREEN — DriverHomeScreen
 // Sprint 3 — EasyVTC
 // ══════════════════════════════════════════════════════════════════════════════
-
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View, Text, ScrollView, Switch, StyleSheet,
   ActivityIndicator, Alert, TouchableOpacity,
@@ -11,6 +10,7 @@ import {
 import { useDriver }   from '../../hooks/useDriver';
 import { AppIcon }     from '../../components/common/AppIcon';
 import { Colors }      from '../../theme/colors';
+import { useReservation } from '../../hooks/useReservation';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES LOCAUX
@@ -40,6 +40,7 @@ function StatusCard({
 }) {
   const canGoOnline = driverStatus === 'active' || driverStatus === 'probationary';
   const isOnTrip = driverStatus === 'on_trip';
+
 
   return (
     <View style={sc.card}>
@@ -226,26 +227,39 @@ const STATUS_LABELS: Record<string, string> = {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export default function DriverHomeScreen({ navigation }: any) {
-  const { user, isOnline, status, setOnlineStatus, isLoading } = useDriver();
+  const { isOnline, status, setOnlineStatus, isLoading: isDriverLoading } = useDriver();
+  const { driverHomeReservations, fetchDriverHomeReservations, isLoading: isReservationsLoading } = useReservation();
 
   const [isToggling, setIsToggling]   = useState(false);
   // Stats mockées — à remplacer par un hook dédié quand l'API stats sera disponible
   const [stats] = useState<DayStats>({ rides: 3, revenue: 185, rating: 4.8 });
-  // Courses mockées — à remplacer par useRides() quand le module sera disponible
-  const [rides] = useState([
-    {
-      id:           '1',
-      ref_number:   'BC-2025-00145',
-      client_name:  'Marie Dubois',
-      client_phone: '+33 6 45 67 89 01',
-      origin:       'Massy, 91300',
-      destination:  'Aéroport Paris-Orly',
-      date:         '15 janvier 2026',
-      time:         '14h30',
-      price:        65,
-      status:       'assigned',
-    },
-  ]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await fetchDriverHomeReservations();
+      } catch (err) {
+        console.error("Failed to fetch driver reservations:", err);
+      }
+    };
+    void loadData();
+  }, [fetchDriverHomeReservations]);
+
+  const assignedRides = useMemo(() => {
+    return driverHomeReservations
+      .map(r => ({
+        id:           r.id,
+        ref_number:   `BC-${r.id.slice(-6).toUpperCase()}`,
+        client_name:  `${r.client?.first_name ?? ''} ${r.client?.last_name ?? 'Client inconnu'}`,
+        client_phone: r.client?.phone ?? 'Non communiqué',
+        origin:       r.pickup_address,
+        destination:  r.dest_address,
+        date:         new Date(r.scheduled_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+        time:         new Date(r.scheduled_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        price:        r.price_final ?? r.price_estimated,
+        status:       r.status,
+      }));
+  }, [driverHomeReservations]);
 
   // ── Toggle disponibilité ──────────────────────────────────────────────────
   const handleToggle = useCallback(async (value: boolean) => {
@@ -253,15 +267,6 @@ export default function DriverHomeScreen({ navigation }: any) {
       Alert.alert(
         'Profil non validé',
         'Votre profil chauffeur doit être validé par un administrateur avant de pouvoir passer en ligne.',
-        [{ text: 'Compris', style: 'default' }],
-      );
-      return;
-    }
-
-    if (status === 'on_trip') {
-      Alert.alert(
-        'Action impossible',
-        'Vous ne pouvez pas changer votre statut de disponibilité pendant que vous êtes en mission.',
         [{ text: 'Compris', style: 'default' }],
       );
       return;
@@ -278,16 +283,7 @@ export default function DriverHomeScreen({ navigation }: any) {
   }, [status, setOnlineStatus]);
 
   const handleRideDetails = useCallback((id: string) => {
-    navigation?.navigate('DriverReservationDetail', { reservationId: id });
-    // Exemple d'utilisation de startTrip (à adapter à votre logique de bouton "Démarrer")
-    /*
-    try {
-      await startTrip(id);
-      navigation?.navigate('RideInProgress', { rideId: id });
-    } catch (err) {
-      Alert.alert('Erreur', 'Impossible de démarrer la course.');
-    }
-    */
+    navigation.navigate('DriverReservations', { screen: 'DriverReservationDetails', params: { reservationId: id } });
   }, [navigation]);
 
   // ── Rendu ─────────────────────────────────────────────────────────────────
@@ -300,7 +296,7 @@ export default function DriverHomeScreen({ navigation }: any) {
       {/* ── Statut ─────────────────────────────────────────── */}
       <StatusCard
         isOnline={isOnline}
-        isToggling={isToggling}
+        isToggling={isToggling || isDriverLoading}
         driverStatus={status}
         onToggle={handleToggle}
       />
@@ -311,13 +307,17 @@ export default function DriverHomeScreen({ navigation }: any) {
       {/* ── Courses attribuées ─────────────────────────────── */}
       <Text style={styles.sectionTitle}>Courses attribuées</Text>
 
-      {rides.length === 0 ? (
+      {isReservationsLoading ? (
+        <View style={styles.empty}>
+          <ActivityIndicator color={Colors.bordeaux} />
+        </View>
+      ) : assignedRides.length === 0 ? (
         <View style={styles.empty}>
           <AppIcon name="car-outline" size={40} color={Colors.textSecondary} />
           <Text style={styles.emptyText}>Aucune course attribuée pour l'instant</Text>
         </View>
       ) : (
-        rides.map(ride => (
+        assignedRides.map(ride => (
           <RideCard
             key={ride.id}
             {...ride}

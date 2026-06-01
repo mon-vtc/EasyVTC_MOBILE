@@ -17,10 +17,13 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation }  from '@react-navigation/native';
 import { useReservation } from '../../hooks/useReservation';
 import { AppIcon }        from '../../components/common/AppIcon';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Colors, Spacing }         from '../../theme/colors';
 import { Logo }           from '../../constants/logo';
 import type { GeoPoint, VehicleTypeOption } from '../../types/reservations.types';
 import type { PricingFlatRate } from '../../types/pricing.types';
+import CustomCalendarModal from '../../components/common/CustomCalendarModal';
+import CustomTimePickerModal from '../../components/common/CustomTimePickerModal';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VEHICLE ICONS — alignés avec VehicleType backend : standard | berline | van
@@ -428,9 +431,9 @@ function Step2({ booking, setDate, setTime, setPassengers, setLuggage, isFetchin
       })()
     : new Date();
 
-  const handleDateChange = (_: any, date?: Date) => {
+  const handleDateConfirm = (date: Date) => {
     setShowDatePicker(false);
-    if (date) setDate(date.toISOString().split('T')[0]);
+    setDate(date.toISOString().split('T')[0]);
   };
 
   const handleTimeChange = (_: any, date?: Date) => {
@@ -441,6 +444,8 @@ function Step2({ booking, setDate, setTime, setPassengers, setLuggage, isFetchin
       setTime(`${h}:${m}`);
     }
   };
+
+  const todayString = new Date().toISOString().split('T')[0];
 
   return (
     <ScrollView contentContainerStyle={styles.stepContent} keyboardShouldPersistTaps="handled">
@@ -456,14 +461,17 @@ function Step2({ booking, setDate, setTime, setPassengers, setLuggage, isFetchin
         </Text>
         <AppIcon name="chevron-down-outline" size={16} color={Colors.textSecondary} />
       </TouchableOpacity>
-      {showDatePicker && (
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          minimumDate={new Date()}
-          onChange={handleDateChange}
-        />
-      )}
+
+      {/* ── Modal Calendrier custom ── */}
+      <CustomCalendarModal
+        visible={showDatePicker}
+        selectedDate={booking.date ?? null}
+        onConfirm={(dateStr) => {
+          setDate(dateStr);
+          setShowDatePicker(false);
+        }}
+        onCancel={() => setShowDatePicker(false)}
+      />
 
       {/* ── Heure ── */}
       <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Heure</Text>
@@ -475,59 +483,46 @@ function Step2({ booking, setDate, setTime, setPassengers, setLuggage, isFetchin
         <AppIcon name="chevron-down-outline" size={16} color={Colors.textSecondary} />
       </TouchableOpacity>
       {showTimePicker && (
-        <DateTimePicker
-          value={selectedTime}
-          mode="time"
-          is24Hour
-          onChange={handleTimeChange}
+        <CustomTimePickerModal
+          visible={showTimePicker}
+          selectedTime={booking.time ?? null}
+          onConfirm={(timeStr) => {
+            setTime(timeStr);
+            setShowTimePicker(false);
+          }}
+          onCancel={() => setShowTimePicker(false)}
         />
       )}
 
       {/* ── Compteurs ── */}
       <View style={styles.counterRow}>
-
-        {/* Passagers — setPassengers est enrichi dans le hook et déclenche fetchEstimate */}
         <View style={styles.counterBlock}>
           <Text style={styles.fieldLabel}>Passagers</Text>
           <View style={styles.counter}>
-            <TouchableOpacity
-              style={styles.counterBtn}
-              onPress={() => setPassengers(Math.max(1, booking.nb_passengers - 1))}
-            >
+            <TouchableOpacity style={styles.counterBtn} onPress={() => setPassengers(Math.max(1, booking.nb_passengers - 1))}>
               <Text style={styles.counterBtnText}>−</Text>
             </TouchableOpacity>
             <Text style={styles.counterValue}>{booking.nb_passengers}</Text>
-            <TouchableOpacity
-              style={styles.counterBtn}
-              onPress={() => setPassengers(Math.min(7, booking.nb_passengers + 1))}
-            >
+            <TouchableOpacity style={styles.counterBtn} onPress={() => setPassengers(Math.min(7, booking.nb_passengers + 1))}>
               <Text style={styles.counterBtnText}>+</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Bagages — setter simple, pas d'impact sur le prix */}
         <View style={styles.counterBlock}>
           <Text style={styles.fieldLabel}>Bagages</Text>
           <View style={styles.counter}>
-            <TouchableOpacity
-              style={styles.counterBtn}
-              onPress={() => setLuggage(Math.max(0, booking.luggage - 1))}
-            >
+            <TouchableOpacity style={styles.counterBtn} onPress={() => setLuggage(Math.max(0, booking.luggage - 1))}>
               <Text style={styles.counterBtnText}>−</Text>
             </TouchableOpacity>
             <Text style={styles.counterValue}>{booking.luggage}</Text>
-            <TouchableOpacity
-              style={styles.counterBtn}
-              onPress={() => setLuggage(Math.min(10, booking.luggage + 1))}
-            >
+            <TouchableOpacity style={styles.counterBtn} onPress={() => setLuggage(Math.min(10, booking.luggage + 1))}>
               <Text style={styles.counterBtnText}>+</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
-      {/* ── Indicateur recalcul en cours ── */}
       {isFetchingPrice && (
         <View style={styles.estimateLoading}>
           <ActivityIndicator size="small" color={Colors.bordeaux} />
@@ -538,6 +533,51 @@ function Step2({ booking, setDate, setTime, setPassengers, setLuggage, isFetchin
   );
 }
 
+// ── Styles du calendrier ────────────────────────────────────────────
+const calendarStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  container: {
+    width: '100%',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.bordeaux,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  headerTitle: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelBtn: {
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: Colors.bordeauxLight,
+  },
+  cancelText: {
+    color: Colors.bordeauxLight,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+});
 // ══════════════════════════════════════════════════════════════════════════════
 // ÉTAPE 3 — Récapitulatif + Confirmation
 // ══════════════════════════════════════════════════════════════════════════════

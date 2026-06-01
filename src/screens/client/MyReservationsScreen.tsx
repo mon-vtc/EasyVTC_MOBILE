@@ -320,7 +320,7 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
   };
 
   const handleMessage = (reservation: Reservation) => {
-    navigation.navigate('Messages', { driverId: reservation.driver_id });
+    navigation.navigate('ChatScreen', { driverId: reservation.driver_id });
   };
 
   const handleCancel = (reservation: Reservation) => {

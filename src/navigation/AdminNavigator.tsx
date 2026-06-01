@@ -30,6 +30,12 @@ import ManagerDetailScreen from '../screens/admin/managers/ManagerDetailScreen';
 import CreateManagerScreen from '../screens/admin/managers/CreateManagerScreen';
 import EditManagerScreen from '../screens/admin/managers/Editmanagerscreen';
 import ManagerPermissionsScreen from '../screens/admin/managers/ManagerPermissionsScreen';
+import NotificationDetailsScreen from '../screens/notifications/NotificationDetailsScreen';
+import NotificationsScreen from '../screens/notifications/NotificationsScreen';
+import SupportListScreen from '../screens/support/SupportListScreen';
+import SupportChatScreen from '../screens/support/SupportChatScreen';
+import AdminDiscussionScreen from '../screens/admin/AdminDiscussionScreen';
+import AdminChatScreen from '../screens/admin/AdminChatScreen';
 
 import type {
   AdminDrawerParamList,
@@ -38,6 +44,9 @@ import type {
   ClientsStackParamList,
   AdminInvoicesStackParamList,
   AdminOrderStackParamList,
+  AdminNotificationsStackParamList,
+  SupportStackParamList,
+  DiscussionStackParamList,
 } from '../types/auth.types';
 
 import type { ManagersStackParamList } from '../types';
@@ -47,6 +56,11 @@ const DriversStack = createNativeStackNavigator<DriversStackParamList>();
 const ReservationsStack = createNativeStackNavigator<ReservationsStackParamList>();
 const InvoicesStack = createNativeStackNavigator<AdminInvoicesStackParamList>();
 const OrderStack = createNativeStackNavigator<AdminOrderStackParamList>();
+const NotificationsStack = createNativeStackNavigator<AdminNotificationsStackParamList>();
+const SupportStack = createNativeStackNavigator<SupportStackParamList>();
+
+// Stack pour les discussions (supervision)
+const DiscussionStack = createNativeStackNavigator<DiscussionStackParamList>();
 
 // ── Stack pour la section Chauffeurs ────────────────────────────
 // Permet de naviguer de la liste vers le détail sans quitter le drawer
@@ -69,6 +83,18 @@ function AdminReservationsStack() {
     </ReservationsStack.Navigator>
   );
 }
+
+// ── Stack pour la section Notifications ──────────────────────────
+function AdminNotificationsStack() {
+  return (
+    <NotificationsStack.Navigator screenOptions={{ headerShown: false }}>
+      <NotificationsStack.Screen name="AdminNotificationList" component={NotificationsScreen} />
+      <NotificationsStack.Screen name="NotificationDetails" component={NotificationDetailsScreen} />
+    </NotificationsStack.Navigator>
+  );
+}
+
+// ── Stack pour la section Factures ────────────────────────────
 
 function AdminInvoicesStack() {
   return (
@@ -137,6 +163,26 @@ function AdminManagersNavigator() {
   );
 }
 
+// ── Stack pour la section Support ───────────────────────────────
+function AdminSupportStack() {
+  return (
+    <SupportStack.Navigator screenOptions={{ headerShown: false }}>
+      <SupportStack.Screen name="SupportList" component={SupportListScreen} />
+      <SupportStack.Screen name="SupportChat" component={SupportChatScreen} />
+    </SupportStack.Navigator>
+  );
+}
+
+// ── Stack pour la section Discussions (Supervision) ───────────────
+function AdminDiscussionStack() {
+  return (
+    <DiscussionStack.Navigator screenOptions={{ headerShown: false }}>
+      <DiscussionStack.Screen name="AdminDiscussionList" component={AdminDiscussionScreen} />
+      <DiscussionStack.Screen name="AdminChatScreen" component={AdminChatScreen} />
+    </DiscussionStack.Navigator>
+  );
+}
+
 
 
 // ── Drawer ──────────────────────────────────────────────────────
@@ -158,7 +204,7 @@ const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions =>
   ),
 
   headerRight: () => (
-    <TouchableOpacity onPress={() => console.log('Notifications')} style={{ marginRight: 20 }}>
+    <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={{ marginRight: 20 }}>
       <AppIcon name="notifications-outline" size={24} color={Colors.white} />
     </TouchableOpacity>
   ),
@@ -179,6 +225,7 @@ function DrawerLabel({ icon, label }: { icon: React.ComponentProps<typeof AppIco
 }
 
 export default function AdminNavigator() {
+  
   return (
     <Drawer.Navigator
       drawerContent={(props) => <DrawerContent {...props} />}
@@ -191,11 +238,25 @@ export default function AdminNavigator() {
       />
 
       <Drawer.Screen
+        name="Notifications"
+        component={AdminNotificationsStack}
+        options={{ drawerLabel: () => <DrawerLabel icon="notifications-outline" label="Notifications" /> }}
+      />
+
+      <Drawer.Screen
         name="AdminReservations"
         component={AdminReservationsStack}
         options={{
           drawerLabel: () => <DrawerLabel icon="car-outline" label="Réservations" />,
           headerShown: false,
+        }}
+      />
+
+      <Drawer.Screen
+        name="AdminDiscussions"
+        component={AdminDiscussionStack}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="chatbubbles-outline" label="Supervision chats" />,
         }}
       />
 
@@ -227,6 +288,15 @@ export default function AdminNavigator() {
         }}
       />
 
+
+      <Drawer.Screen
+        name="AdminSupport"
+        component={AdminSupportStack}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="headset-outline" label="Support" />,
+          headerShown: false,
+        }}
+      />
 
       <Drawer.Screen
         name="AdminDocuments"
@@ -282,7 +352,7 @@ export default function AdminNavigator() {
           headerShown: false,
         }}
       />
-
+      
       <Drawer.Screen
         name="AdminReviews"
         component={AdminReviewsScreen}

@@ -83,11 +83,18 @@ export default function ReservationDetailsScreen() {
   }
 
   const accessToken  = useAuthStore(s => s.accessToken);
-  const reservations = useReservationStore(s => s.reservations);
+  // ✅ Lire depuis `selected` que fetchById renseigne
+const selected     = useReservationStore(s => s.selected);
+const reservations = useReservationStore(s => s.reservations);
+
+  const reservation =
+    selected?.id === reservationId          // vient de fetchById
+      ? selected
+      : reservations.find(r => r.id === reservationId) // vient de fetchMine
+      ?? null;
   const fetchById    = useReservationStore(s => s.fetchById);
   const cancel       = useReservationStore(s => s.cancel);
 
-  const reservation = reservations.find(r => r.id === reservationId) ?? null;
   const status = reservation?.status as string | undefined;
   const ref = reservation?.id.split('-').pop()?.toUpperCase() ?? reservation?.id;
 
@@ -128,7 +135,7 @@ export default function ReservationDetailsScreen() {
 
   const handleMessage = useCallback(() => {
     if (reservation?.driver_id) {
-      nav.navigate('Messages' as any);
+      (nav as any).navigate('ChatScreen', { reservationId: reservation.id });
     }
   }, [reservation?.driver_id, nav]);
 

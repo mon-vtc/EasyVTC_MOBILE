@@ -45,6 +45,8 @@ interface ReservationState {
   isFetchingPrice: boolean;
   error:           string | null;
   homeReservations: Reservation[];
+  adminHomeReservations: Reservation[];
+  driverHomeReservations: Reservation[];
 
 
   // ── Actions liste ──────────────────────────────────────────────────────────
@@ -54,6 +56,8 @@ interface ReservationState {
   fetchById:             (token: string, id: string)                       => Promise<void>;
   fetchDriverActive:     (token: string)                                   => Promise<void>;
   fetchAvailableDrivers: (token: string, vehicleType?: string)             => Promise<AvailableDriverDto[]>;
+  fetchAdminHomeReservations: (token: string) => Promise<void>;
+  fetchDriverHomeReservations: (token: string) => Promise<void>;
   fetchHomeReservations: (token: string) => Promise<void>;
   cancel:            (token: string, id: string, reason?: string)      => Promise<void>;
 
@@ -100,6 +104,8 @@ interface ReservationState {
 export const useReservationStore = create<ReservationState>((set, get) => ({
   reservations:      [],
   homeReservations: [],
+  adminHomeReservations: [],
+  driverHomeReservations: [],
   myReservations:    [],
   currentReservation:null,
   total:             0,
@@ -198,12 +204,10 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   },
 
   // ── Annulation ─────────────────────────────────────────────────────────────
-  cancel: async (id, reason) => {
+  cancel: async (token, id, reason) => {
     set({ isLoading: true, error: null });
     try {
-      const token = useAuthStore.getState().accessToken;
       if (!token) throw new Error('Non authentifié');
-
       const res = await reservationApi.cancel(token, id,  reason );
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur annulation');
       set(state => ({
@@ -241,7 +245,6 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
 
   complete: async (token, id, payload) => {
     set({ isLoading: true, error: null });
-    console.log('Completing ride with:', { id, ...payload });
     try {
       const res = await reservationApi.complete(
         token, id,
@@ -251,7 +254,6 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
         payload?.price_adjusted,
       );
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur complétion');
-      console.log('Ride completed, response:', res.data);
       set({ activeRide: null, isLoading: false });
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
@@ -286,15 +288,45 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   fetchVehicleTypes: async (token, country) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await vehicleApi.getVehicleTypes(token, country);
-      console.log(res.data);
-      
+      const res = await vehicleApi.getVehicleTypes(token, country);      
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur chargement véhicules');
       set({ vehicleTypes: res.data, isLoading: false });
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
     }
   },
+
+  fetchAdminHomeReservations: async (token) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await reservationApi.listAll(token, { status: 'pending', limit: 5, page: 1 });
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
+      set({
+        adminHomeReservations: res.data.reservations,
+        isLoading: false,
+      });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      throw err;
+    }
+  },
+
+  fetchDriverHomeReservations: async (token) => {
+    set({ isLoading: true, error: null });
+    try {
+      // Pour le chauffeur, on veut les courses qui lui sont assignées et qui sont à venir
+      const res = await reservationApi.getDriverReservations(token, { status: 'assigned', limit: 5 });
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
+      set({
+        driverHomeReservations: res.data.reservations,
+        isLoading: false,
+      });
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      throw err;
+    }
+  },
+
 
     // Nouvelle action (charge uniquement pending + assigned, sans filtre statut partagé) :
   fetchHomeReservations: async (token) => {

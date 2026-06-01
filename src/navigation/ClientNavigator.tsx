@@ -32,7 +32,11 @@ import BookingConfirmationScreen  from '../screens/client/BookingConfirmationScr
 import ReservationDetailsScreen   from '../screens/client/ReservationDetailsScreen';
 import OrderDetailsScreen         from '../screens/client/OrderDetailsScreen';
 import InvoiceDetailsScreen       from '../screens/client/InvoiceDetailsScreen';
-
+import NotificationsScreen        from '../screens/notifications/NotificationsScreen';
+import NotificationDetailsScreen  from '../screens/notifications/NotificationDetailsScreen';
+import SupportListScreen          from '../screens/support/SupportListScreen';
+import SupportChatScreen          from '../screens/support/SupportChatScreen';
+import ChatScreen                 from '../screens/chats/ChatScreen';
 import type { ClientTabParamList, ClientStackParamList } from '../types/auth.types';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -48,6 +52,10 @@ function FABButton({ onPress }: { onPress: (e?: any) => void }) {
       <Ionicons name="add" size={28} color={Colors.white} />
     </TouchableOpacity>
   );
+}
+
+function CreateReservationTabScreen() {
+  return null;
 }
 
 const fabStyles = StyleSheet.create({
@@ -117,8 +125,8 @@ function ClientTabs() {
        * Le composant CreateReservationScreen peut rester vide / redirect.
        */}
       <Tab.Screen
-        name="CreateReservation"
-        component={CreateReservationScreen}
+        name="CreateReservationTab"
+        component={CreateReservationTabScreen}
         options={({ navigation }) => ({
           tabBarLabel: '',
           tabBarButton: () => <FABButton onPress={() => navigation.navigate('CreateReservation')} />,
@@ -145,18 +153,6 @@ function ClientTabs() {
             <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
-      />
-
-      {/* S4 — Écrans cachés de la tab bar, accessibles via navigation.navigate() */}
-      <Tab.Screen
-        name="MyOrders"
-        component={MyOrdersScreen}
-        options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
-      />
-      <Tab.Screen
-        name="MyInvoices"
-        component={MyInvoicesScreen}
-        options={{ tabBarItemStyle: { display: 'none' }, tabBarLabel: '' }}
       />
     </Tab.Navigator>
   );
@@ -204,6 +200,41 @@ export default function ClientNavigator() {
           animation: 'slide_from_right',
         }}
       />
+      <Stack.Screen
+        name="MyOrders"
+        component={MyOrdersScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="MyInvoices"
+        component={MyInvoicesScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="SupportList"
+        component={SupportListScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="SupportChat"
+        component={SupportChatScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
 
       {/* Détail d'un bon de commande */}
       <Stack.Screen
@@ -213,11 +244,25 @@ export default function ClientNavigator() {
           animation: 'slide_from_right',
         }}
       />
+      <Stack.Screen
+        name="NotificationDetails"
+        component={NotificationDetailsScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
 
       {/* Détail d'une facture */}
       <Stack.Screen
         name="InvoiceDetails"
         component={InvoiceDetailsScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="ChatScreen"
+        component={ChatScreen}
         options={{
           animation: 'slide_from_right',
         }}

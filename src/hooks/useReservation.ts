@@ -42,6 +42,8 @@ export function useReservation() {
   const isFetchingPrice  = useReservationStore(s => s.isFetchingPrice);
   const error            = useReservationStore(s => s.error);
   const _fetchVehicleTypes = useReservationStore(s => s.fetchVehicleTypes);
+  const _fetchAdminHomeReservations = useReservationStore(s => s.fetchAdminHomeReservations);
+  const _fetchDriverHomeReservations = useReservationStore(s => s.fetchDriverHomeReservations);
   const _fetchMine         = useReservationStore(s => s.fetchMine);
   const _fetchDriverReservations = useReservationStore(s => s.fetchDriverReservations);
   const _fetchAll          = useReservationStore(s => s.fetchAll);
@@ -392,6 +394,8 @@ export function useReservation() {
   }, [_submitBooking]);
 
   const homeReservations       = useReservationStore(s => s.homeReservations);
+  const adminHomeReservations = useReservationStore(s => s.adminHomeReservations);
+  const driverHomeReservations = useReservationStore(s => s.driverHomeReservations);
   const _fetchHomeReservations = useReservationStore(s => s.fetchHomeReservations);
 
   return {
@@ -448,6 +452,16 @@ export function useReservation() {
     homeReservations,
     fetchHomeReservations: useCallback(
       () => _fetchHomeReservations(accessTokenRef.current!),
+      [],
+    ),
+    adminHomeReservations,
+    fetchAdminHomeReservations: useCallback(
+      () => _fetchAdminHomeReservations(accessTokenRef.current!),
+      [],
+    ),
+    driverHomeReservations,
+    fetchDriverHomeReservations: useCallback(
+      () => _fetchDriverHomeReservations(accessTokenRef.current!),
       [],
     ),
 

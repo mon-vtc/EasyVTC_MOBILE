@@ -35,9 +35,9 @@ export default {
 
   // ── EAS Build config ─────────────────────────────────────────────────────
   // Décommenter pour les builds EAS (production/preview)
-  // extra: {
-  //   eas: {
-  //     projectId: "983978ef-6a7b-428d-92a6-ae5f8dc773ac",
-  //   },
-  // },
+  extra: {
+    eas: {
+      projectId: "983978ef-6a7b-428d-92a6-ae5f8dc773ac",
+    },
+  },
 };

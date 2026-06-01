@@ -7,11 +7,17 @@ import { Ionicons }  from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuth }   from '../../hooks/useAuth';
 import { useReservation } from '../../hooks/useReservation';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { ClientTabParamList }   from '../../types/auth.types';
+import type { ClientTabParamList, ClientStackParamList }   from '../../types/auth.types';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNotifications } from '../../hooks/useNotifications';  
 
-type Props = BottomTabScreenProps<ClientTabParamList, 'ClientHome'>;
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<ClientTabParamList, 'ClientHome'>,
+  NativeStackScreenProps<ClientStackParamList>
+>;
 
 type Ride = {
   id: string;
@@ -116,6 +122,7 @@ export default function ClientHomeScreen({ navigation }: Props) {
   const { user } = useAuth();
   const { homeReservations, fetchHomeReservations } = useReservation();
   const firstName = user?.first_name ?? 'Marie';
+  const { notifications, unreadCount } = useNotifications();
 
   // useEffect :
   useEffect(() => {
@@ -177,14 +184,14 @@ export default function ClientHomeScreen({ navigation }: Props) {
               </View>
               <View style={styles.headerIcons}>
                 {/* Cloche avec badge */}
-                <TouchableOpacity style={styles.iconBtn}>
+                <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Notifications')}>
                   <Ionicons name="notifications-outline" size={26} color={Colors.white} />
                   <View style={styles.notifBadge}>
-                    <Text style={styles.notifText}>3</Text>
+                    <Text style={styles.notifText}>{ unreadCount}</Text>
                   </View>
                 </TouchableOpacity>
                 {/* Profil */}
-                <TouchableOpacity style={styles.iconBtn}>
+                <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('ClientProfile')}>
                   <Ionicons name="person-circle-outline" size={26} color={Colors.white} />
                 </TouchableOpacity>
               </View>
@@ -204,7 +211,15 @@ export default function ClientHomeScreen({ navigation }: Props) {
           <View style={styles.section}>
             <View style={styles.quickActions}>
               {QUICK_ACTIONS.map((action) => (
-                <TouchableOpacity key={action.label} style={styles.quickAction}>
+                <TouchableOpacity 
+                  key={action.label} 
+                  style={styles.quickAction}
+                  onPress={
+                    action.label === 'Support'
+                      ? () => navigation.navigate('SupportList')
+                      : undefined
+                  }
+                >
                   <View style={styles.quickActionIcon}>
                     <Ionicons name={action.icon} size={22} color={Colors.bordeaux} />
                   </View>
