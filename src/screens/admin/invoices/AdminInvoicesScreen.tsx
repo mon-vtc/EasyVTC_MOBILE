@@ -16,6 +16,7 @@ import { useAuthStore }     from '../../../store/auth.store';
 import { invoicesApi }      from '../../../services/api/invoices.api';
 import type { Invoice }     from '../../../types/invoices.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
+import { useToast } from '../../../hooks/useToast';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -35,6 +36,7 @@ function AdjustPriceModal({ invoice, token, onClose }: {
   onClose: () => void;
 }) {
   const { adjustPrice, isAdjusting } = useInvoicesStore();
+  const { showToast } = useToast();
   const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
   const [newAmount, setNewAmount] = useState(String(invoice.amount_ttc));
   const [reason,    setReason]    = useState('');
@@ -42,19 +44,19 @@ function AdjustPriceModal({ invoice, token, onClose }: {
   const handleSubmit = async () => {
     const parsed = parseFloat(newAmount.replace(',', '.'));
     if (isNaN(parsed) || parsed <= 0) {
-      Alert.alert('Montant invalide', 'Saisissez un montant positif.');
+      showToast({ type: 'error', message: 'Montant invalide. Saisissez un montant positif.' });
       return;
     }
     if (!reason.trim()) {
-      Alert.alert('Motif requis', 'Le motif d\'ajustement est obligatoire.');
+      showToast({ type: 'error', message: 'Motif requis. Le motif d\'ajustement est obligatoire.' });
       return;
     }
     try {
       await adjustPrice(token, invoice.id, { new_amount_ttc: parsed, reason: reason.trim() });
-      Alert.alert('Succès', 'Prix ajusté et facture régénérée.');
+      showToast({ type: 'success', message: 'Prix ajusté et facture régénérée.' });
       onClose();
     } catch (err: unknown) {
-      Alert.alert('Erreur', err instanceof Error ? err.message : 'Erreur lors de l\'ajustement');
+      showToast({ type: 'error', message: err instanceof Error ? err.message : 'Erreur lors de l\'ajustement' });
     }
   };
 
@@ -149,6 +151,8 @@ function InvoiceRow({ invoice, token, onAdjust, onPress }: {
   const [opening, setOpening] = useState(false);
   const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
   const snap = invoice.trip_snapshot;
+  const { showToast } = useToast();
+
 
   const openPdf = async () => {
     setOpening(true);
@@ -156,7 +160,7 @@ function InvoiceRow({ invoice, token, onAdjust, onPress }: {
       const res = await invoicesApi.fetchPdfUrl(token, invoice.id);
       if (!res.ok || !res.data?.url) throw new Error(res.message ?? 'URL indisponible');
       await Linking.openURL(res.data.url);
-    } catch { Alert.alert('Erreur', 'Impossible d\'ouvrir la facture.'); }
+    } catch { showToast({ type: 'error', title: 'Erreur', message: 'Impossible d\'ouvrir la facture.' }); }
     finally { setOpening(false); }
   };
 
@@ -234,13 +238,14 @@ export default function AdminInvoicesScreen() {
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const [adjustTarget, setAdjustTarget] = useState<Invoice | null>(null);
   const [search, setSearch] = useState('');
+  const { showToast } = useToast();
 
   const load = useCallback(async () => {
     try { await fetch(token); } catch { /* handled */ }
   }, [token]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { if (error) { Alert.alert('Erreur', error); clearError(); } }, [error]);
+  useEffect(() => { if (error) { showToast({ type: 'error', message: error }); clearError(); } }, [error]);
 
   const filtered = search.trim()
     ? invoices.filter(inv =>

@@ -8,6 +8,7 @@ import { z }           from 'zod';
 import { FormField }   from '../../components/forms/FormField';
 import { useForm, useWatch } from 'react-hook-form';
 import { useAuth }     from '../../hooks/useAuth';
+import { useToast }     from '../../hooks/useToast';
 import { Ionicons }    from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
@@ -85,6 +86,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
 
   const [avatarKey, setAvatarKey] = useState(Date.now());
 
+  const { showToast } = useToast();
   const initials = `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
 
   // ── Galerie photo ──────────────────────────────────────────
@@ -115,10 +117,10 @@ export default function ClientProfileScreen({ navigation }: Props) {
           setPendingImage(null);
         }
 
-        Alert.alert('Succès', 'Profil mis à jour avec succès.');
+        showToast({ type: 'success', title: 'Succès', message: 'Profil mis à jour avec succès.' });
       } catch (err) {
         if (__DEV__) console.error('Update error:', err);
-        Alert.alert('Erreur', 'Impossible de sauvegarder les modifications.');
+        showToast({ type: 'error', title: 'Erreur', message: 'Impossible de sauvegarder les modifications.' });
         return;
       }
     }
@@ -173,27 +175,18 @@ export default function ClientProfileScreen({ navigation }: Props) {
     try {
       await changePassword(data.current_password, data.new_password, data.confirm_password);
       await login({ email: user!.email, password: data.new_password });
-      Alert.alert('Succès', 'Votre mot de passe a été changé avec succès.');
+      showToast({ type: 'success', title: 'Succès', message: 'Votre mot de passe a été changé avec succès.' });
       reset();
       setShowPasswordModal(false);
     } catch (err) {
       if (__DEV__) console.error('Reset password error:', err);
-      Alert.alert('Erreur', 'Impossible de changer le mot de passe. Vérifiez vos informations.');
+      showToast({ type: 'error', title: 'Erreur', message: 'Impossible de changer le mot de passe. Vérifiez vos informations.' });
     }
   };
 
 
   // Priorité d'affichage : pending > confirmed > serveur
   const avatarUri = pendingImage ?? confirmedImage ?? user?.profile_photo_url;
-
-  {avatarUri ? (
-    <Image
-      source={{ uri: avatarUri }}
-      style={{ width: '100%', height: '100%', borderRadius: 50 }}
-    />
-  ) : (
-    <Text style={styles.avatarInitials}>{initials}</Text>
-  )}
 
   return (
     <View style={styles.flex}>

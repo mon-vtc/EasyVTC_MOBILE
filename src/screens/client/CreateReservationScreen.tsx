@@ -10,12 +10,13 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView,
+  StyleSheet, ActivityIndicator, KeyboardAvoidingView,
   Platform, Image, Modal,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation }  from '@react-navigation/native';
 import { useReservation } from '../../hooks/useReservation';
+import { useToast }       from '../../hooks/useToast';
 import { AppIcon }        from '../../components/common/AppIcon';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Colors, Spacing }         from '../../theme/colors';
@@ -167,6 +168,7 @@ function Step1({
   setFlatRateId,
   getCurrentLocation, geocodeAddress,
 }: any) {
+  const { showToast } = useToast();
   const [originInput, setOriginInput]           = useState<string>(booking.origin?.address ?? '');
   const [destinationInput, setDestinationInput] = useState<string>(booking.destination?.address ?? '');
   const [isGeolocating, setIsGeolocating]       = useState(false);
@@ -180,7 +182,7 @@ function Step1({
       setOriginInput(point.address);
       setOrigin(point);
     } else {
-      Alert.alert('Géolocalisation', "Impossible d'obtenir votre position.");
+      showToast({ title: 'Géolocalisation', message: "Impossible d'obtenir votre position.", type: 'error' });
     }
     setIsGeolocating(false);
   };
@@ -718,6 +720,7 @@ export default function BookingScreen({ navigation }: any) {
   } = useReservation();
 
   const nav = navigation ?? useNavigation();
+  const { showToast } = useToast();
 
   const handleBack = () => {
     if (booking.step > 1) prevStep();
@@ -726,11 +729,11 @@ export default function BookingScreen({ navigation }: any) {
 
   const handleNext = () => {
     if (booking.step === 1 && !isStep1Valid) {
-      Alert.alert('Champs manquants', 'Veuillez renseigner le départ, la destination et le type de véhicule.');
+      showToast({ title: 'Champs manquants', message: 'Veuillez renseigner le départ, la destination et le type de véhicule.', type: 'warning' });
       return;
     }
     if (booking.step === 2 && !isStep2Valid) {
-      Alert.alert('Champs manquants', "Veuillez renseigner la date, l'heure et au moins 1 passager.");
+      showToast({ title: 'Champs manquants', message: "Veuillez renseigner la date, l'heure et au moins 1 passager.", type: 'warning' });
       return;
     }
     // Transition étape 2 → 3 : forcer un recalcul avec tous les paramètres courants.
@@ -752,13 +755,14 @@ export default function BookingScreen({ navigation }: any) {
       nav.replace('BookingConfirmation', { reservationId: reservation.id });
     } catch (err) {
       console.warn('Booking confirmation failed', err);
-      Alert.alert('Erreur', "Impossible de confirmer la réservation.");
+      showToast({ title: 'Erreur', message: "Impossible de confirmer la réservation.", type: 'error' });
     }
   };
 
   React.useEffect(() => {
     if (error) {
-      Alert.alert('Erreur', error, [{ text: 'OK', onPress: clearError }]);
+      showToast({ title: 'Erreur', message: error, type: 'error' });
+      clearError();
     }
   }, [error]);
 

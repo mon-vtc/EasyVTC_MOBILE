@@ -10,6 +10,7 @@ import { useVehicleTypesStore } from '../../../store/vehicleTypes.store';
 import type { AuthUser, DriverUser } from '../../../types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriversStackParamList }  from '../../../types/auth.types';
+import { useToast } from '../../../hooks/useToast';
 
 type Props = NativeStackScreenProps<DriversStackParamList, 'DriverDetail'>;
 
@@ -279,6 +280,8 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
     if (data) setDriver(data);
   }, [driverId]); // ← driverId seulement, stable
 
+  const { showToast } = useToast();
+
   useEffect(() => { load(); }, [load]);
 
   const handleStatusChange = () => {
@@ -324,7 +327,7 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
             try {
               await lockUser(driver.id, 'Verrouillage préventif par l\'administrateur.');
               await load();
-            } catch (_) {}
+            } catch (err: any) { showToast({ type: 'error', message: err.message ?? 'Impossible de verrouiller le compte.' }); }
           },
         },
       ]
@@ -364,9 +367,10 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
                 status,
                 reason: `Changement de statut par l'administrateur : ${labels[status]}.`,
               });
-              Alert.alert('Succès', 'Le statut du chauffeur a été mis à jour.');
+            
+              showToast({ type: 'success', message: 'Le statut du chauffeur a été mis à jour.' });
               await load();
-            } catch (_) {}
+            } catch (err: any) { showToast({ type: 'error', message: err.message ?? 'Impossible de changer le statut.' }); }
           },
         },
       ]

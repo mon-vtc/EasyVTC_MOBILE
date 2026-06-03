@@ -6,6 +6,7 @@ import { reservationApi }   from '../../services/api/reservation.api';
 import { invoicesApi }      from '../../services/api/invoices.api';
 import { ordersApi }        from '../../services/api/orders.api';
 import { pricingApi }       from '../../services/api/pricing.api';
+import { commissionApi }    from '../../services/api/commission.api';
 import { vehicleApi }       from '../../services/api/vehicle.api';
 import { api }              from '../../lib/api';
 import { PricingCountry, PriceEstimateDto } from '../../types/pricing.types';
@@ -389,5 +390,63 @@ describe('pricingApi › estimate', () => {
     mockApi.post.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
     pricingApi.estimate(TOKEN, PriceEstimateDTO);
     expect(mockApi.post).toHaveBeenCalledWith('/pricing/estimate', PriceEstimateDTO, TOKEN);
+  });
+});
+
+describe('commissionApi › params commission', () => {
+  it('listSettings appelle /admin/commission-settings sans filtres', () => {
+    mockApi.get.mockResolvedValue({ ok: true, data: [], message: 'OK' });
+    commissionApi.listSettings(TOKEN);
+    expect(mockApi.get).toHaveBeenCalledWith('/admin/commission-settings', TOKEN);
+  });
+
+  it('listSettings construit la querystring avec zone et is_active', () => {
+    mockApi.get.mockResolvedValue({ ok: true, data: [], message: 'OK' });
+    commissionApi.listSettings(TOKEN, { zone: 'france', is_active: true });
+    const url = (mockApi.get as jest.Mock).mock.calls[0][0] as string;
+    expect(url).toContain('zone=france');
+    expect(url).toContain('is_active=true');
+  });
+
+  it('getSettingById appelle /admin/commission-settings/:id', () => {
+    mockApi.get.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
+    commissionApi.getSettingById(TOKEN, 'setting-1');
+    expect(mockApi.get).toHaveBeenCalledWith('/admin/commission-settings/setting-1', TOKEN);
+  });
+
+  it('createSetting appelle POST /admin/commission-settings', () => {
+    const dto = { label: 'Commission France', zone: 'france' as const, rate_type: 'percentage' as const, rate_value: 15 };
+    mockApi.post.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
+    commissionApi.createSetting(TOKEN, dto);
+    expect(mockApi.post).toHaveBeenCalledWith('/admin/commission-settings', dto, TOKEN);
+  });
+
+  it('updateSetting appelle PATCH /admin/commission-settings/:id', () => {
+    mockApi.patch.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
+    commissionApi.updateSetting(TOKEN, 'setting-1', { rate_value: 12 });
+    expect(mockApi.patch).toHaveBeenCalledWith('/admin/commission-settings/setting-1', { rate_value: 12 }, TOKEN);
+  });
+
+  it('deleteSetting appelle DELETE /admin/commission-settings/:id', () => {
+    mockApi.delete.mockResolvedValue({ ok: true, data: undefined, message: 'OK' });
+    commissionApi.deleteSetting(TOKEN, 'setting-1');
+    expect(mockApi.delete).toHaveBeenCalledWith('/admin/commission-settings/setting-1', TOKEN);
+  });
+
+  it('getSummary appelle /admin/commissions/summary avec period et date', () => {
+    mockApi.get.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
+    commissionApi.getSummary(TOKEN, 'month', '2026-06-01');
+    expect(mockApi.get).toHaveBeenCalledWith('/admin/commissions/summary?period=month&date=2026-06-01', TOKEN);
+  });
+
+  it('listCommissions appelle /admin/commissions avec filtres', () => {
+    mockApi.get.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
+    commissionApi.listCommissions(TOKEN, { period: 'all', zone: 'senegal', page: 2, limit: 10 });
+    const url = (mockApi.get as jest.Mock).mock.calls[0][0] as string;
+    expect(url).toContain('/admin/commissions');
+    expect(url).toContain('period=all');
+    expect(url).toContain('zone=senegal');
+    expect(url).toContain('page=2');
+    expect(url).toContain('limit=10');
   });
 });

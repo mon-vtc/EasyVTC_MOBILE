@@ -13,6 +13,7 @@ import {
 import { useNavigation }      from '@react-navigation/native';
 import { useVehicleTypes }    from '../../hooks/useVehicleTypes';
 import { AppIcon }            from '../../components/common/AppIcon';
+import { useToast } from '../../hooks/useToast';
 import { Logo }               from '../../constants/logo';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type {
@@ -336,6 +337,7 @@ const modal = StyleSheet.create({
 export default function AdminVehicleTypesScreen() {
   const { allTypes, isLoading, error, refresh, createType, updateType, deleteType } = useVehicleTypes();
 
+  const { showToast } = useToast();
   const [modalVisible, setModalVisible] = useState(false);
   const [editItem, setEditItem]         = useState<VehicleTypeRecord | null>(null);
   const [saving, setSaving]             = useState(false);
@@ -368,7 +370,7 @@ export default function AdminVehicleTypesScreen() {
           sort_order:         toInt(values.sort_order),
         };
         await updateType(editItem.id, dto);
-        Alert.alert('Succès', 'Type de véhicule mis à jour.');
+        showToast({ type: 'success', message: 'Type de véhicule mis à jour.' });
       } else {
         const dto: CreateVehicleTypePayload = {
           code:               values.code.trim().toLowerCase(),
@@ -376,13 +378,13 @@ export default function AdminVehicleTypesScreen() {
           description:        values.description.trim() || null,
           capacity:           toInt(values.capacity),
           icon:               values.icon.trim() || null,
-          base_price_france:  toFloat(values.base_price_france),
+          base_price_france:  toFloat(values.base_price_france), 
           base_price_senegal: toFloat(values.base_price_senegal),
           is_active:          values.is_active,
           sort_order:         toInt(values.sort_order),
         };
         await createType(dto);
-        Alert.alert('Succès', 'Type de véhicule créé avec succès.');
+        showToast({ type: 'success', message: 'Type de véhicule créé avec succès.' });
       }
       setModalVisible(false);
     } catch (err: unknown) {
@@ -406,7 +408,7 @@ export default function AdminVehicleTypesScreen() {
             try {
               await updateType(item.id, { is_active: !item.is_active });
             } catch (err: unknown) {
-              const msg = err instanceof Error ? err.message : 'Erreur lors de la mise à jour.';
+              const msg = err instanceof Error ? err.message : 'Erreur lors de la mise à jour.'; 
               Alert.alert('Erreur', msg);
             }
           },
@@ -428,10 +430,10 @@ export default function AdminVehicleTypesScreen() {
             setSaving(true); // Activer l'indicateur de chargement si nécessaire
             try {
               await deleteType(item.id);
-              Alert.alert('Succès', `Le type "${item.label}" a été supprimé.`);
+              showToast({ type: 'success', message: `Le type "${item.label}" a été supprimé.` });
             } catch (err: unknown) {
               const msg = err instanceof Error ? err.message : 'Erreur lors de la suppression.';
-              Alert.alert('Impossible de supprimer', msg);
+              showToast({ type: 'error', title: 'Impossible de supprimer', message: msg });
             }
           },
         },

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, Platform, RefreshControl, Image, Alert
-} from 'react-native';
+} from 'react-native'; 
 
 import { Ionicons }  from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
@@ -19,7 +19,8 @@ import type {
     AdminDrawerParamList,
     DriversStackParamList,
 } from '../../../types/auth.types'; // ← une seule source
-import errorMap from 'zod/v3/locales/en.cjs';
+
+import { useToast } from '../../../hooks/useToast';
 
 type Props = CompositeScreenProps<
   NativeStackScreenProps<DriversStackParamList, 'DriversList'>,
@@ -34,6 +35,7 @@ const TABS: { key: FilterTab; label: string }[] = [
   { key: 'inactifs', label: 'Inactifs' },
 ];
 
+
 // ── Carte chauffeur ─────────────────────────────────────────────
 function DriverCard({
   driver,
@@ -47,6 +49,7 @@ function DriverCard({
     onRefresh: () => void;
   }) {
   const isOnline   = driver.driver?.is_online ?? false;
+  const { showToast } = useToast();
 
   const handleChangeStatus = async (status: 'probationary' | 'pending') => {
     const driverId = driver.driver?.id ?? driver.id;
@@ -57,10 +60,10 @@ function DriverCard({
     try {
       const updatedDriver = await onChangeDriverStatus(driverId, { status, reason });
       if (!updatedDriver) throw new Error('Mise à jour du statut du chauffeur a échoué');
-      Alert.alert('Succès', 'Le statut du chauffeur a été mis à jour.');
+      showToast({ type: 'success', message: 'Le statut du chauffeur a été mis à jour.' });
       onRefresh();
     } catch (error: any) {
-      Alert.alert('Erreur', error?.message ?? 'Une erreur est survenue.');
+      showToast({ type: 'error', message: error?.message ?? 'Une erreur est survenue.' });
     }
   };
   const lastSeen   = (driver as any).last_seen_label ?? (isOnline ? 'En ligne' : 'Hors ligne');

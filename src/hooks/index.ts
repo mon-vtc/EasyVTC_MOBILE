@@ -4,3 +4,4 @@ export { useDriver }  from './useDriver';
 export { useAdmin }   from './useAdmin';
 export { useManager } from './useManager';
 export { useUsers }   from './useUsers';
+export { useCommissionSettings } from './useCommissionSettings';

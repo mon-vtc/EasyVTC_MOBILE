@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useReservation } from '../../hooks/useReservation';
+import { useToast } from '../../hooks/useToast';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import DriverPickerModal from './DriverPickerModal';
 import type { Reservation, ReservationStatus, AvailableDriverDto } from '../../types/reservations.types';
@@ -165,6 +166,7 @@ const cardStyles = StyleSheet.create({
 // ── ÉCRAN PRINCIPAL ───────────────────────────────────────────────────────────
 export default function AdminReservationsScreen({ navigation }: any) {
   const { reservations, fetchAll, isLoading, error, clearError, assign } = useReservation();
+  const { showToast } = useToast();
 
   const [activeTab,   setActiveTab]   = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -229,10 +231,10 @@ export default function AdminReservationsScreen({ navigation }: any) {
       await assign(targetReservation.id, driver.id);
       setPickerVisible(false);
       setTargetReservation(null);
-      Alert.alert('Succès', `${driver.user.first_name} ${driver.user.last_name} assigné avec succès.`);
+      showToast({ type: 'success', title: 'Succès', message: `${driver.user.first_name} ${driver.user.last_name} assigné avec succès.` });
       load();
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || "Erreur lors de l'assignation.");
+      showToast({ type: 'error', title: 'Erreur', message: err?.message || "Erreur lors de l'assignation." });
       throw err; // laisse le modal ouvert
     }
   };

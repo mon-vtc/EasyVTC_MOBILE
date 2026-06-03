@@ -12,6 +12,7 @@ import { useNavigation }       from '@react-navigation/native';
 import { usePricing }          from '../../hooks/usePricing';
 import type { PricingCountry, PricingFormValues, PricingExample } from '../../types/pricing.types';
 import { Logo }                from '../../constants/logo';
+import { useToast } from '../../hooks/useToast';
 import { AppIcon }             from '../../components/common/AppIcon';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -202,6 +203,7 @@ export default function AdminPricingScreen() {
     computeExample,
   } = usePricing();
 
+  const { showToast } = useToast();
   // ── Mode édition ─────────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
 
@@ -272,7 +274,7 @@ export default function AdminPricingScreen() {
       await saveConfig(form);
       setSavedForm(form);
       setIsEditing(false);
-      Alert.alert('Enregistré', 'La configuration tarifaire a été mise à jour.');
+      showToast({ title: 'Enregistré', message: 'La configuration tarifaire a été mise à jour.', type: 'success' });
     } catch {
       // L'erreur est déjà dans le store
     }
@@ -281,7 +283,7 @@ export default function AdminPricingScreen() {
   // ── Erreur globale ────────────────────────────────────────────────────────
   useEffect(() => {
     if (error) {
-      Alert.alert('Erreur', error, [{ text: 'OK', onPress: clearError }]);
+      showToast({ title: 'Erreur', message: error, type: 'error', onPress: clearError });
     }
   }, [error]);
 

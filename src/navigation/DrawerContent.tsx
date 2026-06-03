@@ -129,6 +129,12 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
               style={styles.subItem}
               labelStyle={styles.subItemLabel}
             />
+            <DrawerItem
+              label="Règles de commission"
+              onPress={() => props.navigation.navigate('AdminCommissionSettings')}
+              style={styles.subItem}
+              labelStyle={styles.subItemLabel}
+            />
           </DrawerAccordion>
         )}
       </DrawerContentScrollView>

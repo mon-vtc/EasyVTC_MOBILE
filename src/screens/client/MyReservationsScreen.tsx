@@ -1,15 +1,18 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList,
-  TextInput, RefreshControl, Alert, Platform, ActivityIndicator,
+  TextInput, RefreshControl, Platform, ActivityIndicator,
 } from 'react-native';
-import { Ionicons }         from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useReservation }   from '../../hooks/useReservation';
 import { useAuthStore }     from '../../store/auth.store';
 import { invoicesApi }      from '../../services/api/invoices.api';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import { useToast }         from '../../hooks/useToast';
 import type { Reservation, ReservationStatus } from '../../types/reservations.types';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
+import RatingModal            from '../../components/common/RatingModal';
+import { useRatingsStore } from '../../store';
 
 type FilterTab = 'all' | 'invoices' | 'pending' | 'assigned' | 'completed' | 'cancelled';
 
@@ -223,6 +226,7 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     reservations, isLoading, error,
     fetchMine, clearError, cancel,
   } = useReservation();
+  const accessToken  = useAuthStore(s => s.accessToken);
 
   const token = useAuthStore(s => s.accessToken) ?? '';
 
@@ -231,8 +235,11 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
   const [refreshing, setRefreshing] = useState(false);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [selectedForCancel, setSelectedForCancel] = useState<Reservation | null>(null);
+  const [selectedForRating, setSelectedForRating] = useState<Reservation | null>(null);
+  const [ratingModalVisible, setRatingModalVisible] = useState(false);
 
   const activeTabRef = useRef(activeTab);
+  const { showToast } = useToast();
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
 
   const load = useCallback(async (showRefresh = false) => {
@@ -274,48 +281,55 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     }
     return filtered;
   }, [reservations, searchQuery]);
+  
+    // ── États du modal de notation ─────────────────────────────────────────────
+    const [alreadyRated,       setAlreadyRated]       = useState(false);
+    const isSubmitting  = useRatingsStore(s => s.isSubmitting);
+    const submitRating  = useRatingsStore(s => s.submitRating);
 
-  const handleEvaluate = (reservation: Reservation) => {
-    // Naviguer vers un écran d'évaluation ou afficher une modal
-    Alert.alert(
-      'Évaluer le chauffeur',
-      'Quelle note donnez-vous à cette course ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: '⭐⭐⭐⭐⭐ (5)', onPress: () => submitRating(reservation.id, 5) },
-        { text: '⭐⭐⭐⭐ (4)', onPress: () => submitRating(reservation.id, 4) },
-        { text: '⭐⭐⭐ (3)', onPress: () => submitRating(reservation.id, 3) },
-      ],
-    );
-  };
+  const handleEvaluate = useCallback((reservation: Reservation) => {
+    if (alreadyRated) {
+      showToast({ title: 'Déjà évalué', message: 'Vous avez déjà soumis une évaluation pour cette course.', type: 'info' });
+      return;
+    }
+    setSelectedForRating(reservation);
+    setRatingModalVisible(true);
+  }, [alreadyRated, showToast]);
 
-  const submitRating = (reservationId: string, rating: number) => {
-    // Appel API pour soumettre l'évaluation
-    Alert.alert('Merci !', `Vous avez noté la course ${rating}/5`);
-  };
+    const handleRatingSubmit = useCallback(async (note: number) => {
+      if (!accessToken || !selectedForRating?.id) return;
+      try {
+        await submitRating(accessToken, selectedForRating.id, note);
+        setRatingModalVisible(false);
+        setSelectedForRating(null);
+        showToast({ title: 'Merci !', message: `Votre note de ${note}/5 a bien été enregistrée.`, type: 'success' });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
+        setRatingModalVisible(false);
+        setSelectedForRating(null);
+        // Affiche l'erreur, qu'elle soit "déjà noté" ou autre.
+        showToast({ title: 'Erreur', message: msg, type: 'error' });
+      }
+    }, [accessToken, selectedForRating, submitRating, showToast]);
+
 
   const handleViewInvoice = async (reservation: Reservation) => {
     try {
       const res = await invoicesApi.fetchByReservationId(token, reservation.id);
       if (res.ok && res.data) {
         navigation.navigate('InvoiceDetails', { invoiceId: res.data.id });
-      } else {
-        Alert.alert(
-          'Facture indisponible',
-          res.message ?? 'La facture n\'est pas encore disponible pour cette course.',
-        );
-      }
+      } else { showToast({ type: 'warning', title: 'Facture indisponible', message: res.message ?? 'La facture n\'est pas encore disponible pour cette course.' }); }
     } catch {
-      Alert.alert('Erreur', 'Impossible de récupérer la facture. Veuillez réessayer.');
+      showToast({ title: 'Erreur', message: 'Impossible de récupérer la facture. Veuillez réessayer.', type: 'error' });
     }
   };
 
   const handleCall = (reservation: Reservation) => {
-    if (reservation.driver?.user.phone) {
-      Alert.alert('Appel', `Appel au chauffeur: ${reservation.driver.user.phone}`);
+    if (reservation.driver?.user?.phone) {
+      showToast({ title: 'Appel', message: `Appel au chauffeur: ${reservation.driver.user.phone}`, type: 'info' });
       // Linking.openURL(`tel:${reservation.driver.user.phone}`);
     } else {
-      Alert.alert('Non disponible', 'Le numéro du chauffeur n\'est pas disponible');
+      showToast({ title: 'Non disponible', message: 'Le numéro du chauffeur n\'est pas disponible', type: 'warning' });
     }
   };
 
@@ -333,11 +347,10 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     try {
       await cancel(selectedForCancel.id, reason);
       setCancelModalVisible(false);
-      setSelectedForCancel(null);
-      Alert.alert('Succès', 'La réservation a été annulée');
+      showToast({ title: 'Succès', message: 'La réservation a été annulée', type: 'success' });
       load(true);
     } catch (error: any) {
-      Alert.alert('Erreur', error?.message ?? 'Impossible d\'annuler la réservation');
+      showToast({ title: 'Erreur', message: error?.message ?? 'Impossible d\'annuler la réservation', type: 'error' });
     }
   };
 
@@ -431,6 +444,20 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
           setSelectedForCancel(null);
         }}
       />
+
+      {/* Modal de notation */}
+      <RatingModal
+        visible={ratingModalVisible}
+        driverName={
+          selectedForRating?.driver?.user
+            ? `${selectedForRating.driver.user.first_name} ${selectedForRating.driver.user.last_name}`
+            : undefined
+        }
+        isSubmitting={isSubmitting}
+        onConfirm={handleRatingSubmit}
+        onClose={() => setRatingModalVisible(false)}
+      />
+
     </View>
   );
 }

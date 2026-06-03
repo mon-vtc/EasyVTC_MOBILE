@@ -1,12 +1,13 @@
 // screens/admin/managers/CreateManagerScreen.tsx
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Alert, Platform,
+  View, Text, ScrollView, StyleSheet, Platform,
   TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAdmin } from '../../../hooks/useAdmin';
+import { useToast } from '../../../hooks/useToast';
 import { AppInput } from '../../../components/common/AppInput';
 import { AppButton } from '../../../components/common/AppButton';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
@@ -20,6 +21,7 @@ const PRIORITY_OPTIONS = [
 export default function CreateManagerScreen() {
   const navigation = useNavigation();
   const { createManager } = useAdmin();
+  const { showToast } = useToast();
 
   const [firstName,     setFirstName]     = useState('');
   const [lastName,      setLastName]      = useState('');
@@ -65,14 +67,19 @@ export default function CreateManagerScreen() {
         ...(priorityLevel !== null ? { priority_level: priorityLevel }     : {}),
       });
       if (created) {
-        Alert.alert(
-          'Succès',
-          `Le gestionnaire ${created.first_name} a été créé.\nUn email avec ses identifiants lui a été envoyé.`,
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
-        );
+        showToast({
+          title: 'Succès',
+          message: `Le gestionnaire ${created.first_name} a été créé. Un email avec ses identifiants lui a été envoyé.`,
+          type: 'success',
+        });
+        navigation.goBack();
       }
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Une erreur est survenue');
+      showToast({
+        title: 'Erreur',
+        message: err.message || 'Une erreur est survenue',
+        type: 'error',
+      });
     } finally {
       setIsSaving(false);
     }

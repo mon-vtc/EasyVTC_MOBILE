@@ -10,6 +10,7 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAdminDocuments }  from '../../hooks/useAdminDocuments';
 import DocumentViewer         from '../../components/admin/DocumentViewer';
 import type { AdminDocument } from '../../services/api/admin.document.api';
+import { useToast } from '../../hooks/useToast';
 
 // ── URL de base Supabase Storage ─────────────────────────────
 const SUPABASE_STORAGE_URL = process.env.SUPABASE_STORAGE_URL;
@@ -475,6 +476,8 @@ export default function AdminDocumentsScreen({ navigation }: Props) {
     validateDocument, rejectDocument, clearError,
   } = useAdminDocuments();
 
+  const { showToast } = useToast();
+
   const [activeTab,    setActiveTab]    = useState<FilterTab>('all');
   const [refreshing,   setRefreshing]   = useState(false);
   const [actingId,     setActingId]     = useState<string | null>(null);
@@ -563,7 +566,7 @@ const folders = useMemo(() => {
             // Rafraîchir le dossier actif
             if (activeFolder) {
               setActiveFolder(prev => prev ? {
-                ...prev,
+                ...prev, 
                 documents: {
                   ...prev.documents,
                   ...Object.fromEntries(
@@ -574,7 +577,7 @@ const folders = useMemo(() => {
                 },
               } : null);
             }
-          } else Alert.alert('Erreur', error ?? 'Impossible de valider.');
+          } else showToast({ type: 'error', title: 'Erreur', message: error ?? 'Impossible de valider.' });
         },
       },
     ]);
@@ -603,7 +606,7 @@ const folders = useMemo(() => {
           },
         } : null);
       }
-    } else Alert.alert('Erreur', error ?? 'Impossible de rejeter.');
+    } else showToast({ type: 'error', title: 'Erreur', message: error ?? 'Impossible de rejeter.' });
   };
 
   const tabCounts = useMemo(() => ({

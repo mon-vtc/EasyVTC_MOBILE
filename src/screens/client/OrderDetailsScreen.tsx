@@ -31,6 +31,7 @@ import { useOrdersStore } from '../../store/orders.store';
 import { useAuthStore } from '../../store/auth.store';
 import { ordersApi } from '../../services/api/orders.api';
 import type { ClientStackParamList } from '../../types/auth.types';
+import { useToast } from '../../hooks/useToast';
 import { Logo } from '../../constants/logo';
 // ── Types ──────────────────────────────────────────────────────────────────────
 type DetailsNavRoute = RouteProp<ClientStackParamList, 'OrderDetails'>;
@@ -80,6 +81,7 @@ export default function OrderDetailsScreen() {
   const { orders, fetchMine, isLoading } = useOrdersStore();
   const order                           = orders.find(o => o.id === orderId);
 
+  const { showToast } = useToast();
   const [openingPdf, setOpeningPdf] = useState(false);
 
   useEffect(() => {
@@ -95,7 +97,7 @@ export default function OrderDetailsScreen() {
       if (!res.ok || !res.data?.url) throw new Error(res.message ?? 'URL indisponible');
       await Linking.openURL(res.data.url);
     } catch {
-      Alert.alert('Erreur', 'Impossible d\'ouvrir le document PDF.');
+      showToast({ type: 'error', title: 'Erreur', message: 'Impossible d\'ouvrir le document PDF.' });
     } finally {
       setOpeningPdf(false);
     }

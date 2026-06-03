@@ -18,6 +18,7 @@ import { invoicesApi }        from '../../services/api/invoices.api';
 import type { Invoice }       from '../../types/invoices.types';
 import type { ClientTabParamList, ClientStackParamList } from '../../types/auth.types';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import { useToast } from '../../hooks/useToast';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -51,6 +52,7 @@ function InvoiceCard({
   const [openingPdf, setOpeningPdf] = useState(false);
 
   const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
+  const { showToast } = useToast();
 
   const handleOpenPdf = async () => {
     setOpeningPdf(true);
@@ -59,7 +61,7 @@ function InvoiceCard({
       if (!res.ok || !res.data?.url) throw new Error(res.message ?? 'URL indisponible');
       await Linking.openURL(res.data.url);
     } catch {
-      Alert.alert('Erreur', 'Impossible d\'ouvrir la facture.');
+      showToast({ type: 'error', title: 'Erreur', message: 'Impossible d\'ouvrir la facture.' });
     } finally {
       setOpeningPdf(false);
     }

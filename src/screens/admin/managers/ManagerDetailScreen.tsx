@@ -3,12 +3,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   ActivityIndicator, Linking, Platform, Image, Modal,
-  TextInput, Alert, 
+  TextInput,
 } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useAdmin } from '../../../hooks/useAdmin';
+import { useToast } from '../../../hooks/useToast';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
 import type { ManagersStackParamList, UserProfile } from '../../../types';
 
@@ -153,6 +154,7 @@ export default function ManagerDetailScreen() {
   const { managerId } = route.params as { managerId: string };
 
   const { fetchManagerById, changeManagerStatus } = useAdmin();
+  const { showToast } = useToast();
   const [manager,      setManager]      = useState<UserProfile | null>(null);
   const [isLoading,    setIsLoading]    = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -175,8 +177,9 @@ export default function ManagerDetailScreen() {
       if (updated) setManager(updated);
       await fetchManagerById(manager.id); // Re-fetch to ensure all data is fresh
       setModalVisible(false);
+      showToast({ title: 'Succès', message: 'Le statut du gestionnaire a été modifié.', type: 'success' });
     } catch (err: any) {
-      Alert.alert('Erreur', err.message ?? 'Impossible de modifier le statut.');
+      showToast({ title: 'Erreur', message: err.message ?? 'Impossible de modifier le statut.', type: 'error' });
     } finally {
       setActionLoading(false);
     }

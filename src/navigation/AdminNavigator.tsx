@@ -24,6 +24,7 @@ import AdminClientsScreen from '../screens/admin/clients/AdminClientsScreen';
 import AdminClientDetailScreen from '../screens/admin/clients/AdminClientDetailScreen';
 import AdminVehicleTypesScreen from '../screens/admin/AdminVehicleTypesScreen';
 import AdminReviewsScreen      from '../screens/admin/AdminReviewsScreen';
+import AdminCommissionSettingsScreen from '../screens/admin/commissions/AdminCommissionSettingsScreen';
 
 import ManagersListScreen from '../screens/admin/managers/ManagersListScreen';
 import ManagerDetailScreen from '../screens/admin/managers/ManagerDetailScreen';
@@ -363,6 +364,14 @@ export default function AdminNavigator() {
         name="AdminProfile"
         component={AdminProfileScreen}
         options={{ drawerLabel: () => <DrawerLabel icon="person-outline" label="Mon compte" /> }}
+      />
+      <Drawer.Screen
+        name="AdminCommissionSettings"
+        component={AdminCommissionSettingsScreen}
+        options={{
+          drawerItemStyle: { display: 'none' },
+          headerShown: false,
+        }} // Pas de label dans le drawer, accès uniquement via la section Tarification
       />
     </Drawer.Navigator>
   );

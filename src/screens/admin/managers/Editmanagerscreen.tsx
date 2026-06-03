@@ -1,10 +1,11 @@
 // screens/admin/managers/Editmanagerscreen.tsx
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Alert, TouchableOpacity,
+  View, Text, ScrollView, StyleSheet, TouchableOpacity,
   ActivityIndicator, Image, Platform,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useToast } from '../../../hooks/useToast';
 import { Ionicons } from '@expo/vector-icons';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { AppInput } from '../../../components/common/AppInput';
@@ -25,6 +26,7 @@ export default function EditManagerScreen() {
   const { managerId } = route.params as { managerId: string };
 
   const { fetchManagerById, updateManager, changeManagerStatus } = useAdmin();
+  const { showToast } = useToast();
 
   const [manager,      setManager]      = useState<UserProfile | null>(null);
   const [isLoading,    setIsLoading]    = useState(true);
@@ -84,11 +86,10 @@ export default function EditManagerScreen() {
         ...(priorityLevel !== null ? { priority_level: priorityLevel }       : {}),
       });
       if (updated) setManager(updated);
-      Alert.alert('Succès', 'Les informations du gestionnaire ont été mises à jour.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      showToast({ title: 'Succès', message: 'Les informations du gestionnaire ont été mises à jour.', type: 'success' });
+      navigation.goBack();
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Une erreur est survenue');
+      showToast({ title: 'Erreur', message: err.message || 'Une erreur est survenue', type: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -104,9 +105,9 @@ export default function EditManagerScreen() {
       const updated = await changeManagerStatus(manager.id, { status: newStatus, reason });
       if (updated) setManager(updated);
       setModalVisible(false);
-      Alert.alert('Succès', 'Le statut du gestionnaire a été mis à jour.');
+      showToast({ title: 'Succès', message: 'Le statut du gestionnaire a été mis à jour.', type: 'success' });
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Une erreur est survenue');
+      showToast({ title: 'Erreur', message: err.message || 'Une erreur est survenue', type: 'error' });
     } finally {
       setIsSaving(false);
     }

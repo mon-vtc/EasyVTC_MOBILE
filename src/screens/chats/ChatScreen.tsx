@@ -36,7 +36,7 @@ function MessageBubble({ message, isOwn }: BubbleProps) {
   });
 
   return (
-    <View style={[b.row, isOwn ? b.rowRight : b.rowLeft]}>
+    <View style={[b.row, isOwn ? b.rowRight : b.rowLeft, {elevation: 1, shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2}]}>
       <View style={[b.bubble, isOwn ? b.bubbleOwn : b.bubbleOther]}>
         <Text style={[b.text, isOwn ? b.textOwn : b.textOther]}>
           {message.content}
@@ -375,6 +375,11 @@ const s = StyleSheet.create({
   dateSeparator: {
     alignItems: 'center',
     marginVertical: 10,
+    elevation: 1,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   dateSeparatorText: {
     fontSize: 12,
@@ -403,9 +408,7 @@ const s = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
     gap: 8,
   },
   input: {
@@ -418,8 +421,11 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 15,
     color: Colors.textPrimary,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    elevation: 1,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   sendBtn: {
     width: 42,

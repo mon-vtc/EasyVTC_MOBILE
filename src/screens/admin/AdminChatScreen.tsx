@@ -15,13 +15,13 @@ import {
   SafeAreaView,
   Linking,
   Alert,
-} from 'react-native';
+} from 'react-native'; 
 import { useChat } from '../../hooks/useChat';
 import { Colors, Spacing } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import type { ChatMessage, ActiveConversation } from '../../types';
 import AdminHeader from '../../components/admin/AdminHeader';
-
+import { useToast } from '../../hooks/useToast';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -185,6 +185,8 @@ export default function AdminChatScreen({ route, navigation }: AdminChatScreenPr
     conversation?: ActiveConversation;
   };
 
+  const { showToast } = useToast();
+
   const {
     activeConversationMessages,
     activeConversationMessagesPage,
@@ -230,7 +232,7 @@ export default function AdminChatScreen({ route, navigation }: AdminChatScreenPr
 
   const handleCallDriver = useCallback(async () => {
     if (!conversation?.driver) {
-      Alert.alert('Erreur', 'Chauffeur non disponible');
+      showToast({ type: 'error', title: 'Erreur', message: 'Chauffeur non disponible' });
       return;
     }
     Linking.openURL(`tel:${conversation.driver.phone_number || '3385476895'}`);
@@ -238,7 +240,7 @@ export default function AdminChatScreen({ route, navigation }: AdminChatScreenPr
 
   const handleCallClient = useCallback(async () => {
     if (!conversation?.client) {
-      Alert.alert('Erreur', 'Client non disponible');
+      showToast({ type: 'error', title: 'Erreur', message: 'Client non disponible' });
       return;
     }
     Linking.openURL(`tel:${conversation.client.phone_number || '3385476895'}`);
