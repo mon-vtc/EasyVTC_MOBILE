@@ -83,6 +83,9 @@ const NotificationsScreen: React.FC = () => {
   const handleViewAction = useCallback((notification: Notification) => {
     const reservationId = notification.data?.reservation_id;
     const invoiceId = notification.data?.invoice_id;
+    const ticketId = notification.data?.ticket_id;
+    const subject = notification.data?.subject;
+
 
     const navigateToNested = (route: string, nested: { screen: string; params: Record<string, unknown> }) => {
       navigation.navigate(route as any, nested as any);
@@ -158,24 +161,39 @@ const NotificationsScreen: React.FC = () => {
       } else {
         shipToRole();
       }
-    } else if (notification.type === 'document_expiry') {
+        } else if (notification.type === 'document_expiry') {
       shipToRole();
     } else {
-      navigation.navigate('NotificationDetails', { notification });
-    }
+      switch (notification.type) {
+        case 'new_message':
+          if (reservationId) {
+            navigation.navigate('ChatScreen', { reservationId });
+          } else {
+            navigation.navigate('NotificationDetails', { notification });
+          }
+          break;
 
+        case 'support_reply':
+          if (ticketId) {
+            navigation.navigate('SupportChat', { ticketId, subject: subject ?? 'Ticket de support' });
+          } else {
+            navigation.navigate('NotificationDetails', { notification });
+          }
+          break;
+
+        default:
+          navigation.navigate('NotificationDetails', { notification });
+          break;
+      }
+    }
     if (!notification.read_at) {
       handleMarkAsRead(notification.id);
     }
   }, [navigation, handleMarkAsRead, user]);
 
   const handleViewDetails = useCallback((notification: Notification) => {
-    navigation.navigate('NotificationDetails', { notification: notification });
-    // Mark as read if not already
-    if (!notification.read_at) {
-      handleMarkAsRead(notification.id);
-    }
-  }, [navigation, handleMarkAsRead]);
+    handleViewAction(notification);
+  }, [handleViewAction]);
 
   if (error) {
     return (

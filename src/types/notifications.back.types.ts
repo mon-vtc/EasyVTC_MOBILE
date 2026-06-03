@@ -14,6 +14,8 @@ export type NotificationType =
   | 'document_expiry'         // Chauffeur : document bientôt expiré
   | 'reservation_cancelled'  // Chauffeur ou client : course annulée
   | 'new_reservation_admin'  // Admin : une nouvelle réservation est en attente d'assignation
+  | 'support_reply'          // Client ou chauffeur : réponse à un ticket de support
+  | 'new_message';
 
 export type NotificationChannel = 'push' | 'email';
 export type NotificationStatus  = 'pending' | 'sent' | 'failed' | 'delivered';

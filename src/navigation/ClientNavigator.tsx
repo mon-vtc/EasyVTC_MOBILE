@@ -171,6 +171,20 @@ function ClientTabs() {
           tabBarButton: () => null, // Masqué de la barre d'onglets
         }}
       />
+      <Tab.Screen
+        name="MyInvoices"
+        component={MyInvoicesScreen}
+        options={{
+          tabBarButton: () => null, // Masqué de la barre d'onglets
+        }}
+      />
+      <Tab.Screen
+        name="MyOrders"
+        component={MyOrdersScreen}
+        options={{
+          tabBarButton: () => null, // Masqué de la barre d'onglets
+        }}
+      />
 
     </Tab.Navigator>
   );

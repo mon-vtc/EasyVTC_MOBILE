@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Switch,
-  TouchableOpacity, ActivityIndicator, Alert, Platform,
-} from 'react-native';
+  TouchableOpacity, ActivityIndicator, Platform,
+} from 'react-native'; 
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useToast } from '../../../hooks/useToast';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useAdmin } from '../../../hooks/useAdmin';
@@ -47,6 +48,7 @@ export default function ManagerPermissionsScreen() {
   const { managerId } = route.params as { managerId: string };
 
   const { getManagerPermissions, setManagerPermissions } = useAdmin();
+  const { showToast } = useToast();
 
   const [selected, setSelected]     = useState<Set<ManagerPermission>>(new Set());
   const [isLoading, setIsLoading]   = useState(true);
@@ -58,7 +60,7 @@ export default function ManagerPermissionsScreen() {
       const result = await getManagerPermissions(managerId);
       setSelected(new Set(result.permissions));
     } catch (err: any) {
-      Alert.alert('Erreur', err.message ?? 'Impossible de charger les permissions.');
+      showToast({ title: 'Erreur', message: err.message ?? 'Impossible de charger les permissions.', type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -90,9 +92,9 @@ export default function ManagerPermissionsScreen() {
     try {
       await setManagerPermissions(managerId, { permissions: Array.from(selected) });
       setIsDirty(false);
-      Alert.alert('Succès', 'Les permissions ont été mises à jour.');
+      showToast({ title: 'Succès', message: 'Les permissions ont été mises à jour.', type: 'success' });
     } catch (err: any) {
-      Alert.alert('Erreur', err.message ?? 'Impossible de sauvegarder les permissions.');
+      showToast({ title: 'Erreur', message: err.message ?? 'Impossible de sauvegarder les permissions.', type: 'error' });
     } finally {
       setIsSaving(false);
     }

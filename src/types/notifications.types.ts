@@ -107,6 +107,8 @@ export const NOTIFICATION_ACTION_LABELS: NotificationActionLabelMap = {
   reservation_cancelled: 'Voir la course',
   document_expiry:       'Voir les documents',
   new_reservation_admin: 'Traiter la réservation',
+  support_reply: 'Voir la réponse',
+  new_message: 'Voir le message',
 };
 
 // Frontend-specific payload for real-time notifications

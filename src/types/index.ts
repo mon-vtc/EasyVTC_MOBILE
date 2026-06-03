@@ -77,5 +77,15 @@ export type {
   SendMessageDto,
   ChatMessageListResult,
   ActiveConversation,
-  chatMessageListFilters
+  // chatMessageListFilters
 } from './chats.type';
+
+export type {
+  CommissionZone,
+  CommissionRateType,
+  CommissionSetting,
+  CreateCommissionSettingDto,
+  UpdateCommissionSettingDto,
+  CommissionDetail,
+  CommissionPeriod
+} from './commission.types';

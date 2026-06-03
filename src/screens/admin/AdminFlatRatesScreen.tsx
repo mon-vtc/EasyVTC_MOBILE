@@ -17,6 +17,7 @@ import { AppIcon }       from '../../components/common/AppIcon';
 import { Colors, Spacing, Radius } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import type {AppIconProps}  from '../../types/app-icon-props.types';
+import { useToast } from '../../hooks/useToast';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES LOCAUX
@@ -638,6 +639,7 @@ export default function AdminFlatRatesScreen() {
 
   const [selectedItem,  setSelectedItem]  = useState<PricingFlatRate | null>(null);
   const [createVisible, setCreateVisible] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (error) Alert.alert('Erreur', error, [{ text: 'OK', onPress: clearError }]);
@@ -673,12 +675,12 @@ export default function AdminFlatRatesScreen() {
             price:             toFloat(form.price),
             // pickup_surcharge: toFloat(form.pickup_surcharge), // future feature
           });
-          Alert.alert('Enregistré', 'Le forfait a été mis à jour.');
+          showToast({ type: 'success', title: 'Enregistré', message: 'Le forfait a été mis à jour.' });
         }}
         onDelete={async (id) => {
           await deactivateFlatRate(id);
           setSelectedItem(null);
-          Alert.alert('Supprimé', 'Le forfait a été désactivé.');
+          showToast({ type: 'success', title: 'Supprimé', message: 'Le forfait a été désactivé.' });
         }}
       />
     );
@@ -699,7 +701,7 @@ export default function AdminFlatRatesScreen() {
             style: 'destructive',
             onPress: async () => {
               await deactivateFlatRate(item.id);
-              Alert.alert('Supprimé', 'Le forfait a été désactivé.');
+              showToast({ type: 'success', title: 'Supprimé', message: 'Le forfait a été désactivé.' });
             },
           },
         ]
@@ -757,7 +759,7 @@ export default function AdminFlatRatesScreen() {
             // pickup_surcharge: toFloat(form.pickup_surcharge), // future feature
           });
           setCreateVisible(false);
-          Alert.alert('Créé', 'Le forfait a été créé avec succès.');
+          showToast({ type: 'success', title: 'Créé', message: 'Le forfait a été créé avec succès.' });
         }}
       />
     </View>

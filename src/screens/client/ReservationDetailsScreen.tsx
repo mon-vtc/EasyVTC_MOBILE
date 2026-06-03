@@ -9,7 +9,7 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import {
   View, Text, Image, ScrollView, TouchableOpacity,
-  StyleSheet, Animated, Platform, Easing, Alert,
+  StyleSheet, Animated, Platform, Easing,
 } from 'react-native';
 import {
   useNavigation, useRoute,
@@ -18,6 +18,7 @@ import {
 import { AppIcon }             from '../../components/common/AppIcon';
 import { Colors }              from '../../theme/colors';
 import { useReservationStore } from '../../store/reservation.store';
+import { useReservation }      from '../../hooks/useReservation';
 import { useAuthStore }        from '../../store/auth.store';
 import { useRatingsStore }     from '../../store/ratings.store';
 import { invoicesApi }         from '../../services/api/invoices.api';
@@ -25,6 +26,7 @@ import type { ClientStackParamList } from '../../types/auth.types';
 import { Logo }                      from '../../constants/logo';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
 import RatingModal            from '../../components/common/RatingModal';
+import { useToast }           from '../../hooks/useToast';
 
 // ── Types navigation typés ──────────────────────────────────────────────────
 type ConfirmationNav   = NavigationProp<ClientStackParamList, 'ReservationDetails'>;
@@ -71,10 +73,11 @@ function getStatusColor(status: string | undefined): string {
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ÉCRAN PRINCIPAL
-// ══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════s═══════════════════════════════════════════════
 export default function ReservationDetailsScreen() {
   const nav   = useNavigation<ConfirmationNav>();
   const route = useRoute<ConfirmationRoute>();
+  const { showToast } = useToast();
 
   const reservationId = route.params?.reservationId;
 
@@ -84,16 +87,15 @@ export default function ReservationDetailsScreen() {
 
   const accessToken  = useAuthStore(s => s.accessToken);
   // ✅ Lire depuis `selected` que fetchById renseigne
-const selected     = useReservationStore(s => s.selected);
-const reservations = useReservationStore(s => s.reservations);
+  
+  const { fetchById, selected, reservations, cancel } = useReservation();
 
   const reservation =
     selected?.id === reservationId          // vient de fetchById
       ? selected
       : reservations.find(r => r.id === reservationId) // vient de fetchMine
       ?? null;
-  const fetchById    = useReservationStore(s => s.fetchById);
-  const cancel       = useReservationStore(s => s.cancel);
+
 
   const status = reservation?.status as string | undefined;
   const ref = reservation?.id.split('-').pop()?.toUpperCase() ?? reservation?.id;
@@ -113,25 +115,25 @@ const reservations = useReservationStore(s => s.reservations);
   const submitRating  = useRatingsStore(s => s.submitRating);
 
   useEffect(() => {
-    if (!reservation && accessToken) fetchById(accessToken, reservationId);
+    if (!reservation && accessToken) fetchById(reservationId);
   }, [reservationId, reservation, accessToken, fetchById]);
 
   // ── Handlers d'actions ──────────────────────────────────────────────────────
   const handleCall = useCallback(() => {
     if (reservation?.driver?.user?.phone) {
-      Alert.alert(
-        'Appel',
-        `Appel au chauffeur: ${reservation.driver.user.phone}`,
-        [{ text: 'Fermer', style: 'default' }]
-      );
+      showToast({
+        title: 'Appel',
+        message: `Appel au chauffeur: ${reservation.driver.user.phone}`,
+        type: 'info',
+      });
       // Débloquer ce code en production :
       // Linking.openURL(`tel:${reservation.driver.user.phone}`).catch(() => {
       //   Alert.alert('Erreur', 'Impossible d\'appeler ce numéro');
       // });
     } else {
-      Alert.alert('Non disponible', 'Le numéro du chauffeur n\'est pas disponible');
+      showToast({ title: 'Non disponible', message: 'Le numéro du chauffeur n\'est pas disponible', type: 'warning' });
     }
-  }, [reservation?.driver?.user?.phone]);
+  }, [reservation?.driver?.user?.phone, showToast]);
 
   const handleMessage = useCallback(() => {
     if (reservation?.driver_id) {
@@ -145,24 +147,19 @@ const reservations = useReservationStore(s => s.reservations);
       const res = await invoicesApi.fetchByReservationId(accessToken, reservation.id);
       if (res.ok && res.data) {
         nav.navigate('InvoiceDetails', { invoiceId: res.data.id });
-      } else {
-        Alert.alert(
-          'Facture indisponible',
-          res.message ?? 'La facture n\'est pas encore disponible pour cette course.',
-        );
-      }
+      } else { showToast({ type: 'warning', title: 'Facture indisponible', message: res.message ?? 'La facture n\'est pas encore disponible pour cette course.' }); }
     } catch {
-      Alert.alert('Erreur', 'Impossible de récupérer la facture. Veuillez réessayer.');
+      showToast({ title: 'Erreur', message: 'Impossible de récupérer la facture. Veuillez réessayer.', type: 'error' });
     }
-  }, [reservation?.id, accessToken, nav]);
+  }, [reservation?.id, accessToken, nav, showToast]);
 
   const handleEvaluate = useCallback(() => {
     if (alreadyRated) {
-      Alert.alert('Déjà évalué', 'Vous avez déjà soumis une évaluation pour cette course.');
+      showToast({ title: 'Déjà évalué', message: 'Vous avez déjà soumis une évaluation pour cette course.', type: 'info' });
       return;
     }
     setRatingModalVisible(true);
-  }, [alreadyRated]);
+  }, [alreadyRated, showToast]);
 
   const handleRatingSubmit = useCallback(async (note: number) => {
     if (!accessToken || !reservation?.id) return;
@@ -170,18 +167,18 @@ const reservations = useReservationStore(s => s.reservations);
       await submitRating(accessToken, reservation.id, note);
       setRatingModalVisible(false);
       setAlreadyRated(true);
-      Alert.alert('Merci !', `Votre note de ${note}/5 a bien été enregistrée.`);
+      showToast({ title: 'Merci !', message: `Votre note de ${note}/5 a bien été enregistrée.`, type: 'success' });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
       if (msg.includes('déjà')) {
         setRatingModalVisible(false);
         setAlreadyRated(true);
-        Alert.alert('Déjà évalué', 'Vous avez déjà noté cette course.');
+        showToast({ title: 'Déjà évalué', message: 'Vous avez déjà noté cette course.', type: 'info' });
       } else {
-        Alert.alert('Erreur', msg);
+        showToast({ title: 'Erreur', message: msg, type: 'error' });
       }
     }
-  }, [accessToken, reservation?.id, submitRating]);
+  }, [accessToken, reservation?.id, submitRating, showToast]);
 
   const handleCancel = useCallback(() => {
     setCancelModalVisible(true);
@@ -193,12 +190,12 @@ const reservations = useReservationStore(s => s.reservations);
         // Faire l'appel API pour annuler
         await cancel(reservation.id, reason); // Cet appel est maintenant correct
         setCancelModalVisible(false);
-        Alert.alert('Succès', 'La réservation a été annulée');
+        showToast({ title: 'Succès', message: 'La réservation a été annulée', type: 'success' });
         // Retourner à l'écran précédent
         nav.goBack();
       }
     } catch (error: any) {
-      Alert.alert('Erreur', error?.message ?? 'Impossible d\'annuler la réservation');
+      showToast({ title: 'Erreur', message: error?.message ?? 'Impossible d\'annuler la réservation', type: 'error' });
     }
   };
 

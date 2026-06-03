@@ -17,9 +17,11 @@ import type { Order } from '../../../types/orders.types';
 import { DrawerActions } from '@react-navigation/native';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { OrderCard } from '../../../components/common/OrderCard';
+import { useToast } from '../../../hooks/useToast';
 
 export default function AdminOrdersScreen() {
   const navigation = useNavigation<NavigationProp<any>>();
+  const { showToast } = useToast();
 
   const { orders, total, isLoading, error, fetchAll, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
@@ -30,7 +32,10 @@ export default function AdminOrdersScreen() {
   }, [token]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { if (error) { Alert.alert('Erreur', error); clearError(); } }, [error]);
+  useEffect(() => { if (error) { 
+    showToast({ title: 'Erreur', message: error, type: 'error' });
+    clearError();
+  } }, [error]);
 
   const filtered = search.trim()
     ? orders.filter(o =>

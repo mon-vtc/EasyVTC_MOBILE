@@ -55,6 +55,8 @@ export type ClientTabParamList = {
   ClientProfile:       undefined;
   Notifications:        undefined;
   NotificationDetails:  { notification: Notification };
+  MyOrders:             undefined;
+  MyInvoices:           { reservationId?: string } | undefined;
 };
 /**
  * Stack racine du client — enveloppe les tabs et expose les écrans
@@ -244,6 +246,7 @@ export type AdminDrawerParamList = {
   AdminReviews:      undefined;
   BaseGrid:          undefined;
   FlatRates:         undefined;
+  AdminCommissionSettings: undefined;
   AdminVehicleTypes: undefined;
   Notifications:     NavigatorScreenParams<AdminNotificationsStackParamList>;
   AdminDiscussions:  NavigatorScreenParams<DiscussionStackParamList>;

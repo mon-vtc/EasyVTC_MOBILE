@@ -1,6 +1,6 @@
 // AppText.tsx
 import React from 'react';
-import { Text, type TextStyle, StyleSheet } from 'react-native';
+import { Text, type TextStyle, type StyleProp, StyleSheet } from 'react-native';
 import { Colors, Fonts } from '../../theme/colors';
 
 type Variant = 'h1' | 'h2' | 'h3' | 'body' | 'caption' | 'label';
@@ -8,7 +8,7 @@ type Variant = 'h1' | 'h2' | 'h3' | 'body' | 'caption' | 'label';
 interface AppTextProps {
   variant?: Variant;
   color?:   string;
-  style?:   TextStyle;
+  style?:   StyleProp<TextStyle>;
   children: React.ReactNode;
 }
 

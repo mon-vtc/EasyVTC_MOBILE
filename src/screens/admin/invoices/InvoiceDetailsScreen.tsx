@@ -33,6 +33,7 @@ import { invoicesApi }            from '../../../services/api/invoices.api';
 import type { ClientStackParamList } from '../../../types/auth.types';
 import type { InvoiceAdjustment } from '../../../types/invoices.types';
 import { Logo }                   from '../../../constants/logo';
+import { useToast }                   from '../../../hooks/useToast';
 
 // ── Types navigation ───────────────────────────────────────────────────────────
 type NavRoute = RouteProp<ClientStackParamList, 'InvoiceDetails'>;
@@ -64,6 +65,7 @@ export default function InvoiceDetailsScreen() {
   const navigation = useNavigation<NavProp>();
   const route      = useRoute<NavRoute>();
   const { invoiceId } = route.params;
+  const { showToast } = useToast();
 
   const token                             = useAuthStore(s => s.accessToken) ?? '';
   const { invoices, fetchById, isLoading } = useInvoicesStore();
@@ -88,7 +90,7 @@ export default function InvoiceDetailsScreen() {
       if (!res.ok || !res.data?.url) throw new Error(res.message ?? 'URL indisponible');
       await Linking.openURL(res.data.url);
     } catch {
-      Alert.alert('Erreur', 'Impossible d\'ouvrir la facture PDF.');
+      showToast({ type: 'error', message: 'Impossible d\'ouvrir la facture PDF.' });
     } finally {
       setOpeningPdf(false);
     }

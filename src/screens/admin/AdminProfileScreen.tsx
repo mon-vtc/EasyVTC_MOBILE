@@ -6,6 +6,7 @@ import {
 import { zodResolver }       from '@hookform/resolvers/zod';
 import { z }                 from 'zod';
 import { useForm, useWatch } from 'react-hook-form';
+import { useToast } from '../../hooks/useToast';
 import { Ionicons }          from '@expo/vector-icons';
 import * as ImagePicker      from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
@@ -70,6 +71,7 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 // ── Screen ─────────────────────────────────────────────────────
 export default function AdminProfileScreen({ navigation }: Props) {
   const { user, logout, changePassword, isLoading, error, clearError, login, updateProfile, uploadAvatar } = useAuth();
+  const { showToast } = useToast();
 
   const [pendingImage,   setPendingImage]   = useState<string | null>(null); // sélectionnée, pas encore uploadée
   const [confirmedImage, setConfirmedImage] = useState<string | null>(null); // uploadée avec succès
@@ -113,11 +115,11 @@ export default function AdminProfileScreen({ navigation }: Props) {
           setConfirmedImage(pendingImage); 
           setPendingImage(null);
         }
-
-        Alert.alert('Succès', 'Profil mis à jour avec succès.');
+        
+        showToast({ type: 'success', title: 'Succès', message: 'Profil mis à jour avec succès.' });
       } catch (err) {
         if (__DEV__) console.error('Update error:', err);
-        Alert.alert('Erreur', 'Impossible de sauvegarder les modifications.');
+        showToast({ type: 'error', title: 'Erreur', message: 'Impossible de sauvegarder les modifications.' });
         return;
       }
     }
@@ -159,12 +161,12 @@ export default function AdminProfileScreen({ navigation }: Props) {
     try {
       await changePassword(data.current_password, data.new_password, data.confirm_password);
       await login({ email: user!.email, password: data.new_password });
-      Alert.alert('Succès', 'Votre mot de passe a été changé avec succès.');
+      showToast({ type: 'success', title: 'Succès', message: 'Votre mot de passe a été changé avec succès.' });
       reset();
       setShowPasswordModal(false);
     } catch (err) {
       if (__DEV__) console.error('Reset password error:', err);
-      Alert.alert('Erreur', 'Impossible de changer le mot de passe. Vérifiez vos informations.');
+      showToast({ type: 'error', title: 'Erreur', message: 'Impossible de changer le mot de passe. Vérifiez vos informations.' });
     }
   };
 

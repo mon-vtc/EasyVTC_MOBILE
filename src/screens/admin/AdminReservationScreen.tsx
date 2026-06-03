@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp, NavigationProp } from '@react-navigation/native';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
+import { useToast } from '../../hooks/useToast';
 import DriverPickerModal from './DriverPickerModal';
 import  CancelReservationModal from '../../components/common/CancelReservationModal';
 import type { Reservation , AvailableDriverDto} from '../../types/reservations.types';
@@ -379,6 +380,7 @@ export default function AdminReservationScreen() {
   const route      = useRoute<ScreenRoute>();
   const navigation = useNavigation<ScreenNav>();
   const { reservations, selected, fetchById, assign, isLoading, cancel } = useReservation();
+  const { showToast } = useToast();
 
   const [selectedTab, setSelectedTab]     = useState<TabKeys>('details');
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -405,10 +407,10 @@ export default function AdminReservationScreen() {
     try {
       await assign(reservation.id, driver.id);
       setPickerVisible(false);
-      Alert.alert('Succès', `${driver.user.first_name} ${driver.user.last_name} assigné avec succès.`);
+      showToast({ type: 'success', title: 'Succès', message: `${driver.user.first_name} ${driver.user.last_name} assigné avec succès.` });
       fetchById(reservation.id).catch(console.warn);
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || "Erreur lors de l'assignation.");
+      showToast({ type: 'error', title: 'Erreur', message: err?.message || "Erreur lors de l'assignation." });
       throw err; // laisse le modal ouvert
     }
   };
@@ -426,7 +428,7 @@ export default function AdminReservationScreen() {
       case 'cancelled':
         return null; // Pas d'action principale si annulé
       case 'completed':
-        return { label: 'Voir facture', cb: () => Alert.alert('Action', 'Voir Facture') };
+        return { label: 'Voir facture', cb: () => showToast({ title: 'Action', message: 'Voir Facture' }) };
       default:
         return null;
     }
@@ -565,7 +567,7 @@ export default function AdminReservationScreen() {
           if (!reservation) return;
           await cancel(reservation.id, reason);
           setCancelVisible(false);
-          Alert.alert('Réservation annulée', 'La réservation a été annulée avec succès.');
+          showToast({ type: 'success', title: 'Réservation annulée', message: 'La réservation a été annulée avec succès.' });
           navigation.goBack();
         }}
         onClose={() => setCancelVisible(false)}

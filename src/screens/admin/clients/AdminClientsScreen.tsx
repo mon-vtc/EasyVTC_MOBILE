@@ -2,13 +2,14 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, Image, RefreshControl, Modal, ActivityIndicator,
-  Alert, Platform,
+  Platform,
 } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useClientsStore, useAuthStore } from '../../../store';
+import { useToast } from '../../../hooks/useToast';
 import type { ClientWithStats, ClientGlobalStats, ClientListFilters, ClientsStackParamList } from '../../../types';
 
 type Nav = NativeStackNavigationProp<ClientsStackParamList, 'ClientsList'>;
@@ -316,6 +317,8 @@ export default function AdminClientsScreen() {
   const navigation   = useNavigation<Nav>();
   const accessToken  = useAuthStore(s => s.accessToken);
 
+  const { showToast } = useToast();
+
   const {
     clients, total, globalStats, isLoading,
     fetchClients, changeClientStatus, error, clearError,
@@ -366,14 +369,14 @@ export default function AdminClientsScreen() {
       setActionClient(null);
       await load(activeTab, search);
     } catch (err: any) {
-      Alert.alert('Erreur', err.message ?? 'Impossible de modifier le statut.');
+      showToast({ title: 'Erreur', message: err.message ?? 'Impossible de modifier le statut.', type: 'error' });
     } finally {
       setActionLoading(false);
     }
   };
 
   useEffect(() => {
-    if (error) Alert.alert('Erreur', error, [{ text: 'OK', onPress: clearError }]);
+    if (error) showToast({ title: 'Erreur', message: error, type: 'error', onPress: clearError });
   }, [error]);
 
   const stats = globalStats ?? { active_count: 0, total_trips: 0, total_revenue: 0 };

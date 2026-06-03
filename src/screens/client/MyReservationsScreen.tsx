@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList,
-  TextInput, RefreshControl, Alert, Platform, ActivityIndicator,
+  TextInput, RefreshControl, Platform, ActivityIndicator,
 } from 'react-native';
-import { Ionicons }         from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useReservation }   from '../../hooks/useReservation';
 import { useAuthStore }     from '../../store/auth.store';
 import { invoicesApi }      from '../../services/api/invoices.api';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import { useToast }         from '../../hooks/useToast';
 import type { Reservation, ReservationStatus } from '../../types/reservations.types';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
 import RatingModal            from '../../components/common/RatingModal';
@@ -238,6 +239,7 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
 
   const activeTabRef = useRef(activeTab);
+  const { showToast } = useToast();
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
 
   const load = useCallback(async (showRefresh = false) => {
@@ -287,12 +289,12 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
 
   const handleEvaluate = useCallback((reservation: Reservation) => {
     if (alreadyRated) {
-      Alert.alert('Déjà évalué', 'Vous avez déjà soumis une évaluation pour cette course.');
+      showToast({ title: 'Déjà évalué', message: 'Vous avez déjà soumis une évaluation pour cette course.', type: 'info' });
       return;
     }
     setSelectedForRating(reservation);
     setRatingModalVisible(true);
-  }, [alreadyRated]);
+  }, [alreadyRated, showToast]);
 
     const handleRatingSubmit = useCallback(async (note: number) => {
       if (!accessToken || !selectedForRating?.id) return;
@@ -300,15 +302,15 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
         await submitRating(accessToken, selectedForRating.id, note);
         setRatingModalVisible(false);
         setSelectedForRating(null);
-        Alert.alert('Merci !', `Votre note de ${note}/5 a bien été enregistrée.`);
+        showToast({ title: 'Merci !', message: `Votre note de ${note}/5 a bien été enregistrée.`, type: 'success' });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
         setRatingModalVisible(false);
         setSelectedForRating(null);
         // Affiche l'erreur, qu'elle soit "déjà noté" ou autre.
-        Alert.alert('Erreur', msg);
+        showToast({ title: 'Erreur', message: msg, type: 'error' });
       }
-    }, [accessToken, selectedForRating, submitRating]);
+    }, [accessToken, selectedForRating, submitRating, showToast]);
 
 
   const handleViewInvoice = async (reservation: Reservation) => {
@@ -316,23 +318,18 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
       const res = await invoicesApi.fetchByReservationId(token, reservation.id);
       if (res.ok && res.data) {
         navigation.navigate('InvoiceDetails', { invoiceId: res.data.id });
-      } else {
-        Alert.alert(
-          'Facture indisponible',
-          res.message ?? 'La facture n\'est pas encore disponible pour cette course.',
-        );
-      }
+      } else { showToast({ type: 'warning', title: 'Facture indisponible', message: res.message ?? 'La facture n\'est pas encore disponible pour cette course.' }); }
     } catch {
-      Alert.alert('Erreur', 'Impossible de récupérer la facture. Veuillez réessayer.');
+      showToast({ title: 'Erreur', message: 'Impossible de récupérer la facture. Veuillez réessayer.', type: 'error' });
     }
   };
 
   const handleCall = (reservation: Reservation) => {
-    if (reservation.driver?.user.phone) {
-      Alert.alert('Appel', `Appel au chauffeur: ${reservation.driver.user.phone}`);
+    if (reservation.driver?.user?.phone) {
+      showToast({ title: 'Appel', message: `Appel au chauffeur: ${reservation.driver.user.phone}`, type: 'info' });
       // Linking.openURL(`tel:${reservation.driver.user.phone}`);
     } else {
-      Alert.alert('Non disponible', 'Le numéro du chauffeur n\'est pas disponible');
+      showToast({ title: 'Non disponible', message: 'Le numéro du chauffeur n\'est pas disponible', type: 'warning' });
     }
   };
 
@@ -350,11 +347,10 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     try {
       await cancel(selectedForCancel.id, reason);
       setCancelModalVisible(false);
-      setSelectedForCancel(null);
-      Alert.alert('Succès', 'La réservation a été annulée');
+      showToast({ title: 'Succès', message: 'La réservation a été annulée', type: 'success' });
       load(true);
     } catch (error: any) {
-      Alert.alert('Erreur', error?.message ?? 'Impossible d\'annuler la réservation');
+      showToast({ title: 'Erreur', message: error?.message ?? 'Impossible d\'annuler la réservation', type: 'error' });
     }
   };
 
