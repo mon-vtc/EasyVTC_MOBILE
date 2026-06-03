@@ -64,7 +64,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
   const [mapDestinationLat, setMapDestinationLat]             = useState<number | null | undefined>(null);
   const [mapDestinationLng, setMapDestinationLng]             = useState<number | null | undefined>(null);
 
-  type ConfirmationNav = NavigationProp<DriverInvoicesStackParamList, 'DriverInvoiceDetails', 'ChatScreen'>;
+  type ConfirmationNav = NavigationProp<DriverInvoicesStackParamList >;
 
   const reservation  = selected;
   const accessToken  = useAuthStore(s => s.accessToken);
@@ -295,7 +295,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
             )}
             <TouchableOpacity
               style={styles.messageBtn}
-              onPress={() => nav.getParent()?.navigate('DriverReservationDetails', {screen : 'ChatScreen', param : { reservationId: reservation.id }})}
+              onPress={() => nav.navigate('ChatScreen', { reservationId: reservation.id })}
             >
               <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.white} />
             </TouchableOpacity>

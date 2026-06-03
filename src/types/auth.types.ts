@@ -109,6 +109,9 @@ export type DriverOrdersStackParamList = {
 export type DriverInvoicesStackParamList = {
   DriverInvoicesList:   undefined;
   DriverInvoiceDetails: { invoiceId: string };
+  ChatScreen:           { reservationId?: string };
+  supportList: undefined;
+  supportChat: { ticketId: string, subject: string };
 };
 
 export type DriverMessagesStackParamList = {
