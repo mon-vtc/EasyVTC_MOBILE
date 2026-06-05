@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert, Modal, Linking, Platform, Image,
+  ActivityIndicator, Alert, Modal, Linking, Platform, Image, TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
@@ -54,8 +54,9 @@ function formatTime(iso?: string | null): string {
 export default function DriverReservationScreen({ navigation, route }: Props) {
   const { reservationId } = route.params;
   const { selected, fetchById, start, complete, cancel } = useReservation();
-  const [isLoading, setIsLoading]     = useState(false);
+  const [isLoading, setIsLoading]       = useState(false);
   const [confirmModal, setConfirmModal] = useState(false);
+  const [actualDistanceKm, setActualDistanceKm] = useState('');
 
   // Map choice modal state
   const [mapChoiceModalVisible, setMapChoiceModalVisible]     = useState(false);
@@ -83,10 +84,15 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
 
   const heroValues = useMemo(() => {
     if (!reservation) return { distance: '—', duration: '—', amount: '—' };
+    const isCompleted = reservation.status === 'completed';
     return {
-      distance: reservation.distance_km  != null ? `${reservation.distance_km.toFixed(0)} km`  : '—',
-      duration: reservation.duration_min != null ? `${reservation.duration_min.toFixed(0)} min` : '—',
-      amount:   reservation.price_final  != null
+      distance: reservation.distance_km != null
+        ? `${Number(reservation.distance_km).toFixed(0)} km`
+        : isCompleted ? 'N/A' : '—',
+      duration: reservation.duration_min != null
+        ? `${Number(reservation.duration_min).toFixed(0)} min`
+        : '—',
+      amount: reservation.price_final != null
         ? `${reservation.price_final.toFixed(0)} €`
         : `${reservation.price_estimated.toFixed(0)} €`,
     };
@@ -143,11 +149,12 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
     if (!reservation) return;
     try {
       setIsLoading(true);
+      const parsedKm = actualDistanceKm.trim() ? parseFloat(actualDistanceKm) : undefined;
       await complete(reservation.id, {
-        actual_distance_km: reservation.distance_km ?? undefined,
-        actual_duration_min: reservation.duration_min ?? undefined,
-        // TODO: Ajouter un champ pour les notes du chauffeur dans le modal de confirmation
+        actual_distance_km: parsedKm,
+        // actual_duration_min est auto-calculée côté API depuis started_at → ended_at
       });
+      setActualDistanceKm('');
       await refresh();
       setConfirmModal(false);
       Alert.alert('Succès', 'Course terminée.');
@@ -422,10 +429,32 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Terminer la course ?</Text>
             <Text style={styles.modalMessage}>Le client a bien été déposé ?</Text>
+
+            <View style={styles.modalInputBlock}>
+              <Text style={styles.modalInputLabel}>
+                Distance parcourue (km)
+                {reservation?.pricing_type === 'formula' ? ' *' : ''}
+              </Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Ex : 23"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="numeric"
+                value={actualDistanceKm}
+                onChangeText={setActualDistanceKm}
+                maxLength={6}
+              />
+              <Text style={styles.modalInputHint}>
+                {reservation?.pricing_type === 'formula'
+                  ? 'Recommandé — permet de recalculer le prix final'
+                  : 'Optionnel — à titre informatif (forfait fixe)'}
+              </Text>
+            </View>
+
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.modalCancel]}
-                onPress={() => setConfirmModal(false)}
+                onPress={() => { setConfirmModal(false); setActualDistanceKm(''); }}
               >
                 <Text style={styles.modalCancelText}>Annuler</Text>
               </TouchableOpacity>
@@ -573,6 +602,14 @@ const styles = StyleSheet.create({
   modalBox:        { width: '85%', backgroundColor: Colors.white, borderRadius: Radius.lg, padding: Spacing.lg },
   modalTitle:      { fontSize: Fonts.size.lg, fontWeight: '800', marginBottom: Spacing.xs, textAlign: 'center' },
   modalMessage:    { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginBottom: Spacing.md, textAlign: 'center' },
+  modalInputBlock: { marginBottom: Spacing.md },
+  modalInputLabel: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary, marginBottom: Spacing.xs },
+  modalInput: {
+    borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs,
+    fontSize: Fonts.size.md, color: Colors.textPrimary,
+  },
+  modalInputHint:  { fontSize: Fonts.size.xs, color: Colors.textSecondary, marginTop: 4 },
   modalButtons:    { flexDirection: 'row', gap: Spacing.sm },
   modalBtn:        { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.md, alignItems: 'center' },
   modalCancel:     { backgroundColor: Colors.surface },
