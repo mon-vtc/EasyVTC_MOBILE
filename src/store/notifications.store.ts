@@ -27,6 +27,7 @@ interface NotificationsState {
   markAllAsRead:       (token: string) => Promise<void>;
   removeNotificationLocally: (id: string) => void; // Client-side removal for now
   clearError:          () => void;
+  reset:               () => void;
 }
 
 export const useNotificationsStore = create<NotificationsState>((set, get) => ({
@@ -171,4 +172,16 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  reset: () => set({
+    notifications:       [],
+    unreadCount:         0,
+    total:               0,
+    page:                1,
+    hasMore:             true,
+    isLoading:           false,
+    isFetchingNextPage:  false,
+    isRealtimeConnected: false,
+    error:               null,
+  }),
 }));
