@@ -27,10 +27,7 @@ const COUNTRY: PricingCountry = 'france';
 
 export function useReservation() {
   const accessToken = useAuthStore(s => s.accessToken);
-
-  if (!accessToken) {
-    throw new Error('useReservation() ne peut être utilisé que par un utilisateur authentifié.');
-  }
+  const isHydrated  = useAuthStore(s => s.isHydrated);
 
   // ── Sélecteurs store ───────────────────────────────────────────────────────
   const booking          = useReservationStore(s => s.booking);

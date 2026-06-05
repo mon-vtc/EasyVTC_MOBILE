@@ -2,6 +2,7 @@
   import { authApi }        from '../services/api/auth.api';
   import { userApi }        from '../services/api/user.api'
   import { authStorage as secureStorage }  from '../services/auth/auth-storage';
+  import { useNotificationsStore } from './notifications.store';
   import type { AuthUser, LoginPayload, RegisterPayload, UpdateProfilePayload } from '../types';
 
   // ── Utilitaire : aplatir la réponse API → AuthUser/DriverUser ──
@@ -162,13 +163,14 @@
       try { if (accessToken) await authApi.logout(accessToken); } catch (_) {}
       await secureStorage.clearTokens();
       set({ user: null, accessToken: null, refreshToken: null, error: null, localAvatarUri: null });
-      
+      useNotificationsStore.getState().reset();
     },
 
     // ── Force logout (pour token expiré — pas d'appel API) ──────────────────
     forceLogout: async () => {
       await secureStorage.clearTokens();
       set({ user: null, accessToken: null, refreshToken: null, error: null, localAvatarUri: null });
+      useNotificationsStore.getState().reset();
     },
 
     // ── Forgot Password ─────────────────────────────────────────────────────
