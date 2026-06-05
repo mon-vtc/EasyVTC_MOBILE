@@ -24,6 +24,7 @@ import MessagesScreen from '../screens/client/MessagesScreen'; // Réutilisé po
 import SupportListScreen from '../screens/support/SupportListScreen';
 import SupportChatScreen from '../screens/support/SupportChatScreen';
 import DriverReviewScreen        from '../screens/driver/DriverReviewScreen';
+import DriverRevenuesScreen from '../screens/driver/DriverRevenuesScreen';
 
 import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList, DriverNotificationsStackParamList, DriverMessagesStackParamList, SupportStackParamList, DriverTripsStackParamList } from '../types/auth.types';
 
@@ -228,8 +229,8 @@ export default function DriverNavigator() {
 
 
       <Drawer.Screen
-        name="DriverAvailability"
-        component={DriverAvailabilityScreen}
+        name="DriverRevenues"
+        component={DriverRevenuesScreen}
         options={{
           drawerLabel: () => <DrawerLabel icon="cash-outline" label="Revenus" />,
         }}

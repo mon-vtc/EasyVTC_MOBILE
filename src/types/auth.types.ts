@@ -138,6 +138,7 @@ export type DriverDrawerParamList = {
   DriverOrders:       NavigatorScreenParams<DriverOrdersStackParamList>;
   DriverInvoices:     NavigatorScreenParams<DriverInvoicesStackParamList>;
   DriverReviews:      undefined;
+  DriverRevenues:     undefined;
 };
 
 

@@ -41,6 +41,9 @@ export type {
   DriverPlanningResult,
   PlanningPeriod,
   PlanningReservation,
+  DriverRevenuesResult,
+  RevenuesPeriod,
+  RevenueTrip
 } from './drivers.types';
 
 export type {
@@ -59,7 +62,8 @@ export type {
   ManagerPermission,
   SetManagerPermissionsDto,
   ManagerPermissionsResult,
-  AdminStats
+  AdminStats,
+  AdminStatsFilters
 } from './admin.types';
 export { MANAGER_PERMISSIONS, PERMISSION_LABELS } from './admin.types';
 

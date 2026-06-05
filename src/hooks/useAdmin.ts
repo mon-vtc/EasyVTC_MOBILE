@@ -180,9 +180,12 @@ export function useAdmin() {
   const changeClientStatus = useCallback((clientId: string, payload: UpdateUserStatusPayload) =>
     _changeClientStatusRef.current(accessTokenRef.current!, clientId, payload), []);
 
-  const fetchDashboardStats = useCallback(async (): Promise<AdminStats> => {
-    const res = await adminApi.getStats(accessTokenRef.current!);
-    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la récupération des statistiques');
+  const fetchDashboardStats = useCallback(async (filters: { period: 'day' | 'week' | 'month' | 'all' } = { period: 'day' }): Promise<AdminStats> => {
+    const res = await adminApi.getStats(accessTokenRef.current!, filters);
+    if (!res.ok || !res.data) {
+      console.error('Erreur fetchDashboardStats:', res.message, res.errors);
+      throw new Error(res.message ?? 'Erreur lors de la récupération des statistiques');
+    }
     return res.data;
   }, []);
 
