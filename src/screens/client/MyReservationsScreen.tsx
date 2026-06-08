@@ -61,7 +61,7 @@ function ReservationCard({
   const time = new Date(reservation.scheduled_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const driverName = reservation.driver ? `${reservation.driver.user.first_name} ${reservation.driver.user.last_name}` : 'Non assigné';
   const price = reservation.price_final ?? reservation.price_estimated;
-  console.log('ReservationCard rating', { reservation});
+  
   // Actions contextuelles selon le statut
   const isCancellable = ['pending', 'assigned', 'driver_arrived'].includes(status);
   const isCompleted = status === 'completed';
