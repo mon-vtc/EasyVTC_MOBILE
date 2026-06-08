@@ -6,7 +6,7 @@ import { api } from '../../lib/api';
 import type { ApiResponse, PaginatedDrivers, ListDriversParams, DriverPlanningResult } from '../../types';
 import type { DriverUser, DriverWithUser }         from '../../types/user.types';
 import type { UpdateDriverMePayload, ChangeDriverStatusPayload } from '../../types/payload.types';
-import type { PlanningPeriod, PlanningReservation } from '../../types';
+import type { PlanningPeriod, PlanningReservation, DriverRevenuesResult, RevenuesPeriod} from '../../types';
 export const driverApi = {
 
   /** PATCH /drivers/me — siret, zone, vehicle_type */
@@ -47,6 +47,16 @@ export const driverApi = {
     const params = new URLSearchParams({ period });
     if (date) params.set('date', date);
     return api.get(`/drivers/me/planning?${params.toString()}`, token);
+  },
+
+  getMyRevenues: (
+    token: string,
+    period: RevenuesPeriod,
+    date?: string,
+  ): Promise<ApiResponse<DriverRevenuesResult>> => {
+    const params = new URLSearchParams({ period });
+    if (date) params.set('date', date);
+    return api.get(`/drivers/me/revenues?${params.toString()}`, token);
   },
   
 };

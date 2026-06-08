@@ -50,3 +50,16 @@ export interface RevenueTrip {
   price_final: number;
   currency: string;
 }
+export interface DriverRevenuesResult {
+  period: RevenuesPeriod;
+  date_from: string | null;
+  date_to: string | null;
+  total_trips: number;
+  total_gross: number;         // total brut avant commission
+  total_commission: number;    // total prélevé par la plateforme
+  total_net: number;           // ce que le chauffeur perçoit réellement
+  total_revenue: number;       // alias de total_net (rétro-compatibilité)
+  currency: string;
+  revenue_by_currency: { EUR: number; XOF: number };
+  trips: RevenueTrip[];
+}

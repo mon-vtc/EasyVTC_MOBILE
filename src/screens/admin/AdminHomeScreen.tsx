@@ -182,7 +182,7 @@ export default function AdminHomeScreen({ navigation }: any) {
         <StatCard icon="time-outline" value={String(data?.stats?.reservations?.by_status?.pending ?? 0)} label="En attente" colors={['#4A90E2', '#2C6DA9']} />
         <StatCard icon="person-outline" value={String(data?.stats?.drivers?.online ?? 0)} label="Chauffeurs en ligne" colors={['#50E3C2', '#34A88A']} />
         <StatCard icon="logo-euro" value={`${(data?.stats?.revenue?.total_eur ?? 0).toFixed(0)} €`} label="CA du jour" colors={[Colors.bordeaux, '#A12C32']} />
-        <StatCard icon="car-sport-outline" value={String(data?.stats?.reservations?.by_status?.assigned ?? 0)} label="Courses du jour" colors={['#BD10E0', '#8A0B9E']} />
+        <StatCard icon="car-sport-outline" value={`${data?.stats?.reservations?.total ?? 0}`} label="Courses du jour" colors={['#BD10E0', '#8A0B9E']} />
       </View>
 
       {/* Section Réservations en attente */}
