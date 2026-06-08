@@ -5,16 +5,17 @@
 
 import React, { useState } from 'react';
 import {
-  Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator,
+  Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import type { SubmitRatingDto } from '../../types/ratings.types';
 
 interface Props {
   visible:      boolean;
   driverName?:  string;
   isSubmitting: boolean;
-  onConfirm:    (note: number) => void;
+  onConfirm:    (dto: SubmitRatingDto) => void;
   onClose:      () => void;
 }
 
@@ -28,16 +29,19 @@ const LABELS: Record<number, string> = {
 
 export default function RatingModal({ visible, driverName, isSubmitting, onConfirm, onClose }: Props) {
   const [selected, setSelected] = useState<number>(0);
+  const [comment, setComment] = useState<string>('');
 
   const handleClose = () => {
     setSelected(0);
+    setComment('');
     onClose();
   };
 
   const handleConfirm = () => {
     if (selected === 0 || isSubmitting) return;
-    onConfirm(selected);
+    onConfirm({ note: selected, comment: comment.trim() || null });
     setSelected(0);
+    setComment('');
   };
 
   return (
@@ -80,6 +84,20 @@ export default function RatingModal({ visible, driverName, isSubmitting, onConfi
           <Text style={styles.noteLabel}>
             {selected > 0 ? LABELS[selected] : 'Sélectionnez une note'}
           </Text>
+
+          {/* Commentaire optionnel */}
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Ajouter un commentaire (optionnel)"
+            placeholderTextColor={Colors.textMuted}
+            value={comment}
+            onChangeText={setComment}
+            editable={!isSubmitting}
+            multiline
+            maxLength={500}
+            textAlignVertical="top"
+          />
+          <Text style={styles.commentCounter}>{comment.length}/500</Text>
 
           {/* Actions */}
           <View style={styles.actions}>
@@ -149,8 +167,25 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.sm,
     fontWeight: '600',
     color: Colors.textSecondary,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm,
     minHeight: 20,
+  },
+  commentInput: {
+    minHeight: 96,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    padding: Spacing.sm,
+    fontSize: Fonts.size.sm,
+    color: Colors.textPrimary,
+    backgroundColor: Colors.white,
+    marginBottom: Spacing.xs,
+  },
+  commentCounter: {
+    alignSelf: 'flex-end',
+    fontSize: Fonts.size.xs,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.lg,
   },
   actions: {
     flexDirection: 'row',

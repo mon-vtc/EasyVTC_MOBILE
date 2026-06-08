@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { ratingsApi } from '../services/api/ratings.api';
-import type { RatingWithClient, RatingAdmin } from '../types/ratings.types';
+import type { RatingWithClient, RatingAdmin, SubmitRatingDto } from '../types/ratings.types';
 
 interface RatingsState {
   // ── Vue chauffeur (ses propres évaluations) ────────────────────────────────
@@ -29,7 +29,7 @@ interface RatingsState {
   // ── Actions ────────────────────────────────────────────────────────────────
   fetchMyRatings: (token: string, page?: number) => Promise<void>;
   listAll:        (token: string, page?: number) => Promise<void>;
-  submitRating:   (token: string, reservationId: string, note: number) => Promise<void>;
+  submitRating:   (token: string, reservationId: string, dto: SubmitRatingDto) => Promise<void>;
   deleteRating:   (token: string, ratingId: string) => Promise<void>;
   clearError:     () => void;
 }
@@ -92,10 +92,10 @@ export const useRatingsStore = create<RatingsState>((set) => ({
   },
 
   // ── POST /reservations/:id/rating ─────────────────────────────────────────
-  submitRating: async (token, reservationId, note) => {
+  submitRating: async (token, reservationId, dto) => {
     set({ isSubmitting: true, error: null });
     try {
-      const res = await ratingsApi.submit(token, reservationId, note);
+      const res = await ratingsApi.submit(token, reservationId, dto);
       if (!res.ok) throw new Error(res.message ?? "Erreur lors de la soumission de l'évaluation");
       set({ isSubmitting: false });
     } catch (err: unknown) {

@@ -22,6 +22,7 @@ import { useReservation }      from '../../hooks/useReservation';
 import { useAuthStore }        from '../../store/auth.store';
 import { useRatingsStore }     from '../../store/ratings.store';
 import { invoicesApi }         from '../../services/api/invoices.api';
+import type { SubmitRatingDto } from '../../types/ratings.types';
 import type { ClientStackParamList } from '../../types/auth.types';
 import { Logo }                      from '../../constants/logo';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
@@ -161,13 +162,13 @@ export default function ReservationDetailsScreen() {
     setRatingModalVisible(true);
   }, [alreadyRated, showToast]);
 
-  const handleRatingSubmit = useCallback(async (note: number) => {
+  const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
     if (!accessToken || !reservation?.id) return;
     try {
-      await submitRating(accessToken, reservation.id, note);
+      await submitRating(accessToken, reservation.id, dto);
       setRatingModalVisible(false);
       setAlreadyRated(true);
-      showToast({ title: 'Merci !', message: `Votre note de ${note}/5 a bien été enregistrée.`, type: 'success' });
+      showToast({ title: 'Merci !', message: `Votre note de ${dto.note}/5 a bien été enregistrée.`, type: 'success' });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
       if (msg.includes('déjà')) {

@@ -10,6 +10,7 @@ import type {
   Rating,
   DriverRatingsResult,
   AdminRatingsResult,
+  SubmitRatingDto,
 } from '../../types/ratings.types';
 
 function buildQs(page?: number, limit?: number): string {
@@ -26,9 +27,9 @@ export const ratingsApi = {
   submit: (
     token:         string,
     reservationId: string,
-    note:          number,
+    dto:           SubmitRatingDto,
   ): Promise<ApiResponse<Rating>> =>
-    api.post(`/reservations/${reservationId}/rating`, { note }, token),
+    api.post(`/reservations/${reservationId}/rating`, dto, token),
 
   // ── GET /drivers/me/ratings ───────────────────────────────────────────────
   getMyRatings: (
