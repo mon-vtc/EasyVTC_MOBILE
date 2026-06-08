@@ -110,8 +110,9 @@ export default function ReservationDetailsScreen() {
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
 
   // ── États du modal de notation ─────────────────────────────────────────────
+
+  const alreadyRated = reservation?.driver?.rating != null;
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
-  const [alreadyRated,       setAlreadyRated]       = useState(false);
   const isSubmitting  = useRatingsStore(s => s.isSubmitting);
   const submitRating  = useRatingsStore(s => s.submitRating);
 
@@ -159,27 +160,22 @@ export default function ReservationDetailsScreen() {
       showToast({ title: 'Déjà évalué', message: 'Vous avez déjà soumis une évaluation pour cette course.', type: 'info' });
       return;
     }
-    setRatingModalVisible(true);
   }, [alreadyRated, showToast]);
 
-  const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
-    if (!accessToken || !reservation?.id) return;
-    try {
-      await submitRating(accessToken, reservation.id, dto);
-      setRatingModalVisible(false);
-      setAlreadyRated(true);
-      showToast({ title: 'Merci !', message: `Votre note de ${dto.note}/5 a bien été enregistrée.`, type: 'success' });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
-      if (msg.includes('déjà')) {
-        setRatingModalVisible(false);
-        setAlreadyRated(true);
-        showToast({ title: 'Déjà évalué', message: 'Vous avez déjà noté cette course.', type: 'info' });
-      } else {
-        showToast({ title: 'Erreur', message: msg, type: 'error' });
-      }
-    }
-  }, [accessToken, reservation?.id, submitRating, showToast]);
+const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
+  if (!accessToken || !reservation?.id) return;
+  try {
+    await submitRating(accessToken, reservation.id, dto);
+    setRatingModalVisible(false);
+    // ✅ Plus besoin de setAlreadyRated — reservation.driver.rating 
+    //    sera mis à jour par le store
+    showToast({ title: 'Merci !', message: `Votre note de ${dto.note}/5 a bien été enregistrée.`, type: 'success' });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
+    setRatingModalVisible(false);
+    showToast({ title: 'Erreur', message: msg, type: 'error' });
+  }
+}, [accessToken, reservation?.id, submitRating, showToast]);
 
   const handleCancel = useCallback(() => {
     setCancelModalVisible(true);
@@ -403,28 +399,43 @@ export default function ReservationDetailsScreen() {
         <Animated.View style={[styles.ctas, slideUp(ctaAnim)]}>
           {/* Réservations complétées */}
           {isCompleted && (
-            <>
-              <TouchableOpacity
-                style={[styles.btnPrimary, alreadyRated && styles.btnPrimaryDone]}
-                activeOpacity={0.85}
-                onPress={handleEvaluate}
-              >
-                <AppIcon name={alreadyRated ? 'star' : 'star-outline'} size={18} color={WHITE} />
-                <Text style={styles.btnPrimaryText}>
-                  {alreadyRated ? 'Course évaluée' : 'Évaluer le chauffeur'}
-                </Text>
-              </TouchableOpacity>
+  <>
+    {/* ✅ Bouton OU étoiles selon rating */}
+    {!alreadyRated ? (
+      <TouchableOpacity
+        style={styles.btnPrimary}
+        activeOpacity={0.85}
+        onPress={handleEvaluate}
+      >
+        <AppIcon name="star-outline" size={18} color={WHITE} />
+        <Text style={styles.btnPrimaryText}>Évaluer le chauffeur</Text>
+      </TouchableOpacity>
+    ) : (
+      <View style={styles.ratingDisplay}>
+        <Text style={styles.ratingDisplayLabel}>Votre évaluation</Text>
+        <View style={styles.starsRow}>
+          {[1, 2, 3, 4, 5].map(star => (
+            <AppIcon
+              key={star}
+              name="star"
+              size={24}
+              color={star <= (r?.driver?.rating ?? 0) ? '#F59E0B' : '#D1D5DB'}
+            />
+          ))}
+        </View>
+      </View>
+    )}
 
-              <TouchableOpacity
-                style={styles.btnSecondary}
-                activeOpacity={0.85}
-                onPress={handleViewInvoice}
-              >
-                <AppIcon name="document-text-outline" size={18} color={BORDEAUX} />
-                <Text style={styles.btnSecondaryText}>Voir la facture</Text>
-              </TouchableOpacity>
-            </>
-          )}
+    <TouchableOpacity
+      style={styles.btnSecondary}
+      activeOpacity={0.85}
+      onPress={handleViewInvoice}
+    >
+      <AppIcon name="document-text-outline" size={18} color={BORDEAUX} />
+      <Text style={styles.btnSecondaryText}>Voir la facture</Text>
+    </TouchableOpacity>
+  </>
+)}
 
           {/* Réservations annulables */}
           {isCancellable && (
@@ -502,6 +513,20 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: 10,
   },
+  ratingDisplay: {
+  alignItems: 'center',
+  paddingVertical: 12,
+  gap: 8,
+},
+ratingDisplayLabel: {
+  fontSize: 13,
+  color: TEXT_S,
+  fontWeight: '500',
+},
+starsRow: {
+  flexDirection: 'row',
+  gap: 6,
+},
 
   header:   { alignItems: 'center', marginBottom: 20 },
   title:    { fontSize: 26, fontWeight: '800', color: WHITE, marginTop: 20, letterSpacing: -0.5 },
