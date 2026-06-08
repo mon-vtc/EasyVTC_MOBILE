@@ -10,9 +10,10 @@ import { invoicesApi }      from '../../services/api/invoices.api';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useToast }         from '../../hooks/useToast';
 import type { Reservation, ReservationStatus } from '../../types/reservations.types';
+import type { SubmitRatingDto } from '../../types/ratings.types';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
 import RatingModal            from '../../components/common/RatingModal';
-import { useRatingsStore } from '../../store';
+import { useRatingsStore } from '../../store/ratings.store';
 
 type FilterTab = 'all' | 'invoices' | 'pending' | 'assigned' | 'completed' | 'cancelled';
 
@@ -60,12 +61,13 @@ function ReservationCard({
   const time = new Date(reservation.scheduled_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const driverName = reservation.driver ? `${reservation.driver.user.first_name} ${reservation.driver.user.last_name}` : 'Non assigné';
   const price = reservation.price_final ?? reservation.price_estimated;
-
+  console.log('ReservationCard rating', { reservation});
   // Actions contextuelles selon le statut
   const isCancellable = ['pending', 'assigned', 'driver_arrived'].includes(status);
   const isCompleted = status === 'completed';
   const isActive = ['assigned', 'driver_arrived', 'in_progress'].includes(status);
   const showDetails = !['cancelled'].includes(status);
+
 
   return (
     <TouchableOpacity style={cardStyles.wrapper} onPress={onPress}>
@@ -116,13 +118,33 @@ function ReservationCard({
           )}
           
           {/* Action évaluation */}
-          {isCompleted && (
-            <TouchableOpacity style={cardStyles.btnEvaluate} onPress={onEvaluate}>
-              <Ionicons name="star" size={14} color={Colors.white} />
-              <Text style={cardStyles.btnText}>Évaluer</Text>
-            </TouchableOpacity>
-          )}
-          
+          {isCompleted && reservation.driver?.rating === null ? (
+  <TouchableOpacity
+    style={cardStyles.btnEvaluate}
+    onPress={onEvaluate}
+  >
+    <Ionicons name="star" size={14} color={Colors.white} />
+    <Text style={cardStyles.btnText}>Évaluer</Text>
+  </TouchableOpacity>
+) : (
+  isCompleted &&
+  reservation.driver?.rating !== null && (
+    <View style={{ flexDirection: 'row', gap: 2 }}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Ionicons
+          key={star}
+          name="star"
+          size={16}
+          color={
+            star <= reservation.driver?.rating!
+              ? Colors.warning
+              : Colors.bordeauxLight
+          }
+        />
+      ))}
+    </View>
+  )
+)}
           {/* Action facture */}
           {isCompleted && (
             <TouchableOpacity style={cardStyles.btnInvoice} onPress={onViewInvoice}>
@@ -296,13 +318,13 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     setRatingModalVisible(true);
   }, [alreadyRated, showToast]);
 
-    const handleRatingSubmit = useCallback(async (note: number) => {
+    const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
       if (!accessToken || !selectedForRating?.id) return;
       try {
-        await submitRating(accessToken, selectedForRating.id, note);
+        await submitRating(accessToken, selectedForRating.id, dto);
         setRatingModalVisible(false);
         setSelectedForRating(null);
-        showToast({ title: 'Merci !', message: `Votre note de ${note}/5 a bien été enregistrée.`, type: 'success' });
+        showToast({ title: 'Merci !', message: `Votre note de ${dto.note}/5 a bien été enregistrée.`, type: 'success' });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
         setRatingModalVisible(false);

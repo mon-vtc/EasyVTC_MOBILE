@@ -45,11 +45,19 @@ export interface DriverPlanningResult {
 export type RevenuesPeriod = 'week' | 'month' | 'all';
 
 export interface RevenueTrip {
-  reservation_id: string;
-  scheduled_at: string;
-  price_final: number;
-  currency: string;
+  reservation_id:    string;
+  scheduled_at:      string;
+  pickup_address:    string;
+  dest_address:      string;
+  price_final:       number;       // montant brut (ce que le client a payé)
+  commission_amount: number;       // part plateforme (0 si non configuré)
+  net_amount:        number;       // ce que le chauffeur perçoit = price_final - commission
+  currency:          string;
+  client_first_name: string | null;
+  client_last_name:  string | null;
+  rating:            number | null; // note étoiles si la course a été évaluée
 }
+
 export interface DriverRevenuesResult {
   period: RevenuesPeriod;
   date_from: string | null;

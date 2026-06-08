@@ -107,16 +107,16 @@ function HistoryItem({ item }: { item: RevenueTrip }) {
           </Text>
         </View>
       </View>
-{/* 
+
      <View style={styles.historyRow}>
         <Ionicons name="person-outline" size={16} color={Colors.textSecondary} />
-        <Text style={styles.historyText}>{item.pickup_address.split(',')[0]} → {item.dest_address.split(',')[0]}</Text>
+        <Text style={styles.historyText}>{item.client_first_name?.split(',')[0] || 'Client inconnu'}  {item.client_last_name?.split(',')[0] || 'Inconnu'}</Text>
       </View>
 
       <View style={styles.historyRow}>
         <Ionicons name="map-outline" size={16} color={Colors.textSecondary} />
         <Text style={styles.historyText}>{item.pickup_address.split(',')[0]} → {item.dest_address.split(',')[0]}</Text>
-      </View> */}
+      </View>
 
       <View style={styles.historyRow}>
         <Ionicons name="calendar-outline" size={16} color={Colors.textMuted} />

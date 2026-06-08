@@ -9,6 +9,7 @@ export interface Rating {
   client_id:      string;
   driver_id:      string;
   note:           number;
+  comment:        string | null;
   created_at:     string;
 }
 
@@ -38,4 +39,8 @@ export interface AdminRatingsResult {
   page:        number;
   limit:       number;
   total_pages: number;
+}
+export interface SubmitRatingDto {
+  note:     number;          // entier 1–5
+  comment?: string | null;   // commentaire facultatif (max 500 chars)
 }
