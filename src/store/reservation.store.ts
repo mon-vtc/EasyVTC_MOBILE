@@ -88,6 +88,7 @@ interface ReservationState {
   setEstimate:       (price: number, distKm: number, durMin: number) => void;
   setComment:        (text: string)                     => void;
   setFlatRateId:     (id: string | null)                => void;
+  setPromoCode:      (code: string | null)              => void;
 
   /**
    * Soumet la réservation au backend.
@@ -355,6 +356,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   setLuggage:      (luggage)       => set(s => ({ booking: { ...s.booking, luggage } })),
   setComment:      (comment)       => set(s => ({ booking: { ...s.booking, comment } })),
   setFlatRateId:   (flat_rate_id)  => set(s => ({ booking: { ...s.booking, flat_rate_id } })),
+  setPromoCode:    (promo_code)    => set(s => ({ booking: { ...s.booking, promo_code } })),
   setEstimate: (estimated_price, distance_km, duration_min) =>
     set(s => ({ booking: { ...s.booking, estimated_price, distance_km, duration_min } })),
 
@@ -421,8 +423,11 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
 
         // Commentaire optionnel
         ...(booking.comment.trim() && { comment: booking.comment.trim() }),
-      };
 
+        // Code promo optionnel
+        ...(booking.promo_code?.trim() && { promo_code: booking.promo_code.trim() }),
+      };
+      console.log('DTO envoyé au backend :', dto);
       const res = await reservationApi.create(token, dto);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la réservation');
 

@@ -55,7 +55,7 @@ function ReservationCard({ reservation, onDetails, onAction }: {
   if (status === 'in_progress') primaryText = 'Continuer';
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={() => onDetails(reservation.id)}>
       <View style={styles.cardHeader}>
         <View style={[styles.badge, { backgroundColor: statusCfg.bg }]}> 
           <Ionicons name={statusCfg.icon as any} size={12} color={statusCfg.color} />
@@ -87,7 +87,7 @@ function ReservationCard({ reservation, onDetails, onAction }: {
           <Text style={styles.actionBtnText}>{primaryText}</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

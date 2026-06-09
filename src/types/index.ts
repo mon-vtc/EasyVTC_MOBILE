@@ -68,6 +68,15 @@ export type {
 export { MANAGER_PERMISSIONS, PERMISSION_LABELS } from './admin.types';
 
 export type {
+  DiscountType,
+  PromoCode,
+  CreatePromoCodeDto,
+  UpdatePromoCodeDto,
+  PromoCodeListFilters,
+  PromoCodeListResult,
+} from './promo-codes.types';
+
+export type {
   Notification,
   NotificationType,
   NotificationListFilters,

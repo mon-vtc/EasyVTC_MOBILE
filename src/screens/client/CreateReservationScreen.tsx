@@ -169,10 +169,24 @@ function Step1({
   getCurrentLocation, geocodeAddress,
 }: any) {
   const { showToast } = useToast();
-  const [originInput, setOriginInput]           = useState<string>(booking.origin?.address ?? '');
+  const [originInput, setOriginInput] = useState<string>(booking.origin?.address ?? '');
   const [destinationInput, setDestinationInput] = useState<string>(booking.destination?.address ?? '');
-  const [isGeolocating, setIsGeolocating]       = useState(false);
-  const [detailForfait, setDetailForfait]       = useState<PricingFlatRate | null>(null);
+  const [originError, setOriginError] = useState<string | null>(null);
+  const [destinationError, setDestinationError] = useState<string | null>(null);
+  const [isGeolocating, setIsGeolocating] = useState(false);
+  const [detailForfait, setDetailForfait] = useState<PricingFlatRate | null>(null);
+
+  // Synchronise les inputs locaux avec l'état global de la réservation
+  // (utile si l'état est modifié par un forfait par exemple)
+  React.useEffect(() => {
+    setOriginInput(booking.origin?.address ?? '');
+    setOriginError(null);
+  }, [booking.origin]);
+
+  React.useEffect(() => {
+    setDestinationInput(booking.destination?.address ?? '');
+    setDestinationError(null);
+  }, [booking.destination]);
 
   // ── Géolocalisation ────────────────────────────────────────────────────────
   const handleGeolocate = async () => {
@@ -181,7 +195,10 @@ function Step1({
     if (point) {
       setOriginInput(point.address);
       setOrigin(point);
+      setOriginError(null);
     } else {
+      setOrigin(null); // Efface l'origine si la géolocalisation échoue
+      setOriginError('Impossible de géolocaliser votre position.');
       showToast({ title: 'Géolocalisation', message: "Impossible d'obtenir votre position.", type: 'error' });
     }
     setIsGeolocating(false);
@@ -190,17 +207,39 @@ function Step1({
   // ── Géocodage au blur ──────────────────────────────────────────────────────
   const handleOriginBlur = useCallback(async () => {
     const trimmed = originInput.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      setOrigin(null); // Efface l'origine si l'input est vide
+      setOriginError(null);
+      return;
+    }
     const point = await geocodeAddress(trimmed);
-    if (point) setOrigin({ ...point, address: trimmed });
-  }, [originInput, geocodeAddress, setOrigin]);
+    if (point) {
+      setOrigin({ ...point, address: trimmed });
+      setOriginError(null);
+    } else {
+      setOrigin(null); // Efface l'origine si le géocodage échoue
+      setOriginError('Adresse de départ invalide');
+      showToast({ title: 'Adresse invalide', message: 'Impossible de trouver l\'adresse de départ. Veuillez vérifier.', type: 'error' });
+    }
+  }, [originInput, geocodeAddress, setOrigin, showToast]);
 
   const handleDestinationBlur = useCallback(async () => {
     const trimmed = destinationInput.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      setDestination(null); // Efface la destination si l'input est vide
+      setDestinationError(null);
+      return;
+    }
     const point = await geocodeAddress(trimmed);
-    if (point) setDestination({ ...point, address: trimmed });
-  }, [destinationInput, geocodeAddress, setDestination]);
+    if (point) {
+      setDestination({ ...point, address: trimmed });
+      setDestinationError(null);
+    } else {
+      setDestination(null); // Efface la destination si le géocodage échoue
+      setDestinationError('Adresse de destination invalide');
+      showToast({ title: 'Adresse invalide', message: 'Impossible de trouver l\'adresse de destination. Veuillez vérifier.', type: 'error' });
+    }
+  }, [destinationInput, geocodeAddress, setDestination, showToast]);
 
   // ── Forfait : ouvre la vue détail avant d'appliquer ───────────────────────
   const handleFlatRatePress = useCallback((fr: PricingFlatRate) => {
@@ -215,6 +254,8 @@ function Step1({
     if (detailForfait) {
       setOriginInput(detailForfait.origin_label);
       setDestinationInput(detailForfait.destination_label);
+      setOriginError(null); // Efface les erreurs d'adresse si un forfait est appliqué
+      setDestinationError(null);
       setFlatRateId(detailForfait.id);
       setDetailForfait(null);
     }
@@ -237,9 +278,12 @@ function Step1({
       <View style={styles.inputRow}>
         <AppIcon name="location-outline" size={18} color={Colors.textSecondary} />
         <TextInput
-          style={styles.inputField}
+          style={[styles.inputField, originError ? styles.inputError : null]}
           value={originInput}
-          onChangeText={setOriginInput}
+          onChangeText={(text) => {
+            setOriginInput(text);
+            setOriginError(null); // Efface l'erreur dès que l'utilisateur modifie
+          }}
           onBlur={handleOriginBlur}
           placeholder="Ex : 12 rue de Rivoli, Paris"
           placeholderTextColor={Colors.textSecondary}
@@ -258,15 +302,23 @@ function Step1({
           ✓ Position enregistrée — modifiez et quittez le champ pour recalculer
         </Text>
       )}
+      {originError && (
+        <Text style={[styles.geoHint, styles.errorText]}>
+          ✗ {originError}
+        </Text>
+      )}
 
       {/* ── Destination ── */}
       <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Destination</Text>
       <View style={styles.inputRow}>
         <AppIcon name="search-outline" size={18} color={Colors.textSecondary} />
         <TextInput
-          style={styles.inputField}
+          style={[styles.inputField, destinationError ? styles.inputError : null]}
           value={destinationInput}
-          onChangeText={setDestinationInput}
+          onChangeText={(text) => {
+            setDestinationInput(text);
+            setDestinationError(null); // Efface l'erreur dès que l'utilisateur modifie
+          }}
           onBlur={handleDestinationBlur}
           placeholder="Ex : Aéroport Charles de Gaulle"
           placeholderTextColor={Colors.textSecondary}
@@ -277,6 +329,11 @@ function Step1({
       {booking.destination && (
         <Text style={styles.geoHint}>
           ✓ Destination enregistrée — modifiez et quittez le champ pour recalculer
+        </Text>
+      )}
+      {destinationError && (
+        <Text style={[styles.geoHint, styles.errorText]}>
+          ✗ {destinationError}
         </Text>
       )}
 
@@ -419,7 +476,7 @@ function Step1({
 // ══════════════════════════════════════════════════════════════════════════════
 // ÉTAPE 2 — Date / Heure / Passagers / Bagages
 // ══════════════════════════════════════════════════════════════════════════════
-function Step2({ booking, setDate, setTime, setPassengers, setLuggage, isFetchingPrice }: any) {
+function Step2({ booking, setDate, setTime, setPassengers, setLuggage, setPromoCode, isFetchingPrice }: any) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -523,6 +580,21 @@ function Step2({ booking, setDate, setTime, setPassengers, setLuggage, isFetchin
             </TouchableOpacity>
           </View>
         </View>
+      </View>
+
+      {/* Champ Code Promo */}
+      <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Code promo (optionnel)</Text>
+      <View style={styles.inputRow}>
+        <AppIcon name="ticket-outline" size={18} color={Colors.textSecondary} />
+        <TextInput
+          style={styles.inputField}
+          value={booking.promo_code ?? ''}
+          onChangeText={setPromoCode}
+          placeholder="Ex: SUMMER24"
+          placeholderTextColor={Colors.textSecondary}
+          autoCapitalize="characters"
+          autoCorrect={false}
+        />
       </View>
 
       {isFetchingPrice && (
@@ -661,7 +733,22 @@ function Step3({ booking, vehicleTypes, flatRates, setComment, isFetchingPrice }
               <Text style={styles.summaryGridValue}>~{booking.distance_km} km</Text>
             </View>
           )}
+          {booking.duration_min != null && (
+            <View style={styles.summaryGridItem}>
+              <AppIcon name="time-outline" size={14} color={Colors.textSecondary} />
+              <Text style={styles.summaryGridValue}>~{booking.duration_min} min</Text>
+            </View>
+          )}
         </View>
+
+        <View style={styles.summarySep} />
+
+      <View style={styles.summaryPromo}> 
+        <AppIcon name="ticket-outline" size={14} color={Colors.textSecondary} />
+        <Text style={styles.summaryPromoText}>
+          {booking.promo_code ? `Code promo : ${booking.promo_code}` : 'Aucun code promo'}
+        </Text>
+      </View>
       </View>
 
       {/* Prix estimé */}
@@ -713,7 +800,7 @@ export default function BookingScreen({ navigation }: any) {
     setOrigin, setDestination, setVehicleType,
     setFlatRateId,
     setDate, setTime, setPassengers, setLuggage, setComment,
-    goToStep, nextStep, prevStep,
+    goToStep, nextStep, prevStep, setPromoCode,
     getCurrentLocation, geocodeAddress,
     fetchEstimate,
     submitBooking, resetBooking, clearError,
@@ -803,6 +890,7 @@ export default function BookingScreen({ navigation }: any) {
             setTime={setTime}
             setPassengers={setPassengers}   // wrapper enrichi du hook
             setLuggage={setLuggage}
+            setPromoCode={setPromoCode}
             isFetchingPrice={isFetchingPrice}
           />
         )}
@@ -867,12 +955,18 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
     borderRadius: 10, backgroundColor: Colors.white ?? '#fff',
     paddingHorizontal: 12, height: 50,
+    borderWidth: 1, borderColor: 'transparent', // Ajout pour la bordure d'erreur
   },
   inputField: { flex: 1, fontSize: 14, color: Colors.textPrimary, marginLeft: 8 },
   geoBtn:     { padding: 4 },
   geoHint:    { fontSize: 12, color: '#10B981', marginTop: 5, marginLeft: 4 },
 
   // ── Bannière suggestion forfait (Option 2) ─────────────────────────────────
+  // suggestionBanner: {
+  //   // ... (pas de changement ici)
+  // },
+  inputError: { borderColor: '#EF4444' },
+  errorText: { color: '#EF4444' },
   suggestionBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginTop: 12, padding: 12, borderRadius: 10,
@@ -980,7 +1074,8 @@ const styles = StyleSheet.create({
   summaryGrid:      { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   summaryGridItem:  { flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: '45%' },
   summaryGridValue: { fontSize: 13, fontWeight: '600', color: Colors.textPrimary },
-
+  summaryPromo:     { fontSize: 13, color: Colors.textSecondary, marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  summaryPromoText: { fontSize: 13, color: Colors.bordeaux, fontWeight: '600' },
   // ── Prix ───────────────────────────────────────────────────────────────────
   priceCard: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -999,6 +1094,11 @@ const styles = StyleSheet.create({
   charCount: { fontSize: 11, color: Colors.textSecondary, textAlign: 'right', marginTop: 4 },
 
   // ── Barre navigation ───────────────────────────────────────────────────────
+  // inputError: {
+  //   borderColor: Colors.error,
+  //   borderWidth: 1,
+  // },
+  // errorText: { color: Colors.error },
   navBar: {
     flexDirection: 'row', gap: 12, padding: 16,
     paddingBottom: Platform.OS === 'ios' ? 32 : 16,

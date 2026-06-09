@@ -65,6 +65,7 @@ export function useReservation() {
   const _setComment        = useReservationStore(s => s.setComment);
   const _setEstimate       = useReservationStore(s => s.setEstimate);
   const _setFlatRateId     = useReservationStore(s => s.setFlatRateId);
+  const _setPromoCode      = useReservationStore(s => s.setPromoCode);
   const clearError         = useReservationStore(s => s.clearError);
 
   // ── Refs pour éviter les stale closures ────────────────────────────────────
@@ -431,6 +432,7 @@ export function useReservation() {
     // Setters étape 2
     setDate:       _setDate,
     setTime:       _setTime,
+    setPromoCode:  _setPromoCode,
     setPassengers,
     setLuggage:    _setLuggage,
 

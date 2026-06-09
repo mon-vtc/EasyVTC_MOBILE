@@ -1,5 +1,5 @@
 import { useAuth } from './useAuth';
-import { useAuthStore, useUsersStore, useDriversStore, useManagersStore, useClientsStore } from '../store';
+import { useAuthStore, useUsersStore, useDriversStore, useManagersStore, useClientsStore, usePromoCodesStore } from '../store';
 import { managersApi }  from '../services/api/managers.api';
 import { adminApi } from '../services/api/admin.api';
 import type {
@@ -7,6 +7,7 @@ import type {
   UpdateUserStatusPayload, ChangeDriverStatusPayload, UserRole,
   CreateManagerDto, UpdateManagerDto, ChangeManagerStatusDto, ManagerListFilters, AdminStats,
   ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult,
+  PromoCodeListFilters, CreatePromoCodeDto, UpdatePromoCodeDto, PromoCode,
 } from '../types';
 import { useCallback, useEffect, useRef } from 'react';
 
@@ -62,6 +63,18 @@ export function useAdmin() {
   const _changeClientStatus = useClientsStore(s => s.changeClientStatus);
   const clearClientsError = useClientsStore(s => s.clearError);
 
+  // ── Store Codes Promo (endpoint /admin/promo-codes) ───────────
+  const promoCodes             = usePromoCodesStore(s => s.promoCodes);
+  const isPromoCodesLoading    = usePromoCodesStore(s => s.isLoading);
+  const isPromoCodesSaving     = usePromoCodesStore(s => s.isSaving);
+  const promoCodesError        = usePromoCodesStore(s => s.error);
+  const _fetchPromoCodes       = usePromoCodesStore(s => s.fetchPromoCodes);
+  const _createPromoCode       = usePromoCodesStore(s => s.createPromoCode);
+  const _updatePromoCode       = usePromoCodesStore(s => s.updatePromoCode);
+  const _deletePromoCode       = usePromoCodesStore(s => s.deletePromoCode);
+  const _changePromoCodeStatus = usePromoCodesStore(s => s.changePromoCodeStatus);
+  const clearPromoCodesError   = usePromoCodesStore(s => s.clearError);
+
   // ── Store Gestionnaires (endpoint /admin/managers) ────────────
   const managers          = useManagersStore(s => s.managers);
   const managersTotal     = useManagersStore(s => s.total);
@@ -92,6 +105,11 @@ export function useAdmin() {
   const _updateManagerRef       = useRef(_updateManager);
   const _fetchManagerByIdRef    = useRef(_fetchManagerById);
   const _changeManagerStatusRef = useRef(_changeManagerStatus);
+  const _fetchPromoCodesRef = useRef(_fetchPromoCodes);
+  const _createPromoCodeRef = useRef(_createPromoCode);
+  const _updatePromoCodeRef = useRef(_updatePromoCode);
+  const _deletePromoCodeRef = useRef(_deletePromoCode);
+  const _changePromoCodeStatusRef = useRef(_changePromoCodeStatus);
 
   useEffect(() => { _fetchUsersRef.current         = _fetchUsers; },         [_fetchUsers]);
   useEffect(() => { _fetchUserByIdRef.current       = _fetchUserById; },      [_fetchUserById]);
@@ -108,6 +126,11 @@ export function useAdmin() {
   useEffect(() => { _updateManagerRef.current       = _updateManager; },      [_updateManager]);
   useEffect(() => { _fetchManagerByIdRef.current    = _fetchManagerById; },   [_fetchManagerById]);
   useEffect(() => { _changeManagerStatusRef.current = _changeManagerStatus; },[_changeManagerStatus]);
+  useEffect(() => { _fetchPromoCodesRef.current     = _fetchPromoCodes; },    [_fetchPromoCodes]);
+  useEffect(() => { _createPromoCodeRef.current     = _createPromoCode; },    [_createPromoCode]);
+  useEffect(() => { _updatePromoCodeRef.current     = _updatePromoCode; },    [_updatePromoCode]);
+  useEffect(() => { _deletePromoCodeRef.current     = _deletePromoCode; },    [_deletePromoCode]);
+  useEffect(() => { _changePromoCodeStatusRef.current = _changePromoCodeStatus; }, [_changePromoCodeStatus]);
 
   // ── Actions stables (useCallback avec [] — lisent les valeurs via ref) ────
 
@@ -179,6 +202,21 @@ export function useAdmin() {
 
   const changeClientStatus = useCallback((clientId: string, payload: UpdateUserStatusPayload) =>
     _changeClientStatusRef.current(accessTokenRef.current!, clientId, payload), []);
+
+  const fetchPromoCodes = useCallback((filters?: PromoCodeListFilters) =>
+    _fetchPromoCodesRef.current(accessTokenRef.current!, filters), []);
+
+  const createPromoCode = useCallback((dto: CreatePromoCodeDto) =>
+    _createPromoCodeRef.current(accessTokenRef.current!, dto), []);
+
+  const updatePromoCode = useCallback((id: string, dto: UpdatePromoCodeDto) =>
+    _updatePromoCodeRef.current(accessTokenRef.current!, id, dto), []);
+
+  const deletePromoCode = useCallback((id: string) =>
+    _deletePromoCodeRef.current(accessTokenRef.current!, id), []);
+
+  const changePromoCodeStatus = useCallback((id: string, payload: { is_active: boolean }) =>
+    _changePromoCodeStatusRef.current(accessTokenRef.current!, id, payload), []);
 
   const fetchDashboardStats = useCallback(async (filters: { period: 'day' | 'week' | 'month' | 'all' } = { period: 'day' }): Promise<AdminStats> => {
     const res = await adminApi.getStats(accessTokenRef.current!, filters);
@@ -257,6 +295,18 @@ export function useAdmin() {
     fetchAdminClientById,
     fetchAdminClientTrips,
     changeClientStatus,
+
+    // Codes promo
+    promoCodes,
+    isPromoCodesLoading,
+    isPromoCodesSaving,
+    promoCodesError,
+    clearPromoCodesError,
+    fetchPromoCodes,
+    createPromoCode,
+    updatePromoCode,
+    deletePromoCode,
+    changePromoCodeStatus,
 
     // Stats dashboard
     fetchDashboardStats,
