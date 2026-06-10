@@ -22,7 +22,7 @@ import ReservationFilterModal, {
   DEFAULT_FILTERS,
   type ReservationFilters,
 } from '../../components/common/ReservationFilterModal';
-import { filtersToApiParams, useSortedReservations, isFiltersActive } from '../../hooks/useReservationFilters';
+import { filtersToApiParams, useSortedReservations, isFiltersActive , requiresGlobalSort} from '../../hooks/useReservationFilters';
 
 type FilterTab = 'all' | 'pending' | 'assigned' | 'completed' | 'cancelled';
 
@@ -159,10 +159,10 @@ const cardStyles = StyleSheet.create({
 // ── ÉCRAN PRINCIPAL ───────────────────────────────────────────────────────────
 export default function AdminReservationsScreen({ navigation }: any) {
   const {
-    reservations, fetchAll, isLoading, isFetchingNextPage,
-    page, totalPages,
-    error, clearError, assign
+    reservations, fetchAll, fetchAllAdminPages, isLoading, isFetchingNextPage,
+    page, totalPages, error, clearError, assign
   } = useReservation();
+  const [isSorting, setIsSorting] = useState(false);
   const { showToast } = useToast();
 
   const [activeTab,          setActiveTab]          = useState<FilterTab>('all');
@@ -180,6 +180,10 @@ export default function AdminReservationsScreen({ navigation }: any) {
 
   const load = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
+
+    const needsGlobalSort = requiresGlobalSort(filters);
+    if (needsGlobalSort && !showRefresh) setIsSorting(true);
+
     try {
       const apiParams = filtersToApiParams(filters);
       const listFilters: ReservationListFilters = { ...apiParams, page: 1 };
@@ -187,17 +191,24 @@ export default function AdminReservationsScreen({ navigation }: any) {
         const tab = TABS.find(t => t.key === activeTabRef.current);
         if (tab?.statusFilter) listFilters.status = tab.statusFilter;
       }
-      await fetchAll(listFilters);
+
+      if (needsGlobalSort) {
+        await fetchAllAdminPages(listFilters); // ← fetchAllAdminPages utilise listAll côté admin
+      } else {
+        await fetchAll(listFilters);
+      }
     } catch (err) {
       console.error(err);
     } finally {
+      setIsSorting(false);
       if (showRefresh) setRefreshing(false);
     }
-  }, [fetchAll, filters]);
+  }, [fetchAll, fetchAllAdminPages, filters]);
 
   useEffect(() => { load(); }, [activeTab, filters]);
 
   const loadMore = useCallback(() => {
+    if (requiresGlobalSort(filters)) return;
     if (isLoading || isFetchingNextPage || page >= totalPages) return;
 
     const apiParams = filtersToApiParams(filters);
@@ -210,7 +221,7 @@ export default function AdminReservationsScreen({ navigation }: any) {
     fetchAll(listFilters).catch(err => {
       console.error("Failed to load more admin reservations:", err);
     });
-  }, [isLoading, isFetchingNextPage, page, totalPages, fetchAll, filters, activeTab]);
+  }, [filters, isLoading, isFetchingNextPage, page, totalPages, fetchAll]);
 
   const handleTabChange = (tab: FilterTab) => {
     setActiveTab(tab);
@@ -371,10 +382,12 @@ export default function AdminReservationsScreen({ navigation }: any) {
       )}
 
       {/* ── Liste ── */}
-      {isLoading ? (
+      {(isLoading || isSorting) ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.bordeaux} />
-          <Text style={styles.loadingText}>Chargement des réservations…</Text>
+          <Text style={styles.loadingText}>
+            {isSorting ? 'Tri en cours…' : 'Chargement des réservations…'}
+          </Text>
         </View>
       ) : (
         <FlatList

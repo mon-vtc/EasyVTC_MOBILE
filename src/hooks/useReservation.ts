@@ -71,6 +71,10 @@ export function useReservation() {
   const _setEstimate       = useReservationStore(s => s.setEstimate);
   const _setFlatRateId     = useReservationStore(s => s.setFlatRateId);
   const _setPromoCode      = useReservationStore(s => s.setPromoCode);
+  const _fetchAllPages       = useReservationStore(s => s.fetchAllPages);
+  const _fetchAllDriverPages = useReservationStore(s => s.fetchAllDriverPages);
+  const _fetchAllAdminPages = useReservationStore(s => s.fetchAllAdminPages);
+
   const clearError         = useReservationStore(s => s.clearError);
 
   // ── Refs pour éviter les stale closures ────────────────────────────────────
@@ -489,6 +493,20 @@ export function useReservation() {
     fetchById:             useCallback((id: string)                       => _fetchById(accessTokenRef.current!, id), [_fetchById]),
     fetchDriverActive:     useCallback(()                               => _fetchDriverActive(accessTokenRef.current!), [_fetchDriverActive]),
     fetchDriverUserActive: useCallback((vehicleType?: string) => _fetchAvailableDrivers(accessTokenRef.current!, vehicleType), []),
+
+    fetchAllPages: useCallback(
+      (filters?: ReservationListFilters) => _fetchAllPages(accessTokenRef.current!, filters),
+      [_fetchAllPages]
+    ),
+    fetchAllDriverPages: useCallback(
+      (filters?: ReservationListFilters) => _fetchAllDriverPages(accessTokenRef.current!, filters),
+      [_fetchAllDriverPages]
+    ),
+    fetchAllAdminPages: useCallback(
+      (filters?: ReservationListFilters) => _fetchAllAdminPages(accessTokenRef.current!, filters),
+      [_fetchAllAdminPages]
+    ),
+
 
     // Actions fournisseurs
     cancel:   useCallback((id: string, reason?: string)                                                             => _cancel(accessTokenRef.current!, id, reason), []),

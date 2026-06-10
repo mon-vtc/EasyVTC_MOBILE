@@ -61,6 +61,11 @@ interface ReservationState {
   fetchDriverHomeReservations: (token: string) => Promise<void>;
   fetchHomeReservations: (token: string) => Promise<void>;
   cancel:            (token: string, id: string, reason?: string)      => Promise<void>;
+  // Dans ReservationState interface
+  fetchAllPages: (token: string, filters?: ReservationListFilters) => Promise<void>;
+  fetchAllDriverPages: (token: string, filters?: ReservationListFilters) => Promise<void>;
+  fetchAllAdminPages: (token: string, filters?: ReservationListFilters) => Promise<void>;
+
 
   // ── Actions chauffeur ──────────────────────────────────────────────────────
   arrive: (token: string, id: string) => Promise<void>;
@@ -365,6 +370,121 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       set({ homeReservations: [], isLoading: false });
     }
   },
+
+  // Dans le store
+fetchAllPages: async (token, filters) => {
+  set({ isLoading: true, error: null, reservations: [], myReservations: [] });
+  try {
+    const limit = filters?.limit ?? 20;
+    
+    // Première page pour connaître le total
+    const first = await reservationApi.listMine(token, { ...filters, page: 1, limit });
+    if (!first.ok) {
+      set({ reservations: [], myReservations: [], total: 0, totalPages: 1, isLoading: false });
+      return;
+    }
+
+    const totalPages = first.data?.total_pages ?? 1;
+    let all = first.data?.reservations ?? [];
+
+    // Charger les pages suivantes en parallèle
+    if (totalPages > 1) {
+      const pages = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          reservationApi.listMine(token, { ...filters, page: i + 2, limit })
+        )
+      );
+      for (const res of pages) {
+        if (res.ok) all = [...all, ...(res.data?.reservations ?? [])];
+      }
+    }
+
+    set({
+      reservations:   all,
+      myReservations: all,
+      total:          first.data?.total ?? 0,
+      page:           totalPages, // on est "à la fin" — pas de loadMore
+      totalPages,
+      isLoading:      false,
+    });
+  } catch {
+    set({ reservations: [], myReservations: [], total: 0, isLoading: false });
+  }
+},
+
+fetchAllAdminPages: async (token, filters) => {
+    set({ isLoading: true, error: null, reservations: [], myReservations: [] });
+  try {
+    const limit = filters?.limit ?? 20;
+    
+    // Première page pour connaître le total
+    const first = await reservationApi.listAll(token, { ...filters, page: 1, limit });
+    if (!first.ok) {
+      set({ reservations: [], myReservations: [], total: 0, totalPages: 1, isLoading: false });
+      return;
+    }
+
+    const totalPages = first.data?.total_pages ?? 1;
+    let all = first.data?.reservations ?? [];
+
+    // Charger les pages suivantes en parallèle
+    if (totalPages > 1) {
+      const pages = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          reservationApi.listAll(token, { ...filters, page: i + 2, limit })
+        )
+      );
+      for (const res of pages) {
+        if (res.ok) all = [...all, ...(res.data?.reservations ?? [])];
+      }
+    }
+
+    set({
+      reservations:   all,
+      myReservations: all,
+      total:          first.data?.total ?? 0,
+      page:           totalPages, // on est "à la fin" — pas de loadMore
+      totalPages,
+      isLoading:      false,
+    });
+  } catch {
+    set({ reservations: [], myReservations: [], total: 0, isLoading: false });
+  }
+},
+
+fetchAllDriverPages: async (token, filters) => {
+  set({ isLoading: true, error: null, reservations: [], myReservations: [] });
+  try {
+    const limit = filters?.limit ?? 20;
+    const first = await reservationApi.getDriverReservations(token, { ...filters, page: 1, limit });
+    if (!first.ok) {
+      set({ reservations: [], myReservations: [], total: 0, totalPages: 1, isLoading: false });
+      return;
+    }
+    const totalPages = first.data?.total_pages ?? 1;
+    let all = first.data?.reservations ?? [];
+
+    if (totalPages > 1) {
+      const pages = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          reservationApi.getDriverReservations(token, { ...filters, page: i + 2, limit })
+        )
+      );
+      for (const res of pages) {
+        if (res.ok) all = [...all, ...(res.data?.reservations ?? [])];
+      }
+    }
+
+    set({
+      reservations: all, myReservations: all,
+      total: first.data?.total ?? 0,
+      page: totalPages, totalPages,
+      isLoading: false,
+    });
+  } catch {
+    set({ reservations: [], myReservations: [], total: 0, isLoading: false });
+  }
+},
 
   // ── Setters formulaire ─────────────────────────────────────────────────────
   setBookingStep:  (step)          => set(s => ({ booking: { ...s.booking, step } })),

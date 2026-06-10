@@ -56,3 +56,7 @@ export function isFiltersActive(f: ReservationFilters): boolean {
     f.sortOrder !== 'desc'
   );
 }
+
+export function requiresGlobalSort(f: ReservationFilters): boolean {
+  return f.sortField !== 'date' || f.sortOrder !== 'desc'; // dès qu'un tri non-défaut est actif
+}

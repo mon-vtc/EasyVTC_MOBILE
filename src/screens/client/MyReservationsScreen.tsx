@@ -18,7 +18,7 @@ import ReservationFilterModal, {
   DEFAULT_FILTERS,
   type ReservationFilters,
 } from '../../components/common/ReservationFilterModal';
-import { filtersToApiParams, useSortedReservations, isFiltersActive } from '../../hooks/useReservationFilters';
+import { filtersToApiParams, useSortedReservations, isFiltersActive, requiresGlobalSort } from '../../hooks/useReservationFilters';
 
 
 type FilterTab = 'all' | 'invoices' | 'pending' | 'assigned' | 'completed' | 'cancelled';
@@ -187,7 +187,7 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
   const {
     reservations, isLoading, isFetchingNextPage, error,
     page, totalPages,
-    fetchMine, clearError, cancel,
+    fetchMine, fetchAllPages, clearError, cancel,
   } = useReservation();
   const accessToken = useAuthStore(s => s.accessToken);
   const token = useAuthStore(s => s.accessToken) ?? '';
@@ -202,34 +202,48 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
   const [filterModalVisible,  setFilterModalVisible]  = useState(false);
   const [filters,             setFilters]             = useState<ReservationFilters>(DEFAULT_FILTERS);
 
+  const [isSorting, setIsSorting] = useState(false);
+
   const activeTabRef = useRef(activeTab);
   const { showToast } = useToast();
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
 
-  const load = useCallback(async (showRefresh = false) => {
-    if (showRefresh) setRefreshing(true);
-    try {
-      const apiParams = filtersToApiParams(filters);
-      const listFilters: ReservationListFilters = { ...apiParams, page: 1 };
-      const currentTab = activeTabRef.current;
-      if (currentTab !== 'all' && currentTab !== 'invoices') {
-        const tab = TABS.find(t => t.key === currentTab);
-        if (tab?.statusFilter) listFilters.status = tab.statusFilter;
-      } else if (currentTab === 'invoices') {
-        listFilters.status = 'completed';
-      }
-      await fetchMine(listFilters);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      if (showRefresh) setRefreshing(false);
+const load = useCallback(async (showRefresh = false) => {
+  if (showRefresh) setRefreshing(true);
+  
+  const needsGlobalSort = requiresGlobalSort(filters);
+  if (needsGlobalSort && !showRefresh) setIsSorting(true); // ← loader tri
+  
+  try {
+    const apiParams = filtersToApiParams(filters);
+    const listFilters: ReservationListFilters = { ...apiParams, page: 1 };
+    const currentTab = activeTabRef.current;
+    if (currentTab !== 'all' && currentTab !== 'invoices') {
+      const tab = TABS.find(t => t.key === currentTab);
+      if (tab?.statusFilter) listFilters.status = tab.statusFilter;
+    } else if (currentTab === 'invoices') {
+      listFilters.status = 'completed';
     }
-  }, [fetchMine, filters]);
 
-  useEffect(() => { load(); }, [activeTab, filters]);
+    if (needsGlobalSort) {
+      await fetchAllPages(listFilters);
+    } else {
+      await fetchMine(listFilters);
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setIsSorting(false);
+    if (showRefresh) setRefreshing(false);
+  }
+}, [fetchMine, fetchAllPages, filters]);
 
-  const loadMore = useCallback(() => {
-    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+useEffect(() => { load(); }, [activeTab, filters]);
+
+// Désactiver loadMore quand tri global actif (tout est déjà chargé)
+const loadMore = useCallback(() => {
+  if (requiresGlobalSort(filters)) return; // ← rien à faire, tout est chargé
+  if (isLoading || isFetchingNextPage || page >= totalPages) return;
 
     const apiParams = filtersToApiParams(filters);
     const listFilters: ReservationListFilters = { ...apiParams, page: page + 1 };
@@ -243,8 +257,8 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     fetchMine(listFilters).catch(err => {
       console.error("Failed to load more reservations:", err);
     });
-  }, [isLoading, isFetchingNextPage, page, totalPages, fetchMine, filters, activeTab]);
-
+}, [filters, isLoading, isFetchingNextPage, page, totalPages, fetchMine]);
+  
 
   const handleTabChange = (tab: FilterTab) => {
     setActiveTab(tab);
@@ -449,8 +463,16 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
       )}
 
       {/* List */}
-      <FlatList
-        data={filteredReservations}
+      {(isLoading || isSorting) ? (
+  <View style={styles.loaderContainer}>
+    <ActivityIndicator size="large" color={Colors.bordeaux} />
+    <Text style={styles.loaderText}>
+      {isSorting ? 'Tri en cours…' : 'Chargement…'}
+    </Text>
+  </View>
+) : (
+  <FlatList
+    data={filteredReservations}
         keyExtractor={item => item.id}
         renderItem={renderReservation}
         onEndReached={loadMore}
@@ -464,6 +486,7 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
         ListFooterComponent={isFetchingNextPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
         contentContainerStyle={filteredReservations.length > 0 ? styles.scroll : styles.flex}
       />
+      )}
 
       {/* Error */}
       {error && (
@@ -574,4 +597,15 @@ const styles = StyleSheet.create({
   emptyText: { color: Colors.textMuted, fontSize: Fonts.size.md },
   errorBanner: { backgroundColor: Colors.errorLight, borderLeftWidth: 3, borderLeftColor: Colors.error, padding: Spacing.md, marginHorizontal: Spacing.md, marginTop: Spacing.sm, borderRadius: Radius.sm, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   errorText: { color: Colors.error, fontSize: Fonts.size.sm, flex: 1 },
+
+  loaderContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+  },
+  loaderText: {
+    color: Colors.textSecondary,
+    fontSize: Fonts.size.sm,
+  },
 });

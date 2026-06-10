@@ -23,7 +23,7 @@ import ReservationFilterModal, {
   DEFAULT_FILTERS,
   type ReservationFilters,
 } from '../../components/common/ReservationFilterModal';
-import { filtersToApiParams, useSortedReservations, isFiltersActive } from '../../hooks/useReservationFilters';
+import { filtersToApiParams, useSortedReservations, isFiltersActive, requiresGlobalSort } from '../../hooks/useReservationFilters';
 
 type DriverReservationsProps = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationsList'>;
 
@@ -99,10 +99,11 @@ function ReservationCard({ reservation, onDetails, onAction }: {
 
 export default function DriverReservationsScreen({ navigation }: DriverReservationsProps) {
   const {
-    reservations, fetchDriverReservations, start,
-    isLoading, isFetchingNextPage,
-    page, totalPages
+    reservations, fetchDriverReservations, fetchAllDriverPages,
+    start, isLoading, isFetchingNextPage, page, totalPages
   } = useReservation();
+
+  const [isSorting, setIsSorting] = useState(false);
 
   const [activeTab,          setActiveTab]          = useState<FilterTab>('all');
   const [refreshing,         setRefreshing]         = useState(false);
@@ -117,22 +118,33 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
     if (loadingRef.current) return;
     loadingRef.current = true;
     setRefreshing(true);
+
+    const needsGlobalSort = requiresGlobalSort(filters);
+    if (needsGlobalSort) setIsSorting(true);
+
     try {
       const apiParams = filtersToApiParams(filters);
       const listFilters: ReservationListFilters = { ...apiParams, page: 1 };
       if (activeFilter) listFilters.status = activeFilter;
-      await fetchDriverReservations(listFilters);
+
+      if (needsGlobalSort) {
+        await fetchAllDriverPages(listFilters);
+      } else {
+        await fetchDriverReservations(listFilters);
+      }
     } catch (err) {
       console.error(err);
     } finally {
       loadingRef.current = false;
+      setIsSorting(false);
       setRefreshing(false);
     }
-  }, [fetchDriverReservations, activeFilter, filters]);
+  }, [fetchDriverReservations, fetchAllDriverPages, activeFilter, filters]);
 
   useEffect(() => { load(); }, [load]);
 
   const loadMore = useCallback(() => {
+    if (requiresGlobalSort(filters)) return;
     if (isLoading || isFetchingNextPage || page >= totalPages) return;
 
     const apiParams = filtersToApiParams(filters);
@@ -144,7 +156,7 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
     fetchDriverReservations(listFilters).catch(err => {
       console.error("Failed to load more driver reservations:", err);
     });
-  }, [isLoading, isFetchingNextPage, page, totalPages, fetchDriverReservations, filters, activeFilter]);
+  }, [filters, isLoading, isFetchingNextPage, page, totalPages, fetchDriverReservations]);
 
   const handleApplyFilters = (newFilters: ReservationFilters) => {
     setFilters(newFilters);
@@ -283,9 +295,14 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
       )}
 
       {/* ── Liste ── */}
-      {isLoading && !refreshing ? (
+      {(isLoading && !refreshing) || isSorting ? (
         <View style={styles.loader}>
           <ActivityIndicator size="large" color={Colors.bordeaux} />
+          {isSorting && (
+            <Text style={{ color: Colors.textSecondary, fontSize: Fonts.size.sm, marginTop: Spacing.sm }}>
+              Tri en cours…
+            </Text>
+          )}
         </View>
       ) : (
         <FlatList
