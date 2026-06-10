@@ -1,14 +1,28 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList,
-  TextInput, RefreshControl, Platform, ActivityIndicator, Alert
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  FlatList,
+  TextInput,
+  RefreshControl,
+  Platform,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '../../components/common/AppIcon'
 import { useReservation } from '../../hooks/useReservation';
 import { useToast } from '../../hooks/useToast';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import DriverPickerModal from './DriverPickerModal';
-import type { Reservation, ReservationStatus, AvailableDriverDto } from '../../types/reservations.types';
+import type { Reservation, ReservationStatus, AvailableDriverDto, ReservationListFilters } from '../../types/reservations.types';
+import ReservationFilterModal, {
+  DEFAULT_FILTERS,
+  type ReservationFilters,
+} from '../../components/common/ReservationFilterModal';
+import { filtersToApiParams, useSortedReservations, isFiltersActive } from '../../hooks/useReservationFilters';
 
 type FilterTab = 'all' | 'pending' | 'assigned' | 'completed' | 'cancelled';
 
@@ -62,10 +76,9 @@ function ReservationCard({
 
   return (
     <TouchableOpacity style={cardStyles.wrapper} onPress={onPress} activeOpacity={0.75}>
-
       <View style={cardStyles.row1}>
         <View style={[cardStyles.badge, { backgroundColor: statusCfg.bg }]}>
-          <Ionicons name={statusCfg.icon as any} size={11} color={statusCfg.color} />
+          <AppIcon name={statusCfg.icon as any} size={11} color={statusCfg.color} />
           <Text style={[cardStyles.badgeText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
         </View>
         <Text style={cardStyles.price}>
@@ -97,17 +110,17 @@ function ReservationCard({
       <View style={cardStyles.footer}>
         <View style={cardStyles.footerLeft}>
           <View style={cardStyles.metaRow}>
-            <Ionicons name="calendar-outline" size={12} color={Colors.textMuted} />
+            <AppIcon name="calendar-outline" size={12} color={Colors.textMuted} />
             <Text style={cardStyles.meta}>{date} • {time}</Text>
           </View>
           {driverName ? (
             <View style={cardStyles.metaRow}>
-              <Ionicons name="person-outline" size={12} color={Colors.textMuted} />
+              <AppIcon name="person-outline" size={12} color={Colors.textMuted} />
               <Text style={cardStyles.meta}>{driverName}</Text>
             </View>
           ) : (
             <View style={cardStyles.metaRow}>
-              <Ionicons name="person-outline" size={12} color={Colors.textMuted} />
+              <AppIcon name="person-outline" size={12} color={Colors.textMuted} />
               <Text style={[cardStyles.meta, { color: '#E65100' }]}>Non assigné</Text>
             </View>
           )}
@@ -116,28 +129,14 @@ function ReservationCard({
           <Text style={cardStyles.detailsBtnText}>{buttonText}</Text>
         </TouchableOpacity>
       </View>
-
     </TouchableOpacity>
   );
 }
 
 const cardStyles = StyleSheet.create({
-  wrapper: {
-    backgroundColor: Colors.white,
-    borderRadius:    Radius.md,
-    padding:         Spacing.md,
-    marginVertical:  Spacing.xs,
-    shadowColor:     '#000',
-    shadowOffset:    { width: 0, height: 2 },
-    shadowOpacity:   0.07,
-    shadowRadius:    5,
-    elevation:       2,
-  },
+  wrapper: { backgroundColor: Colors.white, borderRadius: Radius.md, padding: Spacing.md, marginVertical: Spacing.xs, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 5, elevation: 2 },
   row1: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  badge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    borderRadius: Radius.full, paddingVertical: 3, paddingHorizontal: Spacing.sm,
-  },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: Radius.full, paddingVertical: 3, paddingHorizontal: Spacing.sm },
   badgeText: { fontSize: Fonts.size.xs, fontWeight: '700' },
   price: { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.bordeaux },
   row2: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: Spacing.sm },
@@ -153,28 +152,28 @@ const cardStyles = StyleSheet.create({
   footerLeft: { flex: 1, gap: 3 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   meta: { fontSize: Fonts.size.xs, color: Colors.textMuted },
-  detailsBtn: {
-    backgroundColor: Colors.bordeaux,
-    borderRadius: Radius.sm,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    marginLeft: Spacing.sm,
-  },
+  detailsBtn: { backgroundColor: Colors.bordeaux, borderRadius: Radius.sm, paddingVertical: 6, paddingHorizontal: 14, marginLeft: Spacing.sm },
   detailsBtnText: { color: Colors.white, fontSize: Fonts.size.xs, fontWeight: '700' },
 });
 
 // ── ÉCRAN PRINCIPAL ───────────────────────────────────────────────────────────
 export default function AdminReservationsScreen({ navigation }: any) {
-  const { reservations, fetchAll, isLoading, error, clearError, assign } = useReservation();
+  const {
+    reservations, fetchAll, isLoading, isFetchingNextPage,
+    page, totalPages,
+    error, clearError, assign
+  } = useReservation();
   const { showToast } = useToast();
 
-  const [activeTab,   setActiveTab]   = useState<FilterTab>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [refreshing,  setRefreshing]  = useState(false);
+  const [activeTab,          setActiveTab]          = useState<FilterTab>('all');
+  const [searchQuery,        setSearchQuery]        = useState('');
+  const [refreshing,         setRefreshing]         = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [filters,            setFilters]            = useState<ReservationFilters>(DEFAULT_FILTERS);
 
   // Driver picker
-  const [pickerVisible, setPickerVisible]                   = useState(false);
-  const [targetReservation, setTargetReservation]           = useState<Reservation | null>(null);
+  const [pickerVisible,     setPickerVisible]     = useState(false);
+  const [targetReservation, setTargetReservation] = useState<Reservation | null>(null);
 
   const activeTabRef = useRef(activeTab);
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
@@ -182,49 +181,72 @@ export default function AdminReservationsScreen({ navigation }: any) {
   const load = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
     try {
-      const filters: any = {};
+      const apiParams = filtersToApiParams(filters);
+      const listFilters: ReservationListFilters = { ...apiParams, page: 1 };
       if (activeTabRef.current !== 'all') {
         const tab = TABS.find(t => t.key === activeTabRef.current);
-        if (tab?.statusFilter) filters.status = tab.statusFilter;
+        if (tab?.statusFilter) listFilters.status = tab.statusFilter;
       }
-      await fetchAll(filters);
+      await fetchAll(listFilters);
     } catch (err) {
       console.error(err);
     } finally {
       if (showRefresh) setRefreshing(false);
     }
-  }, [fetchAll]);
+  }, [fetchAll, filters]);
 
-  useEffect(() => { load(); }, [activeTab]);
+  useEffect(() => { load(); }, [activeTab, filters]);
+
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+
+    const apiParams = filtersToApiParams(filters);
+    const listFilters: ReservationListFilters = { ...apiParams, page: page + 1 };
+    if (activeTabRef.current !== 'all') {
+      const tab = TABS.find(t => t.key === activeTabRef.current);
+      if (tab?.statusFilter) listFilters.status = tab.statusFilter;
+    }
+
+    fetchAll(listFilters).catch(err => {
+      console.error("Failed to load more admin reservations:", err);
+    });
+  }, [isLoading, isFetchingNextPage, page, totalPages, fetchAll, filters, activeTab]);
 
   const handleTabChange = (tab: FilterTab) => {
     setActiveTab(tab);
     setSearchQuery('');
   };
 
+  const handleApplyFilters = (newFilters: ReservationFilters) => {
+    setFilters(newFilters);
+    setFilterModalVisible(false);
+  };
+
+  // Tri côté client
+  const sortedReservations = useSortedReservations(reservations, filters);
+
+  // Recherche textuelle sur le résultat trié
   const filteredReservations = useMemo(() => {
-    if (!searchQuery) return reservations;
+    if (!searchQuery) return sortedReservations;
     const q = searchQuery.toLowerCase();
-    return reservations.filter(r =>
+    return sortedReservations.filter(r =>
       r.id.toLowerCase().includes(q) ||
       r.pickup_address.toLowerCase().includes(q) ||
       r.dest_address.toLowerCase().includes(q) ||
       (r.client && `${r.client.first_name} ${r.client.last_name}`.toLowerCase().includes(q)) ||
-      (r.driver  && `${r.driver.user.first_name} ${r.driver.user.last_name}`.toLowerCase().includes(q))
+      (r.driver?.user && `${r.driver.user.first_name} ${r.driver.user.last_name}`.toLowerCase().includes(q))
     );
-  }, [reservations, searchQuery]);
+  }, [sortedReservations, searchQuery]);
 
   const handleOpenReservation = (reservationId: string) => {
     navigation.navigate('AdminReservationDetail', { reservationId });
   };
 
-  /* ── Ouvre le picker pour une réservation ── */
   const handleAssignPress = (reservation: Reservation) => {
     setTargetReservation(reservation);
     setPickerVisible(true);
   };
 
-  /* ── Confirme l'assignation ── */
   const handleAssignConfirm = async (driver: AvailableDriverDto) => {
     if (!targetReservation) return;
     try {
@@ -235,21 +257,26 @@ export default function AdminReservationsScreen({ navigation }: any) {
       load();
     } catch (err: any) {
       showToast({ type: 'error', title: 'Erreur', message: err?.message || "Erreur lors de l'assignation." });
-      throw err; // laisse le modal ouvert
+      throw err;
     }
   };
+
+  const filtersActive = isFiltersActive(filters);
 
   const targetRef = targetReservation
     ? `BC-${targetReservation.id.split('-').pop()?.toUpperCase()}`
     : undefined;
 
-  const renderReservation = ({ item }: { item: Reservation }) => (
+  const renderReservation = ({ item }: { item: Reservation }) => {
+    if (!item) return null;
+    return ( // ← ajoute cette ligne
     <ReservationCard
       reservation={item}
       onPress={() => handleOpenReservation(item.id)}
       onAssign={() => handleAssignPress(item)}
     />
-  );
+    )
+  };
 
   return (
     <View style={styles.flex}>
@@ -257,13 +284,13 @@ export default function AdminReservationsScreen({ navigation }: any) {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.openDrawer()}>
-          <Ionicons name="menu" size={24} color={Colors.white} />
+          <AppIcon name="menu" size={24} color={Colors.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Réservations</Text>
         <View style={styles.headerBtn} />
       </View>
 
-      {/* ── Filtres ── */}
+      {/* ── Filtres par statut ── */}
       <View style={styles.tabsWrapper}>
         <ScrollView
           horizontal
@@ -286,22 +313,62 @@ export default function AdminReservationsScreen({ navigation }: any) {
         </ScrollView>
       </View>
 
-      {/* ── Recherche ── */}
+      {/* ── Recherche + Tri ── */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={18} color={Colors.iconMuted} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Rechercher par ID, adresse, client, chauffeur..."
-          placeholderTextColor={Colors.textMuted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-        )}
+        <View style={styles.searchWrapper}>
+          <AppIcon name="search" size={18} color={Colors.iconMuted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Rechercher par ID, adresse, client, chauffeur..."
+            placeholderTextColor={Colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <AppIcon name="close-circle" size={18} color={Colors.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
+        <TouchableOpacity
+          style={[styles.filterBtn, filtersActive && styles.filterBtnActive]}
+          onPress={() => setFilterModalVisible(true)}
+        >
+          <AppIcon
+            name="funnel-outline"
+            size={20}
+            color={filtersActive ? Colors.white : Colors.bordeaux}
+          />
+          {filtersActive && <View style={styles.filterBadge} />}
+        </TouchableOpacity>
       </View>
+
+      {/* Résumé des filtres actifs */}
+      {filtersActive && (
+        <View style={styles.filterSummary}>
+          <AppIcon name="information-circle-outline" size={14} color={Colors.bordeaux} />
+          <Text style={styles.filterSummaryText} numberOfLines={1}>
+            {filters.dateMode === 'specific' && filters.dateExact
+              ? `Date : ${filters.dateExact.split('-').reverse().join('/')}`
+              : filters.dateMode === 'period'
+              ? `Période : ${filters.dateFrom?.split('-').reverse().join('/') ?? '…'} -> ${filters.dateTo?.split('-').reverse().join('/') ?? '…'}`
+              : ''}
+              </Text>
+              {(filters.sortField !== 'date' || filters.sortOrder !== 'desc') && !!filters.dateMode && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3,  }}>
+                  <Text style={styles.filterSummaryText}>  •  Tri : {filters.sortField === 'price' ? 'prix' : 'date'}</Text>
+                  <AppIcon
+                    name={filters.sortOrder === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline'}
+                    size={13}
+                    color={Colors.bordeaux}
+                  />
+                </View>
+              )}
+          <TouchableOpacity style={{ marginLeft: 'auto' }} onPress={() => setFilters(DEFAULT_FILTERS)}>
+            <AppIcon name="close-circle" size={16} color={Colors.bordeaux} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* ── Liste ── */}
       {isLoading ? (
@@ -314,14 +381,19 @@ export default function AdminReservationsScreen({ navigation }: any) {
           data={filteredReservations}
           keyExtractor={item => item.id}
           renderItem={renderReservation}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          refreshControl={<RefreshControl refreshing={refreshing && !isFetchingNextPage} onRefresh={() => load(true)} />}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Ionicons name="calendar-outline" size={40} color={Colors.textMuted} />
-              <Text style={styles.emptyText}>Aucune réservation trouvée</Text>
-            </View>
+            !isLoading && (
+              <View style={styles.empty}>
+                <AppIcon name="calendar-outline" size={40} color={Colors.textMuted} />
+                <Text style={styles.emptyText}>Aucune réservation trouvée</Text>
+              </View>
+            )
           }
-          contentContainerStyle={styles.scroll}
+          ListFooterComponent={isFetchingNextPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
+          contentContainerStyle={filteredReservations.length > 0 ? styles.scroll : styles.flex}
         />
       )}
 
@@ -330,7 +402,7 @@ export default function AdminReservationsScreen({ navigation }: any) {
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity onPress={clearError}>
-            <Ionicons name="close" size={20} color={Colors.error} />
+            <AppIcon name="close" size={20} color={Colors.error} />
           </TouchableOpacity>
         </View>
       )}
@@ -347,6 +419,14 @@ export default function AdminReservationsScreen({ navigation }: any) {
         }}
       />
 
+      {/* ── Modal de filtres ── */}
+      <ReservationFilterModal
+        visible={filterModalVisible}
+        filters={filters}
+        onApply={handleApplyFilters}
+        onClose={() => setFilterModalVisible(false)}
+      />
+
     </View>
   );
 }
@@ -355,76 +435,52 @@ export default function AdminReservationsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
 
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
   headerBtn:   { padding: Spacing.sm, width: 40 },
   headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
 
-  tabsWrapper: {
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  tabsContent: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical:   Spacing.sm,
-    flexDirection:     'row',
-    gap:               Spacing.sm,
-    alignItems:        'center',
-  },
-  tab: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical:   7,
-    borderRadius:      Radius.full,
-    backgroundColor:   Colors.background,
-    borderWidth:       1,
-    borderColor:       Colors.border,
-  },
+  tabsWrapper: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  tabsContent: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, flexDirection: 'row', gap: Spacing.sm, alignItems: 'center' },
+  tab:            { paddingHorizontal: Spacing.md, paddingVertical: 7, borderRadius: Radius.full, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border },
   tabActive:      { backgroundColor: Colors.bordeaux, borderColor: Colors.bordeaux },
   tabLabel:       { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textMuted },
   tabLabelActive: { color: Colors.white },
 
-  searchContainer: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    gap:              Spacing.sm,
-    backgroundColor:  Colors.surface,
-    borderRadius:     Radius.md,
-    marginHorizontal: Spacing.md,
-    marginVertical:   Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical:  Platform.OS === 'ios' ? 10 : 6,
-    borderWidth:      1,
-    borderColor:      Colors.border,
-  },
+  // Recherche + tri
+  searchContainer: { flexDirection: 'row', alignItems: 'center', marginHorizontal: Spacing.md, marginVertical: Spacing.sm, gap: Spacing.sm },
+  searchWrapper: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, backgroundColor: Colors.surface, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Platform.OS === 'ios' ? 10 : 6, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
   searchInput: { flex: 1, fontSize: Fonts.size.sm, color: Colors.textPrimary, padding: 0 },
+  filterBtn: {
+    padding: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
+    position: 'relative',
+  },
+  filterBtnActive: {
+    backgroundColor: Colors.bordeaux,
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.warning ?? '#F59E0B',
+    borderWidth: 1.5,
+    borderColor: Colors.white,
+  },
+
+  // Résumé filtres
+  filterSummary: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginHorizontal: Spacing.md, marginBottom: Spacing.xs, backgroundColor: Colors.bordeaux + '12', borderRadius: Radius.sm, paddingVertical: 6, paddingHorizontal: Spacing.sm, borderLeftWidth: 3, borderLeftColor: Colors.bordeaux },
+  filterSummaryText: { fontSize: Fonts.size.xs, color: Colors.bordeaux, fontWeight: '500' },
 
   scroll: { padding: Spacing.md, paddingTop: Spacing.sm },
-
   empty:     { alignItems: 'center', paddingVertical: 60, gap: Spacing.md },
   emptyText: { color: Colors.textMuted, fontSize: Fonts.size.md },
-
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.sm },
   loadingText:      { color: Colors.textSecondary, fontSize: Fonts.size.sm },
-
-  errorBanner: {
-    backgroundColor:  Colors.errorLight,
-    borderLeftWidth:  3,
-    borderLeftColor:  Colors.error,
-    padding:          Spacing.md,
-    marginHorizontal: Spacing.md,
-    marginTop:        Spacing.sm,
-    borderRadius:     Radius.sm,
-    flexDirection:    'row',
-    justifyContent:   'space-between',
-    alignItems:       'center',
-  },
+  errorBanner: { backgroundColor: Colors.errorLight, borderLeftWidth: 3, borderLeftColor: Colors.error, padding: Spacing.md, marginHorizontal: Spacing.md, marginTop: Spacing.sm, borderRadius: Radius.sm, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   errorText: { color: Colors.error, fontSize: Fonts.size.sm, flex: 1 },
 });

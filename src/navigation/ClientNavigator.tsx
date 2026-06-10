@@ -37,6 +37,7 @@ import NotificationDetailsScreen  from '../screens/notifications/NotificationDet
 import SupportListScreen          from '../screens/support/SupportListScreen';
 import SupportChatScreen          from '../screens/support/SupportChatScreen';
 import ChatScreen                 from '../screens/chats/ChatScreen';
+import MyFavoritesScreen from '../screens/client/MyFavoritesScreen';
 import type { ClientTabParamList, ClientStackParamList } from '../types/auth.types';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -279,6 +280,13 @@ export default function ClientNavigator() {
       <Stack.Screen
         name="ChatScreen"
         component={ChatScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="MyFavorites"
+        component={MyFavoritesScreen}
         options={{
           animation: 'slide_from_right',
         }}

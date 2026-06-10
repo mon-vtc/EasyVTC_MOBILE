@@ -43,6 +43,7 @@ interface ReservationState {
   isLoading:       boolean;
   isSubmitting:    boolean;
   isFetchingPrice: boolean;
+  isFetchingNextPage: boolean;
   error:           string | null;
   homeReservations: Reservation[];
   adminHomeReservations: Reservation[];
@@ -119,60 +120,82 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   isLoading:       false,
   isSubmitting:    false,
   isFetchingPrice: false,
+  isFetchingNextPage: false,
   error:           null,
 
+  // ── Liste client ───────────────────────────────────────────────────────────
   // ── Liste client ───────────────────────────────────────────────────────────
   fetchMine: async (token, filters) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await reservationApi.listMine(token, filters);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      set({
-        reservations: res.data.reservations,
-        myReservations: res.data.reservations,
-        total:        res.data.total,
-        page:         res.data.page,
-        totalPages:   res.data.total_pages,
-        isLoading:    false,
-      });
+      const page = filters?.page ?? 1;
+      if (page > 1) set({ isFetchingNextPage: true });
+      else set({ isLoading: true, reservations: [], myReservations: [] });
+
+      const res = await reservationApi.listMine(token, { ...filters, page });
+      
+      // 500 sur date vide = aucune réservation, pas une vraie erreur
+      if (!res.ok) {
+        set({ reservations: [], myReservations: [], total: 0, totalPages: 1, isLoading: false, isFetchingNextPage: false });
+        return;
+      }
+    
+      set(state => ({
+        reservations:   page > 1 ? [...state.reservations, ...(res.data?.reservations ?? [])] : (res.data?.reservations ?? []),
+        myReservations: page > 1 ? [...state.myReservations, ...(res.data?.reservations ?? [])] : (res.data?.reservations ?? []),
+        total:          res.data?.total      ?? 0,
+        page:           res.data?.page       ?? 1,
+        totalPages:     res.data?.total_pages ?? 1,
+        isLoading:      false,
+        isFetchingNextPage: false,
+      }));
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
-      throw err;
+      // Swallow silencieusement — l'UI affichera juste "aucune réservation"
+      set({ reservations: [], myReservations: [], total: 0, isLoading: false, isFetchingNextPage: false });
     }
   },
-
+  
   fetchDriverReservations: async (token, filters) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await reservationApi.getDriverReservations(token, filters);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      set({
-        reservations: res.data.reservations,
-        myReservations: res.data.reservations,
-        total:        res.data.total,
-        page:         res.data.page,
-        totalPages:   res.data.total_pages,
-        isLoading:    false,
-      });
-    } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
-      throw err;
+      const page = filters?.page ?? 1;
+      if (page > 1) set({ isFetchingNextPage: true });
+      else set({ isLoading: true, reservations: [], myReservations: [] });
+
+      const res = await reservationApi.getDriverReservations(token, { ...filters, page });
+      set(state => ({
+        reservations:   res.ok ? (page > 1 ? [...state.reservations, ...(res.data?.reservations ?? [])] : (res.data?.reservations ?? [])) : [],
+        myReservations: res.ok ? (page > 1 ? [...state.myReservations, ...(res.data?.reservations ?? [])] : (res.data?.reservations ?? [])) : [],
+        total:          res.data?.total      ?? 0,
+        page:           res.data?.page       ?? 1,
+        totalPages:     res.data?.total_pages ?? 1,
+        isLoading:      false,
+        isFetchingNextPage: false,
+      }));
+    } catch {
+      set({ reservations: [], myReservations: [], total: 0, isLoading: false, isFetchingNextPage: false });
     }
   },
-
   // ── Liste admin ────────────────────────────────────────────────────────────
   fetchAll: async (token, filters) => {
-    set({ isLoading: true, error: null });
+    const page = filters?.page ?? 1;
+    if (page > 1) set({ isFetchingNextPage: true });
+    else set({ isLoading: true, reservations: [] });
+
     try {
-      const res = await reservationApi.listAll(token, filters);
+      const res = await reservationApi.listAll(token, { ...filters, page });
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      set({
-        reservations: res.data.reservations,
-        total:        res.data.total,
-        page:         res.data.page,
-        totalPages:   res.data.total_pages,
+      const { reservations, total, total_pages } = res.data;
+      set(state => ({
+        reservations: page > 1
+               ? [...state.reservations, ...reservations]
+          : reservations,
+        total:        total,
+        page:         page,
+        totalPages:   total_pages,
         isLoading:    false,
-      });
+        isFetchingNextPage: false,
+      }));
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
       throw err;
@@ -217,7 +240,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
         isLoading:    false,
       }));
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false, isFetchingNextPage: false });
       throw err;
     }
   },
@@ -334,14 +357,12 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await reservationApi.listMine(token, { limit: 10 });
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
       set({
-        homeReservations: res.data.reservations,
+        homeReservations: res.ok ? (res.data?.reservations ?? []) : [],
         isLoading: false,
       });
-    } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
-      throw err;
+    } catch {
+      set({ homeReservations: [], isLoading: false });
     }
   },
 

@@ -7,9 +7,9 @@
 // Affichage et sélection des forfaits disponibles (Option 1 + Option 2).
 // ══════════════════════════════════════════════════════════════════════════════
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
-  View, Text, TextInput, ScrollView, TouchableOpacity,
+  View, Text, TextInput, ScrollView, TouchableOpacity, FlatList,
   StyleSheet, ActivityIndicator, KeyboardAvoidingView,
   Platform, Image, Modal,
 } from 'react-native';
@@ -25,6 +25,7 @@ import type { GeoPoint, VehicleTypeOption } from '../../types/reservations.types
 import type { PricingFlatRate } from '../../types/pricing.types';
 import CustomCalendarModal from '../../components/common/CustomCalendarModal';
 import CustomTimePickerModal from '../../components/common/CustomTimePickerModal';
+import { FavoriteAddress } from '../../types/favorites.types'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VEHICLE ICONS — alignés avec VehicleType backend : standard | berline | van
@@ -166,11 +167,12 @@ function Step1({
   flatRates, suggestedFlatRate,
   setOrigin, setDestination, setVehicleType,
   setFlatRateId,
-  getCurrentLocation, geocodeAddress,
+  getCurrentLocation, geocodeAddress, favorites,
 }: any) {
   const { showToast } = useToast();
   const [originInput, setOriginInput] = useState<string>(booking.origin?.address ?? '');
   const [destinationInput, setDestinationInput] = useState<string>(booking.destination?.address ?? '');
+  const [focusedInput, setFocusedInput] = useState<'origin' | 'destination' | null>(null);
   const [originError, setOriginError] = useState<string | null>(null);
   const [destinationError, setDestinationError] = useState<string | null>(null);
   const [isGeolocating, setIsGeolocating] = useState(false);
@@ -179,11 +181,13 @@ function Step1({
   // Synchronise les inputs locaux avec l'état global de la réservation
   // (utile si l'état est modifié par un forfait par exemple)
   React.useEffect(() => {
+    if (focusedInput !== 'origin')
     setOriginInput(booking.origin?.address ?? '');
     setOriginError(null);
   }, [booking.origin]);
 
   React.useEffect(() => {
+    if (focusedInput !== 'destination')
     setDestinationInput(booking.destination?.address ?? '');
     setDestinationError(null);
   }, [booking.destination]);
@@ -261,6 +265,31 @@ function Step1({
     }
   }, [detailForfait, setFlatRateId]);
 
+  const handleSelectFavorite = (fav: FavoriteAddress) => {
+    const point: GeoPoint = {
+      address: fav.address,
+      latitude: fav.lat ?? 0,
+      longitude: fav.lng ?? 0,
+    };
+    if (focusedInput === 'origin') {
+      setOrigin(point);
+    } else if (focusedInput === 'destination') {
+      setDestination(point);
+    }
+    setFocusedInput(null);
+  };
+
+  const suggestedFavorites = useMemo(() => {
+    if (!focusedInput) return [];
+    const query = (focusedInput === 'origin' ? originInput : destinationInput).toLowerCase().trim();
+    if (query.length < 2) return [];
+
+    return favorites.filter(
+      (fav: FavoriteAddress) =>
+        fav.label.toLowerCase().includes(query) || fav.address.toLowerCase().includes(query)
+    );
+  }, [favorites, focusedInput, originInput, destinationInput]);
+
   return (
     <ScrollView contentContainerStyle={styles.stepContent} keyboardShouldPersistTaps="handled">
 
@@ -275,7 +304,7 @@ function Step1({
 
       {/* ── Lieu de départ ── */}
       <Text style={styles.fieldLabel}>Lieu de départ</Text>
-      <View style={styles.inputRow}>
+      <View style={[ styles.inputRow, focusedInput=== 'origin' && { borderBottomRightRadius : 0, borderBottomLeftRadius : 0}]}>
         <AppIcon name="location-outline" size={18} color={Colors.textSecondary} />
         <TextInput
           style={[styles.inputField, originError ? styles.inputError : null]}
@@ -283,7 +312,9 @@ function Step1({
           onChangeText={(text) => {
             setOriginInput(text);
             setOriginError(null); // Efface l'erreur dès que l'utilisateur modifie
+            if (booking.flat_rate_id) setFlatRateId(null);
           }}
+          onFocus={() => setFocusedInput('origin')}
           onBlur={handleOriginBlur}
           placeholder="Ex : 12 rue de Rivoli, Paris"
           placeholderTextColor={Colors.textSecondary}
@@ -297,6 +328,21 @@ function Step1({
           }
         </TouchableOpacity>
       </View>
+      {/* Suggestions pour le départ */}
+      {focusedInput === 'origin' && suggestedFavorites.length > 0 && (
+        <View style={styles.favoritesContainer}>
+          <Text style={styles.favoritesTitle}>Suggestions</Text>
+          {suggestedFavorites.map((item: FavoriteAddress) => (
+            <TouchableOpacity key={item.id} style={styles.favoriteItem} onPress={() => handleSelectFavorite(item)}>
+              <AppIcon name="star" size={16} color={Colors.bordeaux} />
+              <View style={{ flex: 1, marginLeft: Spacing.sm }}>
+                <Text style={styles.favoriteLabel}>{item.label}</Text>
+                <Text style={styles.favoriteAddress} numberOfLines={1}>{item.address}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
       {booking.origin && (
         <Text style={styles.geoHint}>
           ✓ Position enregistrée — modifiez et quittez le champ pour recalculer
@@ -308,9 +354,10 @@ function Step1({
         </Text>
       )}
 
+
       {/* ── Destination ── */}
       <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Destination</Text>
-      <View style={styles.inputRow}>
+      <View style={[ styles.inputRow, focusedInput=== 'destination' && { borderBottomRightRadius : 0, borderBottomLeftRadius : 0} ]}>
         <AppIcon name="search-outline" size={18} color={Colors.textSecondary} />
         <TextInput
           style={[styles.inputField, destinationError ? styles.inputError : null]}
@@ -318,7 +365,9 @@ function Step1({
           onChangeText={(text) => {
             setDestinationInput(text);
             setDestinationError(null); // Efface l'erreur dès que l'utilisateur modifie
+            if (booking.flat_rate_id) setFlatRateId(null);
           }}
+          onFocus={() => setFocusedInput('destination')}
           onBlur={handleDestinationBlur}
           placeholder="Ex : Aéroport Charles de Gaulle"
           placeholderTextColor={Colors.textSecondary}
@@ -326,6 +375,21 @@ function Step1({
           autoCorrect={false}
         />
       </View>
+      {/* Suggestions pour la destination */}
+      {focusedInput === 'destination' && suggestedFavorites.length > 0 && (
+        <View style={styles.favoritesContainer}>
+          <Text style={styles.favoritesTitle}>Suggestions</Text>
+          {suggestedFavorites.map((item: FavoriteAddress) => (
+            <TouchableOpacity key={item.id} style={styles.favoriteItem} onPress={() => handleSelectFavorite(item)}>
+              <AppIcon name="star" size={16} color={Colors.bordeaux} />
+              <View style={{ flex: 1, marginLeft: Spacing.sm }}>
+                <Text style={styles.favoriteLabel}>{item.label}</Text>
+                <Text style={styles.favoriteAddress} numberOfLines={1}>{item.address}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
       {booking.destination && (
         <Text style={styles.geoHint}>
           ✓ Destination enregistrée — modifiez et quittez le champ pour recalculer
@@ -336,6 +400,7 @@ function Step1({
           ✗ {destinationError}
         </Text>
       )}
+
 
       {/* ── Bannière de suggestion de forfait (Option 2) ── */}
       {suggestedFlatRate && booking.flat_rate_id !== suggestedFlatRate.id && (
@@ -798,6 +863,7 @@ export default function BookingScreen({ navigation }: any) {
     isStep1Valid, isStep2Valid, isStep3Valid,
     flatRates, suggestedFlatRate,
     setOrigin, setDestination, setVehicleType,
+    favorites,
     setFlatRateId,
     setDate, setTime, setPassengers, setLuggage, setComment,
     goToStep, nextStep, prevStep, setPromoCode,
@@ -880,6 +946,7 @@ export default function BookingScreen({ navigation }: any) {
             setVehicleType={setVehicleType}
             setFlatRateId={setFlatRateId}
             getCurrentLocation={getCurrentLocation}
+            favorites={favorites}
             geocodeAddress={geocodeAddress}
           />
         )}
@@ -961,6 +1028,30 @@ const styles = StyleSheet.create({
   geoBtn:     { padding: 4 },
   geoHint:    { fontSize: 12, color: '#10B981', marginTop: 5, marginLeft: 4 },
 
+  // Favoris
+  favoritesContainer: {
+    // marginTop: Spacing.lg,
+    backgroundColor: Colors.surface,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    padding: Spacing.sm,
+  },
+  favoritesTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+  },
+  favoriteItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.sm,
+    borderRadius: 8,
+  },
+  favoriteLabel: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
+  favoriteAddress: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  favoritesEmpty: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', padding: Spacing.md },
   // ── Bannière suggestion forfait (Option 2) ─────────────────────────────────
   // suggestionBanner: {
   //   // ... (pas de changement ici)

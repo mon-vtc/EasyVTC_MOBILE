@@ -12,6 +12,7 @@ import * as Location                      from 'expo-location';
 import { useAuthStore }                   from '../store/auth.store';
 import { useReservationStore }            from '../store/reservation.store';
 import { vehicleTypesApi }               from '../services/api/vehicleTypes.api';
+import { useFavorites }                   from './useFavorites';
 import { pricingApi }                     from '../services/api/pricing.api';
 import { useAuth }                        from './useAuth';
 import type {
@@ -28,6 +29,7 @@ const COUNTRY: PricingCountry = 'france';
 export function useReservation() {
   const accessToken = useAuthStore(s => s.accessToken);
   const isHydrated  = useAuthStore(s => s.isHydrated);
+  const { favorites, fetchFavorites: fetchFavoritesHook } = useFavorites();
 
   // ── Sélecteurs store ───────────────────────────────────────────────────────
   const booking          = useReservationStore(s => s.booking);
@@ -37,6 +39,9 @@ export function useReservation() {
   const isLoading        = useReservationStore(s => s.isLoading);
   const isSubmitting     = useReservationStore(s => s.isSubmitting);
   const isFetchingPrice  = useReservationStore(s => s.isFetchingPrice);
+  const isFetchingNextPage = useReservationStore(s => s.isFetchingNextPage);
+  const page             = useReservationStore(s => s.page);
+  const totalPages       = useReservationStore(s => s.totalPages);
   const error            = useReservationStore(s => s.error);
   const _fetchVehicleTypes = useReservationStore(s => s.fetchVehicleTypes);
   const _fetchAdminHomeReservations = useReservationStore(s => s.fetchAdminHomeReservations);
@@ -73,6 +78,11 @@ export function useReservation() {
   const bookingRef       = useRef(booking);
   const accessTokenRef   = useRef(accessToken);
   const priceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Charger les favoris au démarrage
+  useEffect(() => {
+    if (accessToken) fetchFavoritesHook();
+  }, [accessToken, fetchFavoritesHook]);
 
   useEffect(() => { bookingRef.current = booking; },         [booking]);
   useEffect(() => { accessTokenRef.current = accessToken; }, [accessToken]);
@@ -403,13 +413,19 @@ export function useReservation() {
     isLoading,
     isSubmitting,
     isFetchingPrice,
+    isFetchingNextPage,
     error,
     clearError,
+
+    // Pagination
+    page,
+    totalPages,
 
     // Validations
     isStep1Valid,
     isStep2Valid,
     isStep3Valid,
+    favorites,
 
     // Navigation
     goToStep,

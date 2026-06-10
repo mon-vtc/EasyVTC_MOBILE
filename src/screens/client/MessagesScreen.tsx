@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: '50%',
   },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.lg, paddingHorizontal: Spacing.md },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.sm, paddingHorizontal: Spacing.md },
   headerBtn: { padding: Spacing.sm, width: 40 },
   headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
   

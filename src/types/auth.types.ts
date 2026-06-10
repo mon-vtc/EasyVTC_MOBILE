@@ -80,6 +80,8 @@ export type ClientStackParamList = {
   SupportList:          undefined;
   SupportChat:          { ticketId: string; subject: string };
   ChatScreen:           { reservationId?: string };
+  MyFavorites:          undefined;
+
 };
 
 export type DriverReservationsStackParamList = {
