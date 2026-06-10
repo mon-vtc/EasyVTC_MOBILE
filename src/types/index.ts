@@ -77,6 +77,19 @@ export type {
 } from './promo-codes.types';
 
 export type {
+  CampaignType, CampaignStatus,
+  MarketingCampaign,
+  CreateCampaignDto,
+  UpdateCampaignDto,
+  ClientSummary,
+  ClientBaseStats,
+  ClientBaseFilters,
+  ClientBaseResult,
+  CampaignListResult,
+} from './marketing.types';
+
+
+export type {
   Notification,
   NotificationType,
   NotificationListFilters,
@@ -102,3 +115,4 @@ export type {
   CommissionDetail,
   CommissionPeriod
 } from './commission.types';
+

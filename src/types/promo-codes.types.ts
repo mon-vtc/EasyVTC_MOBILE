@@ -24,7 +24,6 @@ export interface CreatePromoCodeDto {
   code: string;
   discount_type: DiscountType;
   discount_value: number;
-  valid_from?: string;
   valid_until?: string;
   max_uses?: number;
   min_order_amount?: number;
@@ -34,7 +33,6 @@ export interface UpdatePromoCodeDto {
   code?: string;
   discount_type?: DiscountType;
   discount_value?: number;
-  valid_from?: string | null;
   valid_until?: string | null;
   max_uses?: number | null;
   min_order_amount?: number | null;

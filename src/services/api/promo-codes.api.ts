@@ -24,7 +24,7 @@ class PromoCodesApi {
     token: string,
     dto: CreatePromoCodeDto,
   ): Promise<ApiResponse<PromoCode>> {
-    return api.post('/admin/promo-codes', dto, token);
+    return api.post('/admin/promo-codes/', dto, token);
   }
 
   updatePromoCode(

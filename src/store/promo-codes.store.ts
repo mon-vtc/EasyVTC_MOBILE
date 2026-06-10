@@ -19,7 +19,6 @@ interface PromoCodesState {
   createPromoCode: (token: string, dto: CreatePromoCodeDto) => Promise<PromoCode | null>;
   updatePromoCode: (token: string, id: string, dto: UpdatePromoCodeDto) => Promise<PromoCode | null>;
   deletePromoCode: (token: string, id: string) => Promise<void>;
-  changePromoCodeStatus: (token: string, id: string, payload: { is_active: boolean }) => Promise<PromoCode | null>;
   clearError: () => void;
 }
 
@@ -90,22 +89,6 @@ export const usePromoCodesStore = create<PromoCodesState>((set) => ({
       const res = await promoCodesApi.deletePromoCode(token, id);
       if (!res.ok) throw new Error(res.message ?? 'Erreur lors de la suppression');
       set(state => ({ promoCodes: state.promoCodes.filter((promo) => promo.id !== id) }));
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erreur inconnue';
-      set({ error: message });
-      throw new Error(message);
-    } finally {
-      set({ isSaving: false });
-    }
-  },
-
-  changePromoCodeStatus: async (token, id, payload) => {
-    set({ isSaving: true, error: null });
-    try {
-      const res = await promoCodesApi.updatePromoCode(token, id, payload);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la mise à jour du statut');
-      set(state => ({ promoCodes: state.promoCodes.map((promo) => promo.id === id ? res.data! : promo) }));
-      return res.data;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       set({ error: message });
