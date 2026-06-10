@@ -214,11 +214,22 @@ export default function ClientHomeScreen({ navigation }: Props) {
                 <TouchableOpacity 
                   key={action.label} 
                   style={styles.quickAction}
-                  onPress={
-                    action.label === 'Support'
-                      ? () => navigation.navigate('SupportList')
-                      : undefined
-                  }
+                  onPress={() => {
+                    switch (action.label) {
+                      case 'Historique':
+                        navigation.navigate('MyReservations');
+                        break;
+                      case 'Favoris':
+                        navigation.navigate('MyFavorites');
+                        break;
+                      // case 'Promos':
+                      //   navigation.navigate('Promotions'); // TODO: Créer l'écran Promotions
+                      //   break;
+                      case 'Support':
+                        navigation.navigate('SupportList');
+                        break;
+                    }
+                  }}
                 >
                   <View style={styles.quickActionIcon}>
                     <Ionicons name={action.icon} size={22} color={Colors.bordeaux} />

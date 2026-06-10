@@ -9,6 +9,7 @@ import { Logo }        from '../constants/logo';
 
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
 import AdminDocumentsScreen from '../screens/admin/AdminDocumentsScreen';
+import AdminPromoCommunicationScreen from '../screens/admin/AdminPromoCommunicationScreen';
 import AdminProfileScreen from '../screens/admin/AdminProfileScreen';
 import AdminDriversScreen from '../screens/admin/drivers/AdminDriversScreen';
 import AdminDriverDetailScreen from '../screens/admin/drivers/AdminDriverDetailScreen';
@@ -308,6 +309,14 @@ export default function AdminNavigator() {
         }}
       />
 
+      <Drawer.Screen
+        name="AdminPromoCommunication"
+        component={AdminPromoCommunicationScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="pricetag-outline" label="Promo & Communication" />,
+          headerShown: false,
+        }}
+      />
 
       <Drawer.Screen
         name="BaseGrid"

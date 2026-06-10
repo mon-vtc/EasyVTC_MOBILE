@@ -80,6 +80,8 @@ export type ClientStackParamList = {
   SupportList:          undefined;
   SupportChat:          { ticketId: string; subject: string };
   ChatScreen:           { reservationId?: string };
+  MyFavorites:          undefined;
+
 };
 
 export type DriverReservationsStackParamList = {
@@ -243,6 +245,7 @@ export type AdminDrawerParamList = {
   AdminDrivers:   NavigatorScreenParams<DriversStackParamList>;
   AdminReservations: NavigatorScreenParams<ReservationsStackParamList>;
   AdminDocuments: undefined;
+  AdminPromoCommunication: undefined;
   AdminManagers:  NavigatorScreenParams<ManagersStackParamList>;
   AdminProfile:   undefined;
   AdminClients:      NavigatorScreenParams<ClientsStackParamList>;

@@ -3,6 +3,7 @@ export { useUsersStore }     from './users.store';
 export { useDriversStore }   from './drivers.store';
 export { useManagersStore }  from './managers.store';
 export { useClientsStore }   from './clients.store';
+export { usePromoCodesStore } from './promo-codes.store';
 export { useDocumentsStore } from './document.store';
 export { useOrdersStore }    from './orders.store';
 export { useInvoicesStore }  from './invoices.store';

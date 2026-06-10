@@ -81,6 +81,7 @@ export interface Reservation {
   price_final:     number | null;
   price_adjusted:  number | null;
   price_breakdown: PriceBreakdown;
+  discount_amount: number | null;
 
   // Métriques
   distance_km:  number | null;
@@ -192,6 +193,7 @@ export interface BookingFormState {
   duration_min:    number | null;
   comment:         string;
   flat_rate_id:    string | null;
+  promo_code:      string | null;
 
   // Navigation
   step: BookingStep;
@@ -210,6 +212,7 @@ export const BOOKING_INITIAL_STATE: BookingFormState = {
   duration_min:    null,
   comment:         '',
   flat_rate_id:    null,
+  promo_code:      null,
   step:            1,
 };
 

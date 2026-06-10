@@ -43,6 +43,7 @@ interface ReservationState {
   isLoading:       boolean;
   isSubmitting:    boolean;
   isFetchingPrice: boolean;
+  isFetchingNextPage: boolean;
   error:           string | null;
   homeReservations: Reservation[];
   adminHomeReservations: Reservation[];
@@ -60,6 +61,11 @@ interface ReservationState {
   fetchDriverHomeReservations: (token: string) => Promise<void>;
   fetchHomeReservations: (token: string) => Promise<void>;
   cancel:            (token: string, id: string, reason?: string)      => Promise<void>;
+  // Dans ReservationState interface
+  fetchAllPages: (token: string, filters?: ReservationListFilters) => Promise<void>;
+  fetchAllDriverPages: (token: string, filters?: ReservationListFilters) => Promise<void>;
+  fetchAllAdminPages: (token: string, filters?: ReservationListFilters) => Promise<void>;
+
 
   // ── Actions chauffeur ──────────────────────────────────────────────────────
   arrive: (token: string, id: string) => Promise<void>;
@@ -88,6 +94,7 @@ interface ReservationState {
   setEstimate:       (price: number, distKm: number, durMin: number) => void;
   setComment:        (text: string)                     => void;
   setFlatRateId:     (id: string | null)                => void;
+  setPromoCode:      (code: string | null)              => void;
 
   /**
    * Soumet la réservation au backend.
@@ -118,60 +125,82 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   isLoading:       false,
   isSubmitting:    false,
   isFetchingPrice: false,
+  isFetchingNextPage: false,
   error:           null,
 
+  // ── Liste client ───────────────────────────────────────────────────────────
   // ── Liste client ───────────────────────────────────────────────────────────
   fetchMine: async (token, filters) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await reservationApi.listMine(token, filters);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      set({
-        reservations: res.data.reservations,
-        myReservations: res.data.reservations,
-        total:        res.data.total,
-        page:         res.data.page,
-        totalPages:   res.data.total_pages,
-        isLoading:    false,
-      });
+      const page = filters?.page ?? 1;
+      if (page > 1) set({ isFetchingNextPage: true });
+      else set({ isLoading: true, reservations: [], myReservations: [] });
+
+      const res = await reservationApi.listMine(token, { ...filters, page });
+      
+      // 500 sur date vide = aucune réservation, pas une vraie erreur
+      if (!res.ok) {
+        set({ reservations: [], myReservations: [], total: 0, totalPages: 1, isLoading: false, isFetchingNextPage: false });
+        return;
+      }
+    
+      set(state => ({
+        reservations:   page > 1 ? [...state.reservations, ...(res.data?.reservations ?? [])] : (res.data?.reservations ?? []),
+        myReservations: page > 1 ? [...state.myReservations, ...(res.data?.reservations ?? [])] : (res.data?.reservations ?? []),
+        total:          res.data?.total      ?? 0,
+        page:           res.data?.page       ?? 1,
+        totalPages:     res.data?.total_pages ?? 1,
+        isLoading:      false,
+        isFetchingNextPage: false,
+      }));
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
-      throw err;
+      // Swallow silencieusement — l'UI affichera juste "aucune réservation"
+      set({ reservations: [], myReservations: [], total: 0, isLoading: false, isFetchingNextPage: false });
     }
   },
-
+  
   fetchDriverReservations: async (token, filters) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await reservationApi.getDriverReservations(token, filters);
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      set({
-        reservations: res.data.reservations,
-        myReservations: res.data.reservations,
-        total:        res.data.total,
-        page:         res.data.page,
-        totalPages:   res.data.total_pages,
-        isLoading:    false,
-      });
-    } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
-      throw err;
+      const page = filters?.page ?? 1;
+      if (page > 1) set({ isFetchingNextPage: true });
+      else set({ isLoading: true, reservations: [], myReservations: [] });
+
+      const res = await reservationApi.getDriverReservations(token, { ...filters, page });
+      set(state => ({
+        reservations:   res.ok ? (page > 1 ? [...state.reservations, ...(res.data?.reservations ?? [])] : (res.data?.reservations ?? [])) : [],
+        myReservations: res.ok ? (page > 1 ? [...state.myReservations, ...(res.data?.reservations ?? [])] : (res.data?.reservations ?? [])) : [],
+        total:          res.data?.total      ?? 0,
+        page:           res.data?.page       ?? 1,
+        totalPages:     res.data?.total_pages ?? 1,
+        isLoading:      false,
+        isFetchingNextPage: false,
+      }));
+    } catch {
+      set({ reservations: [], myReservations: [], total: 0, isLoading: false, isFetchingNextPage: false });
     }
   },
-
   // ── Liste admin ────────────────────────────────────────────────────────────
   fetchAll: async (token, filters) => {
-    set({ isLoading: true, error: null });
+    const page = filters?.page ?? 1;
+    if (page > 1) set({ isFetchingNextPage: true });
+    else set({ isLoading: true, reservations: [] });
+
     try {
-      const res = await reservationApi.listAll(token, filters);
+      const res = await reservationApi.listAll(token, { ...filters, page });
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      set({
-        reservations: res.data.reservations,
-        total:        res.data.total,
-        page:         res.data.page,
-        totalPages:   res.data.total_pages,
+      const { reservations, total, total_pages } = res.data;
+      set(state => ({
+        reservations: page > 1
+               ? [...state.reservations, ...reservations]
+          : reservations,
+        total:        total,
+        page:         page,
+        totalPages:   total_pages,
         isLoading:    false,
-      });
+        isFetchingNextPage: false,
+      }));
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
       throw err;
@@ -216,7 +245,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
         isLoading:    false,
       }));
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false, isFetchingNextPage: false });
       throw err;
     }
   },
@@ -333,16 +362,129 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await reservationApi.listMine(token, { limit: 10 });
-      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
       set({
-        homeReservations: res.data.reservations,
+        homeReservations: res.ok ? (res.data?.reservations ?? []) : [],
         isLoading: false,
       });
-    } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
-      throw err;
+    } catch {
+      set({ homeReservations: [], isLoading: false });
     }
   },
+
+  // Dans le store
+fetchAllPages: async (token, filters) => {
+  set({ isLoading: true, error: null, reservations: [], myReservations: [] });
+  try {
+    const limit = filters?.limit ?? 20;
+    
+    // Première page pour connaître le total
+    const first = await reservationApi.listMine(token, { ...filters, page: 1, limit });
+    if (!first.ok) {
+      set({ reservations: [], myReservations: [], total: 0, totalPages: 1, isLoading: false });
+      return;
+    }
+
+    const totalPages = first.data?.total_pages ?? 1;
+    let all = first.data?.reservations ?? [];
+
+    // Charger les pages suivantes en parallèle
+    if (totalPages > 1) {
+      const pages = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          reservationApi.listMine(token, { ...filters, page: i + 2, limit })
+        )
+      );
+      for (const res of pages) {
+        if (res.ok) all = [...all, ...(res.data?.reservations ?? [])];
+      }
+    }
+
+    set({
+      reservations:   all,
+      myReservations: all,
+      total:          first.data?.total ?? 0,
+      page:           totalPages, // on est "à la fin" — pas de loadMore
+      totalPages,
+      isLoading:      false,
+    });
+  } catch {
+    set({ reservations: [], myReservations: [], total: 0, isLoading: false });
+  }
+},
+
+fetchAllAdminPages: async (token, filters) => {
+    set({ isLoading: true, error: null, reservations: [], myReservations: [] });
+  try {
+    const limit = filters?.limit ?? 20;
+    
+    // Première page pour connaître le total
+    const first = await reservationApi.listAll(token, { ...filters, page: 1, limit });
+    if (!first.ok) {
+      set({ reservations: [], myReservations: [], total: 0, totalPages: 1, isLoading: false });
+      return;
+    }
+
+    const totalPages = first.data?.total_pages ?? 1;
+    let all = first.data?.reservations ?? [];
+
+    // Charger les pages suivantes en parallèle
+    if (totalPages > 1) {
+      const pages = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          reservationApi.listAll(token, { ...filters, page: i + 2, limit })
+        )
+      );
+      for (const res of pages) {
+        if (res.ok) all = [...all, ...(res.data?.reservations ?? [])];
+      }
+    }
+
+    set({
+      reservations:   all,
+      myReservations: all,
+      total:          first.data?.total ?? 0,
+      page:           totalPages, // on est "à la fin" — pas de loadMore
+      totalPages,
+      isLoading:      false,
+    });
+  } catch {
+    set({ reservations: [], myReservations: [], total: 0, isLoading: false });
+  }
+},
+
+fetchAllDriverPages: async (token, filters) => {
+  set({ isLoading: true, error: null, reservations: [], myReservations: [] });
+  try {
+    const limit = filters?.limit ?? 20;
+    const first = await reservationApi.getDriverReservations(token, { ...filters, page: 1, limit });
+    if (!first.ok) {
+      set({ reservations: [], myReservations: [], total: 0, totalPages: 1, isLoading: false });
+      return;
+    }
+    const totalPages = first.data?.total_pages ?? 1;
+    let all = first.data?.reservations ?? [];
+
+    if (totalPages > 1) {
+      const pages = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          reservationApi.getDriverReservations(token, { ...filters, page: i + 2, limit })
+        )
+      );
+      for (const res of pages) {
+        if (res.ok) all = [...all, ...(res.data?.reservations ?? [])];
+      }
+    }
+
+    set({
+      reservations: all, myReservations: all,
+      total: first.data?.total ?? 0,
+      page: totalPages, totalPages,
+      isLoading: false,
+    });
+  } catch {
+    set({ reservations: [], myReservations: [], total: 0, isLoading: false });
+  }
+},
 
   // ── Setters formulaire ─────────────────────────────────────────────────────
   setBookingStep:  (step)          => set(s => ({ booking: { ...s.booking, step } })),
@@ -355,6 +497,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   setLuggage:      (luggage)       => set(s => ({ booking: { ...s.booking, luggage } })),
   setComment:      (comment)       => set(s => ({ booking: { ...s.booking, comment } })),
   setFlatRateId:   (flat_rate_id)  => set(s => ({ booking: { ...s.booking, flat_rate_id } })),
+  setPromoCode:    (promo_code)    => set(s => ({ booking: { ...s.booking, promo_code } })),
   setEstimate: (estimated_price, distance_km, duration_min) =>
     set(s => ({ booking: { ...s.booking, estimated_price, distance_km, duration_min } })),
 
@@ -421,8 +564,11 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
 
         // Commentaire optionnel
         ...(booking.comment.trim() && { comment: booking.comment.trim() }),
-      };
 
+        // Code promo optionnel
+        ...(booking.promo_code?.trim() && { promo_code: booking.promo_code.trim() }),
+      };
+      console.log('DTO envoyé au backend :', dto);
       const res = await reservationApi.create(token, dto);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la réservation');
 

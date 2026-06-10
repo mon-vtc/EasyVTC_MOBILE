@@ -40,7 +40,7 @@ const SURFACE  = Colors?.surface       ;
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function formatPrice(price: number | null | undefined, currency?: string): string {
   if (price == null) return '—';
-  return `${price.toFixed(0)}${currency ?? '€'}`;
+  return `${price}${currency ?? '€'}`;
 }
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', {
@@ -373,6 +373,22 @@ export default function BookingConfirmationScreen() {
             value={getVehicleLabel(r?.vehicle_type)}
             delay={60}
           />
+          {r?.distance_km != null && (
+            <DetailRow
+              icon="navigate-outline"
+              label="Distance estimée"
+              value={`${r.distance_km} km`}
+              delay={90}
+            />
+          )}
+          {r?.duration_min != null && (
+            <DetailRow
+              icon="timer-outline"
+              label="Durée estimée"
+              value={`${r.duration_min} min`}
+              delay={120}
+            />
+          )}
           {r?.nb_passengers != null && (
             <DetailRow
               icon="people-outline"
@@ -408,17 +424,34 @@ export default function BookingConfirmationScreen() {
         </Animated.View>
 
         {/* ── Prix estimé ── */}
-        <Animated.View style={[styles.priceCard, slideUp(priceAnim)]}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.priceLabel}>Prix estimé</Text>
-            <Text style={styles.priceNote}>
-              Paiement à effectuer directement auprès du chauffeur
-            </Text>
-          </View>
-          <Text style={styles.priceValue}>
-            {formatPrice(r?.price_estimated, r?.country === 'france' ? '€' : ' CFA')}
-          </Text>
-        </Animated.View>
+        {r?.promo_code_id && r.discount_amount != null && r.price_estimated != null ? (
+          <Animated.View style={[styles.priceCard, slideUp(priceAnim)]}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={styles.priceFinalLabel}>Prix final estimé</Text>
+              <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>Prix initial</Text>
+                <Text style={styles.priceInitialValue}>{formatPrice(r.price_estimated + r.discount_amount, r.country === 'france' ? '€' : ' CFA')}</Text>
+              </View>
+              <View style={styles.priceRow}>
+                <Text style={styles.priceDiscountLabel}>Réduction</Text>
+                <Text style={styles.priceDiscountValue}>- {formatPrice(r.discount_amount, r.country === 'france' ? '€' : ' CFA')}</Text>
+              </View>
+              <View style={styles.priceDivider} />
+              <View style={styles.priceRow}>
+                <Text style={styles.priceFinalValueLabel}>Total à régler</Text>
+                <Text style={styles.priceValue}>{formatPrice(r.price_estimated, r.country === 'france' ? '€' : ' CFA')}</Text>
+              </View>
+            </View>
+          </Animated.View>
+        ) : (
+          <Animated.View style={[styles.priceCard, slideUp(priceAnim)]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.priceLabel}>Prix estimé</Text>
+              <Text style={styles.priceNote}>Paiement à effectuer directement auprès du chauffeur</Text>
+            </View>
+            <Text style={styles.priceValue}>{formatPrice(r?.price_estimated, r?.country === 'france' ? '€' : ' CFA')}</Text>
+          </Animated.View>
+        )}
 
         {/* ── Prochaines étapes (fond bleu clair — fidèle capture) ── */}
         <Animated.View style={[styles.nextCard, slideUp(priceAnim)]}>
@@ -542,12 +575,25 @@ const styles = StyleSheet.create({
     shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
   priceLabel: { fontSize: 15, fontWeight: '700', color: TEXT_P },
+  priceFinalLabel: { fontSize: 18, fontWeight: '800', color: TEXT_P, marginBottom: 8 },
+  priceFinalValueLabel: { fontSize: 16, fontWeight: 'bold', color: TEXT_P },
+  priceDiscountLabel: { fontSize: 14, fontWeight: '500', color: Colors.success },
   priceNote:  { fontSize: 11, color: TEXT_S, marginTop: 4, maxWidth: 190, lineHeight: 16 },
   priceValue: {
     fontSize: 30, fontWeight: '900', color: TEXT_P,
     letterSpacing: -1, marginLeft: 12,
   },
- 
+  priceInitialValue: { fontSize: 18, fontWeight: '600', color: TEXT_S, textDecorationLine: 'line-through' },
+  priceDiscountValue: { fontSize: 18, fontWeight: '600', color: Colors.success },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  priceDivider: {
+    height: 1, backgroundColor: BORDER, marginVertical: 8,
+  },
+
   // Prochaines étapes — fond bleu très clair (#EEF4FB) fidèle capture
   nextCard: {
     backgroundColor: '#EEF4FB',
