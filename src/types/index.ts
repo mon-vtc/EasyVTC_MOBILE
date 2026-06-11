@@ -5,6 +5,7 @@ export type { UserRole, UserStatus, AuthUser, AuthTokens,
               ManagerNotificationsStackParamList,
               ManagersStackParamList,
               ClientsStackParamList,
+              AdminAuditLogsStackParamList
             } from './auth.types';
 
 export type { ClientUser, DriverUser, AdminUser,
@@ -75,6 +76,25 @@ export type {
   PromoCodeListFilters,
   PromoCodeListResult,
 } from './promo-codes.types';
+
+export type {
+  CampaignType, CampaignStatus,
+  MarketingCampaign,
+  CreateCampaignDto,
+  UpdateCampaignDto,
+  ClientSummary,
+  ClientBaseStats,
+  ClientBaseFilters,
+  ClientBaseResult,
+  CampaignListResult,
+} from './marketing.types';
+
+export type {
+  AuditLog,
+  AuditLogListFilters,
+  AuditLogListResult,
+} from './audit-logs.types';
+
 
 export type {
   Notification,

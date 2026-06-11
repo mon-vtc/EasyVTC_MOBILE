@@ -1,12 +1,12 @@
 import { useAuth } from './useAuth';
-import { useAuthStore, useUsersStore, useDriversStore, useManagersStore, useClientsStore, usePromoCodesStore } from '../store';
+import { useAuthStore, useUsersStore, useDriversStore, useManagersStore, useClientsStore, usePromoCodesStore, useMarketingStore, useAuditLogsStore } from '../store';
 import { managersApi }  from '../services/api/managers.api';
 import { adminApi } from '../services/api/admin.api';
 import type {
-  AdminUser, ListUsersParams, ListDriversParams,
+  AdminUser, CreateCampaignDto, ListUsersParams, ListDriversParams,
   UpdateUserStatusPayload, ChangeDriverStatusPayload, UserRole,
   CreateManagerDto, UpdateManagerDto, ChangeManagerStatusDto, ManagerListFilters, AdminStats,
-  ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult,
+  ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult, ClientBaseFilters, AuditLogListFilters,
   PromoCodeListFilters, CreatePromoCodeDto, UpdatePromoCodeDto, PromoCode,
 } from '../types';
 import { useCallback, useEffect, useRef } from 'react';
@@ -72,8 +72,35 @@ export function useAdmin() {
   const _createPromoCode       = usePromoCodesStore(s => s.createPromoCode);
   const _updatePromoCode       = usePromoCodesStore(s => s.updatePromoCode);
   const _deletePromoCode       = usePromoCodesStore(s => s.deletePromoCode);
-  const _changePromoCodeStatus = usePromoCodesStore(s => s.changePromoCodeStatus);
   const clearPromoCodesError   = usePromoCodesStore(s => s.clearError);
+
+  // ── Store Marketing (endpoint /admin/marketing) ─────────────
+  const marketingClients      = useMarketingStore(s => s.clients);
+  const marketingStats        = useMarketingStore(s => s.stats);
+  const marketingTotal        = useMarketingStore(s => s.total);
+  const campaigns             = useMarketingStore(s => s.campaigns);
+  const campaignsTotalPages   = useMarketingStore(s => s.totalPages);
+  const campaignsPage         = useMarketingStore(s => s.page);
+  const isMarketingLoading    = useMarketingStore(s => s.isLoading);
+  const isFetchingNextMarketingPage = useMarketingStore(s => s.isFetchingNextPage);
+  const marketingError        = useMarketingStore(s => s.error);
+  const _fetchMarketingClients = useMarketingStore(s => s.fetchClients);
+  const _createCampaign        = useMarketingStore(s => s.createCampaign);
+  const _fetchCampaigns        = useMarketingStore(s => s.fetchCampaigns);
+  const clearMarketingError   = useMarketingStore(s => s.clearError);
+
+  // ── Store Audit Logs (endpoint /admin/audit-logs) ───────────
+  const auditLogs             = useAuditLogsStore(s => s.logs);
+  const selectedAuditLog      = useAuditLogsStore(s => s.selectedLog);
+  const auditLogsTotal        = useAuditLogsStore(s => s.total);
+  const auditLogsPage         = useAuditLogsStore(s => s.page);
+  const auditLogsTotalPages   = useAuditLogsStore(s => s.totalPages);
+  const isAuditLogsLoading    = useAuditLogsStore(s => s.isLoading);
+  const isFetchingNextAuditLogPage = useAuditLogsStore(s => s.isFetchingNextPage);
+  const auditLogsError        = useAuditLogsStore(s => s.error);
+  const _fetchAuditLogs       = useAuditLogsStore(s => s.fetchLogs);
+  const _fetchLogById         = useAuditLogsStore(s => s.fetchLogById);
+  const clearAuditLogsError   = useAuditLogsStore(s => s.clearError);
 
   // ── Store Gestionnaires (endpoint /admin/managers) ────────────
   const managers          = useManagersStore(s => s.managers);
@@ -109,7 +136,11 @@ export function useAdmin() {
   const _createPromoCodeRef = useRef(_createPromoCode);
   const _updatePromoCodeRef = useRef(_updatePromoCode);
   const _deletePromoCodeRef = useRef(_deletePromoCode);
-  const _changePromoCodeStatusRef = useRef(_changePromoCodeStatus);
+  const _fetchMarketingClientsRef = useRef(_fetchMarketingClients);
+  const _createCampaignRef        = useRef(_createCampaign);
+  const _fetchCampaignsRef        = useRef(_fetchCampaigns);
+  const _fetchAuditLogsRef        = useRef(_fetchAuditLogs);
+  const _fetchLogByIdRef          = useRef(_fetchLogById);
 
   useEffect(() => { _fetchUsersRef.current         = _fetchUsers; },         [_fetchUsers]);
   useEffect(() => { _fetchUserByIdRef.current       = _fetchUserById; },      [_fetchUserById]);
@@ -130,7 +161,11 @@ export function useAdmin() {
   useEffect(() => { _createPromoCodeRef.current     = _createPromoCode; },    [_createPromoCode]);
   useEffect(() => { _updatePromoCodeRef.current     = _updatePromoCode; },    [_updatePromoCode]);
   useEffect(() => { _deletePromoCodeRef.current     = _deletePromoCode; },    [_deletePromoCode]);
-  useEffect(() => { _changePromoCodeStatusRef.current = _changePromoCodeStatus; }, [_changePromoCodeStatus]);
+  useEffect(() => { _fetchMarketingClientsRef.current = _fetchMarketingClients; }, [_fetchMarketingClients]);
+  useEffect(() => { _createCampaignRef.current        = _createCampaign; },        [_createCampaign]);
+  useEffect(() => { _fetchCampaignsRef.current        = _fetchCampaigns; },        [_fetchCampaigns]);
+  useEffect(() => { _fetchAuditLogsRef.current        = _fetchAuditLogs; },        [_fetchAuditLogs]);
+  useEffect(() => { _fetchLogByIdRef.current          = _fetchLogById; },          [_fetchLogById]);
 
   // ── Actions stables (useCallback avec [] — lisent les valeurs via ref) ────
 
@@ -215,8 +250,20 @@ export function useAdmin() {
   const deletePromoCode = useCallback((id: string) =>
     _deletePromoCodeRef.current(accessTokenRef.current!, id), []);
 
-  const changePromoCodeStatus = useCallback((id: string, payload: { is_active: boolean }) =>
-    _changePromoCodeStatusRef.current(accessTokenRef.current!, id, payload), []);
+  const fetchMarketingClients = useCallback((filters?: ClientBaseFilters) =>
+    _fetchMarketingClientsRef.current(accessTokenRef.current!, filters), []);
+
+  const createCampaign = useCallback((dto: CreateCampaignDto) =>
+    _createCampaignRef.current(accessTokenRef.current!, dto), []);
+
+  const fetchCampaigns = useCallback((page?: number, limit?: number) =>
+    _fetchCampaignsRef.current(accessTokenRef.current!, page, limit), []);
+
+  const fetchAuditLogs = useCallback((filters?: AuditLogListFilters) =>
+    _fetchAuditLogsRef.current(accessTokenRef.current!, filters), []);
+
+  const fetchLogById = useCallback((id: string) =>
+    _fetchLogByIdRef.current(accessTokenRef.current!, id), []);
 
   const fetchDashboardStats = useCallback(async (filters: { period: 'day' | 'week' | 'month' | 'all' } = { period: 'day' }): Promise<AdminStats> => {
     const res = await adminApi.getStats(accessTokenRef.current!, filters);
@@ -306,7 +353,34 @@ export function useAdmin() {
     createPromoCode,
     updatePromoCode,
     deletePromoCode,
-    changePromoCodeStatus,
+
+    // Marketing
+    marketingClients,
+    marketingStats,
+    marketingTotal,
+    campaigns,
+    campaignsTotalPages,
+    campaignsPage,
+    isMarketingLoading,
+    isFetchingNextMarketingPage,
+    marketingError,
+    clearMarketingError,
+    fetchMarketingClients,
+    createCampaign,
+    fetchCampaigns,
+
+    // Audit Logs
+    auditLogs,
+    selectedAuditLog,
+    auditLogsTotal,
+    auditLogsPage,
+    auditLogsTotalPages,
+    isAuditLogsLoading,
+    isFetchingNextAuditLogPage,
+    auditLogsError,
+    fetchAuditLogs,
+    fetchLogById,
+    clearAuditLogsError,
 
     // Stats dashboard
     fetchDashboardStats,

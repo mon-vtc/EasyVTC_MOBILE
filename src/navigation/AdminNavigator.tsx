@@ -39,6 +39,9 @@ import SupportChatScreen from '../screens/support/SupportChatScreen';
 import AdminDiscussionScreen from '../screens/admin/AdminDiscussionScreen';
 import AdminChatScreen from '../screens/admin/AdminChatScreen';
 
+import AdminAuditLogsScreen from '../screens/admin/AdminAuditLogsScreen';
+import AdminAuditLogDetailScreen from '../screens/admin/AdminAuditLogDetailScreen';
+
 import type {
   AdminDrawerParamList,
   DriversStackParamList,
@@ -49,6 +52,7 @@ import type {
   AdminNotificationsStackParamList,
   SupportStackParamList,
   DiscussionStackParamList,
+  AdminAuditLogsStackParamList,
 } from '../types/auth.types';
 
 import type { ManagersStackParamList } from '../types';
@@ -185,6 +189,17 @@ function AdminDiscussionStack() {
   );
 }
 
+const AuditLogsStack = createNativeStackNavigator<AdminAuditLogsStackParamList>();
+
+function AdminAuditLogsNavigator() {
+  return (
+    <AuditLogsStack.Navigator screenOptions={{ headerShown: false }}>
+      <AuditLogsStack.Screen name="AdminAuditLogsList" component={AdminAuditLogsScreen} />
+      <AuditLogsStack.Screen name="AdminAuditLogDetail" component={AdminAuditLogDetailScreen} />
+    </AuditLogsStack.Navigator>
+  );
+}
+
 
 
 // ── Drawer ──────────────────────────────────────────────────────
@@ -305,6 +320,15 @@ export default function AdminNavigator() {
         component={AdminDocumentsStack}
         options={{
           drawerLabel: () => <DrawerLabel icon="document-text-outline" label="Documents" />,
+          headerShown: false,
+        }}
+      />
+
+      <Drawer.Screen
+        name="AdminAuditLogs"
+        component={AdminAuditLogsNavigator}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="document-text-outline" label="Audit logs" />,
           headerShown: false,
         }}
       />

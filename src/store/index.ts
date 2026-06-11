@@ -9,3 +9,5 @@ export { useOrdersStore }    from './orders.store';
 export { useInvoicesStore }  from './invoices.store';
 export { useRatingsStore }   from './ratings.store';
 export { useCommissionSettingsStore } from './commission.store';
+export { useMarketingStore } from './marketing.store';
+export { useAuditLogsStore } from './audit-logs.store';
