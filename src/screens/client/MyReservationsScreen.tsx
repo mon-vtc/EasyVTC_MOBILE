@@ -296,10 +296,10 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
     setRatingModalVisible(true);
   }, [alreadyRated, showToast]);
 
-    const handleRatingSubmit = useCallback(async (note: number) => {
+    const handleRatingSubmit = useCallback(async (note: number, comment?: string) => {
       if (!accessToken || !selectedForRating?.id) return;
       try {
-        await submitRating(accessToken, selectedForRating.id, note);
+        await submitRating(accessToken, selectedForRating.id, note, comment);
         setRatingModalVisible(false);
         setSelectedForRating(null);
         showToast({ title: 'Merci !', message: `Votre note de ${note}/5 a bien été enregistrée.`, type: 'success' });
@@ -307,7 +307,6 @@ export default function MyReservationsScreen({ navigation }: { navigation: any }
         const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
         setRatingModalVisible(false);
         setSelectedForRating(null);
-        // Affiche l'erreur, qu'elle soit "déjà noté" ou autre.
         showToast({ title: 'Erreur', message: msg, type: 'error' });
       }
     }, [accessToken, selectedForRating, submitRating, showToast]);

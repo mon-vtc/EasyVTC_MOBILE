@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import {
-  Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator,
+  Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
@@ -14,7 +14,7 @@ interface Props {
   visible:      boolean;
   driverName?:  string;
   isSubmitting: boolean;
-  onConfirm:    (note: number) => void;
+  onConfirm:    (note: number, comment?: string) => void;
   onClose:      () => void;
 }
 
@@ -28,16 +28,19 @@ const LABELS: Record<number, string> = {
 
 export default function RatingModal({ visible, driverName, isSubmitting, onConfirm, onClose }: Props) {
   const [selected, setSelected] = useState<number>(0);
+  const [comment,  setComment]  = useState<string>('');
 
   const handleClose = () => {
     setSelected(0);
+    setComment('');
     onClose();
   };
 
   const handleConfirm = () => {
     if (selected === 0 || isSubmitting) return;
-    onConfirm(selected);
+    onConfirm(selected, comment.trim() || undefined);
     setSelected(0);
+    setComment('');
   };
 
   return (
@@ -80,6 +83,19 @@ export default function RatingModal({ visible, driverName, isSubmitting, onConfi
           <Text style={styles.noteLabel}>
             {selected > 0 ? LABELS[selected] : 'Sélectionnez une note'}
           </Text>
+
+          {/* Commentaire facultatif */}
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Laissez un commentaire (facultatif)"
+            placeholderTextColor={Colors.textMuted}
+            value={comment}
+            onChangeText={setComment}
+            multiline
+            numberOfLines={3}
+            maxLength={500}
+            editable={!isSubmitting}
+          />
 
           {/* Actions */}
           <View style={styles.actions}>
@@ -149,8 +165,20 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.sm,
     fontWeight: '600',
     color: Colors.textSecondary,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
     minHeight: 20,
+  },
+  commentInput: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    fontSize: Fonts.size.sm,
+    color: Colors.textPrimary,
+    minHeight: 72,
+    textAlignVertical: 'top',
+    marginBottom: Spacing.lg,
   },
   actions: {
     flexDirection: 'row',

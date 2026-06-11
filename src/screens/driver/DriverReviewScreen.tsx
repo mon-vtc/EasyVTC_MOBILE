@@ -59,6 +59,9 @@ function RatingCard({ rating }: { rating: RatingWithClient }) {
         </View>
       </View>
       <StarRow note={rating.note} />
+      {rating.comment ? (
+        <Text style={styles.comment}>{rating.comment}</Text>
+      ) : null}
     </View>
   );
 }
@@ -252,6 +255,7 @@ const styles = StyleSheet.create({
   },
   noteText: { fontSize: Fonts.size.xs, fontWeight: '700', color: '#92400E' },
   starRow:  { flexDirection: 'row', gap: 3 },
+  comment:  { fontSize: Fonts.size.xs, color: Colors.textSecondary, marginTop: Spacing.xs, lineHeight: 18, fontStyle: 'italic' },
 
   // ── État vide ─────────────────────────────────────────────────────────────
   emptyState: { alignItems: 'center', paddingTop: Spacing.xxl },

@@ -27,8 +27,9 @@ export const ratingsApi = {
     token:         string,
     reservationId: string,
     note:          number,
+    comment?:      string | null,
   ): Promise<ApiResponse<Rating>> =>
-    api.post(`/reservations/${reservationId}/rating`, { note }, token),
+    api.post(`/reservations/${reservationId}/rating`, { note, comment: comment ?? null }, token),
 
   // ── GET /drivers/me/ratings ───────────────────────────────────────────────
   getMyRatings: (

@@ -29,7 +29,7 @@ interface RatingsState {
   // ── Actions ────────────────────────────────────────────────────────────────
   fetchMyRatings: (token: string, page?: number) => Promise<void>;
   listAll:        (token: string, page?: number) => Promise<void>;
-  submitRating:   (token: string, reservationId: string, note: number) => Promise<void>;
+  submitRating:   (token: string, reservationId: string, note: number, comment?: string | null) => Promise<void>;
   deleteRating:   (token: string, ratingId: string) => Promise<void>;
   clearError:     () => void;
 }
@@ -92,10 +92,10 @@ export const useRatingsStore = create<RatingsState>((set) => ({
   },
 
   // ── POST /reservations/:id/rating ─────────────────────────────────────────
-  submitRating: async (token, reservationId, note) => {
+  submitRating: async (token, reservationId, note, comment) => {
     set({ isSubmitting: true, error: null });
     try {
-      const res = await ratingsApi.submit(token, reservationId, note);
+      const res = await ratingsApi.submit(token, reservationId, note, comment);
       if (!res.ok) throw new Error(res.message ?? "Erreur lors de la soumission de l'évaluation");
       set({ isSubmitting: false });
     } catch (err: unknown) {

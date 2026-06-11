@@ -45,8 +45,28 @@ export interface DriverPlanningResult {
 export type RevenuesPeriod = 'week' | 'month' | 'all';
 
 export interface RevenueTrip {
-  reservation_id: string;
-  scheduled_at: string;
-  price_final: number;
-  currency: string;
+  reservation_id:    string;
+  scheduled_at:      string;
+  pickup_address:    string;
+  dest_address:      string;
+  price_final:       number;
+  commission_amount: number;
+  net_amount:        number;
+  currency:          string;
+  client_first_name: string | null;
+  client_last_name:  string | null;
+  rating:            number | null;
+}
+
+export interface DriverRevenuesResult {
+  period:              RevenuesPeriod;
+  date_from:           string | null;
+  date_to:             string | null;
+  total_trips:         number;
+  total_gross:         number;
+  total_commission:    number;
+  total_net:           number;
+  currency:            string;
+  revenue_by_currency: { EUR: number; XOF: number };
+  trips:               RevenueTrip[];
 }

@@ -161,10 +161,10 @@ export default function ReservationDetailsScreen() {
     setRatingModalVisible(true);
   }, [alreadyRated, showToast]);
 
-  const handleRatingSubmit = useCallback(async (note: number) => {
+  const handleRatingSubmit = useCallback(async (note: number, comment?: string) => {
     if (!accessToken || !reservation?.id) return;
     try {
-      await submitRating(accessToken, reservation.id, note);
+      await submitRating(accessToken, reservation.id, note, comment);
       setRatingModalVisible(false);
       setAlreadyRated(true);
       showToast({ title: 'Merci !', message: `Votre note de ${note}/5 a bien été enregistrée.`, type: 'success' });
