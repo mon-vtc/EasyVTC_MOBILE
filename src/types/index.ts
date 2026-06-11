@@ -5,6 +5,7 @@ export type { UserRole, UserStatus, AuthUser, AuthTokens,
               ManagerNotificationsStackParamList,
               ManagersStackParamList,
               ClientsStackParamList,
+              AdminAuditLogsStackParamList
             } from './auth.types';
 
 export type { ClientUser, DriverUser, AdminUser,
@@ -88,6 +89,12 @@ export type {
   CampaignListResult,
 } from './marketing.types';
 
+export type {
+  AuditLog,
+  AuditLogListFilters,
+  AuditLogListResult,
+} from './audit-logs.types';
+
 
 export type {
   Notification,
@@ -115,4 +122,3 @@ export type {
   CommissionDetail,
   CommissionPeriod
 } from './commission.types';
-

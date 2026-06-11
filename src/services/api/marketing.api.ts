@@ -9,6 +9,7 @@ import type {
   ClientBaseResult,
   CreateCampaignDto,
   MarketingCampaign,
+  CampaignListResult
 } from '../../types/marketing.types';
 
 class MarketingApi {

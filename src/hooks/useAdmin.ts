@@ -1,12 +1,12 @@
 import { useAuth } from './useAuth';
-import { useAuthStore, useUsersStore, useDriversStore, useManagersStore, useClientsStore, usePromoCodesStore, useMarketingStore } from '../store';
+import { useAuthStore, useUsersStore, useDriversStore, useManagersStore, useClientsStore, usePromoCodesStore, useMarketingStore, useAuditLogsStore } from '../store';
 import { managersApi }  from '../services/api/managers.api';
 import { adminApi } from '../services/api/admin.api';
 import type {
   AdminUser, CreateCampaignDto, ListUsersParams, ListDriversParams,
   UpdateUserStatusPayload, ChangeDriverStatusPayload, UserRole,
   CreateManagerDto, UpdateManagerDto, ChangeManagerStatusDto, ManagerListFilters, AdminStats,
-  ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult, ClientBaseFilters,
+  ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult, ClientBaseFilters, AuditLogListFilters,
   PromoCodeListFilters, CreatePromoCodeDto, UpdatePromoCodeDto, PromoCode,
 } from '../types';
 import { useCallback, useEffect, useRef } from 'react';
@@ -89,6 +89,19 @@ export function useAdmin() {
   const _fetchCampaigns        = useMarketingStore(s => s.fetchCampaigns);
   const clearMarketingError   = useMarketingStore(s => s.clearError);
 
+  // ── Store Audit Logs (endpoint /admin/audit-logs) ───────────
+  const auditLogs             = useAuditLogsStore(s => s.logs);
+  const selectedAuditLog      = useAuditLogsStore(s => s.selectedLog);
+  const auditLogsTotal        = useAuditLogsStore(s => s.total);
+  const auditLogsPage         = useAuditLogsStore(s => s.page);
+  const auditLogsTotalPages   = useAuditLogsStore(s => s.totalPages);
+  const isAuditLogsLoading    = useAuditLogsStore(s => s.isLoading);
+  const isFetchingNextAuditLogPage = useAuditLogsStore(s => s.isFetchingNextPage);
+  const auditLogsError        = useAuditLogsStore(s => s.error);
+  const _fetchAuditLogs       = useAuditLogsStore(s => s.fetchLogs);
+  const _fetchLogById         = useAuditLogsStore(s => s.fetchLogById);
+  const clearAuditLogsError   = useAuditLogsStore(s => s.clearError);
+
   // ── Store Gestionnaires (endpoint /admin/managers) ────────────
   const managers          = useManagersStore(s => s.managers);
   const managersTotal     = useManagersStore(s => s.total);
@@ -126,6 +139,8 @@ export function useAdmin() {
   const _fetchMarketingClientsRef = useRef(_fetchMarketingClients);
   const _createCampaignRef        = useRef(_createCampaign);
   const _fetchCampaignsRef        = useRef(_fetchCampaigns);
+  const _fetchAuditLogsRef        = useRef(_fetchAuditLogs);
+  const _fetchLogByIdRef          = useRef(_fetchLogById);
 
   useEffect(() => { _fetchUsersRef.current         = _fetchUsers; },         [_fetchUsers]);
   useEffect(() => { _fetchUserByIdRef.current       = _fetchUserById; },      [_fetchUserById]);
@@ -149,6 +164,8 @@ export function useAdmin() {
   useEffect(() => { _fetchMarketingClientsRef.current = _fetchMarketingClients; }, [_fetchMarketingClients]);
   useEffect(() => { _createCampaignRef.current        = _createCampaign; },        [_createCampaign]);
   useEffect(() => { _fetchCampaignsRef.current        = _fetchCampaigns; },        [_fetchCampaigns]);
+  useEffect(() => { _fetchAuditLogsRef.current        = _fetchAuditLogs; },        [_fetchAuditLogs]);
+  useEffect(() => { _fetchLogByIdRef.current          = _fetchLogById; },          [_fetchLogById]);
 
   // ── Actions stables (useCallback avec [] — lisent les valeurs via ref) ────
 
@@ -241,6 +258,12 @@ export function useAdmin() {
 
   const fetchCampaigns = useCallback((page?: number, limit?: number) =>
     _fetchCampaignsRef.current(accessTokenRef.current!, page, limit), []);
+
+  const fetchAuditLogs = useCallback((filters?: AuditLogListFilters) =>
+    _fetchAuditLogsRef.current(accessTokenRef.current!, filters), []);
+
+  const fetchLogById = useCallback((id: string) =>
+    _fetchLogByIdRef.current(accessTokenRef.current!, id), []);
 
   const fetchDashboardStats = useCallback(async (filters: { period: 'day' | 'week' | 'month' | 'all' } = { period: 'day' }): Promise<AdminStats> => {
     const res = await adminApi.getStats(accessTokenRef.current!, filters);
@@ -345,6 +368,19 @@ export function useAdmin() {
     fetchMarketingClients,
     createCampaign,
     fetchCampaigns,
+
+    // Audit Logs
+    auditLogs,
+    selectedAuditLog,
+    auditLogsTotal,
+    auditLogsPage,
+    auditLogsTotalPages,
+    isAuditLogsLoading,
+    isFetchingNextAuditLogPage,
+    auditLogsError,
+    fetchAuditLogs,
+    fetchLogById,
+    clearAuditLogsError,
 
     // Stats dashboard
     fetchDashboardStats,
