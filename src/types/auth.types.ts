@@ -57,6 +57,7 @@ export type ClientTabParamList = {
   NotificationDetails:  { notification: Notification };
   MyOrders:             undefined;
   MyInvoices:           { reservationId?: string } | undefined;
+  ReservationDetails: { reservationId?: string }
 };
 /**
  * Stack racine du client — enveloppe les tabs et expose les écrans

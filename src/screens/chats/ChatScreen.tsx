@@ -102,18 +102,27 @@ export default function ChatScreen({navigation}: any) {
     fetchMessages,
     sendMessage,
     addMessageOptimistically,
+    resetMessages
   } = useChat();
 
   const [text, setText]       = useState('');
   const [sending, setSending] = useState(false);
   const flatListRef           = useRef<FlatList>(null);
 
-  const { reservations } = useReservation();
-  const reservation = reservations.find(r => r.id === reservationId);
-  const driver = reservation?.driver;
+  const { reservations, selected, fetchById } = useReservation();
+  const reservation = selected?.id === reservationId
+    ? selected
+    : reservations.find(r => r.id === reservationId);
+  const driver = reservation?.driver ?? null;
 
   useEffect(() => {
-    fetchMessages(reservationId!);
+    if (reservationId) {
+      fetchMessages(reservationId);
+      // Si la réservation n'est pas dans le store, on la charge
+      if (!reservation) {
+        fetchById(reservationId).catch(console.error);
+      }
+    }
   }, [reservationId, fetchMessages]);
 
   // Scroll to bottom quand les messages changent
@@ -178,9 +187,13 @@ export default function ChatScreen({navigation}: any) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
+
       {/* ── Header ── */}
       <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={s.headerBtn}>
+        <TouchableOpacity onPress={() => {
+          resetMessages();
+          navigation.goBack();
+        }} style={s.headerBtn}>
           <AppIcon name="arrow-back" size={24} color={Colors.white} />
         </TouchableOpacity>
 
@@ -188,10 +201,11 @@ export default function ChatScreen({navigation}: any) {
           {user?.role !== 'driver' && driver ?  (
             <>
               <View style={s.avatarContainer}>
-                <View style={s.avatar}>
-                  {/* You can use an <Image> component here if you have the driver's avatar URL */}
-                  <AppIcon name="person-outline" size={20} color={Colors.bordeaux} />
-                </View>
+                {driver.user.profile_photo_url ? (
+                  <Image source={{ uri: driver.user.profile_photo_url }} style={s.avatar} />
+                ) : (
+                  <View style={s.avatar}><AppIcon name="person-outline" size={20} color={Colors.bordeaux} /></View>
+                )}
                 <View style={[s.statusIndicator, driver.is_online ? s.statusOnline : s.statusOffline]} />
               </View>
               <View>
@@ -242,9 +256,15 @@ export default function ChatScreen({navigation}: any) {
           <AppIcon name="call-outline" size={22} color={Colors.white} />
         </TouchableOpacity>
       </View>
+      {/* Loader pendant que la réservation charge (si elle n'était pas dans le store) */}
+      {/* {!reservation && isLoadingMessages && (
+        <View style={s.centered}>
+          <ActivityIndicator size="large" color={Colors.bordeaux} />
+        </View>
+      )} */}
 
       {/* ── Liste messages ── */}
-      {isLoadingMessages && activeConversationMessages.length === 0 ? (
+      {isLoadingMessages && activeConversationMessages.length === 0 && !reservation ? (
         <View style={s.centered}>
           <ActivityIndicator size="large" color={Colors.bordeaux} />
         </View>
