@@ -4,7 +4,7 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { api } from '../../lib/api';
-import type { ApiResponse, PromoCode, CreatePromoCodeDto, UpdatePromoCodeDto, PromoCodeListFilters, PromoCodeListResult } from '../../types';
+import type { ApiResponse, PromoCode, CreatePromoCodeDto, UpdatePromoCodeDto, PromoCodeListFilters, PromoCodeListResult, UserPromoCodesResult, BulkAssignDto, BulkAssignResult } from '../../types';
 
 class PromoCodesApi {
   listPromoCodes(
@@ -40,6 +40,18 @@ class PromoCodesApi {
     id: string,
   ): Promise<ApiResponse<void>> {
     return api.delete(`/admin/promo-codes/${id}`, token);
+  }
+
+  bulkAssign(
+    token: string,
+    templateId: string,
+    dto: BulkAssignDto,
+  ): Promise<ApiResponse<BulkAssignResult>> {
+    return api.post(`/admin/promo-codes/${templateId}/bulk-assign`, dto, token);
+  }
+
+  fetchMyPromoCodes(token: string): Promise<ApiResponse<UserPromoCodesResult>> {
+    return api.get('/promo-codes/mine', token);
   }
 }
 

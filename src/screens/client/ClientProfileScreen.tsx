@@ -6,7 +6,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z }           from 'zod';
 import { FormField }   from '../../components/forms/FormField';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useAuth }     from '../../hooks/useAuth';
 import { useToast }     from '../../hooks/useToast';
 import { Ionicons }    from '@expo/vector-icons';
@@ -14,6 +14,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { ClientTabParamList }   from '../../types/auth.types';
+import { useAuthStore } from '../../store/auth.store';
+import { useMarketingStore } from '../../store/marketing.store';
 import { Logo }        from '../../constants/logo';
 
 
@@ -55,6 +57,24 @@ const strengthStyles = StyleSheet.create({
   textOk:  { color: Colors.bordeauxLight },
 });
 
+function PrefRow({ label, sub, value, onChange }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void; }) {
+  return (
+    <View style={styles.prefRow}>
+      <View style={styles.prefText}>
+        <Text style={styles.prefLabel}>{label}</Text>
+        <Text style={styles.prefSub}>{sub}</Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        trackColor={{ false: Colors.border, true: Colors.bordeauxLight }}
+        thumbColor={value ? Colors.white : Colors.surface}
+        style={{ transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }] }}
+      />
+    </View>
+  );
+}
+
 // ── Schéma mot de passe ─────────────────────────────────────────
 const passwordSchema = z.object({
   current_password: z.string().min(1, 'Requis'),
@@ -73,16 +93,17 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 // ── Écran ───────────────────────────────────────────────────────
 export default function ClientProfileScreen({ navigation }: Props) {
   const { user, logout, changePassword, isLoading, error, clearError, login, updateProfile, uploadAvatar } = useAuth();
+  const accessToken = useAuthStore(s => s.accessToken);
+  const _updateMyMarketingConsents = useMarketingStore(s => s.updateMyMarketingConsents);
   
   const [pendingImage,   setPendingImage]   = useState<string | null>(null); // sélectionnée, pas encore uploadée
   const [confirmedImage, setConfirmedImage] = useState<string | null>(null); // uploadée avec succès
 
   // État local des champs éditables
   const [editMode,   setEditMode]   = useState(false);
-  const [firstName,  setFirstName]  = useState(user?.first_name ?? '');
-  const [lastName,   setLastName]   = useState(user?.last_name  ?? '');
+  const [firstName,  setFirstName]  = useState(user?.first_name ?? ''); 
+  const [lastName,   setLastName]   = useState(user?.last_name  ?? ''); 
   const [phone,      setPhone]      = useState(user?.phone      ?? '');
-  const [notifPromo, setNotifPromo] = useState(true);
 
   const [avatarKey, setAvatarKey] = useState(Date.now());
 
@@ -98,6 +119,22 @@ export default function ClientProfileScreen({ navigation }: Props) {
       quality: 0.7,
     });
     if (!result.canceled) setPendingImage(result.assets[0].uri);
+  };
+
+  const handleConsentChange = async (type: 'email' | 'sms' | 'push', value: boolean) => {
+    if (!accessToken) return;
+
+    try {
+      const dto = {
+        ...(type === 'email' && { marketing_email_opt_in: value }),
+        ...(type === 'sms'   && { marketing_sms_opt_in:   value }),
+        ...(type === 'push'  && { marketing_push_opt_in:  value }),
+      };
+      await _updateMyMarketingConsents(accessToken, dto);
+      showToast({ type: 'success', title: 'Préférences mises à jour', message: 'Vos choix ont été enregistrés.' });
+    } catch (err) {
+      showToast({ type: 'error', title: 'Erreur', message: 'Impossible de sauvegarder vos préférences.' });
+    }
   };
 
   // ── Sauvegarde ─────────────────────────────────────────────
@@ -187,7 +224,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
 
   // Priorité d'affichage : pending > confirmed > serveur
   const avatarUri = pendingImage ?? confirmedImage ?? user?.profile_photo_url;
-
+  const myProfile = useMarketingStore(s => s.myProfile);
   return (
     <View style={styles.flex}>
 
@@ -270,18 +307,26 @@ export default function ClientProfileScreen({ navigation }: Props) {
         <View style={styles.section}>
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Préférences</Text>
-            <View style={styles.prefRow}>
-              <View style={styles.prefText}>
-                <Text style={styles.prefLabel}>Notifications publicitaires</Text>
-                <Text style={styles.prefSub}>Recevoir des offres et promotions</Text>
-              </View>
-              <Switch
-                value={notifPromo}
-                onValueChange={setNotifPromo}
-                trackColor={{ false: Colors.border, true: Colors.bordeauxLight }}
-                thumbColor={Colors.white}
-              />
-            </View>
+            <PrefRow
+              label="Offres par Email"
+              sub="Recevoir nos promotions par email"
+              value={myProfile?.marketing_email_opt_in ?? false}
+              onChange={(val) => handleConsentChange('email', val)}
+            />
+            <View style={styles.divider} />
+            <PrefRow
+              label="Offres par SMS"
+              sub="Recevoir nos promotions par SMS"
+              value={myProfile?.marketing_sms_opt_in ?? false}
+              onChange={(val) => handleConsentChange('sms', val)}
+            />
+            <View style={styles.divider} />
+            <PrefRow
+              label="Notifications Push"
+              sub="Recevoir nos offres via l'application"
+              value={myProfile?.marketing_push_opt_in ?? false}
+              onChange={(val) => handleConsentChange('push', val)}
+            />
           </View>
         </View>
 

@@ -75,6 +75,10 @@ export type {
   UpdatePromoCodeDto,
   PromoCodeListFilters,
   PromoCodeListResult,
+  UserPromoCodesResult,
+  UserPromoCodeItem,
+  BulkAssignDto,
+  BulkAssignResult
 } from './promo-codes.types';
 
 export type {
@@ -87,6 +91,8 @@ export type {
   ClientBaseFilters,
   ClientBaseResult,
   CampaignListResult,
+  UpdateMarketingConsentsDto,
+  MyMarketingProfile,
 } from './marketing.types';
 
 export type {
