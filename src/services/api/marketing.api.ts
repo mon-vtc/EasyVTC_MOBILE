@@ -11,6 +11,7 @@ import type {
   CampaignListResult,
   CreateCampaignDto,
   UpdateMarketingConsentsDto,
+  UpdateCampaignDto,
   MyMarketingProfile,
 } from '../../types';
 
@@ -26,6 +27,18 @@ class MarketingApi {
 
   createCampaign(token: string, dto: CreateCampaignDto): Promise<ApiResponse<MarketingCampaign>> {
     return api.post('/admin/marketing/campaigns', dto, token);
+  }
+
+  updateCampaign(token: string, id: string, dto: UpdateCampaignDto): Promise<ApiResponse<MarketingCampaign>> {
+    return api.patch(`/admin/marketing/campaigns/${id}`, dto, token);
+  }
+
+  deleteCampaign(token: string, id: string): Promise<ApiResponse<void>> {
+    return api.delete(`/admin/marketing/campaigns/${id}`, token);
+  }
+
+  sendCampaign(token: string, id: string): Promise<ApiResponse<{ sent_count: number }>> {
+    return api.post(`/admin/marketing/campaigns/${id}/send`, {}, token);
   }
 
   updateMyConsents(token: string, dto: UpdateMarketingConsentsDto): Promise<ApiResponse<void>> {

@@ -11,6 +11,7 @@ import type {
   MarketingCampaign,
   CreateCampaignDto,
   UpdateMarketingConsentsDto,
+  UpdateCampaignDto,
   MyMarketingProfile,
 } from '../types/marketing.types';
 
@@ -31,6 +32,9 @@ interface MarketingState {
   fetchClients: (token: string, filters?: ClientBaseFilters) => Promise<void>;
   fetchCampaigns: (token: string, page?: number, limit?: number) => Promise<void>;
   createCampaign: (token: string, dto: CreateCampaignDto) => Promise<MarketingCampaign | null>;
+  updateCampaign: (token: string, id: string, dto: UpdateCampaignDto) => Promise<MarketingCampaign | null>;
+  deleteCampaign: (token: string, id: string) => Promise<void>;
+  sendCampaign: (token: string, id: string) => Promise<{ sent_count: number } | null>;
   updateMyMarketingConsents: (token: string, dto: UpdateMarketingConsentsDto) => Promise<void>;
   fetchMyMarketingProfile: (token: string) => Promise<void>;
   clearError: () => void;
@@ -106,6 +110,55 @@ export const useMarketingStore = create<MarketingState>((set, get) => ({
       set(state => ({
         campaigns: [res.data!, ...state.campaigns],
       }));
+      return res.data;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      set({ error: message });
+      throw new Error(message);
+    } finally {
+      set({ isSaving: false });
+    }
+  },
+
+  updateCampaign: async (token, id, dto) => {
+    set({ isSaving: true, error: null });
+    try {
+      const res = await marketingApi.updateCampaign(token, id, dto);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la mise à jour de la campagne');
+      set(state => ({
+        campaigns: state.campaigns.map(c => (c.id === id ? res.data! : c)),
+      }));
+      return res.data;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      set({ error: message });
+      throw new Error(message);
+    } finally {
+      set({ isSaving: false });
+    }
+  },
+
+  deleteCampaign: async (token, id) => {
+    set({ isSaving: true, error: null });
+    try {
+      const res = await marketingApi.deleteCampaign(token, id);
+      if (!res.ok) throw new Error(res.message ?? 'Erreur lors de la suppression de la campagne');
+      set(state => ({ campaigns: state.campaigns.filter(c => c.id !== id) }));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      set({ error: message });
+      throw new Error(message);
+    } finally {
+      set({ isSaving: false });
+    }
+  },
+
+  sendCampaign: async (token, id) => {
+    set({ isSaving: true, error: null });
+    try {
+      const res = await marketingApi.sendCampaign(token, id);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de l\'envoi de la campagne');
+      get().fetchCampaigns(token, 1, 20); // Re-fetch pour mettre à jour le statut
       return res.data;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';

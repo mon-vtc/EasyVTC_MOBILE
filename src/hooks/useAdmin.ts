@@ -90,6 +90,9 @@ export function useAdmin() {
   const _fetchMarketingClients = useMarketingStore(s => s.fetchClients);
   const _createCampaign        = useMarketingStore(s => s.createCampaign);
   const _fetchCampaigns        = useMarketingStore(s => s.fetchCampaigns);
+  const _updateCampaign        = useMarketingStore(s => s.updateCampaign);
+  const _deleteCampaign        = useMarketingStore(s => s.deleteCampaign);
+  const _sendCampaign          = useMarketingStore(s => s.sendCampaign);
   const clearMarketingError   = useMarketingStore(s => s.clearError);
 
   // ── Store Audit Logs (endpoint /admin/audit-logs) ───────────
@@ -169,6 +172,9 @@ export function useAdmin() {
   useEffect(() => { _fetchMarketingClientsRef.current = _fetchMarketingClients; }, [_fetchMarketingClients]);
   useEffect(() => { _createCampaignRef.current        = _createCampaign; },        [_createCampaign]);
   useEffect(() => { _fetchCampaignsRef.current        = _fetchCampaigns; },        [_fetchCampaigns]);
+  useEffect(() => { _updateCampaign.current         = _updateCampaign; },         [_updateCampaign]);
+  useEffect(() => { _deleteCampaign.current         = _deleteCampaign; },         [_deleteCampaign]);
+  useEffect(() => { _sendCampaign.current           = _sendCampaign; },           [_sendCampaign]);
   useEffect(() => { _fetchAuditLogsRef.current        = _fetchAuditLogs; },        [_fetchAuditLogs]);
   useEffect(() => { _fetchLogByIdRef.current          = _fetchLogById; },          [_fetchLogById]);
 
@@ -266,6 +272,15 @@ export function useAdmin() {
 
   const fetchCampaigns = useCallback((page?: number, limit?: number) =>
     _fetchCampaignsRef.current(accessTokenRef.current!, page, limit), []);
+
+   const updateCampaign = useCallback((id: string, dto: Partial<CreateCampaignDto>) =>
+    _updateCampaign.current(accessTokenRef.current!, id, dto), []);
+
+  const deleteCampaign = useCallback((id: string) =>
+    _deleteCampaign.current(accessTokenRef.current!, id), []);
+
+  const sendCampaign = useCallback((id: string) =>
+    _sendCampaign.current(accessTokenRef.current!, id), []);
 
   const fetchAuditLogs = useCallback((filters?: AuditLogListFilters) =>
     _fetchAuditLogsRef.current(accessTokenRef.current!, filters), []);
@@ -379,6 +394,9 @@ export function useAdmin() {
     fetchMarketingClients,
     createCampaign,
     fetchCampaigns,
+    updateCampaign,
+    deleteCampaign,
+    sendCampaign,
 
     // Audit Logs
     auditLogs,

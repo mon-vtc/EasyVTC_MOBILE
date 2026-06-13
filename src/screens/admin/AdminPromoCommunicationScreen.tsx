@@ -109,6 +109,9 @@ export default function AdminPromoCommunicationScreen() {
     
     createCampaign,
     fetchCampaigns,
+    updateCampaign,
+    deleteCampaign,
+    sendCampaign,
     fetchMarketingClients,
     clearMarketingError,
     fetchAdminClients,
@@ -122,6 +125,7 @@ export default function AdminPromoCommunicationScreen() {
   const [isCampaignModalVisible, setCampaignModalVisible] = useState(false);
   const [isClientSelectorVisible, setClientSelectorVisible] = useState(false);
   const [promoCreationMode, setPromoCreationMode] = useState<PromoCreationMode>('public');
+  const [editingCampaign, setEditingCampaign] = useState<MarketingCampaign | null>(null);
   const [selectedClients, setSelectedClients] = useState<ClientWithStats[]>([]);
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const { clients: allClients, fetchAdminClients: fetchAllClients } = useAdmin();
@@ -368,19 +372,71 @@ export default function AdminPromoCommunicationScreen() {
   }, [isMarketingLoading, isFetchingNextMarketingPage, campaignsPage, campaignsTotalPages, fetchCampaigns]);
 
   const openCreateCampaignModal = useCallback(() => {
+    setEditingCampaign(null);
     resetCampaignForm({ name: '', type: 'email', subject: '', body: '' });
+    setCampaignModalVisible(true);
+  }, [resetCampaignForm]);
+
+  const openEditCampaignModal = useCallback((campaign: MarketingCampaign) => {
+    setEditingCampaign(campaign);
+    resetCampaignForm({
+      name: campaign.name,
+      type: campaign.type,
+      subject: campaign.subject ?? '',
+      body: campaign.body,
+    });
     setCampaignModalVisible(true);
   }, [resetCampaignForm]);
 
   const handleSaveCampaign = useCallback(async (values: CampaignFormValues) => {
     try {
-      await createCampaign(values as CreateCampaignDto);
-      showToast({ title: 'Succès', message: 'Campagne créée en tant que brouillon.', type: 'success' });
+      if (editingCampaign) {
+        await updateCampaign(editingCampaign.id, values as CreateCampaignDto);
+        showToast({ title: 'Succès', message: 'Campagne mise à jour.', type: 'success' });
+      } else {
+        await createCampaign(values as CreateCampaignDto);
+        showToast({ title: 'Succès', message: 'Campagne créée en tant que brouillon.', type: 'success' });
+      }
       setCampaignModalVisible(false);
     } catch (error: any) {
       showToast({ title: 'Erreur', message: error?.message ?? 'Impossible de créer la campagne.', type: 'error' });
     }
-  }, [createCampaign, showToast]);
+  }, [createCampaign, updateCampaign, editingCampaign, showToast]);
+
+  const handleDeleteCampaign = useCallback((campaign: MarketingCampaign) => {
+    Alert.alert(
+      'Supprimer la campagne',
+      `Êtes-vous sûr de vouloir supprimer le brouillon "${campaign.name}" ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer', style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteCampaign(campaign.id);
+              showToast({ title: 'Supprimé', message: 'La campagne a été supprimée.', type: 'success' });
+            } catch (error: any) {
+              showToast({ title: 'Erreur', message: error?.message ?? 'Impossible de supprimer.', type: 'error' });
+            }
+          },
+        },
+      ],
+    );
+  }, [deleteCampaign, showToast]);
+
+  const handleSendCampaign = useCallback((campaign: MarketingCampaign) => {
+    Alert.alert('Envoyer la campagne', `Envoyer "${campaign.name}" à tous les clients éligibles ? Cette action est irréversible.`, [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Envoyer', style: 'default', onPress: async () => {
+        try {
+          const result = await sendCampaign(campaign.id);
+          showToast({ title: 'Envoi en cours', message: `Campagne envoyée à ${result?.sent_count ?? 0} destinataires.`, type: 'success' });
+        } catch (error: any) {
+          showToast({ title: 'Erreur', message: error?.message ?? 'Impossible d\'envoyer la campagne.', type: 'error' });
+        }
+      }},
+    ]);
+  }, [sendCampaign, showToast]);
 
   const renderPromoCard = ({ item: promo }: { item: PromoCode }) => {
     const now = new Date();
@@ -462,11 +518,14 @@ export default function AdminPromoCommunicationScreen() {
           <>
             <Text style={styles.campaignDraftText}>Cette campagne n'a pas encore été envoyée.</Text>
             <View style={styles.campaignActionsRow}>
-              <TouchableOpacity style={styles.campaignTextButton} onPress={() => showToast({ title: 'Envoyer maintenant', message: 'Fonctionnalité à venir', type: 'info' })}>
+              <TouchableOpacity style={styles.campaignTextButton} onPress={() => handleSendCampaign(item)}>
                 <Text style={styles.campaignTextButtonText}>Envoyer</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.campaignTextButton} onPress={() => showToast({ title: 'Voir brouillon', message: 'Fonctionnalité à venir', type: 'info' })}>
-                <Text style={styles.campaignTextButtonText}>Voir</Text>
+              <TouchableOpacity style={styles.campaignTextButton} onPress={() => openEditCampaignModal(item)}>
+                <Text style={styles.campaignTextButtonText}>Modifier</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.campaignTextButton} onPress={() => handleDeleteCampaign(item)}>
+                <Text style={[styles.campaignTextButtonText, { color: Colors.error }]}>Supprimer</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -510,7 +569,7 @@ export default function AdminPromoCommunicationScreen() {
     <>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Base clients</Text>
-        <View style={styles.addButton} />
+        {/* <View style={styles.addButton} /> */}
       </View>
       <View style={styles.statsGrid}>
         <View style={[styles.kpiCardClient, styles.kpiCard]}>
@@ -1074,7 +1133,7 @@ export default function AdminPromoCommunicationScreen() {
       <Modal visible={isCampaignModalVisible} animationType="slide" transparent onRequestClose={() => setCampaignModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Nouvelle Campagne</Text>
+            <Text style={styles.modalTitle}>{editingCampaign ? 'Modifier la campagne' : 'Nouvelle Campagne'}</Text>
             <ScrollView contentContainerStyle={styles.modalScroll} keyboardShouldPersistTaps="handled">
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Nom de la campagne</Text>
@@ -1167,8 +1226,8 @@ export default function AdminPromoCommunicationScreen() {
                   disabled={isCampaignSubmitting}
                 >
                   {isCampaignSubmitting
-                    ? <ActivityIndicator color={Colors.white} />
-                    : <Text style={styles.modalSaveText}>Créer</Text>
+                    ? <ActivityIndicator color={Colors.white} /> 
+                    : <Text style={styles.modalSaveText}>{editingCampaign ? 'Mettre à jour' : 'Créer'}</Text>
                   }
                 </TouchableOpacity>
               </View>
