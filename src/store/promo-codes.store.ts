@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { promoCodesApi } from '../services/api/promo-codes.api';
-import type { PromoCode, PromoCodeListFilters, CreatePromoCodeDto, UpdatePromoCodeDto } from '../types';
+import type { PromoCode, PromoCodeListFilters, CreatePromoCodeDto, UpdatePromoCodeDto, UserPromoCodeItem, UserPromoCodesResult, BulkAssignDto, BulkAssignResult } from '../types';
 
 interface PromoCodesState {
   promoCodes: PromoCode[];
@@ -16,10 +16,20 @@ interface PromoCodesState {
   isSaving: boolean;
   error: string | null;
   fetchPromoCodes: (token: string, filters?: PromoCodeListFilters) => Promise<void>;
+
+  myActivePromoCodes: UserPromoCodeItem[];
+  myExpiredPromoCodes: UserPromoCodeItem[];
+  myTotalSavings: number;
+  myActiveCount: number;
+  isFetchingMyPromoCodes: boolean;
+  myPromoCodesError: string | null;
+  fetchMyPromoCodes: (token: string) => Promise<void>;
   createPromoCode: (token: string, dto: CreatePromoCodeDto) => Promise<PromoCode | null>;
   updatePromoCode: (token: string, id: string, dto: UpdatePromoCodeDto) => Promise<PromoCode | null>;
   deletePromoCode: (token: string, id: string) => Promise<void>;
+  bulkAssignPromoCode: (token: string, templateId: string, dto: BulkAssignDto) => Promise<BulkAssignResult | null>;
   clearError: () => void;
+  clearMyPromoCodesError: () => void;
 }
 
 export const usePromoCodesStore = create<PromoCodesState>((set) => ({
@@ -29,6 +39,12 @@ export const usePromoCodesStore = create<PromoCodesState>((set) => ({
   totalPages: 1,
   isLoading: false,
   isSaving: false,
+  myActivePromoCodes: [],
+  myExpiredPromoCodes: [],
+  myTotalSavings: 0,
+  myActiveCount: 0,
+  isFetchingMyPromoCodes: false,
+  myPromoCodesError: null,
   error: null,
 
   fetchPromoCodes: async (token, filters) => {
@@ -83,6 +99,22 @@ export const usePromoCodesStore = create<PromoCodesState>((set) => ({
     }
   },
 
+  bulkAssignPromoCode: async (token, templateId, dto) => {
+    set({ isSaving: true, error: null });
+    try {
+      const res = await promoCodesApi.bulkAssign(token, templateId, dto);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de l\'assignation en masse');
+      // Note: On ne met pas à jour la liste locale car les codes générés sont spécifiques aux utilisateurs
+      return res.data;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      set({ error: message });
+      throw new Error(message);
+    } finally {
+      set({ isSaving: false });
+    }
+  },
+
   deletePromoCode: async (token, id) => {
     set({ isSaving: true, error: null });
     try {
@@ -99,4 +131,23 @@ export const usePromoCodesStore = create<PromoCodesState>((set) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  clearMyPromoCodesError: () => set({ myPromoCodesError: null }),
+
+  fetchMyPromoCodes: async (token: string) => {
+    set({ isFetchingMyPromoCodes: true, myPromoCodesError: null });
+    try {
+      const res = await promoCodesApi.fetchMyPromoCodes(token);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors du chargement de vos codes promo');
+      set({
+        myActivePromoCodes: res.data.active,
+        myExpiredPromoCodes: res.data.expired,
+        myTotalSavings: res.data.stats.total_savings,
+        myActiveCount: res.data.stats.active_count,
+        isFetchingMyPromoCodes: false,
+      });
+    } catch (err: unknown) {
+      set({ myPromoCodesError: err instanceof Error ? err.message : 'Erreur inconnue', isFetchingMyPromoCodes: false });
+    }
+  },
 }));

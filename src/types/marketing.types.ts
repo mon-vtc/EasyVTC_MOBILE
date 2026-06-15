@@ -83,3 +83,17 @@ export interface CampaignListResult {
   limit: number;
   total_pages: number;
 }
+
+export interface UpdateMarketingConsentsDto {
+  marketing_email_opt_in?: boolean;
+  marketing_sms_opt_in?: boolean;
+  marketing_push_opt_in?: boolean;
+}
+
+export interface MyMarketingProfile {
+  marketing_email_opt_in: boolean;
+  marketing_sms_opt_in: boolean;
+  marketing_push_opt_in: boolean;
+}
+
+

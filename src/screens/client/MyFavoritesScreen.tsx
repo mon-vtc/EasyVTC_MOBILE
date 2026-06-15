@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
   ActivityIndicator, Alert, Modal, TextInput, Platform, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -131,24 +131,30 @@ export default function MyFavoritesScreen({ navigation }: any) {
         <Image source={Logo.LogoEasyVTC} style={{ width: 32, height: 32 }} />
         <View style={styles.headerBtn} />
       </View>
-      <View style={styles.titleZone}>
-        <View>
-          <Text style={styles.mainTitle}>Mes favoris</Text>
-          <Text style={styles.subtitle}>
-            {favorites.length} adresse{favorites.length > 1 ? 's' : ''} enregistrée{favorites.length > 1 ? 's' : ''}
-          </Text>
-        </View>
-        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-          <Ionicons name="add" size={32} color={Colors.white} />
-        </TouchableOpacity>
-      </View>
 
       {isLoading ? (
         <ActivityIndicator size="large" color={Colors.bordeaux} style={{ marginTop: 50 }} />
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {favorites.length === 0 ? renderEmptyState() : favorites.map(renderCard)}
-        </ScrollView>
+        <FlatList
+          data={favorites}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => renderCard(item)}
+          ListHeaderComponent={
+            <View style={styles.titleZone}>
+              <View>
+                <Text style={styles.mainTitle}>Mes favoris</Text>
+                <Text style={styles.subtitle}>
+                  {favorites.length} adresse{favorites.length > 1 ? 's' : ''} enregistrée{favorites.length > 1 ? 's' : ''}
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+                <Ionicons name="add" size={32} color={Colors.white} />
+              </TouchableOpacity>
+            </View>
+          }
+          ListEmptyComponent={renderEmptyState()}
+          contentContainerStyle={styles.scrollContent}
+        />
       )}
 
       <Modal

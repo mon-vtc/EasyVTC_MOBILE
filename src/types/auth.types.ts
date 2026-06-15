@@ -82,6 +82,7 @@ export type ClientStackParamList = {
   SupportChat:          { ticketId: string; subject: string };
   ChatScreen:           { reservationId?: string };
   MyFavorites:          undefined;
+  PromoCodes:           undefined;
 
 };
 
