@@ -91,10 +91,6 @@ export interface UpdateMarketingConsentsDto {
 }
 
 export interface MyMarketingProfile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
   marketing_email_opt_in: boolean;
   marketing_sms_opt_in: boolean;
   marketing_push_opt_in: boolean;

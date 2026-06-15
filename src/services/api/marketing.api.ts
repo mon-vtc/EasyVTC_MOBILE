@@ -46,7 +46,7 @@ class MarketingApi {
   }
 
   getMyMarketingProfile(token: string): Promise<ApiResponse<MyMarketingProfile>> {
-    return api.get('/users/me/marketing-profile', token);
+    return api.get('/users/me/marketing-consents', token);
   }
 }
 

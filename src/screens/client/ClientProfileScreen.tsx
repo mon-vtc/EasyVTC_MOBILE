@@ -6,6 +6,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z }           from 'zod';
 import { FormField }   from '../../components/forms/FormField';
+import { useFocusEffect } from '@react-navigation/native';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useAuth }     from '../../hooks/useAuth';
 import { useToast }     from '../../hooks/useToast';
@@ -94,6 +95,7 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 export default function ClientProfileScreen({ navigation }: Props) {
   const { user, logout, changePassword, isLoading, error, clearError, login, updateProfile, uploadAvatar } = useAuth();
   const accessToken = useAuthStore(s => s.accessToken);
+  const { fetchMyMarketingProfile } = useMarketingStore();
   const _updateMyMarketingConsents = useMarketingStore(s => s.updateMyMarketingConsents);
   
   const [pendingImage,   setPendingImage]   = useState<string | null>(null); // sélectionnée, pas encore uploadée
@@ -109,6 +111,13 @@ export default function ClientProfileScreen({ navigation }: Props) {
 
   const { showToast } = useToast();
   const initials = `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (accessToken) fetchMyMarketingProfile(accessToken);
+    }, [accessToken, fetchMyMarketingProfile])
+  );
+
 
   // ── Galerie photo ──────────────────────────────────────────
   const pickImage = async () => {

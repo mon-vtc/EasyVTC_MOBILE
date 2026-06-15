@@ -1184,7 +1184,7 @@ export default function AdminPromoCommunicationScreen() {
                   name="subject"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                      style={styles.fieldInput}
+                      style={[styles.fieldInput, {elevation : 1}]}
                       value={value}
                       onBlur={onBlur}
                       onChangeText={onChange}
@@ -1203,7 +1203,7 @@ export default function AdminPromoCommunicationScreen() {
                   name="body"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                      style={[styles.fieldInput, { height: 120, textAlignVertical: 'top' }]}
+                      style={[styles.fieldInput, { height: 120, textAlignVertical: 'top', elevation : 1 }]}
                       value={value}
                       onBlur={onBlur}
                       onChangeText={onChange}
@@ -1739,6 +1739,8 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     color: Colors.textPrimary,
     fontFamily: Fonts.regular,
+    borderRadius : Radius.md,
+    backgroundColor : Colors.surface,
   },
   fieldInputText: {
     color: Colors.textPrimary,
