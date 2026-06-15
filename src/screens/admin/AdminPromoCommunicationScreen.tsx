@@ -86,7 +86,8 @@ type CampaignFormValues = {
 
 const campaignFormSchema = z.object({
   name: z.string().min(3, 'Le nom doit faire au moins 3 caractères.'),
-  type: z.enum(['email', 'sms', 'push']),
+  type: z.enum(['email', 'push']),
+  // type: z.enum(['email', 'sms', 'push']),
   subject: z.string().optional(),
   body: z.string().min(10, 'Le corps du message doit faire au moins 10 caractères.'),
 }).refine(data => data.type !== 'email' || (data.subject && data.subject.length > 0), { message: 'L\'objet est requis pour un email.', path: ['subject'] });
@@ -119,7 +120,8 @@ export default function AdminPromoCommunicationScreen() {
 
   const [activeTab, setActiveTab] = useState<TabKey>('promo');
   const [searchClients, setSearchClients] = useState('');
-  const [activeClientFilter, setActiveClientFilter] = useState<'all' | 'email' | 'sms' | 'push'>('all');
+  const [activeClientFilter, setActiveClientFilter] = useState<'all' | 'email' | 'push'>('all');
+  // const [activeClientFilter, setActiveClientFilter] = useState<'all' | 'email' | 'sms' | 'push'>('all');
   const [isModalVisible, setModalVisible] = useState(false);
   const [isCalendarVisible, setCalendarVisible] = useState(false);
   const [isCampaignModalVisible, setCampaignModalVisible] = useState(false);
@@ -582,11 +584,11 @@ export default function AdminPromoCommunicationScreen() {
           <Text style={styles.kpiValue}>{marketingStats?.opt_in_email ?? 0}</Text>
           <Text style={styles.kpiLabel}>Opt-in Email</Text>
         </View>
-        <View style={[styles.kpiCardChat, styles.kpiCard]}>
+        {/* <View style={[styles.kpiCardChat, styles.kpiCard]}>
           <View style={styles.kpiIcon}><AppIcon name="chatbubble-ellipses-outline" size={20} color={Colors.white} /></View>
           <Text style={styles.kpiValue}>{marketingStats?.opt_in_sms ?? 0}</Text>
           <Text style={styles.kpiLabel}>Opt-in SMS</Text>
-        </View>
+        </View> */}
         <View style={[styles.kpiCardNotif, styles.kpiCard]}>
           <View style={styles.kpiIcon}><AppIcon name="notifications-outline" size={20} color={Colors.white} /></View>
           <Text style={styles.kpiValue}>{marketingStats?.opt_in_push ?? 0}</Text>
@@ -605,7 +607,8 @@ export default function AdminPromoCommunicationScreen() {
           />
         </View>
         <View style={styles.filterRow}>
-          {(['all', 'email', 'sms', 'push'] as const).map((filter) => (
+          {(['all', 'email', 'push'] as const).map((filter) => (
+          // {(['all', 'email', 'sms', 'push'] as const).map((filter) => (
             <TouchableOpacity
               key={filter}
               style={[styles.filterChip, activeClientFilter === filter && styles.filterChipActive]}
@@ -717,12 +720,12 @@ export default function AdminPromoCommunicationScreen() {
                     <Text style={styles.badgeText}>{CANAL.email.label}</Text>
                   </View>
                 )}
-                {client.marketing_sms_opt_in && (
+                {/* {client.marketing_sms_opt_in && (
                   <View style={styles.badge}>
                     <AppIcon name={CANAL.sms.icon} size={12} color={Colors.textSecondary} />
                     <Text style={styles.badgeText}>{CANAL.sms.label}</Text>
                   </View>
-                )}
+                )} */}
                 {client.marketing_push_opt_in && (
                   <View style={styles.badge}>
                     <AppIcon name={CANAL.push.icon} size={12} color={Colors.textSecondary} />
@@ -1161,7 +1164,8 @@ export default function AdminPromoCommunicationScreen() {
                   name="type"
                   render={({ field: { value, onChange } }) => (
                     <View style={styles.toggleRow}>
-                      {(['email', 'sms', 'push'] as const).map((type) => (
+                      {/* {(['email', 'sms', 'push'] as const).map((type) => ( */}
+                      {(['email', 'push'] as const).map((type) => (
                         <TouchableOpacity
                           key={type}
                           style={[styles.toggleButton, value === type && styles.toggleButtonActive]}

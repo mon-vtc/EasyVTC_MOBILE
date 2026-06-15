@@ -181,14 +181,16 @@ function Step1({
   // Synchronise les inputs locaux avec l'état global de la réservation
   // (utile si l'état est modifié par un forfait par exemple)
   React.useEffect(() => {
-    if (focusedInput !== 'origin')
-    setOriginInput(booking.origin?.address ?? '');
+    if (focusedInput !== 'origin') {
+      setOriginInput(booking.origin?.address ?? '');
+    }
     setOriginError(null);
   }, [booking.origin]);
 
   React.useEffect(() => {
-    if (focusedInput !== 'destination')
-    setDestinationInput(booking.destination?.address ?? '');
+    if (focusedInput !== 'destination') {
+      setDestinationInput(booking.destination?.address ?? '');
+    }
     setDestinationError(null);
   }, [booking.destination]);
 

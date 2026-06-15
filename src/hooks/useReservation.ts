@@ -165,6 +165,9 @@ export function useReservation() {
   // ── Géocodage ──────────────────────────────────────────────────────────────
   const geocodeAddress = useCallback(async (address: string): Promise<GeoPoint | null> => {
     try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return null;
+
       const results = await Location.geocodeAsync(address);
       if (!results.length) return null;
       return { latitude: results[0].latitude, longitude: results[0].longitude, address };
