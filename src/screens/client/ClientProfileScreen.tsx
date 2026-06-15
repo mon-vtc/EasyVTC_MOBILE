@@ -323,13 +323,13 @@ export default function ClientProfileScreen({ navigation }: Props) {
               onChange={(val) => handleConsentChange('email', val)}
             />
             <View style={styles.divider} />
-            <PrefRow
+            {/* <PrefRow
               label="Offres par SMS"
               sub="Recevoir nos promotions par SMS"
               value={myProfile?.marketing_sms_opt_in ?? false}
               onChange={(val) => handleConsentChange('sms', val)}
             />
-            <View style={styles.divider} />
+            <View style={styles.divider} /> */}
             <PrefRow
               label="Notifications Push"
               sub="Recevoir nos offres via l'application"
