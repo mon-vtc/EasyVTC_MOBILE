@@ -222,9 +222,9 @@ export default function ClientHomeScreen({ navigation }: Props) {
                       case 'Favoris':
                         navigation.navigate('MyFavorites');
                         break;
-                      // case 'Promos':
-                      //   navigation.navigate('Promotions'); // TODO: Créer l'écran Promotions
-                      //   break;
+                      case 'Promos':
+                        navigation.navigate('PromoCodes'); // TODO: Créer l'écran Promotions
+                        break;
                       case 'Support':
                         navigation.navigate('SupportList');
                         break;

@@ -908,7 +908,7 @@ export default function BookingScreen({ navigation }: any) {
       nav.replace('BookingConfirmation', { reservationId: reservation.id });
     } catch (err) {
       console.warn('Booking confirmation failed', err);
-      showToast({ title: 'Erreur', message: "Impossible de confirmer la réservation.", type: 'error' });
+      showToast({ title: 'Erreur', message: `${err}`, type: 'error' });
     }
   };
 

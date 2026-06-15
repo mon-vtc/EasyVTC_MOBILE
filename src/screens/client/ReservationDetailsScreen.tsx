@@ -36,7 +36,7 @@ type ConfirmationRoute = RouteProp<ClientStackParamList, 'ReservationDetails'>;
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function formatPrice(price: number | null | undefined): string {
   if (price == null) return '—';
-  return `${price.toFixed(0)} €`;
+  return `${price} €`;
 }
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });

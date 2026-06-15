@@ -6,7 +6,7 @@ import type {
   AdminUser, CreateCampaignDto, ListUsersParams, ListDriversParams,
   UpdateUserStatusPayload, ChangeDriverStatusPayload, UserRole,
   CreateManagerDto, UpdateManagerDto, ChangeManagerStatusDto, ManagerListFilters, AdminStats,
-  ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult, ClientBaseFilters, AuditLogListFilters,
+  ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult, ClientBaseFilters, AuditLogListFilters, BulkAssignDto,
   PromoCodeListFilters, CreatePromoCodeDto, UpdatePromoCodeDto, PromoCode,
 } from '../types';
 import { useCallback, useEffect, useRef } from 'react';
@@ -72,12 +72,15 @@ export function useAdmin() {
   const _createPromoCode       = usePromoCodesStore(s => s.createPromoCode);
   const _updatePromoCode       = usePromoCodesStore(s => s.updatePromoCode);
   const _deletePromoCode       = usePromoCodesStore(s => s.deletePromoCode);
+  const _bulkAssignPromoCode   = usePromoCodesStore(s => s.bulkAssignPromoCode);
   const clearPromoCodesError   = usePromoCodesStore(s => s.clearError);
 
   // ── Store Marketing (endpoint /admin/marketing) ─────────────
   const marketingClients      = useMarketingStore(s => s.clients);
   const marketingStats        = useMarketingStore(s => s.stats);
   const marketingTotal        = useMarketingStore(s => s.total);
+  const marketingClientPage   = useMarketingStore(s => s.page);
+  const marketingClientTotalPages = useMarketingStore(s => s.clientTotalPages);
   const campaigns             = useMarketingStore(s => s.campaigns);
   const campaignsTotalPages   = useMarketingStore(s => s.totalPages);
   const campaignsPage         = useMarketingStore(s => s.page);
@@ -87,6 +90,9 @@ export function useAdmin() {
   const _fetchMarketingClients = useMarketingStore(s => s.fetchClients);
   const _createCampaign        = useMarketingStore(s => s.createCampaign);
   const _fetchCampaigns        = useMarketingStore(s => s.fetchCampaigns);
+  const _updateCampaign        = useMarketingStore(s => s.updateCampaign);
+  const _deleteCampaign        = useMarketingStore(s => s.deleteCampaign);
+  const _sendCampaign          = useMarketingStore(s => s.sendCampaign);
   const clearMarketingError   = useMarketingStore(s => s.clearError);
 
   // ── Store Audit Logs (endpoint /admin/audit-logs) ───────────
@@ -136,6 +142,7 @@ export function useAdmin() {
   const _createPromoCodeRef = useRef(_createPromoCode);
   const _updatePromoCodeRef = useRef(_updatePromoCode);
   const _deletePromoCodeRef = useRef(_deletePromoCode);
+  const _bulkAssignPromoCodeRef = useRef(_bulkAssignPromoCode);
   const _fetchMarketingClientsRef = useRef(_fetchMarketingClients);
   const _createCampaignRef        = useRef(_createCampaign);
   const _fetchCampaignsRef        = useRef(_fetchCampaigns);
@@ -161,9 +168,13 @@ export function useAdmin() {
   useEffect(() => { _createPromoCodeRef.current     = _createPromoCode; },    [_createPromoCode]);
   useEffect(() => { _updatePromoCodeRef.current     = _updatePromoCode; },    [_updatePromoCode]);
   useEffect(() => { _deletePromoCodeRef.current     = _deletePromoCode; },    [_deletePromoCode]);
+  useEffect(() => { _bulkAssignPromoCodeRef.current = _bulkAssignPromoCode; },[_bulkAssignPromoCode]);
   useEffect(() => { _fetchMarketingClientsRef.current = _fetchMarketingClients; }, [_fetchMarketingClients]);
   useEffect(() => { _createCampaignRef.current        = _createCampaign; },        [_createCampaign]);
   useEffect(() => { _fetchCampaignsRef.current        = _fetchCampaigns; },        [_fetchCampaigns]);
+  useEffect(() => { _updateCampaign.current         = _updateCampaign; },         [_updateCampaign]);
+  useEffect(() => { _deleteCampaign.current         = _deleteCampaign; },         [_deleteCampaign]);
+  useEffect(() => { _sendCampaign.current           = _sendCampaign; },           [_sendCampaign]);
   useEffect(() => { _fetchAuditLogsRef.current        = _fetchAuditLogs; },        [_fetchAuditLogs]);
   useEffect(() => { _fetchLogByIdRef.current          = _fetchLogById; },          [_fetchLogById]);
 
@@ -247,6 +258,9 @@ export function useAdmin() {
   const updatePromoCode = useCallback((id: string, dto: UpdatePromoCodeDto) =>
     _updatePromoCodeRef.current(accessTokenRef.current!, id, dto), []);
 
+  const bulkAssignPromoCode = useCallback((templateId: string, dto: BulkAssignDto) =>
+    _bulkAssignPromoCodeRef.current(accessTokenRef.current!, templateId, dto), []);
+
   const deletePromoCode = useCallback((id: string) =>
     _deletePromoCodeRef.current(accessTokenRef.current!, id), []);
 
@@ -258,6 +272,15 @@ export function useAdmin() {
 
   const fetchCampaigns = useCallback((page?: number, limit?: number) =>
     _fetchCampaignsRef.current(accessTokenRef.current!, page, limit), []);
+
+   const updateCampaign = useCallback((id: string, dto: Partial<CreateCampaignDto>) =>
+    _updateCampaign.current(accessTokenRef.current!, id, dto), []);
+
+  const deleteCampaign = useCallback((id: string) =>
+    _deleteCampaign.current(accessTokenRef.current!, id), []);
+
+  const sendCampaign = useCallback((id: string) =>
+    _sendCampaign.current(accessTokenRef.current!, id), []);
 
   const fetchAuditLogs = useCallback((filters?: AuditLogListFilters) =>
     _fetchAuditLogsRef.current(accessTokenRef.current!, filters), []);
@@ -353,11 +376,14 @@ export function useAdmin() {
     createPromoCode,
     updatePromoCode,
     deletePromoCode,
+    bulkAssignPromoCode,
 
     // Marketing
     marketingClients,
     marketingStats,
     marketingTotal,
+    marketingClientPage,
+    marketingClientTotalPages,
     campaigns,
     campaignsTotalPages,
     campaignsPage,
@@ -368,6 +394,9 @@ export function useAdmin() {
     fetchMarketingClients,
     createCampaign,
     fetchCampaigns,
+    updateCampaign,
+    deleteCampaign,
+    sendCampaign,
 
     // Audit Logs
     auditLogs,

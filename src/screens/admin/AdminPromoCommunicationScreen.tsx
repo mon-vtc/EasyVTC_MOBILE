@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState , useRef} from 'react';
 import {
   FlatList,
   View,
@@ -12,6 +12,7 @@ import {
   Alert,
   Modal,
   Platform,
+  FlatList as RNFlatList,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
@@ -22,7 +23,7 @@ import { useAdmin } from '../../hooks/useAdmin';
 import CustomCalendarModal from '../../components/common/CustomCalendarModal';
 import { AppIcon } from '../../components/common/AppIcon';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
-import type { PromoCode, ClientSummary, DiscountType, CampaignType, CreateCampaignDto, MarketingCampaign } from '../../types';
+import type { PromoCode, ClientSummary, DiscountType, CampaignType, CreateCampaignDto, MarketingCampaign, ClientWithStats, BulkAssignDto, CreatePromoCodeDto, ClientBaseFilters } from '../../types';
 import { useToast } from '../../hooks/useToast';
 
 const TAB_ITEMS = [
@@ -37,28 +38,44 @@ const CANAL = {
   push: { key: 'push', label: 'Push' , icon: 'notifications-outline' as const},
 };
 
+const PROMO_MODES = [
+  { key: 'public', label: 'Public', icon: 'barcode-outline'},
+  { key: 'single', label: '1 client', icon: 'person-outline'},
+  { key: 'bulk',   label: 'multi-clients', icon: 'people-outline'},
+] as const;
+type PromoCreationMode = typeof PROMO_MODES[number]['key'];
+
 type TabKey = typeof TAB_ITEMS[number]['key'];
 
-type PromoFormValues = {
-  code: string;
-  discount_type: DiscountType;
-  discount_value: string;
-  valid_until: string;
-  max_uses: string;
-  min_order_amount: string;
-};
+type PromoFormValues = CreatePromoCodeDto;
 
 const promoFormSchema = z.object({
-  code: z.string().min(1, 'Le code est requis'),
+  code: z.string().optional(),
+  name: z.string().min(3, 'Le nom est requis (3 caractères min).'),
+  description: z.string().optional(),
+  code_radical: z.string().optional(),
+  assigned_user_id: z.string().optional(),
   discount_type: z.enum(['percent', 'fixed']),
-  discount_value: z.preprocess(
-    (value) => Number(String(value).replace(',', '.')),
-    z.number().positive('La valeur doit être positive'),
-  ),
+  discount_value: z.number().positive('La valeur doit être positive'),
+  valid_from: z.string().optional(),
   valid_until: z.string().optional(),
-  max_uses: z.string().optional(),
-  min_order_amount: z.string().optional(),
-});
+  max_uses: z.number().optional(),
+  max_uses_per_user: z.number().optional(),
+  min_order_amount: z.number().optional(),
+  condition_label: z.string().optional(),
+  condition_type: z.enum(['none', 'pickup_location']).optional(),
+  pickup_lat: z.number().optional(),
+  pickup_lng: z.number().optional(),
+  pickup_radius_meters: z.number().optional(),
+}).refine(
+  (d) => {
+    if (d.assigned_user_id) return !!d.code_radical;
+    return !!d.code;
+  },
+  (d) => d.assigned_user_id
+    ? { message: 'Le radical est requis.', path: ['code_radical'] }
+    : { message: 'Le code est requis.', path: ['code'] },
+);
 
 type CampaignFormValues = {
   name: string;
@@ -83,12 +100,18 @@ export default function AdminPromoCommunicationScreen() {
     marketingClients, marketingStats, campaigns, campaignsPage, campaignsTotalPages,
     isMarketingLoading, isFetchingNextMarketingPage, marketingError,
     fetchPromoCodes,
+    marketingClientPage, marketingClientTotalPages,
     createPromoCode,
     updatePromoCode,
+    bulkAssignPromoCode,
     deletePromoCode,
     clearPromoCodesError,
+    
     createCampaign,
     fetchCampaigns,
+    updateCampaign,
+    deleteCampaign,
+    sendCampaign,
     fetchMarketingClients,
     clearMarketingError,
     fetchAdminClients,
@@ -100,6 +123,13 @@ export default function AdminPromoCommunicationScreen() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isCalendarVisible, setCalendarVisible] = useState(false);
   const [isCampaignModalVisible, setCampaignModalVisible] = useState(false);
+  const [isClientSelectorVisible, setClientSelectorVisible] = useState(false);
+  const [promoCreationMode, setPromoCreationMode] = useState<PromoCreationMode>('public');
+  const [editingCampaign, setEditingCampaign] = useState<MarketingCampaign | null>(null);
+  const [selectedClients, setSelectedClients] = useState<ClientWithStats[]>([]);
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const { clients: allClients, fetchAdminClients: fetchAllClients } = useAdmin();
+  const [calendarTarget, setCalendarTarget] = useState<'valid_from' | 'valid_until'>('valid_until');
   const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
 
   const {
@@ -113,11 +143,18 @@ export default function AdminPromoCommunicationScreen() {
     resolver: zodResolver(promoFormSchema),
     defaultValues: {
       code: '',
+      name: '',
+      description: '',
+      code_radical: '',
+      assigned_user_id: '',
       discount_type: 'percent',
-      discount_value: '0',
+      discount_value: undefined,
+      valid_from: '',
       valid_until: '',
-      max_uses: '',
-      min_order_amount: '',
+      max_uses: undefined,
+      max_uses_per_user: undefined,
+      min_order_amount: undefined,
+      condition_label: '',
     },
   });
 
@@ -133,13 +170,33 @@ export default function AdminPromoCommunicationScreen() {
     defaultValues: { name: '', type: 'email', subject: '', body: '' },
   });
 
+  useEffect(() => {
+    if (isClientSelectorVisible) {
+      fetchAllClients({ search: clientSearchQuery, limit: 50 });
+    }
+  }, [isClientSelectorVisible, clientSearchQuery, fetchAllClients]);
 
   useEffect(() => {
     if (activeTab === 'promo') fetchPromoCodes({ page: 1, limit: 20 });
-    if (activeTab === 'clients') fetchMarketingClients({ page: 1, limit: 20 });
     if (activeTab === 'campaigns') fetchCampaigns(1, 20);
-  }, [activeTab, fetchPromoCodes, fetchMarketingClients]);
+  }, [activeTab, fetchPromoCodes, fetchCampaigns]);
 
+  const isInitialLoadDone = useRef(false);
+
+  useEffect(() => {
+    if (activeTab !== 'clients') return;
+    isInitialLoadDone.current = false; // reset à chaque changement de filtre
+
+    const filters: ClientBaseFilters = { page: 1, limit: 20 };
+    const trimmed = searchClients.trim();
+    if (trimmed) filters.search = trimmed;
+    if (activeClientFilter !== 'all') filters.consent = activeClientFilter;
+
+    fetchMarketingClients(filters).finally(() => {
+      isInitialLoadDone.current = true;
+    });
+  }, [activeTab, searchClients, activeClientFilter, fetchMarketingClients]);
+  
   useEffect(() => {
     if (promoCodesError) {
       showToast({ title:'Erreur', message : `Erreur promo codes ${promoCodesError}`, type: 'error' });
@@ -154,21 +211,21 @@ export default function AdminPromoCommunicationScreen() {
     }
   }, [marketingError, clearMarketingError]);
 
-  const filteredClients = useMemo(
-    () => marketingClients.filter((client : ClientSummary) => {
-      const query = searchClients.trim().toLowerCase();
-      const matchesSearch = !query || [client.first_name, client.last_name, client.email || '']
-        .some((value) => value.toLowerCase().includes(query));
+  const loadMoreClients = useCallback(() => {
+    if (!isInitialLoadDone.current) return;
+    if (isMarketingLoading || isFetchingNextMarketingPage || marketingClientPage >= marketingClientTotalPages) {
+      return;
+    }
 
-      if (!matchesSearch) return false;
+    const nextPage = marketingClientPage + 1;
+    const filters: ClientBaseFilters = { page: nextPage, limit: 20 };
 
-      if (activeClientFilter === 'email') return client.marketing_email_opt_in;
-      if (activeClientFilter === 'sms') return client.marketing_sms_opt_in;
-      if (activeClientFilter === 'push') return client.marketing_push_opt_in;
-      return true;
-    }),
-    [marketingClients, searchClients, activeClientFilter],
-  );
+    const trimmed = searchClients.trim();
+    if (trimmed) filters.search = trimmed;
+    if (activeClientFilter !== 'all') filters.consent = activeClientFilter;
+
+    fetchMarketingClients(filters);
+  }, [isMarketingLoading, isFetchingNextMarketingPage, marketingClientPage, marketingClientTotalPages, fetchMarketingClients, searchClients, activeClientFilter]);
 
   const onChangeTab = useCallback((tab: TabKey) => {
     setActiveTab(tab);
@@ -176,44 +233,100 @@ export default function AdminPromoCommunicationScreen() {
 
   const openCreatePromoModal = useCallback(() => {
     setEditingPromo(null);
-    reset({ code: '', discount_type: 'percent', discount_value: '0', valid_until: '', max_uses: '', min_order_amount: '' });
+    setPromoCreationMode('public');
+    setSelectedClients([]);
+    reset({
+      code: '',
+      name: '',
+      description: '',
+      code_radical: '',
+      assigned_user_id: '',
+      discount_type: 'percent',
+      discount_value: 0,
+      valid_from: '',
+      valid_until: '',
+      max_uses: undefined,
+      max_uses_per_user: undefined,
+      min_order_amount: undefined,
+      condition_label: '',
+    });
     setModalVisible(true);
   }, [reset]);
 
   const openEditPromoModal = useCallback((promo: PromoCode) => {
     setEditingPromo(promo);
-    // Extraire la date YYYY-MM-DD de valid_until (ISO string)
-    const dateOnly = promo.valid_until ? promo.valid_until.split('T')[0] : '';
+    const validFromDate = promo.valid_from ? promo.valid_from.split('T')[0] : '';
+    const validUntilDate = promo.valid_until ? promo.valid_until.split('T')[0] : '';
     reset({
-      code: promo.code,
+      code: promo.code ?? '',
+      name: promo.name ?? '',
+      description: promo.description ?? '',
       discount_type: promo.discount_type,
-      discount_value: String(promo.discount_value),
-      valid_until: dateOnly,
-      max_uses: promo.max_uses !== null ? String(promo.max_uses) : '',
-      min_order_amount: promo.min_order_amount !== null ? String(promo.min_order_amount) : '',
+      discount_value: promo.discount_value,
+      valid_from: validFromDate,
+      valid_until: validUntilDate,
+      max_uses: promo.max_uses ?? undefined,
+      min_order_amount: promo.min_order_amount ?? undefined,
     });
     setModalVisible(true);
   }, [reset]);
 
   const handleSavePromo = useCallback(async (values: PromoFormValues) => {
     try {
-      // Convertir la date YYYY-MM-DD en ISO 8601 datetime
       const toIsoDateTime = (dateStr: string) => dateStr ? `${dateStr}T00:00:00Z` : undefined;
+
+      const cleanedValues = { ...values };
+      (Object.keys(cleanedValues) as Array<keyof PromoFormValues>).forEach(key => {
+        const val = cleanedValues[key];
+        if (val === '' || val === 0) {
+          (cleanedValues as any)[key] = undefined;
+        } else if (typeof val === 'string') {
+          (cleanedValues as any)[key] = val.trim();
+        }
+      });
       
-      const dto = {
-        code: values.code.trim(),
-        discount_type: values.discount_type,
-        discount_value: Number(values.discount_value),
-        max_uses: values.max_uses ? Number(values.max_uses) : undefined,
-        min_order_amount: values.min_order_amount ? Number(values.min_order_amount) : undefined,
+      const dto: CreatePromoCodeDto = {
+        ...cleanedValues,
+        code: cleanedValues.code?.trim().toUpperCase(),
+        name: cleanedValues.name?.trim(),
+        assigned_user_id: undefined,
+        valid_from: toIsoDateTime(cleanedValues.valid_from || ''),
+        valid_until: toIsoDateTime(cleanedValues.valid_until || ''),
       };
 
       if (editingPromo) {
         await updatePromoCode(editingPromo.id, dto);
         showToast({ title: 'Succès', message: 'Code promo mis à jour.', type: 'success' });
-      } else {
+      } else if (promoCreationMode === 'public') {
+        console.log(dto);
         await createPromoCode(dto);
-        showToast({ title: 'Succès', message: 'Nouveau code promo créé.', type: 'success' });
+        showToast({ title: 'Succès', message: 'Nouveau code promo public créé.', type: 'success' });
+      } else if (promoCreationMode === 'single' && selectedClients.length === 1) {
+        console.log(dto);
+        dto.assigned_user_id = selectedClients[0].id;
+        await createPromoCode(dto);
+        showToast({ title: 'Succès', message: `Code assigné à ${selectedClients[0].first_name}.`, type: 'success' });
+      } else if (promoCreationMode === 'bulk' && selectedClients.length > 0) {
+        const templateDto: CreatePromoCodeDto = {
+          ...dto,
+          code: undefined,
+          assigned_user_id: selectedClients[0].id,
+        };
+        const template = await createPromoCode(templateDto);
+        if (!template) throw new Error('Impossible de créer le template.');
+      
+        const bulkDto: BulkAssignDto = {
+          user_ids: selectedClients.map(c => c.id),
+        };
+        await bulkAssignPromoCode(template.id, bulkDto);
+        showToast({ 
+          title: 'Succès', 
+          message: `${selectedClients.length} codes générés et assignés.`, 
+          type: 'success' 
+        });
+      } else {
+        showToast({ title: 'Action requise', message: 'Veuillez sélectionner un ou plusieurs clients.', type: 'info' });
+        return;
       }
 
       setModalVisible(false);
@@ -221,7 +334,7 @@ export default function AdminPromoCommunicationScreen() {
     } catch (error: any) {
       showToast({ title: 'Erreur', message: error?.message ?? 'Impossible de sauvegarder le code promo.', type: 'error' });
     }
-  }, [createPromoCode, editingPromo, fetchPromoCodes, updatePromoCode]);
+  }, [createPromoCode, editingPromo, fetchPromoCodes, updatePromoCode, promoCreationMode, selectedClients, bulkAssignPromoCode, showToast]);
 
   const handleDeletePromo = useCallback((promo: PromoCode) => {
     Alert.alert(
@@ -246,9 +359,9 @@ export default function AdminPromoCommunicationScreen() {
   }, [deletePromoCode]);
 
   const handleTogglePromoStatus = useCallback(async (promo: PromoCode, nextValue: boolean) => {
-    try { // La mise à jour du statut se fait via updatePromoCode
+    try {
       await updatePromoCode(promo.id, { is_active: nextValue });
-    } catch (error: any) { // Affiche une erreur si l'API échoue
+    } catch (error: any) {
       showToast({ title: 'Erreur', message: error?.message ?? 'Impossible de mettre à jour le statut.', type: 'error' });
     }
   }, [updatePromoCode]);
@@ -259,22 +372,73 @@ export default function AdminPromoCommunicationScreen() {
   }, [isMarketingLoading, isFetchingNextMarketingPage, campaignsPage, campaignsTotalPages, fetchCampaigns]);
 
   const openCreateCampaignModal = useCallback(() => {
+    setEditingCampaign(null);
     resetCampaignForm({ name: '', type: 'email', subject: '', body: '' });
+    setCampaignModalVisible(true);
+  }, [resetCampaignForm]);
+
+  const openEditCampaignModal = useCallback((campaign: MarketingCampaign) => {
+    setEditingCampaign(campaign);
+    resetCampaignForm({
+      name: campaign.name,
+      type: campaign.type,
+      subject: campaign.subject ?? '',
+      body: campaign.body,
+    });
     setCampaignModalVisible(true);
   }, [resetCampaignForm]);
 
   const handleSaveCampaign = useCallback(async (values: CampaignFormValues) => {
     try {
-      await createCampaign(values as CreateCampaignDto);
-      showToast({ title: 'Succès', message: 'Campagne créée en tant que brouillon.', type: 'success' });
-      setCampaignModalVisible(false); // Re-fetch campaigns list when available
-      // TODO: Re-fetch campaigns list when available
+      if (editingCampaign) {
+        await updateCampaign(editingCampaign.id, values as CreateCampaignDto);
+        showToast({ title: 'Succès', message: 'Campagne mise à jour.', type: 'success' });
+      } else {
+        await createCampaign(values as CreateCampaignDto);
+        showToast({ title: 'Succès', message: 'Campagne créée en tant que brouillon.', type: 'success' });
+      }
+      setCampaignModalVisible(false);
     } catch (error: any) {
       showToast({ title: 'Erreur', message: error?.message ?? 'Impossible de créer la campagne.', type: 'error' });
     }
-  }, [createCampaign, showToast]);
+  }, [createCampaign, updateCampaign, editingCampaign, showToast]);
 
-  const renderPromoCard = (promo: PromoCode) => {
+  const handleDeleteCampaign = useCallback((campaign: MarketingCampaign) => {
+    Alert.alert(
+      'Supprimer la campagne',
+      `Êtes-vous sûr de vouloir supprimer le brouillon "${campaign.name}" ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer', style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteCampaign(campaign.id);
+              showToast({ title: 'Supprimé', message: 'La campagne a été supprimée.', type: 'success' });
+            } catch (error: any) {
+              showToast({ title: 'Erreur', message: error?.message ?? 'Impossible de supprimer.', type: 'error' });
+            }
+          },
+        },
+      ],
+    );
+  }, [deleteCampaign, showToast]);
+
+  const handleSendCampaign = useCallback((campaign: MarketingCampaign) => {
+    Alert.alert('Envoyer la campagne', `Envoyer "${campaign.name}" à tous les clients éligibles ? Cette action est irréversible.`, [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Envoyer', style: 'default', onPress: async () => {
+        try {
+          const result = await sendCampaign(campaign.id);
+          showToast({ title: 'Envoi en cours', message: `Campagne envoyée à ${result?.sent_count ?? 0} destinataires.`, type: 'success' });
+        } catch (error: any) {
+          showToast({ title: 'Erreur', message: error?.message ?? 'Impossible d\'envoyer la campagne.', type: 'error' });
+        }
+      }},
+    ]);
+  }, [sendCampaign, showToast]);
+
+  const renderPromoCard = ({ item: promo }: { item: PromoCode }) => {
     const now = new Date();
     const expired = promo.valid_until ? new Date(promo.valid_until) < now : false;
     const statusLabel = !promo.is_active ? 'Inactif' : expired ? 'Expiré' : 'Actif';
@@ -291,7 +455,7 @@ export default function AdminPromoCommunicationScreen() {
               <AppIcon name="pricetag-outline" size={20} color={Colors.white} />
             </View>
             <View style={styles.promoHeaderText}>
-              <Text style={styles.promoName}>{promo.code}</Text>
+              <Text style={styles.promoName}>{promo.name ?? promo.code}</Text>
               <Text style={styles.promoValue}>{discountLabel}</Text>
             </View>
           </View>
@@ -354,11 +518,14 @@ export default function AdminPromoCommunicationScreen() {
           <>
             <Text style={styles.campaignDraftText}>Cette campagne n'a pas encore été envoyée.</Text>
             <View style={styles.campaignActionsRow}>
-              <TouchableOpacity style={styles.campaignTextButton} onPress={() => showToast({ title: 'Envoyer maintenant', message: 'Fonctionnalité à venir', type: 'info' })}>
+              <TouchableOpacity style={styles.campaignTextButton} onPress={() => handleSendCampaign(item)}>
                 <Text style={styles.campaignTextButtonText}>Envoyer</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.campaignTextButton} onPress={() => showToast({ title: 'Voir brouillon', message: 'Fonctionnalité à venir', type: 'info' })}>
-                <Text style={styles.campaignTextButtonText}>Voir</Text>
+              <TouchableOpacity style={styles.campaignTextButton} onPress={() => openEditCampaignModal(item)}>
+                <Text style={styles.campaignTextButtonText}>Modifier</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.campaignTextButton} onPress={() => handleDeleteCampaign(item)}>
+                <Text style={[styles.campaignTextButtonText, { color: Colors.error }]}>Supprimer</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -377,6 +544,84 @@ export default function AdminPromoCommunicationScreen() {
       </View>
     );
   };
+
+  // ─── Header components for each tab ──────────────────────────────────────────
+
+  const PromoListHeader = useCallback(() => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>Codes promotionnels</Text>
+      <TouchableOpacity style={styles.addButton} onPress={openCreatePromoModal}>
+        <AppIcon name="add" size={24} color={Colors.white} />
+      </TouchableOpacity>
+    </View>
+  ), [openCreatePromoModal]);
+
+  const CampaignListHeader = useCallback(() => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>Campagnes marketing</Text>
+      <TouchableOpacity style={styles.addButton} onPress={openCreateCampaignModal}>
+        <AppIcon name="add" size={24} color={Colors.white} />
+      </TouchableOpacity>
+    </View>
+  ), [openCreateCampaignModal]);
+
+  const ClientListHeader = useCallback(() => (
+    <>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Base clients</Text>
+        {/* <View style={styles.addButton} /> */}
+      </View>
+      <View style={styles.statsGrid}>
+        <View style={[styles.kpiCardClient, styles.kpiCard]}>
+          <View style={styles.kpiIcon}><AppIcon name="people-outline" size={20} color={Colors.white} /></View>
+          <Text style={styles.kpiValue}>{marketingStats?.total_clients ?? 0}</Text>
+          <Text style={styles.kpiLabel}>Total Clients</Text>
+        </View>
+        <View style={[styles.kpiCardEmail, styles.kpiCard]}>
+          <View style={styles.kpiIcon}><AppIcon name="mail-outline" size={20} color={Colors.white} /></View>
+          <Text style={styles.kpiValue}>{marketingStats?.opt_in_email ?? 0}</Text>
+          <Text style={styles.kpiLabel}>Opt-in Email</Text>
+        </View>
+        <View style={[styles.kpiCardChat, styles.kpiCard]}>
+          <View style={styles.kpiIcon}><AppIcon name="chatbubble-ellipses-outline" size={20} color={Colors.white} /></View>
+          <Text style={styles.kpiValue}>{marketingStats?.opt_in_sms ?? 0}</Text>
+          <Text style={styles.kpiLabel}>Opt-in SMS</Text>
+        </View>
+        <View style={[styles.kpiCardNotif, styles.kpiCard]}>
+          <View style={styles.kpiIcon}><AppIcon name="notifications-outline" size={20} color={Colors.white} /></View>
+          <Text style={styles.kpiValue}>{marketingStats?.opt_in_push ?? 0}</Text>
+          <Text style={styles.kpiLabel}>Opt-in Push</Text>
+        </View>
+      </View>
+      <View style={styles.filterContent}>
+        <View style={styles.searchWrapper}>
+          <TextInput
+            placeholder="Recherche par nom, prénom, email, téléphone"
+            placeholderTextColor={'#9CA3AF'}
+            style={styles.searchInput}
+            value={searchClients}
+            onChangeText={setSearchClients}
+            onSubmitEditing={() => fetchMarketingClients({ page: 1, limit: 20, search: searchClients || undefined })}
+          />
+        </View>
+        <View style={styles.filterRow}>
+          {(['all', 'email', 'sms', 'push'] as const).map((filter) => (
+            <TouchableOpacity
+              key={filter}
+              style={[styles.filterChip, activeClientFilter === filter && styles.filterChipActive]}
+              onPress={() => setActiveClientFilter(filter)}
+            >
+              <Text style={[styles.filterText, activeClientFilter === filter && styles.filterTextActive]}>
+                {filter === 'all' ? 'Tous' : filter.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    </>
+  ), [marketingStats, searchClients, activeClientFilter, fetchMarketingClients]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
 
   return (
     <View style={styles.screen}>
@@ -397,174 +642,246 @@ export default function AdminPromoCommunicationScreen() {
               style={[styles.tabItem, active ? styles.tabActive : styles.tabInactive]}
               onPress={() => onChangeTab(tab.key)}
             >
-              <Text style={[styles.tabText, active ? styles.tabTextActive : styles.tabTextInactive]}>{tab.label}</Text>
+              <Text style={[styles.tabText, active ? styles.tabTextActive : styles.tabTextInactive]}>
+                {tab.label}
+              </Text>
             </TouchableOpacity>
           );
         })}
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {activeTab === 'promo' ? 'Codes promotionnels' : activeTab === 'clients' ? 'Base clients' : 'Campagnes marketing'}
-          </Text>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => activeTab === 'promo' ? openCreatePromoModal() : openCreateCampaignModal()}
-          >
-            <AppIcon name="add" size={24} color={Colors.white} />
-          </TouchableOpacity>
-        </View>
+      {/* ── Onglet Promo ── */}
+      {activeTab === 'promo' && (
+        <FlatList
+          data={promoCodes}
+          renderItem={renderPromoCard}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={<PromoListHeader />}
+          ListEmptyComponent={
+            isPromoCodesLoading
+              ? <ActivityIndicator size="large" color={Colors.bordeaux} style={styles.loader} />
+              : <Text style={styles.emptyText}>Aucun code promo n'est disponible.</Text>
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
-        {activeTab === 'promo' && (
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {isPromoCodesLoading ? (
-              <ActivityIndicator size="large" color={Colors.bordeaux} style={styles.loader} />
-            ) : promoCodes.length === 0 ? (
-              <Text style={styles.emptyText}>Aucun code promo n'est disponible.</Text>
-            ) : (
-              promoCodes.map(renderPromoCard)
-            )}
-          </ScrollView>
-        )}
-
-        {activeTab === 'clients' && (
-          <ScrollView showsVerticalScrollIndicator={false}> 
-            <View style={styles.statsGrid}>
-              <View style={[styles.kpiCardClient , styles.kpiCard]}>
-                <View style={styles.kpiIcon}><AppIcon name="people-outline" size={20} color={Colors.white} /></View>
-                <Text style={styles.kpiValue}>{marketingStats?.total_clients ?? 0}</Text>
-                <Text style={styles.kpiLabel}>Total Clients</Text>
+      {/* ── Onglet Clients ── */}
+      {activeTab === 'clients' && (
+        <FlatList
+          data={marketingClients}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          onEndReached={loadMoreClients}
+          onEndReachedThreshold={0.5}
+          ListHeaderComponent={<ClientListHeader />}
+          renderItem={({ item: client }) => (
+            <View style={styles.clientCard}>
+              <View style={styles.clientInfoRow}>
+                <View style={styles.clientAvatar}>
+                  <AppIcon name="person-outline" size={20} color={Colors.white} />
+                </View>
+                <View style={styles.clientTextGroup}>
+                  <Text style={styles.clientName}>{client.first_name} {client.last_name}</Text>
+                  <Text style={styles.clientEmail}>{client.email}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.clientActionButton}
+                  onPress={() => showToast({ title: 'Détails client', message: 'Fonctionnalité de fiche client à venir', type: 'info' })}
+                >
+                  <Text style={styles.clientActionText}>Voir</Text>
+                  <AppIcon name="eye-outline" size={16} color={Colors.white} />
+                </TouchableOpacity>
               </View>
-              <View style={[styles.kpiCardEmail , styles.kpiCard]}>
-                <View style={styles.kpiIcon}><AppIcon name="mail-outline" size={20} color={Colors.white} /></View>
-                <Text style={styles.kpiValue}>{marketingStats?.opt_in_email ?? 0}</Text>
-                <Text style={styles.kpiLabel}>Opt-in Email</Text>
+              <View style={styles.clientStatsRow}>
+                <View style={styles.clientStatItem}>
+                  <Text style={styles.clientStatValue}>{client.total_rides}</Text>
+                  <Text style={styles.clientStatLabel}>Courses</Text>
+                </View>
+                <View style={styles.clientStatItem}>
+                  <Text style={styles.clientStatValue}>{client.total_spent} €</Text>
+                  <Text style={styles.clientStatLabel}>Dépensé</Text>
+                </View>
+                <View style={styles.clientStatItem}>
+                  <Text style={styles.clientStatValue}>
+                    {client.last_ride_date ? new Date(client.last_ride_date).toLocaleDateString('fr-FR') : 'Aucune'}
+                  </Text>
+                  <Text style={styles.clientStatLabel}>Dernière activité</Text>
+                </View>
               </View>
-              <View style={[styles.kpiCardChat , styles.kpiCard]}>
-                <View style={styles.kpiIcon}><AppIcon name="chatbubble-ellipses-outline" size={20} color={Colors.white} /></View>
-                <Text style={styles.kpiValue}>{marketingStats?.opt_in_sms ?? 0}</Text>
-                <Text style={styles.kpiLabel}>Opt-in SMS</Text>
-              </View>
-              <View style={[styles.kpiCardNotif , styles.kpiCard]}>
-                <View style={styles.kpiIcon}><AppIcon name="notifications-outline" size={20} color={Colors.white} /></View>
-                <Text style={styles.kpiValue}>{marketingStats?.opt_in_push ?? 0}</Text>
-                <Text style={styles.kpiLabel}>Opt-in Push</Text>
+              <View style={styles.badgesRow}>
+                {client.marketing_email_opt_in && (
+                  <View style={styles.badge}>
+                    <AppIcon name={CANAL.email.icon} size={12} color={Colors.textSecondary} />
+                    <Text style={styles.badgeText}>{CANAL.email.label}</Text>
+                  </View>
+                )}
+                {client.marketing_sms_opt_in && (
+                  <View style={styles.badge}>
+                    <AppIcon name={CANAL.sms.icon} size={12} color={Colors.textSecondary} />
+                    <Text style={styles.badgeText}>{CANAL.sms.label}</Text>
+                  </View>
+                )}
+                {client.marketing_push_opt_in && (
+                  <View style={styles.badge}>
+                    <AppIcon name={CANAL.push.icon} size={12} color={Colors.textSecondary} />
+                    <Text style={styles.badgeText}>{CANAL.push.label}</Text>
+                  </View>
+                )}
               </View>
             </View>
+          )}
+          ListEmptyComponent={
+            !isMarketingLoading
+              ? <Text style={styles.emptyText}>Aucun client trouvé.</Text>
+              : null
+          }
+          ListFooterComponent={
+            isFetchingNextMarketingPage
+              ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} />
+              : null
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
-            <View style= {styles.filterContent}>
-                <View style={styles.searchWrapper}>
-                  <TextInput
-                    placeholder="Recherche par nom, prénom, email, téléphone"
-                    placeholderTextColor={'#9CA3AF'}
-                    style={styles.searchInput}
-                    value={searchClients}
-                    onChangeText={setSearchClients}
-                    onSubmitEditing={() => fetchMarketingClients({ page: 1, limit: 20, search: searchClients || undefined })}
-                  />
-                </View>
+      {/* ── Onglet Campagnes ── */}
+      {activeTab === 'campaigns' && (
+        <FlatList
+          data={campaigns}
+          renderItem={renderCampaignCard}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          onEndReached={loadMoreCampaigns}
+          onEndReachedThreshold={0.5}
+          ListHeaderComponent={<CampaignListHeader />}
+          ListEmptyComponent={
+            isMarketingLoading && campaigns.length === 0
+              ? <ActivityIndicator size="large" color={Colors.bordeaux} style={styles.loader} />
+              : <Text style={styles.emptyText}>Aucune campagne trouvée.</Text>
+          }
+          ListFooterComponent={
+            isFetchingNextMarketingPage
+              ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} />
+              : null
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
-                <View style={styles.filterRow}>
-                  {(['all', 'email', 'sms', 'push'] as const).map((filter) => (
-                    <TouchableOpacity
-                      key={filter}
-                      style={[styles.filterChip, activeClientFilter === filter && styles.filterChipActive]}
-                      onPress={() => setActiveClientFilter(filter)}
-                    >
-                      <Text style={[styles.filterText, activeClientFilter === filter && styles.filterTextActive]}>
-                        {filter === 'all' ? 'Tous' : filter.toUpperCase()}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-            </View>
-
-            {isMarketingLoading ? (
-              <ActivityIndicator size="large" color={Colors.bordeaux} style={styles.loader} />
-            ) : filteredClients.length === 0 ? (
-              <Text style={styles.emptyText}>Aucun client trouvé.</Text>
-            ) : (
-              filteredClients.map((client) => (
-                <View key={client.id} style={styles.clientCard}>
-                  <View style={styles.clientInfoRow}>
-                    <View style={styles.clientAvatar}><AppIcon name="person-outline" size={20} color={Colors.white} /></View>
-                    <View style={styles.clientTextGroup}>
-                      <Text style={styles.clientName}>{client.first_name} {client.last_name}</Text>
-                      <Text style={styles.clientEmail}>{client.email}</Text>
-                    </View>
-                    <TouchableOpacity style={styles.clientActionButton} onPress={() => showToast({ title: 'Détails client', message: 'Fonctionnalité de fiche client à venir', type: 'info' })}>
-                      <Text style={styles.clientActionText}>Voir</Text>
-                      <AppIcon name="eye-outline" size={16} color={Colors.white} />
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.clientStatsRow}>
-                    <View style={styles.clientStatItem}>
-                      <Text style={styles.clientStatValue}>{client.total_rides}</Text>
-                      <Text style={styles.clientStatLabel}>Courses</Text>
-                    </View>
-                    <View style={styles.clientStatItem}>
-                      <Text style={styles.clientStatValue}>{client.total_spent.toFixed(0)} €</Text>
-                      <Text style={styles.clientStatLabel}>Dépensé</Text>
-                    </View>
-                    <View style={styles.clientStatItem}>
-                      <Text style={styles.clientStatValue}>{client.last_ride_date ? new Date(client.last_ride_date).toLocaleDateString('fr-FR') : 'Aucune'}</Text>
-                      <Text style={styles.clientStatLabel}>Dernière activité</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.badgesRow}>
-                    {client.marketing_email_opt_in && <View style={styles.badge}><AppIcon name={CANAL.email.icon} size={12} color={Colors.textSecondary} /><Text style={styles.badgeText}>{CANAL.email.label}</Text></View>}
-                    {client.marketing_sms_opt_in && <View style={styles.badge}><AppIcon name={CANAL.sms.icon} size={12} color={Colors.textSecondary} /><Text style={styles.badgeText}>{CANAL.sms.label}</Text></View>}
-                    {client.marketing_push_opt_in && <View style={styles.badge}><AppIcon name={CANAL.push.icon} size={12} color={Colors.textSecondary} /><Text style={styles.badgeText}>{CANAL.push.label}</Text></View>}
-                  </View>
-                </View>
-              ))
-            )}
-          </ScrollView>
-        )}
-
-        {activeTab === 'campaigns' && (
-          isMarketingLoading && campaigns.length === 0 ? (
-            <ActivityIndicator size="large" color={Colors.bordeaux} style={styles.loader} />
-          ) : (
-            <FlatList
-              data={campaigns}
-              renderItem={renderCampaignCard}
-              keyExtractor={(item) => item.id}
-              onEndReached={loadMoreCampaigns}
-              onEndReachedThreshold={0.5}
-              ListEmptyComponent={<Text style={styles.emptyText}>Aucune campagne trouvée.</Text>}
-              ListFooterComponent={isFetchingNextMarketingPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
-              showsVerticalScrollIndicator={false}
-            />
-          )
-        )}
-      </ScrollView>
-
+      {/* ── Modal Promo ── */}
       <Modal visible={isModalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{editingPromo ? 'Modifier un code promo' : 'Nouveau code promo'}</Text>
-            <ScrollView contentContainerStyle={styles.modalScroll} keyboardShouldPersistTaps="handled">
+            <ScrollView contentContainerStyle={styles.modalScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              {!editingPromo && (
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Mode de création</Text>
+                  <View style={styles.toggleRow}>
+                    {PROMO_MODES.map((mode) => (
+                      <TouchableOpacity
+                        key={mode.key}
+                        style={[styles.toggleButton, promoCreationMode === mode.key && styles.toggleButtonActive]}
+                        onPress={() => setPromoCreationMode(mode.key)}
+                      >
+                        <Text style={[styles.toggleButtonText, promoCreationMode === mode.key && styles.toggleButtonTextActive]}>
+                          {mode.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {promoCreationMode === 'public' && !editingPromo ? (
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Code (public)</Text>
+                  <Controller
+                    control={control}
+                    name="code"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <View style={styles.fieldInputWrapper}>
+                        <AppIcon name="barcode-outline" size={20} color={Colors.textSecondary} />
+                        <TextInput
+                          style={styles.fieldInput}
+                          value={value || ''}
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          placeholder="Ex: SUMMER20"
+                          placeholderTextColor={Colors.textSecondary}
+                        />
+                      </View>
+                    )}
+                  />
+                  {errors.code && <Text style={styles.errorText}>{errors.code.message}</Text>}
+                </View>
+              ) : !editingPromo && (
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Radical du code (pour assignation)</Text>
+                  <Controller
+                    control={control}
+                    name="code_radical"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <View style={styles.fieldInputWrapper}>
+                        <AppIcon name="key-outline" size={20} color={Colors.textSecondary} />
+                        <TextInput
+                          style={styles.fieldInput}
+                          value={value || ''}
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          placeholder="Ex: BIENVENUE"
+                          placeholderTextColor={Colors.textSecondary}
+                        />
+                      </View>
+                    )}
+                  />
+                  {errors.code_radical && <Text style={styles.errorText}>{errors.code_radical.message}</Text>}
+                </View>
+              )}
+
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Code</Text>
+                <Text style={styles.fieldLabel}>Nom de la promotion</Text>
                 <Controller
                   control={control}
-                  name="code"
+                  name="name"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={styles.fieldInput}
-                      value={value}
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      placeholder="EXAMPLE20"
-                      placeholderTextColor={Colors.textSecondary}
-                    />
+                    <View style={styles.fieldInputWrapper}>
+                      <AppIcon name="pricetag-outline" size={20} color={Colors.textSecondary} />
+                      <TextInput
+                        style={styles.fieldInput}
+                        value={value || ''}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        placeholder="Ex: Offre de bienvenue"
+                        placeholderTextColor={Colors.textSecondary}
+                      />
+                    </View>
                   )}
                 />
-                {errors.code && <Text style={styles.errorText}>{errors.code.message}</Text>}
+                {errors.name && <Text style={styles.errorText}>{errors.name.message}</Text>}
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Description</Text>
+                <Controller
+                  control={control}
+                  name="description"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={styles.fieldInputWrapper}>
+                      <AppIcon name="document-text-outline" size={20} color={Colors.textSecondary} />
+                      <TextInput
+                        style={styles.fieldInput}
+                        value={value || ''}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        placeholder="Ex: -20% sur la première course"
+                        placeholderTextColor={Colors.textSecondary}
+                      />
+                    </View>
+                  )}
+                />
               </View>
 
               <View style={styles.field}>
@@ -596,15 +913,21 @@ export default function AdminPromoCommunicationScreen() {
                   control={control}
                   name="discount_value"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={styles.fieldInput}
-                      value={value}
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      placeholder="10"
-                      placeholderTextColor={Colors.textSecondary}
-                      keyboardType="numeric"
-                    />
+                    <View style={styles.fieldInputWrapper}>
+                      <AppIcon name="cash-outline" size={20} color={Colors.textSecondary} />
+                      <TextInput
+                        style={styles.fieldInput}
+                        value={value == null ? '' : String(value)}
+                        onBlur={onBlur}
+                        onChangeText={(text) => {
+                          const cleanedText = text.replace(',', '.').trim();
+                          onChange(cleanedText === '' ? undefined : parseFloat(cleanedText));
+                        }}
+                        placeholder="10"
+                        placeholderTextColor={Colors.textSecondary}
+                        keyboardType="numeric"
+                      />
+                    </View>
                   )}
                 />
                 {errors.discount_value && <Text style={styles.errorText}>{errors.discount_value.message}</Text>}
@@ -616,26 +939,21 @@ export default function AdminPromoCommunicationScreen() {
                   control={control}
                   name="valid_until"
                   render={({ field: { value } }) => (
-                    <>
+                    <View style={styles.fieldInputWrapper}>
+                      <AppIcon name="calendar-outline" size={20} color={Colors.textSecondary} />
                       <TouchableOpacity
                         style={styles.fieldInput}
-                        onPress={() => setCalendarVisible(true)}
+                        onPress={() => {
+                          setCalendarTarget('valid_until');
+                          setCalendarVisible(true);
+                        }}
                         activeOpacity={0.7}
                       >
                         <Text style={[styles.fieldInputText, !value && styles.fieldPlaceholder]}>
                           {value || 'YYYY-MM-JJ'}
                         </Text>
                       </TouchableOpacity>
-                      <CustomCalendarModal
-                        visible={isCalendarVisible}
-                        selectedDate={value || null}
-                        onConfirm={(date) => {
-                          setValue('valid_until', date, { shouldValidate: true, shouldDirty: true });
-                          setCalendarVisible(false);
-                        }}
-                        onCancel={() => setCalendarVisible(false)}
-                      />
-                    </>
+                    </View>
                   )}
                 />
               </View>
@@ -647,15 +965,21 @@ export default function AdminPromoCommunicationScreen() {
                     control={control}
                     name="max_uses"
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <TextInput
-                        style={styles.fieldInput}
-                        value={value}
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        placeholder="Illimité"
-                        placeholderTextColor={Colors.textSecondary}
-                        keyboardType="numeric"
-                      />
+                      <View style={styles.fieldInputWrapper}>
+                        <AppIcon name="infinite-outline" size={20} color={Colors.textSecondary} />
+                        <TextInput
+                          style={styles.fieldInput}
+                          value={value == null ? '' : String(value)}
+                          onBlur={onBlur}
+                          onChangeText={(text) => {
+                            const cleanedText = text.trim();
+                            onChange(cleanedText === '' ? undefined : parseInt(cleanedText, 10));
+                          }}
+                          placeholder="Illimité"
+                          placeholderTextColor={Colors.textSecondary}
+                          keyboardType="numeric"
+                        />
+                      </View>
                     )}
                   />
                 </View>
@@ -665,19 +989,58 @@ export default function AdminPromoCommunicationScreen() {
                     control={control}
                     name="min_order_amount"
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <TextInput
-                        style={styles.fieldInput}
-                        value={value}
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        placeholder="0"
-                        placeholderTextColor={Colors.textSecondary}
-                        keyboardType="numeric"
-                      />
+                      <View style={styles.fieldInputWrapper}>
+                        <AppIcon name="cart-outline" size={20} color={Colors.textSecondary} />
+                        <TextInput
+                          style={styles.fieldInput}
+                          value={value == null ? '' : String(value)}
+                          onBlur={onBlur}
+                          onChangeText={(text) => {
+                            const cleanedText = text.trim();
+                            onChange(cleanedText === '' ? undefined : parseInt(cleanedText, 10));
+                          }}
+                          placeholder="0"
+                          placeholderTextColor={Colors.textSecondary}
+                          keyboardType="numeric"
+                        />
+                      </View>
                     )}
                   />
                 </View>
               </View>
+
+              {!editingPromo && (promoCreationMode === 'single' || promoCreationMode === 'bulk') && (
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>
+                    {promoCreationMode === 'single' ? 'Client assigné' : 'Clients assignés'}
+                  </Text>
+                  <View style={styles.fieldInputWrapper}>
+                    <AppIcon name="person-add-outline" size={20} color={Colors.textSecondary} />
+                    <TouchableOpacity style={styles.fieldInput} onPress={() => setClientSelectorVisible(true)}>
+                      <Text style={[styles.fieldInputText, selectedClients.length === 0 && styles.fieldPlaceholder]}>
+                        {selectedClients.length > 0
+                          ? `${selectedClients.length} client(s) sélectionné(s)`
+                          : 'Sélectionner...'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {selectedClients.length > 0 && (
+                    <Text style={styles.selectedClientsPreview} numberOfLines={1}>
+                      {selectedClients.map(c => `${c.first_name} ${c.last_name}`).join(', ')}
+                    </Text>
+                  )}
+                </View>
+              )}
+
+              <CustomCalendarModal
+                visible={isCalendarVisible}
+                selectedDate={watch(calendarTarget) || null}
+                onConfirm={(date) => {
+                  setValue(calendarTarget, date, { shouldValidate: true, shouldDirty: true });
+                  setCalendarVisible(false);
+                }}
+                onCancel={() => setCalendarVisible(false)}
+              />
 
               <View style={styles.modalButtonsRow}>
                 <TouchableOpacity style={styles.modalCancelButton} onPress={() => setModalVisible(false)}>
@@ -700,10 +1063,77 @@ export default function AdminPromoCommunicationScreen() {
         </View>
       </Modal>
 
+      {/* ── Modal Sélection clients ── */}
+      <Modal visible={isClientSelectorVisible} animationType="slide" transparent onRequestClose={() => setClientSelectorVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Sélectionner des clients</Text>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Rechercher un client..."
+              value={clientSearchQuery}
+              onChangeText={setClientSearchQuery}
+            />
+            <RNFlatList
+              data={allClients}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => {
+                const isSelected = selectedClients.some(c => c.id === item.id);
+                return (
+                  <TouchableOpacity
+                    style={[styles.clientItem, isSelected && styles.clientItemSelected]}
+                    onPress={() => {
+                      if (promoCreationMode === 'single') {
+                        setSelectedClients([item]);
+                      } else {
+                        setSelectedClients(prev =>
+                          isSelected ? prev.filter(c => c.id !== item.id) : [...prev, item]
+                        );
+                      }
+                    }}
+                  >
+                    <Text style={styles.clientItemText}>{item.first_name} {item.last_name}</Text>
+                    <Text style={styles.clientItemSubText}>{item.email}</Text>
+                    {isSelected && <AppIcon name="checkmark-circle" size={24} color={Colors.bordeaux} />}
+                  </TouchableOpacity>
+                );
+              }}
+              ListEmptyComponent={<Text style={styles.emptyText}>Aucun client trouvé.</Text>}
+              style={{ maxHeight: 300 }}
+            />
+            <View style={styles.modalButtonsRow}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setSelectedClients([]);
+                  setClientSelectorVisible(false);
+                }}
+              >
+                <Text style={styles.modalCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={() => {
+                  if (promoCreationMode === 'single' && selectedClients.length === 1) {
+                    setValue('assigned_user_id', selectedClients[0].id);
+                  } else if (promoCreationMode === 'bulk' && selectedClients.length > 0) {
+                    setValue('assigned_user_id', selectedClients[0].id);
+                  }
+                  setClientSelectorVisible(false);
+                }}
+              >
+                <Text style={styles.modalSaveText}>Confirmer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Modal Campagne ── */}
       <Modal visible={isCampaignModalVisible} animationType="slide" transparent onRequestClose={() => setCampaignModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Nouvelle Campagne</Text>
+            <Text style={styles.modalTitle}>{editingCampaign ? 'Modifier la campagne' : 'Nouvelle Campagne'}</Text>
             <ScrollView contentContainerStyle={styles.modalScroll} keyboardShouldPersistTaps="handled">
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Nom de la campagne</Text>
@@ -754,7 +1184,7 @@ export default function AdminPromoCommunicationScreen() {
                   name="subject"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                      style={styles.fieldInput}
+                      style={[styles.fieldInput, {elevation : 1}]}
                       value={value}
                       onBlur={onBlur}
                       onChangeText={onChange}
@@ -773,7 +1203,7 @@ export default function AdminPromoCommunicationScreen() {
                   name="body"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                      style={[styles.fieldInput, { height: 120, textAlignVertical: 'top' }]}
+                      style={[styles.fieldInput, { height: 120, textAlignVertical: 'top', elevation : 1 }]}
                       value={value}
                       onBlur={onBlur}
                       onChangeText={onChange}
@@ -787,9 +1217,18 @@ export default function AdminPromoCommunicationScreen() {
               </View>
 
               <View style={styles.modalButtonsRow}>
-                <TouchableOpacity style={styles.modalCancelButton} onPress={() => setCampaignModalVisible(false)}><Text style={styles.modalCancelText}>Annuler</Text></TouchableOpacity>
-                <TouchableOpacity style={[styles.modalSaveButton, isCampaignSubmitting && styles.modalSaveButtonDisabled]} onPress={handleCampaignSubmit(handleSaveCampaign)} disabled={isCampaignSubmitting}>
-                  {isCampaignSubmitting ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.modalSaveText}>Créer</Text>}
+                <TouchableOpacity style={styles.modalCancelButton} onPress={() => setCampaignModalVisible(false)}>
+                  <Text style={styles.modalCancelText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalSaveButton, isCampaignSubmitting && styles.modalSaveButtonDisabled]}
+                  onPress={handleCampaignSubmit(handleSaveCampaign)}
+                  disabled={isCampaignSubmitting}
+                >
+                  {isCampaignSubmitting
+                    ? <ActivityIndicator color={Colors.white} /> 
+                    : <Text style={styles.modalSaveText}>{editingCampaign ? 'Mettre à jour' : 'Créer'}</Text>
+                  }
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -834,8 +1273,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.sm,
-     borderRadius: Radius.md,
-     elevation : 1,
+    borderRadius: Radius.md,
+    elevation: 1,
   },
   tabItem: {
     flex: 1,
@@ -843,8 +1282,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: Radius.md,
     alignItems: 'center',
-    elevation : 1,
-
+    elevation: 1,
   },
   tabActive: {
     backgroundColor: Colors.bordeaux,
@@ -862,12 +1300,11 @@ const styles = StyleSheet.create({
   tabTextInactive: {
     color: Colors.textPrimary,
   },
-  content: {
+  // Remplace l'ancien style `content` (ScrollView) — maintenant c'est le contentContainerStyle des FlatLists
+  listContent: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xl,
-    elevation : 1,
-    height : '100%',
-    backgroundColor : Colors.background,
+    paddingBottom: Spacing.xxl,
+    backgroundColor: Colors.background,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -876,9 +1313,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   sectionTitle: {
-    color: Colors.textPrimary,
-    fontSize: Fonts.size.lg,
+    color: Colors.bordeauxLight,
+    fontSize: Fonts.size.xl,
     fontFamily: Fonts.bold,
+    fontWeight: 'bold',
   },
   addButton: {
     width: 44,
@@ -1015,7 +1453,7 @@ const styles = StyleSheet.create({
   kpiCardChat: {
     backgroundColor: '#22C55E',
   },
-  kpiIcon: { 
+  kpiIcon: {
     width: 36,
     height: 36,
     borderRadius: Radius.sm,
@@ -1041,14 +1479,14 @@ const styles = StyleSheet.create({
   searchInput: {
     backgroundColor: '#F9FAFB',
     borderRadius: Radius.md,
-    padding: Spacing.sm + 2 ,
+    padding: Spacing.sm + 2,
     color: Colors.textPrimary,
     fontFamily: Fonts.regular,
     elevation: 1,
   },
-  filterContent : {
-    backgroundColor : Colors.white,
-    elevation : 1,
+  filterContent: {
+    backgroundColor: Colors.white,
+    elevation: 1,
     padding: Spacing.md,
     borderRadius: Radius.md,
     marginBottom: Spacing.md,
@@ -1059,7 +1497,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   filterChip: {
-    elevation : 1,
+    elevation: 1,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.md,
@@ -1137,7 +1575,7 @@ const styles = StyleSheet.create({
   },
   clientStatValue: {
     color: Colors.bordeaux,
-    fontWeight : 'bold',
+    fontWeight: 'bold',
     fontSize: Fonts.size.md,
     fontFamily: Fonts.bold,
   },
@@ -1158,7 +1596,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     marginRight: Spacing.sm,
     marginTop: Spacing.sm,
-    flexDirection: 'row', gap: 4, alignItems: 'center'
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'center',
   },
   badgeText: {
     color: Colors.textSecondary,
@@ -1253,28 +1693,27 @@ const styles = StyleSheet.create({
   campaignTextButtonText: {
     color: Colors.bordeaux,
     fontFamily: Fonts.medium,
-
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
-    padding: Spacing.lg,
   },
   modalContent: {
     backgroundColor: Colors.background,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
-    maxHeight: '90%',
+    marginTop: Platform.OS === 'ios' ? Spacing.xl : Spacing.xxl + 32,
   },
   modalScroll: {
-    paddingBottom: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
   modalTitle: {
-    fontSize: Fonts.size.lg,
+    fontSize: Fonts.size.xl,
     color: Colors.textPrimary,
     fontFamily: Fonts.bold,
     marginBottom: Spacing.md,
+    fontWeight: 'bold',
   },
   field: {
     marginBottom: Spacing.md,
@@ -1284,13 +1723,24 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     fontFamily: Fonts.medium,
   },
-  fieldInput: {
+  fieldInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.white,
     borderRadius: Radius.md,
+    paddingHorizontal: Spacing.sm,
+    elevation: 1,
+  },
+  fieldIcon: {
+    marginRight: Spacing.xs,
+  },
+  fieldInput: {
+    flex: 1,
     padding: Spacing.sm,
     color: Colors.textPrimary,
     fontFamily: Fonts.regular,
-    elevation : 1,
+    borderRadius : Radius.md,
+    backgroundColor : Colors.surface,
   },
   fieldInputText: {
     color: Colors.textPrimary,
@@ -1304,15 +1754,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   fieldHalf: {
     flex: 1,
   },
   toggleRow: {
     flexDirection: 'row',
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     overflow: 'hidden',
     backgroundColor: Colors.surface,
+    elevation: 1,
+    padding: Spacing.sm,
   },
   toggleButton: {
     flex: 1,
@@ -1321,6 +1774,8 @@ const styles = StyleSheet.create({
   },
   toggleButtonActive: {
     backgroundColor: Colors.bordeaux,
+    borderRadius: Radius.lg,
+    elevation: 2,
   },
   toggleButtonText: {
     color: Colors.textSecondary,
@@ -1339,7 +1794,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.bordeaux,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
     marginRight: Spacing.sm,
   },
@@ -1351,7 +1806,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: Radius.md,
     backgroundColor: Colors.bordeaux,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
   },
   modalSaveButtonDisabled: {
@@ -1360,9 +1815,41 @@ const styles = StyleSheet.create({
   modalSaveText: {
     color: Colors.white,
     fontFamily: Fonts.medium,
+    fontWeight: 'bold',
   },
   errorText: {
     color: Colors.error,
     marginTop: Spacing.xs,
+  },
+  selectedClientsPreview: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 4,
+    paddingHorizontal: 4,
+  },
+  clientItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.surface,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  clientItemSelected: {
+    backgroundColor: '#EFEAEA',
+    borderRadius: Radius.sm,
+  },
+  clientItemText: {
+    fontFamily: Fonts.medium,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  clientItemSubText: {
+    fontFamily: Fonts.regular,
+    color: Colors.textSecondary,
+    fontSize: 12,
+    marginLeft: 8,
+    flex: 1,
   },
 });
