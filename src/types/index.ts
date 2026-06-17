@@ -44,7 +44,11 @@ export type {
   PlanningReservation,
   DriverRevenuesResult,
   RevenuesPeriod,
-  RevenueTrip
+  RevenueTrip,
+  WeeklyScheduleDay,
+  WeeklyScheduleResult,
+  SetScheduleDto,
+  DayOfWeek
 } from './drivers.types';
 
 export type {

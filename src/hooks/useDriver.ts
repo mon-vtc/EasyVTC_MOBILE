@@ -3,12 +3,13 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { useAuth }        from './useAuth';
 import { useAuthStore }   from '../store/auth.store';
+import { useDriversStore } from '../store/drivers.store';
 import { mapApiUser }     from '../store/auth.store';
 import { driverApi }      from '../services/api/drivers.api';
 import { vehicleApi }     from '../services/api/vehicle.api';
 import { authApi }        from '../services/api/auth.api';
-import type { DriverPlanningResult, PlanningPeriod } from '../types/drivers.types';
-import type { DriverUser, Vehicle, DriverRevenuesResult, RevenuesPeriod }                          from '../types';
+import type { DriverPlanningResult, PlanningPeriod, WeeklyScheduleResult, SetScheduleDto } from '../types/drivers.types';
+import type { DriverUser, Vehicle, DriverRevenuesResult, RevenuesPeriod } from '../types';
 import type { UpdateUserMePayload, UpdateDriverMePayload }             from '../types/payload.types';
 import type { CreateVehiclePayload, UpdateVehiclePayload }             from '../services/api/vehicle.api';
 
@@ -29,6 +30,13 @@ export function useDriver() {
   const appStateSubscriptionRef = useRef<any>(null);
   const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSyncRef = useRef<number>(Date.now());
+
+  // ── Store selectors ───────────────────────────────────────────
+  const weeklySchedule = useDriversStore(s => s.weeklySchedule);
+  const isFetchingSchedule = useDriversStore(s => s.isFetchingSchedule);
+  const _fetchWeeklySchedule = useDriversStore(s => s.fetchWeeklySchedule);
+  const _setWeeklySchedule = useDriversStore(s => s.setWeeklySchedule);
+  const accessTokenRef = useRef(accessToken);
 
   // ── Résoudre le token ou throw ──────────────────────────────
   const token = () => {
@@ -174,6 +182,16 @@ export function useDriver() {
     return res.data;
   }, [accessToken]);
 
+  const fetchWeeklySchedule = useCallback(async () => {
+    if (!accessTokenRef.current) return;
+    await _fetchWeeklySchedule(accessTokenRef.current);
+  }, [_fetchWeeklySchedule]);
+
+  const updateWeeklySchedule = useCallback(async (dto: SetScheduleDto) => {
+    if (!accessTokenRef.current) return false;
+    return _setWeeklySchedule(accessTokenRef.current!, dto);
+  }, [_setWeeklySchedule]);
+
   return {
     user:           driver,
     localAvatarUri: auth.localAvatarUri,
@@ -213,5 +231,11 @@ export function useDriver() {
 
     //Revenues
     getMyRevenues,
+
+    // Weekly Schedule
+    weeklySchedule,
+    isFetchingSchedule,
+    fetchWeeklySchedule,
+    updateWeeklySchedule,
   };
 }

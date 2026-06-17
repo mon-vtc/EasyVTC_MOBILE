@@ -4,7 +4,7 @@
 
 import { api } from '../../lib/api';
 import type { ApiResponse, PaginatedDrivers, ListDriversParams, DriverPlanningResult } from '../../types';
-import type { DriverUser, DriverWithUser }         from '../../types/user.types';
+import type { DriverUser, DriverWithUser, WeeklyScheduleResult, SetScheduleDto } from '../../types';
 import type { UpdateDriverMePayload, ChangeDriverStatusPayload } from '../../types/payload.types';
 import type { PlanningPeriod, PlanningReservation, DriverRevenuesResult, RevenuesPeriod} from '../../types';
 export const driverApi = {
@@ -58,5 +58,12 @@ export const driverApi = {
     if (date) params.set('date', date);
     return api.get(`/drivers/me/revenues?${params.toString()}`, token);
   },
-  
+
+  /** GET /drivers/me/schedule — Récupère le planning hebdomadaire du chauffeur connecté */
+  getMySchedule: (token: string): Promise<ApiResponse<WeeklyScheduleResult>> =>
+    api.get('/drivers/me/schedule', token),
+
+  /** PUT /drivers/me/schedule — Met à jour le planning hebdomadaire du chauffeur connecté */
+  setMySchedule: (token: string, payload: SetScheduleDto): Promise<ApiResponse<WeeklyScheduleResult>> =>
+    api.put('/drivers/me/schedule', payload, token),
 };

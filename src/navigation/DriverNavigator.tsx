@@ -226,6 +226,14 @@ export default function DriverNavigator() {
         }}
       />
 
+      <Drawer.Screen
+        name="DriverAvailability"
+        component={DriverAvailabilityScreen}
+        options={{
+          drawerLabel: () => <DrawerLabel icon="watch-outline" label="Disponibilité" />,
+          headerShown: false,
+        }}
+      />
 
 
       <Drawer.Screen

@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { driverApi } from '../services/api/drivers.api';
-import type { AuthUser, DriverWithUser, ListDriversParams, PaginatedDrivers, ChangeDriverStatusPayload } from '../types';
+import type {
+  DriverProfile,
+  Vehicle,
+  AuthUser,
+  DriverWithUser,
+  ListDriversParams,
+  ChangeDriverStatusPayload,
+  WeeklyScheduleResult,
+  SetScheduleDto,
+} from '../types';
 
 // ── Fonction de mapping DriverWithUser → AuthUser ────────────────────────────
 function mapDriverWithUserToAuthUser(driverWithUser: DriverWithUser): AuthUser {
@@ -45,11 +54,17 @@ interface DriversState {
   totalPages: number;
   isLoading:  boolean;
   error:      string | null;
+  weeklySchedule: WeeklyScheduleResult | null;
+  isFetchingSchedule: boolean;
+  scheduleError: string | null;
 
   fetchDrivers:      (token: string, params?: ListDriversParams) => Promise<void>;
   fetchDriverById:   (token: string, driverId: string)           => Promise<AuthUser | null>;
   changeDriverStatus:(token: string, driverId: string, payload: ChangeDriverStatusPayload) => Promise<AuthUser | null>;
+  fetchWeeklySchedule: (token: string) => Promise<void>;
+  setWeeklySchedule: (token: string, dto: SetScheduleDto) => Promise<boolean>;
   clearError:        () => void;
+  
 }
 
 export const useDriversStore = create<DriversState>((set, _get) => ({
@@ -59,6 +74,9 @@ export const useDriversStore = create<DriversState>((set, _get) => ({
   totalPages: 1,
   isLoading:  false,
   error:      null,
+  weeklySchedule: null,
+  isFetchingSchedule: false,
+  scheduleError: null,
 
   // ── Liste paginée (endpoint /admin/drivers) ───────────────────
   fetchDrivers: async (token, params) => {
@@ -103,6 +121,38 @@ export const useDriversStore = create<DriversState>((set, _get) => ({
     } catch (err: unknown) {
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
       return null;
+    }
+  },
+
+  
+  fetchWeeklySchedule: async (token) => {
+    set({ isFetchingSchedule: true, scheduleError: null });
+    try {
+      const res = await driverApi.getMySchedule(token);
+      if (res.ok && res.data) {
+        set({ weeklySchedule: res.data, isFetchingSchedule: false });
+      } else {
+        set({ scheduleError: res.message || 'Failed to fetch schedule', isFetchingSchedule: false });
+      }
+    } catch (err: any) {
+      set({ scheduleError: err.message || 'An unexpected error occurred', isFetchingSchedule: false });
+    }
+  },
+
+  setWeeklySchedule: async (token, dto) => {
+    set({ isFetchingSchedule: true, scheduleError: null });
+    try {
+      const res = await driverApi.setMySchedule(token, dto);
+      if (res.ok && res.data) {
+        set({ weeklySchedule: res.data, isFetchingSchedule: false });
+        return true;
+      } else {
+        set({ scheduleError: res.message || 'Failed to update schedule', isFetchingSchedule: false });
+        return false;
+      }
+    } catch (err: any) {
+      set({ scheduleError: err.message || 'An unexpected error occurred', isFetchingSchedule: false });
+      return false;
     }
   },
 
