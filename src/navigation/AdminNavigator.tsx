@@ -26,6 +26,7 @@ import AdminClientDetailScreen from '../screens/admin/clients/AdminClientDetailS
 import AdminVehicleTypesScreen from '../screens/admin/AdminVehicleTypesScreen';
 import AdminReviewsScreen      from '../screens/admin/AdminReviewsScreen';
 import AdminCommissionSettingsScreen from '../screens/admin/commissions/AdminCommissionSettingsScreen';
+import AdminStatisticsScreen from '../screens/admin/AdminStatisticsScreen';
 
 import ManagersListScreen from '../screens/admin/managers/ManagersListScreen';
 import ManagerDetailScreen from '../screens/admin/managers/ManagerDetailScreen';
@@ -391,6 +392,16 @@ export default function AdminNavigator() {
         name="AdminReviews"
         component={AdminReviewsScreen}
         options={{ drawerLabel: () => <DrawerLabel icon="star-outline" label="Évaluations" /> }}
+      />
+
+      <Drawer.Screen
+        name="AdminStatistics"
+        component={AdminStatisticsScreen}
+        options={{ 
+          drawerLabel: () => <DrawerLabel icon="stats-chart-outline" label="Statistiques" /> ,
+          headerShown: false,
+        }}
+
       />
 
       <Drawer.Screen

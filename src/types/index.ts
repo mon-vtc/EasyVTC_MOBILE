@@ -68,7 +68,13 @@ export type {
   SetManagerPermissionsDto,
   ManagerPermissionsResult,
   AdminStats,
-  AdminStatsFilters
+  AdminStatsFilters,
+  AdminDashboard,
+  AdminDashboardPeriod,
+  RevenueChartEntry,
+  TopDriver,
+  PopularRoute,
+  PeakHourSlot
 } from './admin.types';
 export { MANAGER_PERMISSIONS, PERMISSION_LABELS } from './admin.types';
 
