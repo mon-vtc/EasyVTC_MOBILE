@@ -160,22 +160,22 @@ export default function ReservationDetailsScreen() {
       showToast({ title: 'Déjà évalué', message: 'Vous avez déjà soumis une évaluation pour cette course.', type: 'info' });
       return;
     }
+    setRatingModalVisible(true);
   }, [alreadyRated, showToast]);
 
-const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
-  if (!accessToken || !reservation?.id) return;
-  try {
-    await submitRating(accessToken, reservation.id, dto);
-    setRatingModalVisible(false);
-    // ✅ Plus besoin de setAlreadyRated — reservation.driver.rating 
-    //    sera mis à jour par le store
-    showToast({ title: 'Merci !', message: `Votre note de ${dto.note}/5 a bien été enregistrée.`, type: 'success' });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
-    setRatingModalVisible(false);
-    showToast({ title: 'Erreur', message: msg, type: 'error' });
-  }
-}, [accessToken, reservation?.id, submitRating, showToast]);
+  const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
+    if (!accessToken || !reservation?.id) return;
+    try {
+      await submitRating(accessToken, reservation.id, dto);
+      setRatingModalVisible(false);
+      showToast({ title: 'Merci !', message: `Votre note de ${dto.note}/5 a bien été enregistrée.`, type: 'success' });
+      fetchById(reservationId);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
+      setRatingModalVisible(false);
+      showToast({ title: 'Erreur', message: msg, type: 'error' });
+    }
+  }, [accessToken, reservation?.id, submitRating, showToast, fetchById, reservationId]);
 
   const handleCancel = useCallback(() => {
     setCancelModalVisible(true);
