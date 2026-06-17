@@ -6,7 +6,7 @@ import type {
   AdminUser, CreateCampaignDto, ListUsersParams, ListDriversParams,
   UpdateUserStatusPayload, ChangeDriverStatusPayload, UserRole,
   CreateManagerDto, UpdateManagerDto, ChangeManagerStatusDto, ManagerListFilters, AdminStats,
-  ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult, ClientBaseFilters, AuditLogListFilters, BulkAssignDto,
+  ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult, ClientBaseFilters, AuditLogListFilters, BulkAssignDto, AdminDashboard, AdminDashboardPeriod,
   PromoCodeListFilters, CreatePromoCodeDto, UpdatePromoCodeDto, PromoCode,
 } from '../types';
 import { useCallback, useEffect, useRef } from 'react';
@@ -146,6 +146,9 @@ export function useAdmin() {
   const _fetchMarketingClientsRef = useRef(_fetchMarketingClients);
   const _createCampaignRef        = useRef(_createCampaign);
   const _fetchCampaignsRef        = useRef(_fetchCampaigns);
+  const _updateCampaignRef        = useRef(_updateCampaign);
+  const _deleteCampaignRef        = useRef(_deleteCampaign);
+  const _sendCampaignRef          = useRef(_sendCampaign);
   const _fetchAuditLogsRef        = useRef(_fetchAuditLogs);
   const _fetchLogByIdRef          = useRef(_fetchLogById);
 
@@ -172,9 +175,9 @@ export function useAdmin() {
   useEffect(() => { _fetchMarketingClientsRef.current = _fetchMarketingClients; }, [_fetchMarketingClients]);
   useEffect(() => { _createCampaignRef.current        = _createCampaign; },        [_createCampaign]);
   useEffect(() => { _fetchCampaignsRef.current        = _fetchCampaigns; },        [_fetchCampaigns]);
-  useEffect(() => { _updateCampaign.current         = _updateCampaign; },         [_updateCampaign]);
-  useEffect(() => { _deleteCampaign.current         = _deleteCampaign; },         [_deleteCampaign]);
-  useEffect(() => { _sendCampaign.current           = _sendCampaign; },           [_sendCampaign]);
+  useEffect(() => { _updateCampaignRef.current      = _updateCampaign; },         [_updateCampaign]);
+  useEffect(() => { _deleteCampaignRef.current      = _deleteCampaign; },         [_deleteCampaign]);
+  useEffect(() => { _sendCampaignRef.current        = _sendCampaign; },           [_sendCampaign]);
   useEffect(() => { _fetchAuditLogsRef.current        = _fetchAuditLogs; },        [_fetchAuditLogs]);
   useEffect(() => { _fetchLogByIdRef.current          = _fetchLogById; },          [_fetchLogById]);
 
@@ -274,13 +277,13 @@ export function useAdmin() {
     _fetchCampaignsRef.current(accessTokenRef.current!, page, limit), []);
 
    const updateCampaign = useCallback((id: string, dto: Partial<CreateCampaignDto>) =>
-    _updateCampaign.current(accessTokenRef.current!, id, dto), []);
+    _updateCampaignRef.current(accessTokenRef.current!, id, dto), []);
 
   const deleteCampaign = useCallback((id: string) =>
-    _deleteCampaign.current(accessTokenRef.current!, id), []);
+    _deleteCampaignRef.current(accessTokenRef.current!, id), []);
 
   const sendCampaign = useCallback((id: string) =>
-    _sendCampaign.current(accessTokenRef.current!, id), []);
+    _sendCampaignRef.current(accessTokenRef.current!, id), []);
 
   const fetchAuditLogs = useCallback((filters?: AuditLogListFilters) =>
     _fetchAuditLogsRef.current(accessTokenRef.current!, filters), []);
@@ -296,6 +299,16 @@ export function useAdmin() {
     }
     return res.data;
   }, []);
+
+  const fetchDashboard = useCallback(async (period: AdminDashboardPeriod = 'week', date?: string): Promise<AdminDashboard> => {
+    const res = await adminApi.getDashboard(accessTokenRef.current!, period, date);
+    if (!res.ok || !res.data) {
+      console.error('Erreur fetchDashboard:', res.message, res.errors);
+      throw new Error(res.message ?? 'Erreur lors de la récupération du dashboard');
+    }
+    return res.data;
+  }, []);
+
 
   return {
     // Profil admin
@@ -413,6 +426,7 @@ export function useAdmin() {
 
     // Stats dashboard
     fetchDashboardStats,
+    fetchDashboard,
 
     // Actions sur son propre compte
     updateProfile: auth.updateProfile,

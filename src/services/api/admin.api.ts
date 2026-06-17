@@ -1,9 +1,9 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // API — Module Admin
 // ══════════════════════════════════════════════════════════════════════════════
-import type { AdminStatsFilters } from '../../types';
+import type { AdminStatsFilters, AdminDashboardPeriod } from '../../types';
 import { api } from '../../lib/api';
-import type { ApiResponse, AdminStats } from '../../types';
+import type { ApiResponse, AdminStats, AdminDashboard } from '../../types';
 class AdminApi {
   /**
    * Récupère les statistiques globales pour le tableau de bord de l'administrateur.
@@ -19,6 +19,19 @@ class AdminApi {
 
     const queryString = params.toString();
     return api.get<AdminStats>(`/admin/stats${queryString ? `?${queryString}` : ''}`, token);
+  }
+
+  /**
+   * Récupère les données du dashboard analytique avancé.
+   * @param token - Le JWT de l'administrateur.
+   * @param period - La période de temps ('week', 'month', 'year').
+   * @param date - La date de référence (optionnelle, YYYY-MM-DD).
+   */
+  getDashboard(token: string, period: AdminDashboardPeriod, date?: string): Promise<ApiResponse<AdminDashboard>> {
+    const params = new URLSearchParams();
+    params.set('period', period);
+    if (date) params.set('date', date);
+    return api.get<AdminDashboard>(`/admin/dashboard?${params.toString()}`, token);
   }
 }
 
