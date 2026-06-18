@@ -252,6 +252,7 @@ export type AdminDrawerParamList = {
   AdminProfile:   undefined;
   AdminClients:      NavigatorScreenParams<ClientsStackParamList>;
   AdminAvailability: undefined;
+  AdminStatistics:   undefined;
   AdminReviews:      undefined;
   BaseGrid:          undefined;
   FlatRates:         undefined;
