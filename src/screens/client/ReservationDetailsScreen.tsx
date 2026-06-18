@@ -116,9 +116,11 @@ export default function ReservationDetailsScreen() {
   const isSubmitting  = useRatingsStore(s => s.isSubmitting);
   const submitRating  = useRatingsStore(s => s.submitRating);
 
+  // Toujours récupérer les données fraîches (driver.rating = note de cette course, ou null si non évalué).
+  // Sans ce fetch, `selected` pourrait contenir des données périmées depuis un précédent fetchById.
   useEffect(() => {
-    if (!reservation && accessToken) fetchById(reservationId);
-  }, [reservationId, reservation, accessToken, fetchById]);
+    if (accessToken) fetchById(reservationId);
+  }, [reservationId, accessToken, fetchById]);
 
   // ── Handlers d'actions ──────────────────────────────────────────────────────
   const handleCall = useCallback(() => {

@@ -286,18 +286,17 @@ const loadMore = useCallback(() => {
   }, [sortedReservations, searchQuery]);
 
   // ── Rating ──────────────────────────────────────────────────────────────────
-  const [alreadyRated, setAlreadyRated] = useState(false);
   const isSubmitting = useRatingsStore(s => s.isSubmitting);
   const submitRating = useRatingsStore(s => s.submitRating);
 
   const handleEvaluate = useCallback((reservation: Reservation) => {
-    if (alreadyRated) {
+    if (reservation.driver?.rating != null) {
       showToast({ title: 'Déjà évalué', message: 'Vous avez déjà soumis une évaluation pour cette course.', type: 'info' });
       return;
     }
     setSelectedForRating(reservation);
     setRatingModalVisible(true);
-  }, [alreadyRated, showToast]);
+  }, [showToast]);
 
   const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
     if (!accessToken || !selectedForRating?.id) return;
