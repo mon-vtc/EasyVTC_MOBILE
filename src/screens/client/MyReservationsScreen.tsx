@@ -114,20 +114,20 @@ function ReservationCard({
               <Text style={cardStyles.btnText}>Appeler</Text>
             </TouchableOpacity>
           )}
-          {isCompleted && reservation.driver?.rating === null ? (
+          {isCompleted && reservation.driver?.rating == null ? (
             <TouchableOpacity style={cardStyles.btnEvaluate} onPress={onEvaluate}>
               <AppIcon name="star" size={14} color={Colors.white} />
               <Text style={cardStyles.btnText}>Évaluer</Text>
             </TouchableOpacity>
           ) : (
-            isCompleted && reservation.driver?.rating !== null && (
+            isCompleted && reservation.driver?.rating != null && (
               <View style={{ flexDirection: 'row', gap: 2 }}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <AppIcon
                     key={star}
                     name="star"
                     size={16}
-                    color={star <= reservation.driver?.rating! ? Colors.warning : Colors.bordeauxLight}
+                    color={star <= reservation.driver!.rating! ? Colors.warning : Colors.bordeauxLight}
                   />
                 ))}
               </View>
@@ -286,18 +286,17 @@ const loadMore = useCallback(() => {
   }, [sortedReservations, searchQuery]);
 
   // ── Rating ──────────────────────────────────────────────────────────────────
-  const [alreadyRated, setAlreadyRated] = useState(false);
   const isSubmitting = useRatingsStore(s => s.isSubmitting);
   const submitRating = useRatingsStore(s => s.submitRating);
 
   const handleEvaluate = useCallback((reservation: Reservation) => {
-    if (alreadyRated) {
+    if (reservation.driver?.rating != null) {
       showToast({ title: 'Déjà évalué', message: 'Vous avez déjà soumis une évaluation pour cette course.', type: 'info' });
       return;
     }
     setSelectedForRating(reservation);
     setRatingModalVisible(true);
-  }, [alreadyRated, showToast]);
+  }, [showToast]);
 
   const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
     if (!accessToken || !selectedForRating?.id) return;
@@ -306,13 +305,14 @@ const loadMore = useCallback(() => {
       setRatingModalVisible(false);
       setSelectedForRating(null);
       showToast({ title: 'Merci !', message: `Votre note de ${dto.note}/5 a bien été enregistrée.`, type: 'success' });
+      load(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
       setRatingModalVisible(false);
       setSelectedForRating(null);
       showToast({ title: 'Erreur', message: msg, type: 'error' });
     }
-  }, [accessToken, selectedForRating, submitRating, showToast]);
+  }, [accessToken, selectedForRating, submitRating, showToast, load]);
 
   const handleViewInvoice = async (reservation: Reservation) => {
     try {
