@@ -44,6 +44,8 @@ interface ChatActions {
   fetchMessages: (token: string, reservationId: string, page?: number, limit?: number) => Promise<void>;
   sendMessage: (token: string, reservationId: string, content: string) => Promise<void>;
   addMessageOptimistically: (message: ChatMessage) => void;
+  markChatAsRead: (token: string, reservationId: string) => Promise<void>;
+  markSupportAsRead: (token: string, ticketId: string) => Promise<void>;
   clearError: () => void;
   clearSupportError: () => void;
   resetMessages: () => void;
@@ -207,6 +209,40 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
     set(state => ({
       activeConversationMessages: [...state.activeConversationMessages, message],
     }));
+  },
+
+  markChatAsRead: async (token, reservationId) => {
+    const currentUnread = get().conversations.find(c => c.reservation_id === reservationId)?.unread_count ?? 0;
+    if (currentUnread === 0) return;
+
+    // Mise à jour optimiste
+    set(state => ({
+      conversations: state.conversations.map(c =>
+        c.reservation_id === reservationId ? { ...c, unread_count: 0 } : c
+      ),
+    }));
+
+    try {
+      await chatApi.markChatAsRead(token, reservationId);
+    } catch (err) {
+      console.error("Failed to mark chat as read on server:", err);
+      // On pourrait vouloir rollback la mise à jour optimiste ici en cas d'erreur critique
+    }
+  },
+
+  markSupportAsRead: async (token, ticketId) => {
+    // Mise à jour optimiste
+    set(state => ({
+      supportTickets: state.supportTickets.map(t =>
+        t.id === ticketId ? { ...t, unread_count: 0 } : t // Assumant un champ unread_count
+      ),
+    }));
+
+    try {
+      await chatApi.markSupportAsRead(token, ticketId);
+    } catch (err) {
+      console.error("Failed to mark support ticket as read on server:", err);
+    }
   },
 
   // ─── ACTIONS SUPPORT ──────────────────────────────────────────────────────

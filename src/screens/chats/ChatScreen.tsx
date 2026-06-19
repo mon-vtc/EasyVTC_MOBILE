@@ -7,10 +7,11 @@ import {
   TouchableOpacity, KeyboardAvoidingView, Platform,
   ActivityIndicator, Image
 } from 'react-native';
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useChat } from '../../hooks/useChat';
 import { useReservation } from '../../hooks/useReservation';
 import { useAuth } from '../../hooks/useAuth';
+import { useAlert } from '../../hooks/useAlert';
 import { Colors, Fonts, Spacing } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
 import type { ChatMessage } from '../../types/chats.type';
@@ -101,9 +102,11 @@ export default function ChatScreen({navigation}: any) {
     activeConversationMessages,
     fetchMessages,
     sendMessage,
+    markChatAsRead,
     addMessageOptimistically,
     resetMessages
   } = useChat();
+  const { showAlert } = useAlert();
 
   const [text, setText]       = useState('');
   const [sending, setSending] = useState(false);
@@ -114,6 +117,12 @@ export default function ChatScreen({navigation}: any) {
     ? selected
     : reservations.find(r => r.id === reservationId);
   const driver = reservation?.driver ?? null;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (reservationId) markChatAsRead(reservationId);
+    }, [reservationId, markChatAsRead])
+  );
 
   useEffect(() => {
     if (reservationId) {
@@ -244,12 +253,11 @@ export default function ChatScreen({navigation}: any) {
         <TouchableOpacity 
           style={[s.headerBtn, s.callBtn]}
           onPress={() => {
-            {user?.role === 'driver' ?  (
-              alert(`Appeler ${reservation?.client?.phone}`)
-            ) : 
-            (
-              alert(`Appeler ${driver?.user.phone}`)
-            )
+            const phone = user?.role === 'driver' ? reservation?.client?.phone : driver?.user.phone;
+            if (phone) {
+              showAlert({ title: 'Appeler', message: phone, buttons: [{ text: 'OK' }] });
+            } else {
+              showAlert({ title: 'Indisponible', message: 'Le numéro de téléphone n\'est pas disponible.', buttons: [{ text: 'OK' }] });
             }
           }}
         >

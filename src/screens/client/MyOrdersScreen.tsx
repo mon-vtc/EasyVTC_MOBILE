@@ -6,12 +6,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useMemo } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, Alert,
+  View, Text, FlatList, TouchableOpacity,
   StyleSheet, ActivityIndicator, Linking, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useOrdersStore } from '../../store/orders.store';
 import { useAuthStore } from '../../store/auth.store';
+import { useToast } from '../../hooks/useToast';
 import type { Order } from '../../types/orders.types';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { OrderCard } from '../../components/common/OrderCard';
@@ -21,6 +22,7 @@ import { OrderCard } from '../../components/common/OrderCard';
 export default function MyOrdersScreen({ navigation } : {navigation: any}) {
   const { orders, total, isLoading, error, fetchMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
+  const { showToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -32,10 +34,10 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
 
   useEffect(() => {
     if (error) {
-      Alert.alert('Erreur', error);
+      showToast({ type: 'error', title: 'Erreur', message: error });
       clearError();
     }
-  }, [error]);
+  }, [error, showToast, clearError]);
 
   const filteredOrders = useMemo(() => {
     if (!searchQuery) return orders;

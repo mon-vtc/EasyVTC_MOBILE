@@ -81,6 +81,9 @@ export const api = {
       body: body instanceof FormData ? body : JSON.stringify(body)
     }, token),
 
-  delete: <T>(url: string, token?: string) =>
-    request<T>(url, { method: 'DELETE' }, token),
+  delete: <T>(url: string, token?: string, body: unknown = null) =>
+    request<T>(url, {
+      method: 'DELETE',
+      body: body ? JSON.stringify(body) : null
+    }, token),
 };

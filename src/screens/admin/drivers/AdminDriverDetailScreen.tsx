@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform, Alert, Image, ActivityIndicator,
+  Platform, Image, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useAdmin }  from '../../../hooks/useAdmin';
 import { useVehicleTypesStore } from '../../../store/vehicleTypes.store';
+import { useAlert } from '../../../hooks/useAlert';
 import type { AuthUser, DriverUser } from '../../../types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriversStackParamList }  from '../../../types/auth.types';
@@ -268,6 +269,7 @@ const tabStyles = StyleSheet.create({
 export default function AdminDriverDetailScreen({ navigation, route }: Props) {
   const { driverId } = route.params as { driverId: string };
   const { fetchDriverById, activateUser, deactivateUser, lockUser, changeDriverStatus, isLoading } = useAdmin();
+  const { showAlert } = useAlert();
 
   const [driver,  setDriver]  = useState<AuthUser | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('informations');
@@ -289,12 +291,12 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
     const status   = driver.status;
     const isActive = status === 'active';
 
-    Alert.alert(
-      isActive ? 'Désactiver ce chauffeur ?' : 'Réactiver ce chauffeur ?',
-      isActive
+    showAlert({
+      title: isActive ? 'Désactiver ce chauffeur ?' : 'Réactiver ce chauffeur ?',
+      message: isActive
         ? 'Le chauffeur ne pourra plus se connecter.'
         : 'Le chauffeur pourra à nouveau se connecter.',
-      [
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: isActive ? 'Désactiver' : 'Réactiver',
@@ -310,16 +312,16 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
             } catch (_) {}
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleLock = () => {
     if (!driver) return;
-    Alert.alert(
-      'Verrouiller ce compte ?',
-      'Le chauffeur sera temporairement bloqué.',
-      [
+    showAlert({
+      title: 'Verrouiller ce compte ?',
+      message: 'Le chauffeur sera temporairement bloqué.',
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Verrouiller', style: 'destructive',
@@ -330,8 +332,8 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
             } catch (err: any) { showToast({ type: 'error', message: err.message ?? 'Impossible de verrouiller le compte.' }); }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleDriverStatusChange = (status: 'pending' | 'probationary' | 'active' | 'rejected' | 'suspended' ) => {
@@ -353,10 +355,10 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
       suspended:    'Le chauffeur sera temporairement suspendu.',
     } as const;
 
-    Alert.alert(
-      `${labels[status]} ce chauffeur ?`,
-      messages[status],
-      [
+    showAlert({
+      title: `${labels[status]} ce chauffeur ?`,
+      message: messages[status],
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: labels[status],
@@ -367,14 +369,13 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
                 status,
                 reason: `Changement de statut par l'administrateur : ${labels[status]}.`,
               });
-            
               showToast({ type: 'success', message: 'Le statut du chauffeur a été mis à jour.' });
               await load();
             } catch (err: any) { showToast({ type: 'error', message: err.message ?? 'Impossible de changer le statut.' }); }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   if (isLoading && !driver) {

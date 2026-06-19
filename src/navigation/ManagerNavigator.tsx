@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { useAlert } from '../hooks/useAlert';
 import { createDrawerNavigator, DrawerNavigationOptions } from '@react-navigation/drawer';
 import {
   DrawerContentScrollView,
@@ -111,12 +112,13 @@ function ManagerNotificationsStack() {
 function ManagerDrawerContent(props: DrawerContentComponentProps) {
   const { user, logout, localAvatarUri } = useAuth();
   const { hasPermission, hasAnyPermission } = usePermissions();
+  const { showAlert } = useAlert();
 
   const handleLogout = () => {
-    Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
+    showAlert({title: 'Déconnexion', message: 'Voulez-vous vraiment vous déconnecter ?', buttons: [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Déconnecter', style: 'destructive', onPress: logout },
-    ]);
+    ]});
   };
 
   return (

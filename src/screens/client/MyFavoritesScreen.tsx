@@ -1,20 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Alert, Modal, TextInput, Platform, Image
+  ActivityIndicator, Modal, TextInput, Platform, Image, ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useToast } from '../../hooks/useToast';
 import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
+import { useAlert } from '../../hooks/useAlert';
 import type { FavoriteAddress, FavoriteAddressType } from '../../types/favorites.types';
-import { FormField } from '../../components/forms/FormField';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigation }  from '@react-navigation/native';
 import { AppIcon } from '../../components/common/AppIcon';
 import { Logo } from '../../constants/logo'
+import { useDebounce } from '../../hooks/useDebounce';
 
 
 const ICONS_MAP: Record<FavoriteAddressType, { name: React.ComponentProps<typeof Ionicons>['name'], color: string, bg: string }> = {
@@ -40,24 +40,171 @@ const getIconForFavorite = (label: string): FavoriteAddressType => {
   return 'custom';
 };
 
+function AddressAutocomplete({ control, suggestions, onSelectSuggestion }: {
+  control: any;
+  suggestions: any[];
+  onSelectSuggestion: (suggestion: any) => void;
+}) {
+  return (
+    <View>
+      <Controller
+        control={control}
+        name="address"
+        render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+          <View style={fieldStyles.wrapper}>
+            <Text style={fieldStyles.label}>Adresse complète</Text>
+            <View style={[fieldStyles.inputWrapper, error ? { borderColor: Colors.error } : {}]}>
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder="15 Rue de la Paix, 75002 Paris"
+                style={fieldStyles.input}
+                multiline
+                numberOfLines={2}
+              />
+            </View>
+            {error && <Text style={fieldStyles.errorText}>{error.message}</Text>}
+          </View>
+        )}
+      />
+      {suggestions.length > 0 && (
+        <ScrollView style={modalStyles.suggestionsContainer} keyboardShouldPersistTaps="handled">
+          {suggestions.map((suggestion: any) => (
+            <TouchableOpacity
+              key={suggestion.properties.id}
+              style={modalStyles.suggestionItem}
+              onPress={() => onSelectSuggestion(suggestion)}
+            >
+              <Ionicons name="location-outline" size={18} color={Colors.textSecondary} />
+              <Text style={modalStyles.suggestionText}>{suggestion.properties.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
+function AddFavoriteModal({
+  visible,
+  isSaving,
+  onClose,
+  onAdd,
+}: {
+  visible: boolean;
+  isSaving: boolean;
+  onClose: () => void;
+  onAdd: (data: AddFavoriteForm) => Promise<void>;
+}) {
+  const { control, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<AddFavoriteForm>({
+    resolver: zodResolver(addFavoriteSchema),
+    defaultValues: { label: '', address: '' },
+  });
+
+  const addressInput = watch('address');
+  const debouncedAddress = useDebounce(addressInput, 300);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Réinitialiser les suggestions quand la modale s'ouvre ou se ferme
+    if (!visible) {
+      setSuggestions([]);
+      reset({ label: '', address: '' }); // Réinitialise le formulaire interne de la modale
+    }
+    if (debouncedAddress.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    const fetchSuggestions = async () => {
+      const url = `https://data.geopf.fr/geocodage/search/?q=${encodeURIComponent(debouncedAddress)}&limit=5`;
+      try {
+        const response = await fetch(url);
+        const json = await response.json();
+        setSuggestions(json.features || []);
+      } catch (error) {
+        console.error('Address API error:', error);
+        setSuggestions([]);
+      }
+    };
+
+    fetchSuggestions();
+  }, [debouncedAddress]);
+
+  const handleSelectSuggestion = (suggestion: any) => {
+    setValue('address', suggestion.properties.label, { shouldValidate: true });
+    setSuggestions([]);
+  };
+
+  const handleAddSubmit = async (data: AddFavoriteForm) => {
+    try {
+      await onAdd(data); // Appelle la fonction onAdd du parent
+      reset({ label: '', address: '' }); // Réinitialise le formulaire après succès
+      setSuggestions([]);
+      onClose(); // Ferme la modale
+    } catch (e) {
+      // L'erreur est gérée par le onAdd du parent, pas besoin de la propager ici
+    }
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={modalStyles.overlay}>
+        <View style={modalStyles.card}>
+          <Text style={modalStyles.title}>Ajouter un favori</Text>
+          <Controller
+            control={control}
+            name="label"
+            render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+              <View style={fieldStyles.wrapper}>
+                <Text style={fieldStyles.label}>Nom du favori (ex: Maison, Travail...)</Text>
+                <View style={[fieldStyles.inputWrapper, error ? { borderColor: Colors.error } : {}]}>
+                  <TextInput
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="Domicile"
+                    style={fieldStyles.input}
+                  />
+                </View>
+                {error && <Text style={fieldStyles.errorText}>{error.message}</Text>}
+              </View>
+            )} />
+          <AddressAutocomplete
+            control={control}
+            suggestions={suggestions}
+            onSelectSuggestion={handleSelectSuggestion}
+          />
+          <View style={modalStyles.actions}>
+            <TouchableOpacity style={[modalStyles.btn, modalStyles.btnCancel]} onPress={onClose} disabled={isSaving}>
+              <Text style={modalStyles.btnCancelText}>Annuler</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[modalStyles.btn, modalStyles.btnConfirm]} onPress={handleSubmit(handleAddSubmit)} disabled={isSaving}>
+              {isSaving ? <ActivityIndicator color={Colors.white} /> : <Text style={modalStyles.btnConfirmText}>Ajouter</Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export default function MyFavoritesScreen({ navigation }: any) {
   const { favorites, isLoading, isSaving, fetchFavorites, addFavorite, deleteFavorite } = useFavorites();
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
   const [isModalVisible, setModalVisible] = useState(false);
-
-  const { control, handleSubmit, reset } = useForm<AddFavoriteForm>({
-    resolver: zodResolver(addFavoriteSchema),
-  });
 
   useEffect(() => {
     fetchFavorites();
   }, []);
 
   const handleDelete = (id: string, label: string) => {
-    Alert.alert(
-      'Supprimer ce favori ?',
-      `Voulez-vous vraiment supprimer "${label}" de vos favoris ?`,
-      [
+    showAlert({
+      title: 'Supprimer ce favori ?',
+      message: `Voulez-vous vraiment supprimer "${label}" de vos favoris ?`,
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Supprimer',
@@ -72,7 +219,7 @@ export default function MyFavoritesScreen({ navigation }: any) {
           },
         },
       ],
-    );
+    });
   };
 
   const handleAdd = async (data: AddFavoriteForm) => {
@@ -80,13 +227,13 @@ export default function MyFavoritesScreen({ navigation }: any) {
       const { res, err } = await addFavorite({ label: data.label, address: data.address });
       if (err) {
         showToast({ type: 'error', title: 'Erreur', message: err.message || 'Impossible d\'ajouter le favori.' });
+        throw new Error(err.message || 'Impossible d\'ajouter le favori.'); // Propager l'erreur pour que la modale puisse la gérer
       } else if (res) {
         showToast({ type: 'success', title: 'Favori ajouté !', message: `"${data.label}" a été ajouté à vos favoris.` });
-        setModalVisible(false);
-        reset();
       }
     } catch (e: any) {
       showToast({ type: 'error', title: 'Erreur inattendue', message: 'Une erreur s\'est produite.' });
+      throw e; // Repropager l'erreur
     }
   };
 
@@ -157,50 +304,30 @@ export default function MyFavoritesScreen({ navigation }: any) {
         />
       )}
 
-      <Modal
+      <AddFavoriteModal
         visible={isModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={modalStyles.overlay}>
-          <View style={modalStyles.card}>
-            <Text style={modalStyles.title}>Ajouter un favori</Text>
-            <FormField
-              name="label"
-              control={control}
-              label="Nom du favori (ex: Maison, Travail...)"
-              placeholder="Domicile"
-            />
-            <FormField
-              name="address"
-              control={control}
-              label="Adresse complète"
-              placeholder="15 Rue de la Paix, 75002 Paris"
-              multiline
-              numberOfLines={3}
-            />
-            <View style={modalStyles.actions}>
-              <TouchableOpacity
-                style={[modalStyles.btn, modalStyles.btnCancel]}
-                onPress={() => { setModalVisible(false); reset(); }}
-              >
-                <Text style={modalStyles.btnCancelText}>Annuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[modalStyles.btn, modalStyles.btnConfirm]}
-                onPress={handleSubmit(handleAdd)}
-                disabled={isSaving}
-              >
-                {isSaving ? <ActivityIndicator color={Colors.white} /> : <Text style={modalStyles.btnConfirmText}>Ajouter</Text>}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        isSaving={isSaving}
+        onClose={() => setModalVisible(false)}
+        onAdd={handleAdd}
+      />
     </View>
   );
 }
+
+const fieldStyles = StyleSheet.create({
+  wrapper: { marginBottom: Spacing.md },
+  label: { fontSize: Fonts.size.sm, color: Colors.textCallToAction, marginBottom: Spacing.xs },
+  inputWrapper: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? Spacing.md : 8,
+    backgroundColor: Colors.white,
+  },
+  input: { fontSize: Fonts.size.md, color: Colors.textPrimary },
+  errorText: { color: Colors.error, fontSize: Fonts.size.xs, marginTop: 4 },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -322,11 +449,32 @@ const modalStyles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderTopLeftRadius: Radius.xl,
     borderTopRightRadius: Radius.xl,
     padding: Spacing.lg,
     paddingBottom: Platform.OS === 'ios' ? Spacing.xxl : Spacing.lg,
+  },
+  suggestionsContainer: {
+    maxHeight: 150,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: Radius.md,
+    borderBottomRightRadius: Radius.md,
+    marginTop: -8,
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  suggestionText: {
+    marginLeft: Spacing.sm,
+    color: Colors.textPrimary,
   },
   title: {
     fontSize: Fonts.size.xl,

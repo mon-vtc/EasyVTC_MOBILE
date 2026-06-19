@@ -7,7 +7,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useState, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, Image,
-  StyleSheet, ActivityIndicator, Alert, RefreshControl, Platform, TextInput
+  StyleSheet, ActivityIndicator, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Logo }    from '../../../constants/logo';
 import { useOrdersStore } from '../../../store/orders.store';
 import { useAuthStore } from '../../../store/auth.store';
+import { useToast } from '../../../hooks/useToast';
 import type { Order } from '../../../types/orders.types';
 import type { DriverOrdersStackParamList } from '../../../types/auth.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
@@ -24,6 +25,7 @@ export default function DriverOrdersScreen() {
   const navigation = useNavigation<NavigationProp<DriverOrdersStackParamList>>();
   const { orders, total, isLoading, error, fetchDriverMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
+  const { showToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -32,7 +34,7 @@ export default function DriverOrdersScreen() {
   }, [token]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { if (error) { Alert.alert('Erreur', error); clearError(); } }, [error]);
+  useEffect(() => { if (error) { showToast({ type: 'error', title: 'Erreur', message: error }); clearError(); } }, [error, showToast, clearError]);
 
   const handleViewOrder = (order: Order) => {
     navigation.navigate('DriverOrderDetails', { orderId: order.id });

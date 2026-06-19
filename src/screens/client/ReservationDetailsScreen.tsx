@@ -9,7 +9,7 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import {
   View, Text, Image, ScrollView, TouchableOpacity,
-  StyleSheet, Animated, Platform, Easing,
+  StyleSheet, Animated, Platform, Easing, ActivityIndicator,
 } from 'react-native';
 import {
   useNavigation, useRoute,
@@ -28,6 +28,7 @@ import { Logo }                      from '../../constants/logo';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
 import RatingModal            from '../../components/common/RatingModal';
 import { useToast }           from '../../hooks/useToast';
+import { useAlert } from '../../hooks/useAlert';
 
 // ── Types navigation typés ──────────────────────────────────────────────────
 type ConfirmationNav   = NavigationProp<ClientStackParamList, 'ReservationDetails'>;
@@ -79,6 +80,7 @@ export default function ReservationDetailsScreen() {
   const nav   = useNavigation<ConfirmationNav>();
   const route = useRoute<ConfirmationRoute>();
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
 
   const reservationId = route.params?.reservationId;
 

@@ -138,3 +138,8 @@ export type {
   CommissionDetail,
   CommissionPeriod
 } from './commission.types';
+
+export type {
+  RgpdExport,
+
+} from './rgpd.type';

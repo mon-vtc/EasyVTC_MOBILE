@@ -103,6 +103,12 @@ export type DriverTripsStackParamList = {
 export type DriverNotificationsStackParamList = {
   NotificationsList: undefined; 
   NotificationDetails: { notification: Notification };
+  ChatScreen:    { reservationId?: string };
+  SupportList: undefined;
+  SupportChat: { ticketId: string, subject: string };
+  DriverReservationDetails: { reservationId: string };
+  DriverInvoicesList:   undefined;
+  DriverInvoiceDetails: { invoiceId: string };
 }
 
 export type DriverOrdersStackParamList = {

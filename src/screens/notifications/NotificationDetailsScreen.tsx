@@ -24,7 +24,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
-  Alert,
   Platform,
   Image,
 } from 'react-native';
@@ -36,6 +35,7 @@ import { fr } from 'date-fns/locale';
 import { Colors, Spacing, Radius } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 import { useAuthStore } from '../../store/auth.store';
+import { useToast } from '../../hooks/useToast';
 import type { Notification, NotificationIconConfig } from '../../types';
 import type { Reservation } from '../../types/reservations.types';
 import {AuthUser} from '../../types/auth.types';
@@ -438,8 +438,10 @@ const CancelledDetails: React.FC<{
   </>
 );
 
-const InvoiceDetails: React.FC<{ notification: Notification }> = ({ notification }) => (
-  <>
+const InvoiceDetails: React.FC<{ notification: Notification }> = ({ notification }) => {
+  const { showToast } = useToast();
+  return (
+    <>
     <AlertBanner
       icon="document-text-outline" iconColor="#6B7280"
       borderColor="#E5E7EB" bg="#F9FAFB"
@@ -455,13 +457,14 @@ const InvoiceDetails: React.FC<{ notification: Notification }> = ({ notification
     {/* FIX 3 : utilisation de backtick correct pour l'apostrophe dans l'Alert */}
     <TouchableOpacity
       style={ctaSt.btn}
-      onPress={() => Alert.alert('Téléchargement', `Fonctionnalité à brancher sur l'API factures.`)}
+      onPress={() => showToast({ type: 'info', title: 'Téléchargement', message: 'Fonctionnalité à brancher sur l\'API factures.' })}
     >
       <Ionicons name="download-outline" size={17} color="#fff" style={{ marginRight: 6 }} />
       <Text style={ctaSt.btnText}>Télécharger la facture</Text>
     </TouchableOpacity>
-  </>
-);
+    </>
+  );
+};
 
 const TripAssignedDetails: React.FC<{
   notification: Notification; user: AuthUser | null; reservation: Reservation; onNavigate: () => void;

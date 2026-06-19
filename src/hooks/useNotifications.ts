@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useAuthStore } from '../store/auth.store';
 import { useNotificationsStore } from '../store/notifications.store';
 
@@ -53,6 +53,16 @@ export const useNotifications = () => {
     }
   };
 
+  const unreadMessagesCount = useMemo(() => 
+    notifications.filter(n => !n.read_at && n.type === 'new_message').length,
+    [notifications]
+  );
+
+  const unreadSupportCount = useMemo(() =>
+    notifications.filter(n => !n.read_at && n.type === 'support_reply').length,
+    [notifications]
+  );
+
   return {
     notifications,
     unreadCount,
@@ -60,6 +70,8 @@ export const useNotifications = () => {
     isFetchingNextPage,
     hasMore,
     error,
+    unreadMessagesCount,
+    unreadSupportCount,
     fetchNotifications: handleRefresh,
     markAsRead:   (id: string) => accessToken && markAsRead(accessToken, id),
     markAllAsRead: ()          => accessToken && markAllAsRead(accessToken),

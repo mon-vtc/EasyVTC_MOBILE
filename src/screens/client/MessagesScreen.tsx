@@ -31,13 +31,33 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
   const recipientName = other_party
     ? `${other_party.first_name} ${other_party.last_name}`
     : 'Interlocuteur inconnu';
+    const timeSince = (date: string | Date) => {
+      const seconds = Math.floor(
+        (new Date().getTime() - new Date(date).getTime()) / 1000
+      );
+    
+      const intervals = [
+        { label: 'an', seconds: 31536000 },
+        { label: 'mois', seconds: 2592000 },
+        { label: 'jour', seconds: 86400 },
+        { label: 'h', seconds: 3600 },
+        { label: 'min', seconds: 60 },
+      ];
+    
+      for (const interval of intervals) {
+        const count = Math.floor(seconds / interval.seconds);
+      
+        if (count >= 1) {
+          return `il y a ${count} ${interval.label}${count > 1 && interval.label !== 'mois' ? 's' : ''}`;
+        }
+      }
+    
+      return "à l'instant";
+    };
 
   const timeAgo = last_message?.created_at
-    ? new Date(last_message.created_at).toLocaleTimeString('fr-FR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : '';
+  ? timeSince(last_message.created_at)
+  : '';
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
@@ -85,7 +105,7 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
 
 export default function MessagesScreen({ navigation }: any) {
   const { user } = useAuth();
-  const { conversations, isLoadingConversations, fetchConversations } = useChat();
+  const { conversations, isLoadingConversations, fetchConversations, markChatAsRead } = useChat();
   
   useFocusEffect(
     React.useCallback(() => {
@@ -117,11 +137,12 @@ export default function MessagesScreen({ navigation }: any) {
         renderItem={({ item }) => (
           <ConversationCard
             conversation={item}
-            onPress={() =>
+            onPress={() => {
+              markChatAsRead(item.reservation_id);
               navigation.navigate('ChatScreen', {
                 reservationId: item.reservation_id,
               })
-            }
+            }}
           />
         )}
         ListEmptyComponent={
@@ -177,6 +198,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
+    marginBottom: Spacing.sm,
     
   },
   avatar: {

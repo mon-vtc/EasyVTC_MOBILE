@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, Platform, TextInput
+  StyleSheet, ActivityIndicator, Linking, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import type { NavigationProp }      from '@react-navigation/native';
@@ -167,7 +167,7 @@ export default function MyInvoicesScreen({
   const navigation = useNavigation<NavigationProp<ClientStackParamList>>();
   const { invoices, isLoading, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
-
+  const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
 
   const load = useCallback(async () => {
@@ -177,7 +177,7 @@ export default function MyInvoicesScreen({
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    if (error) { Alert.alert('Erreur', error); clearError(); }
+    if (error) { showToast({ type: 'error', title: 'Erreur', message: error }); clearError(); }
   }, [error, clearError]);
 
   const filteredInvoices = useMemo(() => {

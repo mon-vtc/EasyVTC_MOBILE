@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
-  TouchableOpacity, Switch, Platform, Alert, Modal, TextInput,
+  TouchableOpacity, Switch, Platform, Modal, TextInput,
 } from 'react-native';
 import { zodResolver }       from '@hookform/resolvers/zod';
 import { z }                 from 'zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { Ionicons }          from '@expo/vector-icons';
+import { useAlert } from '../../hooks/useAlert';
 import * as ImagePicker      from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { FormField }         from '../../components/forms/FormField';
 import { useAuth }           from '../../hooks/useAuth';
+import { useToast }          from '../../hooks/useToast';
 import type { DrawerScreenProps } from '@react-navigation/drawer';
 import type { ManagerDrawerParamList } from '../../types';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -74,6 +76,8 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 export default function ManagerProfileScreen({ navigation }: Props) {
   const { user, logout, changePassword, isLoading, error, clearError, login, updateProfile, uploadAvatar } = useAuth();
   const { permissions } = usePermissions();
+  const { showAlert } = useAlert();
+  const { showToast } = useToast();
 
   const [pendingImage,   setPendingImage]   = useState<string | null>(null); // sélectionnée, pas encore uploadée
   const [confirmedImage, setConfirmedImage] = useState<string | null>(null); // uploadée avec succès
@@ -117,11 +121,10 @@ export default function ManagerProfileScreen({ navigation }: Props) {
           setConfirmedImage(pendingImage); 
           setPendingImage(null);
         }
-
-        Alert.alert('Succès', 'Profil mis à jour avec succès.');
+        showToast({ type: 'success', title: 'Succès', message: 'Profil mis à jour avec succès.' });
       } catch (err) {
         if (__DEV__) console.error('Update error:', err);
-        Alert.alert('Erreur', 'Impossible de sauvegarder les modifications.');
+        showToast({ type: 'error', title: 'Erreur', message: 'Impossible de sauvegarder les modifications.' });
         return;
       }
     }
@@ -163,35 +166,35 @@ export default function ManagerProfileScreen({ navigation }: Props) {
     try {
       await changePassword(data.current_password, data.new_password, data.confirm_password);
       await login({ email: user!.email, password: data.new_password });
-      Alert.alert('Succès', 'Votre mot de passe a été changé avec succès.');
+      showToast({ type: 'success', title: 'Succès', message: 'Votre mot de passe a été changé avec succès.' });
       reset();
       setShowPasswordModal(false);
     } catch (err) {
       if (__DEV__) console.error('Reset password error:', err);
-      Alert.alert('Erreur', 'Impossible de changer le mot de passe. Vérifiez vos informations.');
+      showToast({ type: 'error', title: 'Erreur', message: 'Impossible de changer le mot de passe. Vérifiez vos informations.' });
     }
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      'Supprimer mon compte',
-      'Cette action est irréversible. Voulez-vous vraiment supprimer votre compte ?',
-      [
+    showAlert({
+      title: 'Supprimer mon compte',
+      message: 'Cette action est irréversible. Voulez-vous vraiment supprimer votre compte ?',
+      buttons: [
         { text: 'Annuler',    style: 'cancel' },
         { text: 'Supprimer', style: 'destructive', onPress: logout },
       ]
-    );
+    });
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Voulez-vous vraiment vous déconnecter ?',
-      [
+    showAlert({
+      title: 'Déconnexion',
+      message: 'Voulez-vous vraiment vous déconnecter ?',
+      buttons: [
         { text: 'Annuler',      style: 'cancel' },
         { text: 'Déconnecter', style: 'destructive', onPress: logout },
       ]
-    );
+    });
   };
 
   // Priorité d'affichage : pending > confirmed > serveur

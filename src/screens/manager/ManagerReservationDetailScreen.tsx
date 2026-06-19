@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
   Platform,
   Image,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp, NavigationProp } from '@react-navigation/native';
@@ -17,6 +17,8 @@ import { useReservation } from '../../hooks/useReservation';
 import DriverPickerModal from '../admin/DriverPickerModal';
 import  CancelReservationModal from '../../components/common/CancelReservationModal';
 import type { Reservation , AvailableDriverDto} from '../../types/reservations.types';
+import { useToast } from '../../hooks/useToast';
+import { useAlert } from '../../hooks/useAlert';
 import { AppIcon } from '../../components/common/AppIcon';
 
 type ScreenRoute = RouteProp<{ ManagerReservationDetail: { reservationId: string } }, 'ManagerReservationDetail'>;
@@ -146,6 +148,8 @@ function HistoryItem({ color, label, date }: { color: string; label: string; dat
 
 /* ── CLIENT TAB ── */
 function ClientTab({ client }: { client: Reservation['client'] }) {
+  const { showToast } = useToast();
+  const { showAlert } = useAlert();
   return (
     <View style={S.card}>
       <View style={S.profileRow}>
@@ -172,7 +176,8 @@ function ClientTab({ client }: { client: Reservation['client'] }) {
         </View>
         <TouchableOpacity
           style={S.contactAction}
-          onPress={() => Alert.alert('Appeler', client?.phone || '')}
+          onPress={() => showAlert({title: 'Appeler', message: client?.phone || '', buttons: [{text: 'OK'}]})}
+          // TODO: Remplacer par une action d'appel réelle
         >
           <Ionicons name="call" size={18} color={Colors.white} />
         </TouchableOpacity>
@@ -189,7 +194,7 @@ function ClientTab({ client }: { client: Reservation['client'] }) {
           </View>
           <TouchableOpacity
             style={S.contactAction}
-            onPress={() => Alert.alert('Email', client.email)}
+            onPress={() => Linking.openURL(`mailto:${client.email}`)}
           >
             <Ionicons name="mail" size={18} color={Colors.white} />
           </TouchableOpacity>
@@ -198,7 +203,7 @@ function ClientTab({ client }: { client: Reservation['client'] }) {
 
       <TouchableOpacity
         style={S.profileBtn}
-        onPress={() => Alert.alert('Profil', 'Voir profil client')}
+        onPress={() => showToast({ type: 'info', title: 'Info', message: 'La vue détaillée du profil client sera bientôt disponible.' })}
       >
         <Text style={S.profileBtnText}>Voir le profil complet</Text>
       </TouchableOpacity>
@@ -216,6 +221,8 @@ function DriverTab({
   onAssign: () => void;
   status: Reservation['status'];
 }) {
+  const { showToast } = useToast();
+
   if (!driver) {
     return (
       <View style={S.card}>
@@ -273,7 +280,7 @@ function DriverTab({
         </View>
         <TouchableOpacity
           style={S.contactAction}
-          onPress={() => Alert.alert('Appeler', driver.user.phone || '')}
+          onPress={() => Linking.openURL(`tel:${driver.user.phone}`)}
         >
           <Ionicons name="call" size={18} color={Colors.white} />
         </TouchableOpacity>
@@ -293,7 +300,7 @@ function DriverTab({
 
       <TouchableOpacity
         style={S.profileBtn}
-        onPress={() => Alert.alert('Profil', 'Voir profil chauffeur')}
+        onPress={() => showToast({ type: 'info', title: 'Info', message: 'La vue détaillée du profil chauffeur sera bientôt disponible.' })}
       >
         <Text style={S.profileBtnText}>Voir le profil complet</Text>
       </TouchableOpacity>
@@ -376,6 +383,8 @@ function PaymentTab({ reservation }: { reservation: Reservation }) {
    MAIN SCREEN
 ══════════════════════════════════════ */
 export default function ManagerReservationDetailScreen() {
+  const { showToast } = useToast();
+
   const route      = useRoute<ScreenRoute>();
   const navigation = useNavigation<ScreenNav>();
   const { reservations, selected, fetchById, assign, isLoading, cancel } = useReservation();
@@ -405,10 +414,10 @@ export default function ManagerReservationDetailScreen() {
     try {
       await assign(reservation.id, driver.id);
       setPickerVisible(false);
-      Alert.alert('Succès', `${driver.user.first_name} ${driver.user.last_name} assigné avec succès.`);
+      showToast({ type: 'success', title: 'Succès', message: `${driver.user.first_name} ${driver.user.last_name} a été assigné avec succès.` });
       fetchById(reservation.id).catch(console.warn);
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || "Erreur lors de l'assignation.");
+      showToast({ type: 'error', title: 'Erreur', message: err?.message || "Erreur lors de l'assignation." });
       throw err; // laisse le modal ouvert
     }
   };
@@ -421,10 +430,10 @@ export default function ManagerReservationDetailScreen() {
     switch (reservation.status) {
       case 'pending':
         return { label: 'Assigner un chauffeur', cb: () => setPickerVisible(true) };
-      // case 'assigned':
-      //   return { label: 'Modifier réservation', cb: () => Alert.alert('Action', 'Modifier') };
+      case 'assigned':
+        return { label: 'Modifier l\'assignation', cb: () => setPickerVisible(true) };
       case 'completed':
-        return { label: 'Voir facture', cb: () => Alert.alert('Action', 'Voir Facture') };
+        return { label: 'Voir facture', cb: () => showToast({ type: 'info', title: 'Info', message: 'La vue détaillée de la facture sera bientôt disponible.' }) };
       case 'cancelled':
         return null; // Pas d'action principale si annulé
       default:
@@ -565,7 +574,7 @@ export default function ManagerReservationDetailScreen() {
           if (!reservation) return;
           await cancel(reservation.id, reason);
           setCancelVisible(false);
-          Alert.alert('Réservation annulée', 'La réservation a été annulée avec succès.');
+          showToast({ type: 'success', title: 'Réservation annulée', message: 'La réservation a été annulée avec succès.' });
           navigation.goBack();
         }}
         onClose={() => setCancelVisible(false)}

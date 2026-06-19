@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert, Modal, Linking, Platform, Image, TextInput,
+  ActivityIndicator, Modal, Linking, Platform, Image, TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
@@ -9,7 +9,7 @@ import { useReservation } from '../../hooks/useReservation';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { Reservation, ReservationStatus } from '../../types/reservations.types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { DriverReservationsStackParamList } from '../../types/auth.types';
+import type { DriverNotificationsStackParamList, DriverReservationsStackParamList } from '../../types/auth.types';
 import { AppIcon } from '../../components/common/AppIcon';
 import type { DriverInvoicesStackParamList } from '../../types/auth.types';
 import {
@@ -19,6 +19,8 @@ import {
 import { useAuthStore }   from '../../store/auth.store';
 import { invoicesApi }    from '../../services/api/invoices.api';
 import { Logo } from '../../constants/logo';
+import { useAlert } from '../../hooks/useAlert';
+import { useToast } from '../../hooks/useToast';
 
 type Props = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationDetails'>;
 
@@ -64,8 +66,10 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
   const [mapDestinationAddress, setMapDestinationAddress]     = useState('');
   const [mapDestinationLat, setMapDestinationLat]             = useState<number | null | undefined>(null);
   const [mapDestinationLng, setMapDestinationLng]             = useState<number | null | undefined>(null);
+  const { showToast } = useToast();
+  const { showAlert } = useAlert();
 
-  type ConfirmationNav = NavigationProp<DriverInvoicesStackParamList >;
+  type ConfirmationNav = NavigationProp<any>;
 
   const reservation  = selected;
   const accessToken  = useAuthStore(s => s.accessToken);
@@ -114,20 +118,20 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
 
   const openGoogleMaps = () => {
     const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(mapOriginAddress)}&destination=${encodeURIComponent(mapDestinationAddress)}`;
-    Linking.openURL(url).catch(() =>
-      Alert.alert('Erreur', "Impossible d'ouvrir Google Maps.")
-    );
+    Linking.openURL(url).catch(() => {
+      showToast({ type: 'error', title: 'Erreur', message: "Impossible d'ouvrir Google Maps." });
+    });
     setMapChoiceModalVisible(false);
   };
 
   const openWaze = () => {
     if (mapDestinationLat != null && mapDestinationLng != null) {
       const wazeUrl = `waze://?ll=${mapDestinationLat},${mapDestinationLng}&navigate=yes`;
-      Linking.openURL(wazeUrl).catch(() =>
-        Alert.alert('Erreur', "Impossible d'ouvrir Waze. Assurez-vous que l'application est installée.")
-      );
+      Linking.openURL(wazeUrl).catch(() => {
+        showToast({ type: 'error', title: 'Erreur', message: "Impossible d'ouvrir Waze. Assurez-vous que l'application est installée." });
+      });
     } else {
-      Alert.alert('Erreur', 'Coordonnées de destination non disponibles pour Waze.');
+      showToast({ type: 'error', title: 'Erreur', message: 'Coordonnées de destination non disponibles pour Waze.' });
     }
     setMapChoiceModalVisible(false);
   };
@@ -139,9 +143,9 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
       setIsLoading(true);
       await start(reservation.id);
       await refresh();
-      Alert.alert('Succès', 'Course démarrée.');
+      showToast({ type: 'success', title: 'Succès', message: 'Course démarrée.' });
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || 'Impossible de démarrer la course.');
+      showToast({ type: 'error', title: 'Erreur', message: err?.message || 'Impossible de démarrer la course.' });
     } finally { setIsLoading(false); }
   };
 
@@ -157,15 +161,15 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
       setActualDistanceKm('');
       await refresh();
       setConfirmModal(false);
-      Alert.alert('Succès', 'Course terminée.');
+      showToast({ type: 'success', title: 'Succès', message: 'Course terminée.' });
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || 'Impossible de terminer la course.');
+      showToast({ type: 'error', title: 'Erreur', message: err?.message || 'Impossible de terminer la course.' });
     } finally { setIsLoading(false); }
   };
 
   const handleCancel = () => {
     if (!reservation) return;
-    Alert.alert('Annuler la course', 'Voulez-vous vraiment annuler cette course ?', [
+    showAlert({title: 'Annuler la course', message: 'Voulez-vous vraiment annuler cette course ?', buttons: [
       { text: 'Non', style: 'cancel' },
       {
         text: 'Oui', style: 'destructive',
@@ -174,13 +178,13 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
             setIsLoading(true);
             await cancel(reservation.id, 'Annulé par le chauffeur');
             await refresh();
-            Alert.alert('Succès', 'Course annulée.');
+            showToast({ type: 'success', title: 'Succès', message: 'Course annulée.' });
           } catch (err: any) {
-            Alert.alert('Erreur', err?.message || "Impossible d'annuler la course.");
+            showToast({ type: 'error', title: 'Erreur', message: err?.message || "Impossible d'annuler la course." });
           } finally { setIsLoading(false); }
         },
       },
-    ]);
+    ]});
   };
 
   const handleSupport = () => {
@@ -200,13 +204,14 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
           'DriverInvoiceDetails', { invoiceId: res.data.id },
         );
       } else {
-        Alert.alert(
-          'Facture indisponible',
-          res.message ?? "La facture n'est pas encore disponible pour cette course.",
-        );
+        showToast({
+          type: 'warning',
+          title: 'Facture indisponible',
+          message: res.message ?? "La facture n'est pas encore disponible pour cette course.",
+        });
       }
     } catch {
-      Alert.alert('Erreur', 'Impossible de récupérer la facture. Veuillez réessayer.');
+      showToast({ type: 'error', title: 'Erreur', message: 'Impossible de récupérer la facture. Veuillez réessayer.' });
     }
   }, [reservation?.id, accessToken, nav]);
 

@@ -45,6 +45,8 @@ export function useChat() {
   const _fetchMessages           = useChatStore(s => s.fetchMessages);
   const _sendMessage             = useChatStore(s => s.sendMessage);
   const _addMessageOptimistically = useChatStore(s => s.addMessageOptimistically);
+  const _markChatAsRead          = useChatStore(s => s.markChatAsRead);
+  const _markSupportAsRead       = useChatStore(s => s.markSupportAsRead);
   const _clearError              = useChatStore(s => s.clearError);
   const _resetMessages           = useChatStore(s => s.resetMessages);
   const _fetchSupportTickets     = useChatStore(s => s.fetchSupportTickets);
@@ -86,6 +88,16 @@ export function useChat() {
   const addMessageOptimistically = useCallback(
     (message: ChatMessage) => _addMessageOptimistically(message),
     [_addMessageOptimistically],
+  );
+
+  const markChatAsRead = useCallback(
+    (reservationId: string) => _markChatAsRead(accessToken, reservationId),
+    [accessToken, _markChatAsRead],
+  );
+
+  const markSupportAsRead = useCallback(
+    (ticketId: string) => _markSupportAsRead(accessToken, ticketId),
+    [accessToken, _markSupportAsRead],
   );
 
   // Actions Support
@@ -159,6 +171,8 @@ export function useChat() {
     fetchConversations,
     fetchMessages,
     sendMessage,
+    markChatAsRead,
+    markSupportAsRead,
     addMessageOptimistically,
     clearError:    _clearError,
     resetMessages: _resetMessages,

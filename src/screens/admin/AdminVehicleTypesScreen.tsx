@@ -7,12 +7,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Modal,
+  StyleSheet, ActivityIndicator, Modal,
   KeyboardAvoidingView, Platform, Switch, Image,
 } from 'react-native';
 import { useNavigation }      from '@react-navigation/native';
 import { useVehicleTypes }    from '../../hooks/useVehicleTypes';
 import { AppIcon }            from '../../components/common/AppIcon';
+import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
 import { Logo }               from '../../constants/logo';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
@@ -238,6 +239,7 @@ function VehicleTypeFormModal({
   editItem: VehicleTypeRecord | null;
   saving:   boolean;
 }) {
+  const { showToast } = useToast();
   const [form, setForm] = useState<FormValues>(emptyForm());
 
   useEffect(() => {
@@ -248,10 +250,10 @@ function VehicleTypeFormModal({
     setForm(f => ({ ...f, [key]: val }));
 
   const handleSave = () => {
-    if (!form.code.trim())               return Alert.alert('Champ requis', 'Le code est obligatoire.');
-    if (!form.label.trim())              return Alert.alert('Champ requis', 'Le libellé est obligatoire.');
-    if (!form.capacity || toInt(form.capacity) < 1) return Alert.alert('Champ invalide', 'La capacité doit être ≥ 1.');
-    if (form.base_price_france === '')   return Alert.alert('Champ requis', 'Le prix de base est obligatoire.');
+    if (!form.code.trim())               return showToast({ type: 'error', title: 'Champ requis', message: 'Le code est obligatoire.' });
+    if (!form.label.trim())              return showToast({ type: 'error', title: 'Champ requis', message: 'Le libellé est obligatoire.' });
+    if (!form.capacity || toInt(form.capacity) < 1) return showToast({ type: 'error', title: 'Champ invalide', message: 'La capacité doit être ≥ 1.' });
+    if (form.base_price_france === '')   return showToast({ type: 'error', title: 'Champ requis', message: 'Le prix de base est obligatoire.' });
     onSave(form);
   };
 
@@ -338,6 +340,7 @@ export default function AdminVehicleTypesScreen() {
   const { allTypes, isLoading, error, refresh, createType, updateType, deleteType } = useVehicleTypes();
 
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
   const [modalVisible, setModalVisible] = useState(false);
   const [editItem, setEditItem]         = useState<VehicleTypeRecord | null>(null);
   const [saving, setSaving]             = useState(false);
@@ -389,7 +392,7 @@ export default function AdminVehicleTypesScreen() {
       setModalVisible(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Une erreur est survenue.';
-      Alert.alert('Erreur', msg);
+      showToast({ type: 'error', title: 'Erreur', message: msg });
     } finally {
       setSaving(false);
     }
@@ -397,10 +400,10 @@ export default function AdminVehicleTypesScreen() {
 
   const handleToggleActive = useCallback((item: VehicleTypeRecord) => {
     const action = item.is_active ? 'désactiver' : 'activer';
-    Alert.alert(
-      'Confirmation',
-      `Voulez-vous ${action} le type "${item.label}" ?`,
-      [
+    showAlert({
+      title: 'Confirmation',
+      message: `Voulez-vous ${action} le type "${item.label}" ?`,
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Confirmer',
@@ -409,25 +412,24 @@ export default function AdminVehicleTypesScreen() {
               await updateType(item.id, { is_active: !item.is_active });
             } catch (err: unknown) {
               const msg = err instanceof Error ? err.message : 'Erreur lors de la mise à jour.'; 
-              Alert.alert('Erreur', msg);
+              showToast({ type: 'error', title: 'Erreur', message: msg });
             }
           },
         },
       ]
-    );
+    });
   }, [updateType]);
 
   const handleDelete = useCallback((item: VehicleTypeRecord) => {
-    Alert.alert(
-      'Supprimer ce type',
-      `Supprimer "${item.label}" définitivement ?\n\nCette action est impossible si des réservations ou véhicules utilisent ce type.`,
-      [
+    showAlert({
+      title: 'Supprimer ce type',
+      message: `Supprimer "${item.label}" définitivement ?\n\nCette action est impossible si des réservations ou véhicules utilisent ce type.`,
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Supprimer',
           style: 'destructive',
           onPress: async () => {
-            setSaving(true); // Activer l'indicateur de chargement si nécessaire
             try {
               await deleteType(item.id);
               showToast({ type: 'success', message: `Le type "${item.label}" a été supprimé.` });
@@ -437,9 +439,8 @@ export default function AdminVehicleTypesScreen() {
             }
           },
         },
-      ],
-      { cancelable: false } // Empêche la fermeture de l'alerte en dehors des boutons
-    );
+      ]
+    });
   }, [deleteType]);
 
   return (

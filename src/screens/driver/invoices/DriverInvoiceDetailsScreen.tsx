@@ -14,7 +14,6 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
-  Alert,
   Linking,
   Share,
   Image,
@@ -30,6 +29,7 @@ import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useInvoicesStore }       from '../../../store/invoices.store';
 import { useAuthStore }           from '../../../store/auth.store';
 import { invoicesApi }            from '../../../services/api/invoices.api';
+import { useToast } from '../../../hooks/useToast';
 import type { DriverInvoicesStackParamList } from '../../../types/auth.types';
 import type { InvoiceAdjustment } from '../../../types/invoices.types';
 import { Logo }                   from '../../../constants/logo';
@@ -64,6 +64,7 @@ export default function InvoiceDetailsScreen() {
   const navigation = useNavigation<NavProp>();
   const route      = useRoute<NavRoute>();
   const { invoiceId } = route.params;
+  const { showToast } = useToast();
 
   const token                             = useAuthStore(s => s.accessToken) ?? '';
   const { invoices, fetchById, isLoading } = useInvoicesStore();
@@ -88,7 +89,7 @@ export default function InvoiceDetailsScreen() {
       if (!res.ok || !res.data?.url) throw new Error(res.message ?? 'URL indisponible');
       await Linking.openURL(res.data.url);
     } catch {
-      Alert.alert('Erreur', 'Impossible d\'ouvrir la facture PDF.');
+      showToast({ type: 'error', title: 'Erreur', message: 'Impossible d\'ouvrir la facture PDF.' });
     } finally {
       setOpeningPdf(false);
     }

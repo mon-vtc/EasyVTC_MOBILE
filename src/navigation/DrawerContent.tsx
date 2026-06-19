@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, Image, StyleSheet, TouchableOpacity, Alert, LayoutAnimation, Platform, UIManager
 } from 'react-native';
+import { useAlert } from '../hooks/useAlert';
 import {
   DrawerContentScrollView,
   DrawerItem,
@@ -48,25 +49,31 @@ function DrawerAccordion({
   );
 }
 
-function DrawerLabel({ icon, label }: { icon: React.ComponentProps<typeof AppIcon>['name']; label: string }) {
+export function DrawerLabel({ icon, label, badgeCount }: { icon: React.ComponentProps<typeof AppIcon>['name']; label: string; badgeCount?: number }) {
   return (
     <View style={styles.labelRow}>
-      <AppIcon name={icon} size={20} color={Colors.bordeauxDark} />
+      <View style={{ width: 24, alignItems: 'center' }}>
+        <AppIcon name={icon} size={20} color={Colors.bordeauxDark} />
+      </View>
       <Text style={styles.labelText}>{label}</Text>
+      {badgeCount && badgeCount > 0 ? (
+        <View style={styles.badge} />
+      ) : null}
     </View>
   );
 }
 
 export default function DrawerContent(props: DrawerContentComponentProps) {
   const { user, logout, localAvatarUri } = useAuth();
+  const { showAlert } = useAlert();
 
   const isAdmin = user?.role === 'admin' || user?.role === 'manager';
 
   const handleLogout = () => {
-    Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
+    showAlert({title: 'Déconnexion', message: 'Voulez-vous vraiment vous déconnecter ?', buttons: [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Déconnecter', style: 'destructive', onPress: logout },
-    ]);
+    ]});
   };
 
   const roleLabel: Record<string, string> = {
@@ -166,9 +173,15 @@ const styles = StyleSheet.create({
   logoutBtn:       { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.sm },
   logoutText:      { color: Colors.error, fontSize: Fonts.size.md, fontWeight: '600' },
   labelRow:        { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  labelText:       { fontSize: 16, color: Colors.textPrimary, fontWeight: '500', flex: 1 },
+  labelText:       { fontSize: 16, color: Colors.textPrimary, fontWeight: '500', flex: 1, marginLeft: 8 },
   accordionHeader: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingHorizontal: 26, marginLeft: Spacing.sm, paddingVertical: 12 },
   accordionBody:   { paddingLeft: Spacing.xl },
   subItem:         { marginLeft: 26, marginVertical: -4 },
   subItemLabel:    { fontSize: 15, color: Colors.textPrimary, fontWeight: '500' },
+  badge: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.bordeauxLight,
+  },
 });

@@ -108,20 +108,32 @@ export interface PriceEstimateDto {
 
 // ── Détail interne (stocké en BDD, JAMAIS affiché sur documents — CDC p.26) ──
 export interface PriceBreakdown {
-  // Mode formule
-  base_price?:      number;
-  distance_km?:     number;
-  duration_min?:    number;
-  price_per_km?:    number;
-  price_per_min?:   number;
-  km_cost?:         number;
-  min_cost?:        number;
-  subtotal?:        number;
+  base_price?: number;
+  vehicle_type?: string;
+  vehicle_base_price?: number;
+  distance_km?: number;
+  duration_min?: number;
+  price_per_km?: number;
+  price_per_min?: number;
+  km_cost?: number;
+  min_cost?: number;
+  subtotal?: number;
   minimum_applied?: boolean;
-  // Mode forfait
-  flat_rate_id?:    string;
+  flat_rate_id?: string;
   flat_rate_label?: string;
-  nb_passengers?:   number;
+  nb_passengers?: number;
+  pickup_surcharge_per_person?: number;
+  pickup_surcharge_total?: number;
+  // Suppléments et TVA (mode formule)
+  is_airport?: boolean;
+  airport_supplement_amount?: number;
+  is_night?: boolean;
+  night_supplement_rate?: number;
+  night_supplement_amount?: number;
+  tva_rate?: number;
+  tva_amount?: number;
+  amount_ht?: number;
+  amount_ttc?: number;
 }
 
 export interface PriceEstimateResult {
