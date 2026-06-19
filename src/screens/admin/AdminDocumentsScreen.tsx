@@ -3,11 +3,12 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, RefreshControl, Image, Modal, TextInput,
-  ActivityIndicator, Alert, Animated,
+  ActivityIndicator, Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAdminDocuments }  from '../../hooks/useAdminDocuments';
+import { useAlert } from '../../hooks/useAlert';
 import DocumentViewer         from '../../components/admin/DocumentViewer';
 import type { AdminDocument } from '../../services/api/admin.document.api';
 import { useToast } from '../../hooks/useToast';
@@ -477,6 +478,7 @@ export default function AdminDocumentsScreen({ navigation }: Props) {
   } = useAdminDocuments();
 
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
 
   const [activeTab,    setActiveTab]    = useState<FilterTab>('all');
   const [refreshing,   setRefreshing]   = useState(false);
@@ -546,7 +548,7 @@ const folders = useMemo(() => {
       const detail  = await fetchDocumentById(doc.id);
       const resolved = detail ?? doc;
       const fileUrl  = resolveFileUrl(resolved);
-      if (!fileUrl) { Alert.alert('Erreur', 'URL du document introuvable.'); return; }
+      if (!fileUrl) { showToast({ type: 'error', title: 'Erreur', message: 'URL du document introuvable.' }); return; }
       setViewerDoc({ ...resolved, signed_url: fileUrl });
     } finally {
       setFetchingId(null);
@@ -555,7 +557,7 @@ const folders = useMemo(() => {
 
   // ── Valider ───────────────────────────────────────────────
   const handleValidate = (docId: string) => {
-    Alert.alert('Valider ce document ?', 'Le chauffeur sera notifié.', [
+    showAlert({title: 'Valider ce document ?', message: 'Le chauffeur sera notifié.', buttons: [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Valider', onPress: async () => {
           setActingId(docId);
@@ -580,7 +582,7 @@ const folders = useMemo(() => {
           } else showToast({ type: 'error', title: 'Erreur', message: error ?? 'Impossible de valider.' });
         },
       },
-    ]);
+    ]});
   };
 
   // ── Rejeter ───────────────────────────────────────────────

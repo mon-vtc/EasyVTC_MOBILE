@@ -1,9 +1,10 @@
   import { create } from 'zustand';
   import { authApi }        from '../services/api/auth.api';
-  import { userApi }        from '../services/api/user.api'
+  import { userApi }        from '../services/api/user.api';
+  import { rgpdApi }        from '../services/api/rgpd.api';
   import { authStorage as secureStorage }  from '../services/auth/auth-storage';
   import { useNotificationsStore } from './notifications.store';
-  import type { AuthUser, LoginPayload, RegisterPayload, UpdateProfilePayload } from '../types';
+  import type { AuthUser, LoginPayload, RegisterPayload, UpdateProfilePayload, RgpdExport } from '../types';
 
   // ── Utilitaire : aplatir la réponse API → AuthUser/DriverUser ──
   export function mapApiUser(raw: any): AuthUser {
@@ -48,6 +49,8 @@
     resetPassword:  (token: string, newPassword: string) => Promise<void>;
     updateProfile: (payload: UpdateProfilePayload) => Promise<void>;
     uploadAvatar:   (formData: FormData, pendingImage?: string) => Promise<void>;
+    exportMyData:   () => Promise<RgpdExport>;
+    anonymizeMyAccount: (password: string) => Promise<void>;
     clearError:     ()                          => void;
   }
 
@@ -262,6 +265,43 @@
         throw err;
       }
     },
+    
+    // ── RGPD: Exporter mes données ──────────────────────────────────────────
+    exportMyData: async () => {
+      set({ isLoading: true, error: null });
+      const { accessToken, user } = get();
+      try {
+        if (!accessToken || !user?.id) throw new Error('Non authentifié');
+        
+        const res = await rgpdApi.exportMyData(accessToken, user.id);
+        if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de l\'export des données');
+        
+        set({ isLoading: false });
+        return res.data; // La réponse de l'API est { ok, data: RgpdExport }
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error('Erreur inconnue');
+        set({ error: error.message, isLoading: false });
+        throw error;
+      }
+    },
+
+    // ── RGPD: Anonymiser mon compte ─────────────────────────────────────────
+    anonymizeMyAccount: async (password) => {
+      set({ isLoading: true, error: null });
+      const { accessToken, user, logout } = get();
+      try {
+        if (!accessToken || !user?.id) throw new Error('Non authentifié');
+
+        const res = await rgpdApi.anonymizeMyAccount(accessToken, user.id, password);
+        if (!res.ok) throw new Error(res.message ?? 'Erreur lors de la suppression du compte');
+        
+        await logout(); // Déconnexion après anonymisation réussie
+      } catch (err: unknown) {
+        set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+        throw err;
+      }
+    },
 
     clearError: () => set({ error: null }),
+
   }));

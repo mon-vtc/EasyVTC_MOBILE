@@ -57,6 +57,7 @@ export type ClientTabParamList = {
   NotificationDetails:  { notification: Notification };
   MyOrders:             undefined;
   MyInvoices:           { reservationId?: string } | undefined;
+  ReservationDetails: { reservationId?: string }
 };
 /**
  * Stack racine du client — enveloppe les tabs et expose les écrans
@@ -102,6 +103,12 @@ export type DriverTripsStackParamList = {
 export type DriverNotificationsStackParamList = {
   NotificationsList: undefined; 
   NotificationDetails: { notification: Notification };
+  ChatScreen:    { reservationId?: string };
+  SupportList: undefined;
+  SupportChat: { ticketId: string, subject: string };
+  DriverReservationDetails: { reservationId: string };
+  DriverInvoicesList:   undefined;
+  DriverInvoiceDetails: { invoiceId: string };
 }
 
 export type DriverOrdersStackParamList = {

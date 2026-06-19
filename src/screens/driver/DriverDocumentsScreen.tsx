@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  Alert, TouchableOpacity, ActivityIndicator,
+  TouchableOpacity, ActivityIndicator,
   Modal, Image, Pressable, RefreshControl,
 } from 'react-native';
 import { Ionicons }              from '@expo/vector-icons';
 import { useSafeAreaInsets }     from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import { useToast } from '../../hooks/useToast';
 import { DocumentCard }          from '../../components/common/DocumentCard';
 import { UploadModal }           from '../../components/common/UploadModal';
 import type { UploadPayload }    from '../../components/common/UploadModal';
@@ -25,6 +26,7 @@ export default function DriverDocumentsScreen() {
     clearError, uploadedCount, missingCount,
     requiredMissing, pendingCount, rejectedCount,
   } = useDocuments();
+  const { showToast } = useToast();
 
   const [refreshing,         setRefreshing]         = useState(false);
   const [viewerDoc,          setViewerDoc]          = useState<DocumentView | null>(null);
@@ -40,7 +42,7 @@ export default function DriverDocumentsScreen() {
   }, [fetchDocuments]);
 
   useEffect(() => {
-    if (error) Alert.alert('Erreur', error, [{ text: 'OK', onPress: clearError }]);
+    if (error) { showToast({ type: 'error', title: 'Erreur', message: error }); clearError(); }
   }, [error]);
 
   // ── Ouvre le modal d'upload ───────────────────────────────

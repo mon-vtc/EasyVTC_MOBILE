@@ -6,12 +6,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image,
+  StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
 import { useNavigation }       from '@react-navigation/native';
 import { usePricing }          from '../../hooks/usePricing';
 import type { PricingCountry, PricingFormValues, PricingExample } from '../../types/pricing.types';
 import { Logo }                from '../../constants/logo';
+import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
 import { AppIcon }             from '../../components/common/AppIcon';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
@@ -204,6 +205,7 @@ export default function AdminPricingScreen() {
   } = usePricing();
 
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
   // ── Mode édition ─────────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
 
@@ -249,10 +251,10 @@ export default function AdminPricingScreen() {
   const handleToggleEdit = () => {
     if (isEditing) {
       // Annulation : on restaure le snapshot
-      Alert.alert(
-        'Annuler les modifications',
-        'Les modifications non enregistrées seront perdues.',
-        [
+      showAlert({
+        title: 'Annuler les modifications',
+        message: 'Les modifications non enregistrées seront perdues.',
+        buttons: [
           { text: 'Continuer', style: 'cancel' },
           {
             text: 'Annuler',
@@ -263,7 +265,7 @@ export default function AdminPricingScreen() {
             },
           },
         ]
-      );
+      });
     } else {
       setIsEditing(true);
     }

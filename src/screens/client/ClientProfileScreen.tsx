@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
-  TouchableOpacity, Switch, Platform, Alert, Modal, TextInput,
+  TouchableOpacity, Switch, Platform, Modal, TextInput,
 } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as FileSystem from 'expo-file-system';
 import { z }           from 'zod';
 import { FormField }   from '../../components/forms/FormField';
 import { useFocusEffect } from '@react-navigation/native';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useAuth }     from '../../hooks/useAuth';
+import { useAlert } from '../../hooks/useAlert';
 import { useToast }     from '../../hooks/useToast';
 import { Ionicons }    from '@expo/vector-icons';
+import * as Sharing from 'expo-sharing';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -93,7 +96,7 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 
 // ── Écran ───────────────────────────────────────────────────────
 export default function ClientProfileScreen({ navigation }: Props) {
-  const { user, logout, changePassword, isLoading, error, clearError, login, updateProfile, uploadAvatar } = useAuth();
+  const { user, logout, changePassword, isLoading, error, clearError, login, updateProfile, uploadAvatar, exportMyData, anonymizeMyAccount } = useAuth();
   const accessToken = useAuthStore(s => s.accessToken);
   const { fetchMyMarketingProfile } = useMarketingStore();
   const _updateMyMarketingConsents = useMarketingStore(s => s.updateMyMarketingConsents);
@@ -110,6 +113,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
   const [avatarKey, setAvatarKey] = useState(Date.now());
 
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
   const initials = `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
 
   useFocusEffect(
@@ -198,19 +202,11 @@ export default function ClientProfileScreen({ navigation }: Props) {
 
 
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      'Supprimer mon compte',
-      'Cette action est irréversible. Voulez-vous vraiment supprimer votre compte ?',
-      [
-        { text: 'Annuler',   style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: logout },
-      ]
-    );
-  };
-
   // ── Modal mot de passe ──────────────────────────────────────
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+
   const { control, handleSubmit, reset, formState: { errors } } = useForm<PasswordForm>({
     resolver: zodResolver(passwordSchema),
   });
@@ -230,6 +226,35 @@ export default function ClientProfileScreen({ navigation }: Props) {
     }
   };
 
+  const handleAnonymize = async (password: string) => {
+    if (!password) {
+      showToast({ type: 'error', title: 'Erreur', message: 'Le mot de passe est requis.' });
+      return;
+    }
+    try {
+      await anonymizeMyAccount(password);
+      showToast({ type: 'success', title: 'Compte supprimé', message: 'Votre compte et vos données ont été supprimés.' });
+      setShowDeleteModal(false);
+    } catch (err: any) {
+      showToast({ type: 'error', title: 'Erreur', message: err.message ?? 'Impossible de supprimer le compte.' });
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      const data = await exportMyData();
+      const jsonString = JSON.stringify(data, null, 2);
+      const fileUri = FileSystem.documentDirectory + `eazyvtc_export_${user!.id}.json`;
+      
+      await FileSystem.writeAsStringAsync(fileUri, jsonString, { encoding: FileSystem.EncodingType.UTF8 });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri);
+      }
+    } catch (err) {
+      showToast({ type: 'error', title: 'Erreur', message: 'Impossible d\'exporter vos données.' });
+    }
+  };
 
   // Priorité d'affichage : pending > confirmed > serveur
   const avatarUri = pendingImage ?? confirmedImage ?? user?.profile_photo_url;
@@ -382,14 +407,24 @@ export default function ClientProfileScreen({ navigation }: Props) {
 
           <View style={styles.divider} />
 
+          <TouchableOpacity style={styles.actionRow} onPress={handleExportData} disabled={isLoading}>
+            <View style={styles.actionLeft}>
+              <Ionicons name="download-outline" size={20} color={Colors.textPrimary} />
+              <Text style={styles.actionLabel}>Exporter mes données</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textPrimary} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
           <TouchableOpacity
             style={styles.actionRow}
-            onPress={() =>
-              Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
+            onPress={() => {
+              showAlert({title: 'Déconnexion', message: 'Voulez-vous vraiment vous déconnecter ?', buttons: [
                 { text: 'Annuler',      style: 'cancel' },
                 { text: 'Déconnecter', style: 'destructive', onPress: logout },
-              ])
-            }
+              ]});
+            }}
           >
             <View style={styles.actionLeft}>
               <Ionicons name="log-out-outline" size={20} color={Colors.bordeaux} />
@@ -400,7 +435,13 @@ export default function ClientProfileScreen({ navigation }: Props) {
 
           <View style={styles.divider} />
 
-          <TouchableOpacity style={styles.actionRow} onPress={handleDeleteAccount}>
+          <TouchableOpacity style={styles.actionRow} onPress={() => {
+            showAlert({
+              title: 'Supprimer mon compte',
+              message: 'Cette action est irréversible. Pour confirmer, veuillez saisir votre mot de passe.',
+              buttons: [{ text: 'Annuler', style: 'cancel' }, { text: 'Continuer', onPress: () => setShowDeleteModal(true) }]
+            });
+          }}>
             <View style={styles.actionLeft}>
               <Ionicons name="trash-outline" size={20} color={Colors.error} />
               <Text style={[styles.actionLabel, { color: Colors.error }]}>Supprimer mon compte</Text>
@@ -463,6 +504,55 @@ export default function ClientProfileScreen({ navigation }: Props) {
                 disabled={isLoading}
               >
                 <Text style={modalStyles.btnConfirmText}>Confirmer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Modal Suppression Compte ── */}
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => { setDeletePassword(''); setShowDeleteModal(false); }}
+      >
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.card}>
+            <Text style={modalStyles.title}>Supprimer le compte</Text>
+            <Text style={modalStyles.warningText}>
+              Cette action est irréversible. Pour confirmer, veuillez saisir votre mot de passe.
+            </Text>
+
+            <View style={fieldStyles.wrapper}>
+              <Text style={fieldStyles.label}>Mot de passe</Text>
+              <View style={fieldStyles.inputWrapper}>
+                <TextInput
+                  value={deletePassword}
+                  onChangeText={setDeletePassword}
+                  editable={!isLoading}
+                  secureTextEntry
+                  style={fieldStyles.input}
+                  selectionColor={Colors.bordeaux}
+                  underlineColorAndroid="transparent"
+                  placeholder="Saisissez votre mot de passe"
+                />
+              </View>
+            </View>
+
+            <View style={modalStyles.actions}>
+              <TouchableOpacity
+                style={[modalStyles.btn, modalStyles.btnCancel]}
+                onPress={() => { setDeletePassword(''); setShowDeleteModal(false); }}
+              >
+                <Text style={modalStyles.btnCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[modalStyles.btn, modalStyles.btnDelete]}
+                onPress={() => handleAnonymize(deletePassword)}
+                disabled={isLoading}
+              >
+                <Text style={modalStyles.btnConfirmText}>Supprimer</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -625,6 +715,12 @@ const modalStyles = StyleSheet.create({
     color:        Colors.textPrimary,
     marginBottom: Spacing.lg,
   },
+  warningText: {
+    fontSize: Fonts.size.md,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.lg,
+    lineHeight: 22,
+  },
   actions: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm },
   btn: {
     flex:            1,
@@ -635,5 +731,6 @@ const modalStyles = StyleSheet.create({
   btnCancel:      { backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border },
   btnCancelText:  { color: Colors.textSecondary, fontWeight: '600' },
   btnConfirm:     { backgroundColor: Colors.bordeaux },
+  btnDelete:      { backgroundColor: Colors.error },
   btnConfirmText: { color: Colors.white, fontWeight: '700' },
 });

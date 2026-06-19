@@ -15,12 +15,9 @@ import {
   type RouteProp, type NavigationProp,
 } from '@react-navigation/native';
 import { Ionicons }              from '@expo/vector-icons';
-import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
-import { useReservationStore }   from '../../store/reservation.store';
-import { useAuthStore }          from '../../store/auth.store';
-import { reservationApi }        from '../../services/api/reservation.api';
-import { ordersApi }             from '../../services/api/orders.api';
+import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';;
 import type { ClientStackParamList } from '../../types/auth.types';
+import { useReservation } from '../../hooks/useReservation';
 import type { Reservation }          from '../../types/reservations.types';
 import { RESERVATION_STATUS_LABELS } from '../../types/reservations.types';
 
@@ -171,75 +168,38 @@ export default function BookingConfirmationScreen() {
   const nav   = useNavigation<ConfirmationNav>();
   const route = useRoute<ConfirmationRoute>();
 
-  const reservationId = (route.params)?.reservationId as string | undefined;
+  const { reservationId } = route.params ?? {};
+  const {
+    selected: reservation,
+    isLoading,
+    error,
+    fetchById,
+    fetchOrderByReservationId,
+  } = useReservation();
 
-  const accessToken  = useAuthStore(s => s.accessToken);
-  const reservations = useReservationStore(s => s.reservations);
-  const fetchById    = useReservationStore(s => s.fetchById);
+  const [isLoadingOrder, setIsLoadingOrder] = useState(false);
 
-  const [loading,            setLoading]            = useState(false);
-  const [error,              setError]              = useState<string | null>(null);
-  const [localReservation,   setLocalReservation]   = useState<Reservation | null>(null);
-  const [isLoadingOrder,     setIsLoadingOrder]     = useState(false);
-
-  // Cherche d'abord dans le store (déjà inséré par submitBooking)
-  const storeReservation = reservationId
-    ? (reservations.find(r => r.id === reservationId) ?? null)
-    : null;
-
-  const reservation: Reservation | null = storeReservation ?? localReservation;
-
-  // Fallback API si absent du store
   useEffect(() => {
-    if (!reservationId || storeReservation) return;
-    setLoading(true);
-    (async () => {
-      try {
-        if (accessToken && fetchById) {
-          await fetchById(accessToken, reservationId);
-        } else if (accessToken) {
-          const res = await reservationApi.getById(accessToken, reservationId);
-          if (res.ok && res.data) setLocalReservation(res.data);
-          else setError(res.message ?? 'Impossible de charger la réservation');
-        }
-      } catch {
-        setError('Erreur de chargement');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [reservationId]);
+    // Charge la réservation si elle n'est pas déjà la bonne dans le store
+    if (reservationId && reservation?.id !== reservationId) {
+      fetchById(reservationId);
+    }
+  }, [reservationId, reservation, fetchById]);
 
   // ── Navigation vers le bon de commande ───────────────────────────────────
   // Tente de récupérer l'ordre lié à la réservation. L'ordre peut ne pas exister
   // encore (généré après attribution du chauffeur). Si trouvé → OrderDetails
   // directement. Sinon → liste MyOrders.
-  const handleViewOrderWithRetry = async (retries = 3, delay = 2500) => {
-    if (!reservationId || !accessToken) return;
-
-    for (let i = 0; i < retries; i++) {
-      try {
-        const res = await ordersApi.getByReservation(accessToken, reservationId);
-        if (res.ok && res.data) {
-          nav.navigate('OrderDetails', { orderId: res.data.id });
-          return; // Succès, on arrête les tentatives
-        }
-      } catch (e) {
-        console.warn(`Attempt ${i + 1} failed:`, e);
-      }
-      // Attendre avant de réessayer
-      if (i < retries - 1) {
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-    // Si toutes les tentatives échouent, rediriger vers la liste
-    nav.navigate('ClientTabs', { screen: 'MyOrders' });
-  };
-
   const handleViewOrder = async () => {
+    if (!reservationId) return;
     setIsLoadingOrder(true);
-    await handleViewOrderWithRetry();
+    const order = await fetchOrderByReservationId(reservationId);
     setIsLoadingOrder(false);
+    if (order) {
+      nav.navigate('OrderDetails', { orderId: order.id });
+    } else {
+      nav.navigate('MyOrders');
+    }
   };
 
   // ── Animations entrée page ────────────────────────────────────────────────
@@ -272,15 +232,14 @@ export default function BookingConfirmationScreen() {
     );
   }
 
-  if (loading) {
+  if (isLoading && !reservation) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={BORDEAUX} />
       </View>
     );
   }
-
-  if (error || (!loading && !reservation)) {
+  if (error || (!isLoading && !reservation)) {
     return (
       <View style={styles.center}>
         <Ionicons name="alert-circle-outline" size={48} color={BORDEAUX} />

@@ -121,6 +121,8 @@ function ClientTabs() {
         }}
       />
 
+
+
       {/*
        * FAB central — CreateReservation n'est pas un vrai écran tab.
        * Le bouton navigue vers le Stack "ReservationDetails" (hors tabs).
@@ -169,6 +171,13 @@ function ClientTabs() {
       <Tab.Screen
         name="NotificationDetails"
         component={NotificationDetailsScreen}
+        options={{
+          tabBarButton: () => null, // Masqué de la barre d'onglets
+        }}
+      />
+      <Tab.Screen
+        name="ReservationDetails"
+        component={ReservationDetailsScreen}
         options={{
           tabBarButton: () => null, // Masqué de la barre d'onglets
         }}

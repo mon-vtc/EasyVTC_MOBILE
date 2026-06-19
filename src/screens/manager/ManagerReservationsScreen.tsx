@@ -223,6 +223,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useReservation } from '../../hooks/useReservation';
 import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
 import DriverPickerModal from '../admin/DriverPickerModal';
+import { useToast } from '../../hooks/useToast';
 import type { Reservation, ReservationStatus, AvailableDriverDto } from '../../types/reservations.types';
 import { usePermissions } from '../../hooks/usePermissions';
 
@@ -391,6 +392,7 @@ const cardStyles = StyleSheet.create({
 export default function ManagerReservationsScreen({ navigation }: any) {
   const { reservations, fetchAll, isLoading, error, clearError, assign } = useReservation();
   const { hasPermission } = usePermissions();
+  const { showToast } = useToast();
 
   const [activeTab,   setActiveTab]   = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -455,10 +457,10 @@ export default function ManagerReservationsScreen({ navigation }: any) {
       await assign(targetReservation.id, driver.id);
       setPickerVisible(false);
       setTargetReservation(null);
-      Alert.alert('Succès', `${driver.user.first_name} ${driver.user.last_name} assigné avec succès.`);
+      showToast({ type: 'success', title: 'Succès', message: `${driver.user.first_name} ${driver.user.last_name} a été assigné avec succès.` });
       load();
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || "Erreur lors de l'assignation.");
+      showToast({ type: 'error', title: 'Erreur', message: err?.message || "Erreur lors de l'assignation." });
       throw err; // laisse le modal ouvert
     }
   };

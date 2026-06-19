@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { createDrawerNavigator, DrawerNavigationOptions } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppIcon } from '../components/common/AppIcon';
-import DrawerContent from './DrawerContent';
-import { Colors } from '../theme/colors';
+import DrawerContent, { DrawerLabel } from './DrawerContent';
+import { Colors, Spacing } from '../theme/colors';
 
 import DriverHomeScreen         from '../screens/driver/DriverHomeScreen';
 import DriverReservationsScreen from '../screens/driver/DriverReservationsScreen';
@@ -29,6 +29,7 @@ import DriverRevenuesScreen from '../screens/driver/DriverRevenuesScreen';
 import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList, DriverNotificationsStackParamList, DriverMessagesStackParamList, SupportStackParamList, DriverTripsStackParamList } from '../types/auth.types';
 
 import { Logo }                  from  '../constants/logo';
+ import { useNotifications } from '../hooks/useNotifications';
 
 const DriverReservationsStack = createNativeStackNavigator<DriverReservationsStackParamList>();
 
@@ -61,6 +62,10 @@ function DriverNotificationsStackScreen() {
     <DriverNotificationsStack.Navigator screenOptions={{ headerShown: false }}>
       <DriverNotificationsStack.Screen name="NotificationsList" component={NotificationsScreen} />
       <DriverNotificationsStack.Screen name="NotificationDetails" component={NotificationDetailsScreen} />
+      <DriverNotificationsStack.Screen name="ChatScreen" component={ChatScreen} />
+      <DriverNotificationsStack.Screen name="DriverReservationDetails" component={DriverReservationScreen} />
+      <DriverNotificationsStack.Screen name="SupportList" component ={SupportListScreen} />
+      <DriverNotificationsStack.Screen name="SupportChat" component={SupportChatScreen} />
     </DriverNotificationsStack.Navigator>
   );
 }
@@ -112,63 +117,54 @@ function DriverInvoicesStackScreen() {
 
 const Drawer = createDrawerNavigator<DriverDrawerParamList>();
 
-const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions => ({
-
-
-  headerStyle: { 
-    backgroundColor: Colors.bordeaux, 
-    height: 100,
-    elevation: 0, 
-    shadowOpacity: 0
-  },
-  headerTintColor: Colors.white,
-  headerTitleAlign: 'center',
-
-  headerTitle: () => (
-    <Image 
-      source={Logo.LogoEasyVTC} 
-      style={{ width: 40, height: 40, resizeMode: 'contain' }} 
-    />
-  ),
-
-  // --- Bouton Menu à Gauche ---
-  headerLeft: () => (
-    <TouchableOpacity 
-      onPress={() => navigation.toggleDrawer()} 
-      style={{ marginLeft: 20 }}
-    >
-      <AppIcon name="menu-outline" size={28} color={Colors.white} />
-    </TouchableOpacity>
-  ),
-
-  // --- Bouton Notification à Droite ---
-  headerRight: () => (
-    <TouchableOpacity 
-      onPress={() => navigation.navigate('DriverNotifications')}
-      style={{ marginRight: 20 }}
-    >
-      <AppIcon name="notifications-outline" size={24} color={Colors.white} />
-    </TouchableOpacity>
-  ),
-
-  // --- Style du volet latéral (Drawer) ---
-  drawerStyle: { backgroundColor: Colors.surface, width: 280 },
-  drawerActiveTintColor: Colors.bordeaux,
-  drawerInactiveTintColor: Colors.textSecondary,
-  drawerActiveBackgroundColor: Colors.overlayLight,
-});
-
-/** Composant pour les labels du menu latéral (Icone + Texte) */
-function DrawerLabel({ icon, label }: { icon: React.ComponentProps<typeof AppIcon>['name']; label: string }) {
-  return (
-    <View style={styles.labelRow}>
-      <AppIcon name={icon} size={20} color={Colors.bordeauxDark} />
-      <Text style={styles.labelText}>{label}</Text>
-    </View>
-  );
-}
-
 export default function DriverNavigator() {
+  const { unreadCount, unreadMessagesCount, unreadSupportCount } = useNotifications();
+
+  const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions => ({
+    headerStyle: { 
+      backgroundColor: Colors.bordeaux, 
+      height: 100,
+      elevation: 0, 
+      shadowOpacity: 0
+    },
+    headerTintColor: Colors.white,
+    headerTitleAlign: 'center',
+  
+    headerTitle: () => (
+      <Image 
+        source={Logo.LogoEasyVTC} 
+        style={{ width: 40, height: 40, resizeMode: 'contain' }} 
+      />
+    ),
+  
+    // --- Bouton Menu à Gauche ---
+    headerLeft: () => (
+      <TouchableOpacity 
+        onPress={() => navigation.toggleDrawer()} 
+        style={{ marginLeft: 20 }}
+      >
+        <AppIcon name="menu-outline" size={28} color={Colors.white} />
+      </TouchableOpacity>
+    ),
+  
+    // --- Bouton Notification à Droite ---
+    headerRight: () => (
+      <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('DriverNotifications')}>
+        <AppIcon name="notifications-outline" size={26} color={Colors.white} />
+        {unreadCount > 0 && (
+          <View style={styles.notifBadge}>
+            <Text style={styles.notifText}>{unreadCount}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    ),
+  
+    // --- Style du volet latéral (Drawer) ---
+    drawerStyle: { backgroundColor: Colors.surface, width: 280 },
+    drawerActiveTintColor: Colors.bordeaux,
+    drawerInactiveTintColor: Colors.textSecondary,
+    drawerActiveBackgroundColor: Colors.overlayLight,
+  });
   return (
     <Drawer.Navigator
       drawerContent={(props) => <DrawerContent {...props} />}
@@ -187,17 +183,14 @@ export default function DriverNavigator() {
         component={DriverNotificationsStackScreen}
         options={{ 
           drawerLabel: () => <DrawerLabel icon="notifications-outline" label="Notifications" /> ,
-          
+          headerShown: false,
         }}
       />
 
       <Drawer.Screen
         name="DriverMessages"
         component={DriverMessagesStackScreen}
-        options={{
-          drawerLabel: () => <DrawerLabel icon="chatbubble-outline" label="Messages" />,
-          headerShown: false,
-        }}
+        options={{ drawerLabel: () => <DrawerLabel icon="chatbubble-outline" label="Messages" badgeCount={unreadMessagesCount} />, headerShown: false }}
       />
 
       <Drawer.Screen
@@ -205,6 +198,7 @@ export default function DriverNavigator() {
         component={DriverReservationsStackScreen}
         options={{
           drawerLabel: () => <DrawerLabel icon="car-outline" label="Mes courses" />,
+          unmountOnBlur: true,
           headerShown: false,
         }}
       />
@@ -282,10 +276,7 @@ export default function DriverNavigator() {
       <Drawer.Screen
         name="DriverSupport"
         component={DriverSupportStackScreen}
-        options={{
-            drawerLabel: () => <DrawerLabel icon="headset-outline" label="Support" />,
-            headerShown: false,
-        }}
+        options={{ drawerLabel: () => <DrawerLabel icon="headset-outline" label="Support" badgeCount={unreadSupportCount} />, headerShown: false }}
       />
 
     </Drawer.Navigator>
@@ -295,12 +286,28 @@ export default function DriverNavigator() {
 const styles = StyleSheet.create({
   labelRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    alignItems: 'center'
   },
   labelText: {
     fontSize: 16,
     color: Colors.textPrimary,
     flex: 1,
+    marginLeft: Spacing.md,
+    fontWeight: '500'
   },
+  iconBtn:      { position: 'relative', padding: 6,borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', marginRight: 20 },
+  notifBadge: {
+    position:        'absolute',
+    top:             2, 
+    right: 2,
+    backgroundColor: '#FF5252',
+    borderRadius:    8,
+    minWidth:        16, 
+    height: 16,
+    alignItems:      'center',
+    justifyContent:  'center',
+    paddingHorizontal: 3,
+  },
+  notifText: { color: Colors.white, fontSize: 9, fontWeight: '800' },
+
 });

@@ -2,12 +2,13 @@
 import React, { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
-  TouchableOpacity, Switch, Platform, Alert, Modal, TextInput, ActivityIndicator,
+  TouchableOpacity, Switch, Platform, Modal, TextInput, ActivityIndicator,
 } from 'react-native';
 import { zodResolver }       from '@hookform/resolvers/zod';
 import { z }                 from 'zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { Ionicons }          from '@expo/vector-icons';
+import { useAlert } from '../../hooks/useAlert';
 import * as ImagePicker      from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { FormField }         from '../../components/forms/FormField';
@@ -15,6 +16,9 @@ import { useDriver }         from '../../hooks/useDriver';
 import type { VehicleType, ZoneType, Vehicle } from '../../types/user.types';
 import type { DrawerScreenProps }     from '@react-navigation/drawer';
 import type { DriverDrawerParamList } from '../../types';
+import { useToast } from '../../hooks/useToast';
+
+
 type Props = DrawerScreenProps<DriverDrawerParamList, 'DriverProfile'>;
 
 // ── Password rules ──────────────────────────────────────────────
@@ -23,6 +27,7 @@ const PASSWORD_RULES = [
   { label: 'Une lettre majuscule',  test: (v: string) => /[A-Z]/.test(v) },
   { label: 'Un chiffre',            test: (v: string) => /[0-9]/.test(v) },
 ];
+
 
 function PasswordStrength({ value }: { value: string }) {
   return (
@@ -77,6 +82,7 @@ interface CreateVehicleModalProps {
 function CreateVehicleModal({ visible, isLoading, onClose, onCreate, onUploadPhoto }: CreateVehicleModalProps) {
   const [step, setStep]               = useState<1 | 2>(1);
   const [createdVehicleId, setCreatedVehicleId] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   // Étape 1
   const [plate, setPlate]   = useState('');
@@ -100,7 +106,7 @@ function CreateVehicleModal({ visible, isLoading, onClose, onCreate, onUploadPho
 
   const handleCreate = async () => {
     if (!plate.trim() || !brand.trim() || !model.trim()) {
-      Alert.alert('Champs requis', 'Plaque, marque et modèle sont obligatoires.');
+      showToast({type: 'error', title: 'Champs requis', message : 'Plaque, marque et modèle sont obligatoires.'});
       return;
     }
     try {
@@ -115,7 +121,7 @@ function CreateVehicleModal({ visible, isLoading, onClose, onCreate, onUploadPho
       setCreatedVehicleId(vehicleId);
       setStep(2);
     } catch (err: any) {
-      Alert.alert('Erreur', err.message ?? 'Impossible de créer le véhicule.');
+      showToast({type: 'error', title: 'Erreur', message : err.message ?? 'Impossible de créer le véhicule.'});
     }
   };
 
@@ -136,9 +142,9 @@ function CreateVehicleModal({ visible, isLoading, onClose, onCreate, onUploadPho
       const mimeType = `image/${filename.split('.').pop() || 'jpg'}`;
       formData.append('photo', { uri: photoUri, name: filename, type: mimeType } as any);
       await onUploadPhoto(createdVehicleId, formData);
-      Alert.alert('Succès', 'Véhicule ajouté avec sa photo.');
+      showToast({ type: 'success', title: 'Succès', message: 'Photo du véhicule ajoutée.' });
     } catch {
-      Alert.alert('Attention', 'Véhicule créé mais la photo n\'a pas pu être uploadée.');
+      showToast({ type:'warning', title: 'Attention', message: 'Véhicule créé mais la photo n\'a pas pu être uploadée.'});
     } finally {
       setUploading(false);
       handleClose();
@@ -251,6 +257,8 @@ function EditVehicleModal({ visible, isLoading, vehicleId, initialData, onClose,
   const [type,  setType]    = useState<VehicleType>(initialData.type);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const { showToast } = useToast();
+
 
   // Sync si initialData change
   useEffect(() => {
@@ -290,11 +298,10 @@ function EditVehicleModal({ visible, isLoading, vehicleId, initialData, onClose,
         formData.append('photo', { uri: photoUri, name: filename, type: mimeType } as any);
         await onUploadPhoto(vehicleId, formData);
       }
-
-      Alert.alert('Succès', 'Véhicule mis à jour.');
+      showToast({ type: 'success', title: 'Succès', message: 'Véhicule mis à jour.' });
       onClose();
     } catch (err: any) {
-      Alert.alert('Erreur', err.message ?? 'Impossible de mettre à jour.');
+      showToast({ type: 'error', title: 'Erreur', message: err.message ?? 'Impossible de mettre à jour le véhicule.' });
     } finally {
       setUploading(false);
     }
@@ -369,13 +376,15 @@ interface DeleteVehicleModalProps {
 }
 
 function DeleteVehicleModal({ visible, isLoading, vehicleId, onClose, onConfirm }: DeleteVehicleModalProps) {
+  const { showToast } = useToast();
+
   const handleConfirm = async () => {
     try {
       await onConfirm(vehicleId);
-      Alert.alert('Succès', 'Véhicule supprimé.');
+      showToast({ type: 'success', title: 'Succès', message: 'Véhicule supprimé.' })
       onClose();
     } catch (err: any) {
-      Alert.alert('Erreur', err.message ?? 'Impossible de supprimer le véhicule.');
+      showToast({type: 'error', title: 'Erreur', message : err.message ?? 'Impossible de supprimer le véhicule.'});
     }
   };
 
@@ -435,6 +444,9 @@ export default function DriverProfileScreen({ navigation }: Props) {
     createVehicle, uploadVehiclePhoto, updateVehicle, deleteVehicle,
   } = useDriver();
 
+  const { showToast } = useToast();
+
+  const { showAlert } = useAlert();
   console.log('Petite verifiction de siret',siret,'et de zone', zone );
 
   // ── Modals ──────────────────────────────────────────────────
@@ -493,9 +505,9 @@ export default function DriverProfileScreen({ navigation }: Props) {
           setPendingImage(null);
         }
 
-        Alert.alert('Succès', 'Profil mis à jour avec succès.');
+        showToast({ type: 'success', title: 'Succès', message: 'Profil mis à jour avec succès.' });
       } catch {
-        Alert.alert('Erreur', 'Impossible de sauvegarder les modifications.');
+        showToast({ type: 'error', title: 'Erreur', message: 'Impossible de sauvegarder les modifications.' });
         return;
       }
     }
@@ -542,22 +554,22 @@ export default function DriverProfileScreen({ navigation }: Props) {
     try {
       await changePassword(data.current_password, data.new_password, data.confirm_password);
       await login({ email: user!.email, password: data.new_password });
-      Alert.alert('Succès', 'Mot de passe changé.');
+      showToast({ type: 'success', title: 'Succès', message: 'Mot de passe changé.' });
       reset(); setShowPasswordModal(false);
     } catch {
-      Alert.alert('Erreur', 'Impossible de changer le mot de passe.');
+      showToast({ type: 'error', title: 'Erreur', message: 'Impossible de changer le mot de passe.' });
     }
   };
 
-  const handleLogout = () => Alert.alert('Déconnexion', 'Voulez-vous vous déconnecter ?', [
-    { text: 'Annuler', style: 'cancel' },
-    { text: 'Déconnecter', style: 'destructive', onPress: logout },
-  ]);
+  const handleLogout = () => showAlert({
+    title: 'Déconnexion', message: 'Êtes-vous sûr de vouloir vous déconnecter ?',
+    buttons: [{ text: 'Annuler', style: 'cancel' }, { text: 'Déconnecter', style: 'destructive', onPress: logout }]
+  });
 
-  const handleDeleteAccount = () => Alert.alert(
-    'Supprimer mon compte', 'Cette action est irréversible.',
-    [{ text: 'Annuler', style: 'cancel' }, { text: 'Supprimer', style: 'destructive', onPress: logout }]
-  );
+  const handleDeleteAccount = () => showAlert({
+    title: 'Supprimer mon compte', message: 'Cette action est irréversible.',
+    buttons: [{ text: 'Annuler', style: 'cancel' }, { text: 'Supprimer', style: 'destructive', onPress: logout }]
+  });
 
   return (
     <View style={styles.flex}>

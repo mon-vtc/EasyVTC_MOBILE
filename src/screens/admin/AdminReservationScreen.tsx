@@ -326,9 +326,9 @@ function PaymentTab({ reservation }: { reservation: Reservation }) {
             <Text style={S.paymentLabel}>
               {b?.vehicle_type ? `Prise en charge (${b.vehicle_type})` : 'Prise en charge'}
             </Text>
-            {/* <Text style={S.paymentValue}>
-              {(b?.vehicle_base_price ?? b?.price_breakdown.base_price ?? 0).toFixed(2)} €
-            </Text> */}
+            <Text style={S.paymentValue}>
+              {(b?.price_breakdown.vehicle_base_price ?? b?.price_breakdown.vehicle_base_price ?? 0).toFixed(2)} €
+            </Text>
           </View>
           {b?.price_breakdown.km_cost != null && (
             <View style={S.paymentRow}>

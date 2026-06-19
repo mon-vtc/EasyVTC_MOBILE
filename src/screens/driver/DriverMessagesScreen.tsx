@@ -87,7 +87,7 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
 
 export default function DriverMessagesScreen({ navigation }: any) {
   const { user } = useAuth();
-  const { conversations, isLoadingConversations, fetchConversations } = useChat();
+  const { conversations, isLoadingConversations, fetchConversations, markChatAsRead } = useChat();
   
   useFocusEffect(
     React.useCallback(() => {
@@ -119,11 +119,12 @@ export default function DriverMessagesScreen({ navigation }: any) {
         renderItem={({ item }) => (
           <ConversationCard
             conversation={item}
-            onPress={() =>
+            onPress={() => {
+              markChatAsRead(item.reservation_id);
               navigation.navigate('ChatScreen', {
                 reservationId: item.reservation_id,
               })
-            }
+            }}
           />
         )}
         ListEmptyComponent={

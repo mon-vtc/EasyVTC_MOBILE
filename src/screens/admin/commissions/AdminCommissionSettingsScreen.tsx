@@ -6,7 +6,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, Modal, TextInput, Switch, Platform
+  ActivityIndicator, Modal, TextInput, Switch, Platform
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
@@ -15,6 +15,7 @@ import { z } from 'zod';
 
 import { useCommissionSettings } from '../../../hooks/useCommissionSettings';
 import { useVehicleTypes } from '../../../hooks/useVehicleTypes';
+import { useAlert } from '../../../hooks/useAlert';
 import { useToast } from '../../../hooks/useToast';
 import type { CommissionSetting, CommissionZone, CommissionRateType } from '../../../types';
 import { AppIcon } from '../../../components/common/AppIcon';
@@ -39,6 +40,7 @@ type CommissionFormValues = z.infer<typeof formSchema>;
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function AdminCommissionSettingsScreen() {
   const navigation = useNavigation();
+  const { showAlert } = useAlert();
   const { showToast } = useToast();
   const {
     settings,
@@ -83,8 +85,7 @@ export default function AdminCommissionSettingsScreen() {
 
   useEffect(() => {
     if (error) {
-      
-      Alert.alert('Erreur', error, [{ text: 'OK', onPress: clearError }]);
+      showToast({ type: 'error', title: 'Erreur', message: error, onPress: clearError });
     }
   }, [error, clearError]);
 
@@ -132,10 +133,10 @@ export default function AdminCommissionSettingsScreen() {
   };
 
   const handleDelete = (setting: CommissionSetting) => {
-    Alert.alert(
-      'Supprimer la règle',
-      `Êtes-vous sûr de vouloir supprimer la règle "${setting.label}" ? Cette action est irréversible.`,
-      [
+    showAlert({
+      title: 'Supprimer la règle',
+      message: `Êtes-vous sûr de vouloir supprimer la règle "${setting.label}" ? Cette action est irréversible.`,
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Supprimer',
@@ -150,8 +151,8 @@ export default function AdminCommissionSettingsScreen() {
             }
           },
         },
-      ],
-    );
+      ]
+    });
   };
 
   // ── Rendu ───────────────────────────────────────────────────────────────────

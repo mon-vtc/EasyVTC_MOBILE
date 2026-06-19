@@ -3,13 +3,12 @@ import {
   FlatList,
   View,
   Text,
-  ScrollView,
+  ScrollView, Alert,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
   Switch,
   TextInput,
-  Alert,
   Modal,
   Platform,
   FlatList as RNFlatList,
@@ -22,6 +21,7 @@ import { z } from 'zod';
 import { useAdmin } from '../../hooks/useAdmin';
 import CustomCalendarModal from '../../components/common/CustomCalendarModal';
 import { AppIcon } from '../../components/common/AppIcon';
+import { useAlert } from '../../hooks/useAlert';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { PromoCode, ClientSummary, DiscountType, CampaignType, CreateCampaignDto, MarketingCampaign, ClientWithStats, BulkAssignDto, CreatePromoCodeDto, ClientBaseFilters } from '../../types';
 import { useToast } from '../../hooks/useToast';
@@ -94,6 +94,7 @@ const campaignFormSchema = z.object({
 
 export default function AdminPromoCommunicationScreen() {
   const navigation = useNavigation<any>();
+  const { showAlert } = useAlert();
   const { showToast } = useToast();
   const {
     promoCodes,
@@ -339,10 +340,10 @@ export default function AdminPromoCommunicationScreen() {
   }, [createPromoCode, editingPromo, fetchPromoCodes, updatePromoCode, promoCreationMode, selectedClients, bulkAssignPromoCode, showToast]);
 
   const handleDeletePromo = useCallback((promo: PromoCode) => {
-    Alert.alert(
-      'Supprimer le code promo',
-      `Êtes-vous sûr de supprimer ${promo.code} ?`,
-      [
+    showAlert({
+      title: 'Supprimer le code promo',
+      message: `Êtes-vous sûr de supprimer ${promo.code} ?`,
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Supprimer',
@@ -356,8 +357,8 @@ export default function AdminPromoCommunicationScreen() {
             }
           },
         },
-      ],
-    );
+      ]
+    });
   }, [deletePromoCode]);
 
   const handleTogglePromoStatus = useCallback(async (promo: PromoCode, nextValue: boolean) => {
@@ -406,10 +407,10 @@ export default function AdminPromoCommunicationScreen() {
   }, [createCampaign, updateCampaign, editingCampaign, showToast]);
 
   const handleDeleteCampaign = useCallback((campaign: MarketingCampaign) => {
-    Alert.alert(
-      'Supprimer la campagne',
-      `Êtes-vous sûr de vouloir supprimer le brouillon "${campaign.name}" ?`,
-      [
+    showAlert({
+      title: 'Supprimer la campagne',
+      message: `Êtes-vous sûr de vouloir supprimer le brouillon "${campaign.name}" ?`,
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Supprimer', style: 'destructive',
@@ -422,12 +423,12 @@ export default function AdminPromoCommunicationScreen() {
             }
           },
         },
-      ],
-    );
+      ]
+    });
   }, [deleteCampaign, showToast]);
 
   const handleSendCampaign = useCallback((campaign: MarketingCampaign) => {
-    Alert.alert('Envoyer la campagne', `Envoyer "${campaign.name}" à tous les clients éligibles ? Cette action est irréversible.`, [
+    showAlert({title: 'Envoyer la campagne', message: `Envoyer "${campaign.name}" à tous les clients éligibles ? Cette action est irréversible.`, buttons: [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Envoyer', style: 'default', onPress: async () => {
         try {
@@ -437,7 +438,7 @@ export default function AdminPromoCommunicationScreen() {
           showToast({ title: 'Erreur', message: error?.message ?? 'Impossible d\'envoyer la campagne.', type: 'error' });
         }
       }},
-    ]);
+    ]});
   }, [sendCampaign, showToast]);
 
   const renderPromoCard = ({ item: promo }: { item: PromoCode }) => {
