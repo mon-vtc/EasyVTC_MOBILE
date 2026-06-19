@@ -8,10 +8,10 @@ beforeEach(() => {
 
 // Polyfill FormData pour l'environnement Node.js (si non disponible)
 if (typeof FormData === 'undefined') {
-  global.FormData = class FormData {
+  (global as any).FormData = class FormData {
     private data: Record<string, any> = {};
     append(key: string, value: any) { this.data[key] = value; }
     get(key: string) { return this.data[key]; }
     has(key: string) { return key in this.data; }
-  } as any;
+  };
 }
