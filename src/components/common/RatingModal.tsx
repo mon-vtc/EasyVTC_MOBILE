@@ -39,9 +39,11 @@ export default function RatingModal({ visible, driverName, isSubmitting, onConfi
 
   const handleConfirm = () => {
     if (selected === 0 || isSubmitting) return;
-    onConfirm({ note: selected, comment: comment.trim() || null });
-    setSelected(0);
-    setComment('');
+  
+    onConfirm({
+      note: selected,
+      comment: comment.trim() || null,
+    });
   };
 
   return (
