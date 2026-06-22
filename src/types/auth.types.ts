@@ -262,8 +262,9 @@ export type AdminDrawerParamList = {
   // S4 — Documents financiers
   AdminOrders:       NavigatorScreenParams<AdminOrderStackParamList>;
   AdminInvoices:     NavigatorScreenParams<AdminInvoicesStackParamList>;
-  AdminSupport:      NavigatorScreenParams<SupportStackParamList>;
-  AdminAuditLogs:    NavigatorScreenParams<AdminAuditLogsStackParamList>;
+  AdminSupport:       NavigatorScreenParams<SupportStackParamList>;
+  AdminAuditLogs:     NavigatorScreenParams<AdminAuditLogsStackParamList>;
+  AdminSupportConfig: undefined;
 };
 
 export type AdminAuditLogsStackParamList = {

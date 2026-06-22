@@ -42,6 +42,7 @@ import AdminChatScreen from '../screens/admin/AdminChatScreen';
 
 import AdminAuditLogsScreen from '../screens/admin/AdminAuditLogsScreen';
 import AdminAuditLogDetailScreen from '../screens/admin/AdminAuditLogDetailScreen';
+import AdminSupportConfigScreen from '../screens/admin/AdminSupportConfigScreen';
 
 import type {
   AdminDrawerParamList,
@@ -402,6 +403,12 @@ export default function AdminNavigator() {
           headerShown: false,
         }}
 
+      />
+
+      <Drawer.Screen
+        name="AdminSupportConfig"
+        component={AdminSupportConfigScreen}
+        options={{ drawerLabel: () => <DrawerLabel icon="settings-outline" label="Config support" /> }}
       />
 
       <Drawer.Screen

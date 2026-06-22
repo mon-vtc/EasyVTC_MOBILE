@@ -274,3 +274,14 @@ export interface AdminDashboard {
   popular_routes: PopularRoute[];
   peak_hours:     PeakHourSlot[];
 }
+
+// ── App Config — coordonnées du support ───────────────────────────────────────
+
+export interface SupportConfig {
+  support_phone:   string;
+  support_email:   string;
+  support_address: string;
+  support_hours:   string;
+}
+
+export type SupportConfigKey = keyof SupportConfig;
