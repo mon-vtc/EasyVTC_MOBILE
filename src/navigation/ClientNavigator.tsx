@@ -40,6 +40,7 @@ import ChatScreen                 from '../screens/chats/ChatScreen';
 import MyFavoritesScreen from '../screens/client/MyFavoritesScreen';
 import type { ClientTabParamList, ClientStackParamList } from '../types/auth.types';
 import {PromoCodesScreen} from '../screens/client/PromoCodesScreen';
+import CGU from '../screens/CGU'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // NAVIGATORS
@@ -161,21 +162,6 @@ function ClientTabs() {
 
       {/* Écrans cachés dans les onglets mais accessibles depuis la navigation */}
       <Tab.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{
-          tabBarButton: () => null, // Masqué de la barre d'onglets
-        }}
-      />
-
-      <Tab.Screen
-        name="NotificationDetails"
-        component={NotificationDetailsScreen}
-        options={{
-          tabBarButton: () => null, // Masqué de la barre d'onglets
-        }}
-      />
-      <Tab.Screen
         name="ReservationDetails"
         component={ReservationDetailsScreen}
         options={{
@@ -192,6 +178,13 @@ function ClientTabs() {
       <Tab.Screen
         name="MyOrders"
         component={MyOrdersScreen}
+        options={{
+          tabBarButton: () => null, // Masqué de la barre d'onglets
+        }}
+      />
+      <Tab.Screen
+        name="CGU"
+        component={CGU}
         options={{
           tabBarButton: () => null, // Masqué de la barre d'onglets
         }}
@@ -308,6 +301,16 @@ export default function ClientNavigator() {
           animation: 'slide_from_right',
           headerShown: false,
         }}
+      />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="NotificationDetails"
+        component={NotificationDetailsScreen}
+        options={{ animation: 'slide_from_right' }}
       />
 
     </Stack.Navigator>

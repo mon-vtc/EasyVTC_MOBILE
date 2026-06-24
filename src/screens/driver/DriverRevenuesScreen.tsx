@@ -4,18 +4,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
-  TouchableOpacity, RefreshControl, ScrollView,
+  TouchableOpacity, RefreshControl, ScrollView, Platform, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { Logo } from '../../constants/logo';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useDriver } from '../../hooks/useDriver';
-import type { DriverRevenuesResult, RevenueTrip, RevenuesPeriod } from '../../types';
+import type { DriverRevenuesResult, RevenueTrip, RevenuesPeriod, RevenueStatus } from '../../types';
+import { AppIcon } from '../../components/common/AppIcon';
 
-const REVENUE_FILTERS: { label: string; value: RevenuesPeriod }[] = [
+const REVENUE_PERIODS: { label: string; value: RevenuesPeriod }[] = [
   { label: 'Semaine', value: 'week' },
   { label: 'Mois', value: 'month' },
   { label: 'Tout', value: 'all' },
+];
+
+const REVENUE_STATUS_FILTERS: { label: string; value: 'completed' | 'cancelled' | undefined }[] = [
+  { label: 'Toutes', value: undefined },
+  { label: 'Terminées', value: 'completed' },
+  { label: 'Annulées', value: 'cancelled' },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -38,9 +47,43 @@ function formatTime(iso: string | null): string {
   return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
+const PERIOD_LABELS: Record<string, string> = {
+  month: 'du mois',
+  week:  'de la semaine',
+  all: 'totaux',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  completed: 'Courses terminées',
+  cancelled: 'Courses annulées',
+  undefined: 'Toutes les courses',
+};
+
+// ── Header personnalisé ─────────────────────────────────────────────────────
+function CustomHeader() {
+  const navigation = useNavigation();
+  return (
+    <View style={headerStyles.container}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={headerStyles.backBtn}>
+        <AppIcon name="arrow-back" size={24} color={Colors.white} />
+      </TouchableOpacity>
+      <View style={headerStyles.center}>
+        <Image source={Logo.LogoEasyVTC} style={headerStyles.logo} resizeMode="contain" />
+      </View>
+      <View style={headerStyles.placeholder} />
+    </View>
+  );
+}
+
+const getTitleSuffix = (period: DriverRevenuesResult | null): string =>
+  period ? (PERIOD_LABELS[period.period] ?? 'total') : '';
+
+const getStatusLabel = (status: 'completed' | 'cancelled' | undefined): string =>
+  STATUS_LABELS[String(status) ?? 'undefined'] ?? 'Toutes les courses';
+
 // ── Composants de l'écran ────────────────────────────────────────────────────
 
-function SummaryCard({ revenues }: { revenues: DriverRevenuesResult | null }) {
+function SummaryCard({ revenues, status }: { revenues: DriverRevenuesResult | null; status: 'completed' | 'cancelled' | undefined }) {
   const totalRevenue = revenues?.total_net ?? 0;
   const totalTrips = revenues?.total_trips ?? 0;
   const avgRevenue = totalTrips > 0 ? totalRevenue / totalTrips : 0;
@@ -51,7 +94,7 @@ function SummaryCard({ revenues }: { revenues: DriverRevenuesResult | null }) {
       colors={[Colors.bordeaux, Colors.bordeauxLight]}
       style={styles.summaryCard}
     >
-      <Text style={styles.summaryTitle}>Revenus de la {revenues?.period === 'month' ? 'mois' : 'semaine'}</Text>
+      <Text style={styles.summaryTitle}>Revenus {getTitleSuffix(revenues)}</Text>
       <Text style={styles.summaryAmount}>{formatCurrency(totalRevenue, currency)}</Text>
       <View style={styles.summaryStats}>
         <View style={styles.statItem}>
@@ -63,26 +106,29 @@ function SummaryCard({ revenues }: { revenues: DriverRevenuesResult | null }) {
           <Text style={styles.statLabel}>Revenu moyen</Text>
         </View>
       </View>
+      <View style={styles.statusLabel}>
+        <Text style={styles.statusLabelText}>{getStatusLabel(status)}</Text>
+      </View>
     </LinearGradient>
   );
 }
 
-function FilterBlock({ activeFilter, onFilterChange }: { activeFilter: RevenuesPeriod, onFilterChange: (filter: RevenuesPeriod) => void }) {
+function PeriodFilterBlock({ activePeriod, onPeriodChange }: { activePeriod: RevenuesPeriod; onPeriodChange: (period: RevenuesPeriod) => void }) {
   return (
     <View style={styles.filterCard}>
-      <Text style={styles.filterTitle}>Filtrer par</Text>
+      <Text style={styles.filterTitle}>Période</Text>
       <View style={styles.filterButtons}>
-        {REVENUE_FILTERS.map(filter => (
+        {REVENUE_PERIODS.map(period => (
           <TouchableOpacity
-            key={filter.value}
+            key={period.value}
             style={[
               styles.filterButton,
-              activeFilter === filter.value ? styles.filterButtonActive : styles.filterButtonInactive
+              activePeriod === period.value ? styles.filterButtonActive : styles.filterButtonInactive
             ]}
-            onPress={() => onFilterChange(filter.value)}
+            onPress={() => onPeriodChange(period.value)}
           >
-            <Text style={activeFilter === filter.value ? styles.filterTextActive : styles.filterTextInactive}>
-              {filter.label}
+            <Text style={activePeriod === period.value ? styles.filterTextActive : styles.filterTextInactive}>
+              {period.label}
             </Text>
           </TouchableOpacity>
         ))}
@@ -91,7 +137,31 @@ function FilterBlock({ activeFilter, onFilterChange }: { activeFilter: RevenuesP
   );
 }
 
-function HistoryItem({ item }: { item: RevenueTrip }) {
+function StatusFilterBlock({ activeStatus, onStatusChange }: { activeStatus: 'completed' | 'cancelled' | undefined; onStatusChange: (status: 'completed' | 'cancelled' | undefined) => void }) {
+  return (
+    <View style={styles.filterCard}>
+      <Text style={styles.filterTitle}>Statut</Text>
+      <View style={styles.filterButtons}>
+        {REVENUE_STATUS_FILTERS.map(status => (
+          <TouchableOpacity
+            key={status.value ?? 'all'}
+            style={[
+              styles.filterButton,
+              activeStatus === status.value ? styles.filterButtonActive : styles.filterButtonInactive
+            ]}
+            onPress={() => onStatusChange(status.value)}
+          >
+            <Text style={activeStatus === status.value ? styles.filterTextActive : styles.filterTextInactive}>
+              {status.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function HistoryItem({ item, onInvoicePress, activeStatus }: { item: RevenueTrip; onInvoicePress: (reservationId: string) => void; activeStatus?: 'completed' | 'cancelled' | undefined }) {
   // TODO: Le statut "Payé" / "En attente" n'est pas dans les données de revenus.
   // Il faudrait l'ajouter à l'API ou le déduire d'une autre source (ex: facture).
   // Pour l'instant, on simule.
@@ -108,99 +178,156 @@ function HistoryItem({ item }: { item: RevenueTrip }) {
         </View>
       </View>
 
-     <View style={styles.historyRow}>
+      <View style={styles.historyRow}>
         <Ionicons name="person-outline" size={16} color={Colors.textSecondary} />
-        <Text style={styles.historyText}>{item.client_first_name?.split(',')[0] || 'Client inconnu'}  {item.client_last_name?.split(',')[0] || 'Inconnu'}</Text>
+        <Text style={styles.historyText}>{item.client_first_name?.split(',')[0] || 'Client inconnu'} {item.client_last_name?.split(',')[0] || 'Inconnu'}</Text>
       </View>
 
       <View style={styles.historyRow}>
         <Ionicons name="map-outline" size={16} color={Colors.textSecondary} />
-        <Text style={styles.historyText}>{item.pickup_address.split(',')[0]} → {item.dest_address.split(',')[0]}</Text>
+        <Text style={styles.historyText}>{item.pickup_address.split(',')[0]} <AppIcon name='arrow-forward' size={10} /> {item.dest_address.split(',')[0]}</Text>
       </View>
 
-      <View style={styles.historyRow}>
-        <Ionicons name="calendar-outline" size={16} color={Colors.textMuted} />
-        <Text style={styles.historyDate}>{formatDate(item.scheduled_at)}</Text>
-        <Ionicons name="time-outline" size={16} color={Colors.textMuted} style={{ marginLeft: Spacing.md }} />
-        <Text style={styles.historyDate}>{formatTime(item.scheduled_at)}</Text>
+      <View style={[styles.historyRow, { justifyContent: 'space-between' }]}>
+        <View style={{ flexDirection: 'row' }}>
+          <Ionicons name="calendar-outline" size={16} color={Colors.textMuted} />
+          <Text style={styles.historyDate}>{formatDate(item.scheduled_at)}</Text>
+        </View>
+        <View style={{ flexDirection: 'row' }}>
+          <Ionicons name="time-outline" size={16} color={Colors.textMuted} style={{ marginLeft: Spacing.md }} />
+          <Text style={styles.historyDate}>{formatTime(item.scheduled_at)}</Text>
+        </View>
       </View>
 
       <View style={styles.separator} />
 
-      <View style={styles.historyFooter}>
-        <Text style={styles.historyAmount}>{formatCurrency(item.price_final, item.currency)}</Text>
-        <TouchableOpacity>
-          <Text style={styles.invoiceLink}>Facture</Text>
-        </TouchableOpacity>
-      </View>
+      {activeStatus !== 'cancelled' && (
+        <View style={styles.historyFooter}>
+          <Text style={styles.historyAmount}>{formatCurrency(item.price_final, item.currency)}</Text>
+          {item.rating !== null && (
+            <View style={styles.ratingContainer}>
+              {[1, 2, 3, 4, 5].map(star => (
+                <Ionicons
+                  key={star}
+                  name={star <= Math.round(item.rating!) ? 'star' : 'star-outline'}
+                  size={16}
+                  color={star <= Math.round(item.rating!) ? '#F5A623' : Colors.border}
+                />
+              ))}
+              {/* <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text> */}
+            </View>
+          )}
+          <TouchableOpacity onPress={() => onInvoicePress(item.reservation_id)}>
+            <Text style={styles.invoiceLink}>Facture</Text>
+          </TouchableOpacity>
+        </View>  
+      )}
     </View>
   );
 }
 
 export default function DriverRevenuesScreen() {
-  const { getMyRevenues } = useDriver();
-  const [revenues, setRevenues] = useState<DriverRevenuesResult | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const navigation = useNavigation<any>();
+  const { fetchRevenuesWithFilters, revenues, isFetchingRevenues, revenuesError } = useDriver();
+  const [activePeriod, setActivePeriod] = useState<RevenuesPeriod>('week');
+  const [activeStatus, setActiveStatus] = useState<'completed' | 'cancelled' | undefined>(undefined);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<RevenuesPeriod>('week');
+  const [localRefreshing, setLocalRefreshing] = useState(false);
 
-  const loadRevenues = useCallback(async (period: RevenuesPeriod) => {
-    setIsLoading(true);
-    setError(null);
+  const handleFetchRevenues = useCallback(async (period: RevenuesPeriod, status: 'completed' | 'cancelled' | undefined, page: number = 1) => {
     try {
-      const data = await getMyRevenues(period);
-      setRevenues(data);
+      setError(null);
+      if (page === 1) {
+        setLocalRefreshing(true);
+      } else {
+        setIsLoadingMore(true);
+      }
+      await fetchRevenuesWithFilters(period, status, page);
     } catch (e: any) {
-      setError(e.message || "Erreur lors de la récupération des revenus.");
+      setError(e.message || 'Erreur lors de la récupération des revenus');
     } finally {
-      setIsLoading(false);
+      setLocalRefreshing(false);
+      setIsLoadingMore(false);
     }
-  }, [getMyRevenues]);
+  }, [fetchRevenuesWithFilters]);
 
   useEffect(() => {
-    loadRevenues(activeFilter);
-  }, [activeFilter, loadRevenues]);
+    handleFetchRevenues(activePeriod, activeStatus, 1);
+  }, [activePeriod, activeStatus]);
 
   const handleRefresh = () => {
-    loadRevenues(activeFilter);
+    handleFetchRevenues(activePeriod, activeStatus, 1);
+  };
+
+  const handleLoadMore = () => {
+    if (revenues && revenues.page && !isFetchingRevenues && !isLoadingMore) {
+      const nextPage = revenues.page + 1;
+      const totalPages = Math.ceil((revenues.total_trips_unfiltered || 0) / (revenues.limit || 20));
+      if (nextPage <= totalPages) {
+        handleFetchRevenues(activePeriod, activeStatus, nextPage);
+      }
+    }
+  };
+
+  const handleInvoicePress = (reservationId: string) => {
+    navigation.navigate('DriverInvoiceDetails', { reservationId });
   };
 
   const renderListHeader = () => (
     <>
-      <SummaryCard revenues={revenues} />
-      <FilterBlock activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+      <SummaryCard revenues={revenues} status={activeStatus} />
+      <PeriodFilterBlock activePeriod={activePeriod} onPeriodChange={setActivePeriod} />
+      <StatusFilterBlock activeStatus={activeStatus} onStatusChange={setActiveStatus} />
       <View style={styles.historyTitleContainer}>
         <Text style={styles.historyTitle}>Historique</Text>
         <TouchableOpacity>
-          <Text style={styles.exportButton}>Exportateur</Text>
+          <Text style={styles.exportButton}>Exporter</Text>
         </TouchableOpacity>
       </View>
     </>
   );
 
   const renderEmpty = () => {
-    if (isLoading) return <ActivityIndicator color={Colors.bordeaux} style={{ marginTop: Spacing.xl }} />;
-    if (error) return <Text style={styles.errorText}>{error}</Text>;
+    if (isFetchingRevenues && (!revenues || revenues.trips.length === 0)) {
+      return <ActivityIndicator color={Colors.bordeaux} style={{ marginTop: Spacing.xl }} />;
+    }
+    if (error || revenuesError) {
+      return <Text style={styles.errorText}>{error || revenuesError}</Text>;
+    }
     return (
       <View style={styles.emptyState}>
         <Ionicons name="wallet-outline" size={48} color={Colors.border} />
         <Text style={styles.emptyTitle}>Aucun revenu</Text>
-        <Text style={styles.emptyText}>Les revenus de vos courses terminées{'\n'}apparaîtront ici.</Text>
+        <Text style={styles.emptyText}>
+          Les revenus de vos courses {'\n'}
+          {activeStatus === 'completed' ? 'terminées' : activeStatus === 'cancelled' ? 'annulées' : ''}
+          {'\n'}apparaîtront ici.
+        </Text>
       </View>
     );
   };
 
+  const renderFooter = () => {
+    if (!isLoadingMore) return null;
+    return <ActivityIndicator color={Colors.bordeaux} style={{ marginVertical: Spacing.md }} />;
+  };
+
   return (
     <View style={styles.root}>
+      <CustomHeader />
       <FlatList
         data={revenues?.trips ?? []}
-        keyExtractor={(item) => item.reservation_id}
-        renderItem={({ item }) => <HistoryItem item={item} />}
+        keyExtractor={(item, index) => `${item.reservation_id}-${index}`}
+        renderItem={({ item }) => <HistoryItem item={item} onInvoicePress={handleInvoicePress} activeStatus={activeStatus} />}
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmpty}
+        ListFooterComponent={renderFooter}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading}
+            refreshing={localRefreshing}
             onRefresh={handleRefresh}
             tintColor={Colors.bordeaux}
           />
@@ -231,6 +358,8 @@ const styles = StyleSheet.create({
   statItem: { alignItems: 'center' },
   statValue: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white },
   statLabel: { fontSize: Fonts.size.xs, color: Colors.white, opacity: 0.8, marginTop: 2 },
+  statusLabel: { marginTop: Spacing.md, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: Radius.sm },
+  statusLabelText: { color: Colors.white, fontSize: Fonts.size.xs, fontWeight: '600', textAlign: 'center' },
 
   filterCard: {
     backgroundColor: Colors.white,
@@ -256,6 +385,9 @@ const styles = StyleSheet.create({
   filterButtonInactive: { backgroundColor: Colors.background },
   filterTextActive: { color: Colors.white, fontWeight: '700' },
   filterTextInactive: { color: Colors.textSecondary, fontWeight: '600' },
+
+  ratingContainer: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  ratingText: { fontSize: Fonts.size.sm, color: Colors.textMuted, marginLeft: Spacing.xs },
 
   historyTitleContainer: {
     flexDirection: 'row',
@@ -303,4 +435,31 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: Spacing.xxl },
   emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textSecondary, marginTop: Spacing.md },
   emptyText: { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', marginTop: Spacing.sm, lineHeight: 20 },
+});
+
+const headerStyles = StyleSheet.create({
+  container: {
+    backgroundColor: Colors.bordeaux,
+    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xxl,
+    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backBtn: {
+    padding: Spacing.xs,
+    width: 40,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  logo: {
+    width: 40,
+    height: 40,
+  },
+  placeholder: {
+    width: 40,
+  },
 });

@@ -16,6 +16,8 @@ export interface DriverProfile {
   zone:         ZoneType;
   created_at:   string;
   updated_at:   string;
+  trips_count?:     number;        // Optionnel — ajouté par l'admin endpoint
+  average_rating?:  number | null; // Optionnel — ajouté par l'admin endpoint
 }
 
 // ── DriverWithUser (réponse backend /admin/drivers) ─────────────
@@ -30,6 +32,8 @@ export interface DriverWithUser {
   zone: ZoneType;
   created_at: string;
   updated_at: string;
+  trips_count: number;        // Nombre de courses complétées
+  average_rating: number | null; // Note moyenne (null si pas encore évaluée)
   user: {
     id: string;
     email: string;
@@ -40,6 +44,11 @@ export interface DriverWithUser {
     status: string;
     created_at: string;
   };
+}
+
+// ── DriverWithUserAndVehicle (réponse backend /admin/drivers avec véhicule) ───
+export interface DriverWithUserAndVehicle extends DriverWithUser {
+  vehicle: Vehicle | null;
 }
 
 // ── Client ──────────────────────────────────────────────────────

@@ -7,6 +7,7 @@ import RegisterDriverScreen from '../screens/auth/RegisterDriverScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen  from '../screens/auth/ResetPasswordScreen';
 import type { AuthStackParamList } from '../types/auth.types';
+import CGU from '../screens/CGU';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
@@ -18,6 +19,7 @@ export default function AuthNavigator() {
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="ResetPassword"  component={ResetPasswordScreen} />
       <Stack.Screen name="RegisterDriver" component={RegisterDriverScreen} />
+      <Stack.Screen name="CGU" component={CGU} />
     </Stack.Navigator>
   );
 }

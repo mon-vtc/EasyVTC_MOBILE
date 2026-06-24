@@ -30,13 +30,13 @@ import { useInvoicesStore }       from '../../../store/invoices.store';
 import { useAuthStore }           from '../../../store/auth.store';
 import { invoicesApi }            from '../../../services/api/invoices.api';
 import { useToast } from '../../../hooks/useToast';
-import type { DriverInvoicesStackParamList } from '../../../types/auth.types';
+import type { DriverInvoicesStackParamList, RevenuStackParamList } from '../../../types/auth.types';
 import type { InvoiceAdjustment } from '../../../types/invoices.types';
 import { Logo }                   from '../../../constants/logo';
 
 // ── Types navigation ───────────────────────────────────────────────────────────
-type NavRoute = RouteProp<DriverInvoicesStackParamList, 'DriverInvoiceDetails'>;
-type NavProp  = NavigationProp<DriverInvoicesStackParamList, 'DriverInvoiceDetails'>;
+type NavRoute = RouteProp<DriverInvoicesStackParamList | RevenuStackParamList, 'DriverInvoiceDetails'>;
+type NavProp  = NavigationProp<DriverInvoicesStackParamList | RevenuStackParamList, 'DriverInvoiceDetails'>;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function fmtDate(iso: string): string {
@@ -63,7 +63,9 @@ const vehicleLabel: Record<string, string> = {
 export default function InvoiceDetailsScreen() {
   const navigation = useNavigation<NavProp>();
   const route      = useRoute<NavRoute>();
-  const { invoiceId } = route.params;
+  const params = route.params as any; // Use any to avoid union type issues
+  const invoiceId = params?.invoiceId;
+  const reservationId = params?.reservationId;
   const { showToast } = useToast();
 
   const token                             = useAuthStore(s => s.accessToken) ?? '';
@@ -73,19 +75,43 @@ export default function InvoiceDetailsScreen() {
     ?? useInvoicesStore.getState().selected ?? null;
 
   const [openingPdf, setOpeningPdf] = useState(false);
+  const [isLoadingFromReservation, setIsLoadingFromReservation] = useState(false);
 
   useEffect(() => {
-    if (!invoice || invoice.id !== invoiceId) {
-      fetchById(token, invoiceId);
-    }
-  }, [invoiceId]);
+    const loadInvoice = async () => {
+      try {
+        if (reservationId && !invoiceId) {
+          // Load invoice by reservation ID if only reservation ID is provided
+          setIsLoadingFromReservation(true);
+          const res = await invoicesApi.fetchByReservationId(token, reservationId);
+          if (res.ok && res.data) {
+            useInvoicesStore.setState({ selected: res.data });
+          } else {
+            showToast({ type: 'error', title: 'Erreur', message: 'Facture introuvable.' });
+          }
+        } else if (invoiceId && (!invoice || invoice.id !== invoiceId)) {
+          // Load invoice by ID
+          fetchById(token, invoiceId);
+        }
+      } finally {
+        setIsLoadingFromReservation(false);
+      }
+    };
+    loadInvoice();
+  }, [invoiceId, reservationId]);
 
   // ── Actions ──────────────────────────────────────────────────────────────────
 
   const handleOpenPdf = async () => {
+    if (!invoiceId && !invoice?.id) {
+      showToast({ type: 'error', title: 'Erreur', message: 'ID de facture introuvable.' });
+      return;
+    }
+    
+    const id = invoiceId || invoice?.id || '';
     setOpeningPdf(true);
     try {
-      const res = await invoicesApi.fetchPdfUrl(token, invoiceId);
+      const res = await invoicesApi.fetchPdfUrl(token, id);
       if (!res.ok || !res.data?.url) throw new Error(res.message ?? 'URL indisponible');
       await Linking.openURL(res.data.url);
     } catch {
@@ -97,8 +123,9 @@ export default function InvoiceDetailsScreen() {
 
   const handleShare = async () => {
     if (!invoice) return;
+    const id = invoiceId || invoice?.id || '';
     try {
-      const res = await invoicesApi.fetchPdfUrl(token, invoiceId);
+      const res = await invoicesApi.fetchPdfUrl(token, id);
       const pdfUrl = res.ok && res.data?.url ? res.data.url : null;
       await Share.share({
         title:   `Facture ${invoice.invoice_number}`,
@@ -114,7 +141,7 @@ export default function InvoiceDetailsScreen() {
 
   // ── États de chargement / erreur ─────────────────────────────────────────────
 
-  if (isLoading && !invoice) {
+  if ((isLoading || isLoadingFromReservation) && !invoice) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={Colors.bordeaux} />
@@ -140,6 +167,16 @@ export default function InvoiceDetailsScreen() {
   const tvaAmount = invoice.tva_rate > 0
     ? Math.round((invoice.amount_ttc - invoice.amount_ht) * 100) / 100
     : 0;
+  // Montant HT de la remise (discount_amount est en TTC)
+  const discountAmountHt = invoice.discount_amount
+    ? (invoice.tva_rate > 0
+        ? Math.round((invoice.discount_amount / (1 + invoice.tva_rate / 100)) * 100) / 100
+        : invoice.discount_amount)
+    : null;
+  // Montant HT brut avant remise — affiché dans la ligne du tableau
+  const grossAmountHt = discountAmountHt !== null
+    ? Math.round((invoice.amount_ht + discountAmountHt) * 100) / 100
+    : invoice.amount_ht;
 
   // ── Rendu ────────────────────────────────────────────────────────────────────
 
@@ -267,12 +304,20 @@ export default function InvoiceDetailsScreen() {
               <Text style={[styles.tableHeaderCell, styles.cellQty]}>Quantité</Text>
               <Text style={[styles.tableHeaderCell, styles.cellAmt]}>Montant HT</Text>
             </View>
-            {/* Ligne transport */}
+            {/* Ligne transport (montant brut HT, avant remise éventuelle) */}
             <View style={styles.tableRow}>
               <Text style={[styles.tableCell, styles.cellDesig]}>Transport de voyage (Course VTC)</Text>
               <Text style={[styles.tableCell, styles.cellQty, { textAlign: 'center' }]}>1</Text>
-              <Text style={[styles.tableCell, styles.cellAmt, { textAlign: 'right' }]}>{fmtAmount(invoice.amount_ht)} {currency}</Text>
+              <Text style={[styles.tableCell, styles.cellAmt, { textAlign: 'right' }]}>{fmtAmount(grossAmountHt)} {currency}</Text>
             </View>
+            {/* Ligne réduction (si code promo appliqué) */}
+            {discountAmountHt !== null && (
+              <View style={[styles.tableRow, styles.tableRowDiscount]}>
+                <Text style={[styles.tableCell, styles.cellDesig, styles.tableCellDiscount]}>Réduction (code promo)</Text>
+                <Text style={[styles.tableCell, styles.cellQty, styles.tableCellDiscount, { textAlign: 'center' }]}>—</Text>
+                <Text style={[styles.tableCell, styles.cellAmt, styles.tableCellDiscount, { textAlign: 'right' }]}>-{fmtAmount(discountAmountHt)} {currency}</Text>
+              </View>
+            )}
           </View>
 
           {/* ── Totaux ── */}
@@ -588,6 +633,14 @@ const styles = StyleSheet.create({
     paddingVertical:   10,
     borderTopWidth:    1,
     borderTopColor:    Colors.border,
+  },
+  tableRowDiscount: {
+    backgroundColor: '#FFF8F0',
+  },
+  tableCellDiscount: {
+    color:      Colors.bordeaux,
+    fontStyle:  'italic',
+    fontWeight: '600',
   },
   tableCell: {
     fontSize:          Fonts.size.xs,

@@ -52,10 +52,12 @@ export const driverApi = {
   getMyRevenues: (
     token: string,
     period: RevenuesPeriod,
-    date?: string,
+    filters?: { status?: 'completed' | 'cancelled'; page?: number; limit?: number },
   ): Promise<ApiResponse<DriverRevenuesResult>> => {
     const params = new URLSearchParams({ period });
-    if (date) params.set('date', date);
+    if (filters?.status) params.set('status', filters.status);
+    if (filters?.page) params.set('page', String(filters.page));
+    if (filters?.limit) params.set('limit', String(filters.limit));
     return api.get(`/drivers/me/revenues?${params.toString()}`, token);
   },
 
@@ -66,4 +68,21 @@ export const driverApi = {
   /** PUT /drivers/me/schedule — Met à jour le planning hebdomadaire du chauffeur connecté */
   setMySchedule: (token: string, payload: SetScheduleDto): Promise<ApiResponse<WeeklyScheduleResult>> =>
     api.put('/drivers/me/schedule', payload, token),
+
+  /** GET /admin/drivers/:id/monthly-stats — Stats mensuelles d'un chauffeur */
+  getMonthlyStats: (token: string, driverId: string, date?: string): Promise<ApiResponse<any>> => {
+    const params = new URLSearchParams();
+    if (date) params.set('date', date);
+    const qs = params.toString();
+    return api.get(`/admin/drivers/${driverId}/monthly-stats${qs ? `?${qs}` : ''}`, token);
+  },
+
+  /** GET /admin/drivers/:id/trips-history — Historique des courses d'un chauffeur */
+  getTripsHistory: (token: string, driverId: string, status?: string, page: number = 1, limit: number = 20): Promise<ApiResponse<any>> => {
+    const params = new URLSearchParams();
+    if (status && status !== 'all') params.set('status', status);
+    params.set('page', String(page));
+    params.set('limit', String(limit));
+    return api.get(`/admin/drivers/${driverId}/trips-history?${params.toString()}`, token);
+  },
 };

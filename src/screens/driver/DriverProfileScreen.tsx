@@ -681,7 +681,7 @@ export default function DriverProfileScreen({ navigation }: Props) {
           <View style={styles.divider} />
           <ActionRow icon="lock-closed-outline" label="Changer le mot de passe" color={Colors.textPrimary} onPress={() => { reset(); clearError(); setShowPasswordModal(true); }} />
           <View style={styles.divider} />
-          <ActionRow icon="document-text-outline" label="CGU & Mentions légales" color={Colors.bordeaux} />
+          <ActionRow icon="document-text-outline" label="CGU & Mentions légales" color={Colors.bordeaux}  onPress={() => {navigation.navigate('CGU')}} />
           <View style={styles.divider} />
           <ActionRow icon="log-out-outline"     label="Se déconnecter"         color={Colors.bordeaux}     onPress={handleLogout} />
           <View style={styles.divider} />

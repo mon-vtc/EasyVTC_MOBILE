@@ -9,16 +9,25 @@ import type { UserStatus } from './auth.types';
 // ── Permissions RBAC gestionnaire ────────────────────────────────────────────
 
 export const MANAGER_PERMISSIONS = [
+  // Réservations
   'view_reservations',
   'assign_reservation',
   'cancel_reservation',
+  // Utilisateurs & chauffeurs
+  'view_users',
   'view_drivers',
   'view_clients',
+  // Tarification
   'view_pricing',
-  'manage_pricing',
+  // Documents
+  'view_documents',
+  // Finances
   'view_orders',
   'view_invoices',
-  'view_documents',
+  // Évaluations
+  'view_ratings',
+  // Support
+  'manage_support',
 ] as const;
 
 export type ManagerPermission = typeof MANAGER_PERMISSIONS[number];
@@ -36,13 +45,15 @@ export const PERMISSION_LABELS: Record<ManagerPermission, string> = {
   view_reservations:  'Voir les réservations',
   assign_reservation: 'Attribuer un chauffeur',
   cancel_reservation: 'Annuler une réservation',
+  view_users:         'Voir les utilisateurs',
   view_drivers:       'Voir les chauffeurs',
   view_clients:       'Voir les clients',
   view_pricing:       'Voir les tarifs',
-  manage_pricing:     'Modifier les tarifs',
+  view_documents:     'Valider les documents chauffeurs',
   view_orders:        'Voir les bons de commande',
   view_invoices:      'Voir les factures',
-  view_documents:     'Valider les documents',
+  view_ratings:       'Voir les évaluations',
+  manage_support:     'Gérer le support / chat',
 };
 
 export interface UserProfile {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -105,13 +105,22 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
 
 export default function MessagesScreen({ navigation }: any) {
   const { user } = useAuth();
-  const { conversations, isLoadingConversations, fetchConversations, markChatAsRead } = useChat();
-  
+  const {
+    conversations, isLoadingConversations, fetchConversations,
+    conversationsPage, conversationsTotalPages, isFetchingNextConversationsPage,
+    markChatAsRead,
+  } = useChat();
+
   useFocusEffect(
     React.useCallback(() => {
-      if (user?.role) fetchConversations();
+      if (user?.role) fetchConversations(1);
     }, [fetchConversations, user?.role]),
   );
+
+  const loadMore = useCallback(() => {
+    if (isLoadingConversations || isFetchingNextConversationsPage || conversationsPage >= conversationsTotalPages) return;
+    fetchConversations(conversationsPage + 1);
+  }, [isLoadingConversations, isFetchingNextConversationsPage, conversationsPage, conversationsTotalPages, fetchConversations]);
 
   if (isLoadingConversations && conversations.length === 0) {
     return (
@@ -151,6 +160,9 @@ export default function MessagesScreen({ navigation }: any) {
             <Text style={styles.emptyText}>Aucune conversation</Text>
           </View>
         }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextConversationsPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
         contentContainerStyle={styles.list}
       />
     </View>

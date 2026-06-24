@@ -48,3 +48,7 @@ CLAUDE.md
 
 # Learning by doing
 learning_log.md
+
+.detoxrc.js
+/scripts
+/e2e

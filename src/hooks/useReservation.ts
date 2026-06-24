@@ -501,7 +501,7 @@ export function useReservation() {
     fetchAll:              useCallback((filters?: ReservationListFilters) => _fetchAll(accessTokenRef.current!, filters), [_fetchAll]),
     fetchById:             useCallback((id: string)                       => _fetchById(accessTokenRef.current!, id), [_fetchById]),
     fetchDriverActive:     useCallback(()                               => _fetchDriverActive(accessTokenRef.current!), [_fetchDriverActive]),
-    fetchDriverUserActive: useCallback((vehicleType?: string) => _fetchAvailableDrivers(accessTokenRef.current!, vehicleType), []),
+    fetchDriverUserActive: useCallback((vehicleType?: string, scheduledAt?: string, durationMin?: number | null) => _fetchAvailableDrivers(accessTokenRef.current!, vehicleType, scheduledAt, durationMin), []),
 
     fetchOrderByReservationId: useCallback(async (reservationId: string) => {
       const res = await ordersApi.getByReservation(accessTokenRef.current!, reservationId);

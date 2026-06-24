@@ -23,7 +23,7 @@ import { OrderCard } from '../../../components/common/OrderCard';
 
 export default function DriverOrdersScreen() {
   const navigation = useNavigation<NavigationProp<DriverOrdersStackParamList>>();
-  const { orders, total, isLoading, error, fetchDriverMine, clearError } = useOrdersStore();
+  const { orders, total, page, totalPages, isLoading, isFetchingNextPage, error, fetchDriverMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const { showToast } = useToast();
 
@@ -32,6 +32,11 @@ export default function DriverOrdersScreen() {
   const load = useCallback(async () => {
     try { await fetchDriverMine(token); } catch { /* handled */ }
   }, [token]);
+
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetchDriverMine(token, { page: page + 1 }).catch(() => {});
+  }, [isLoading, isFetchingNextPage, page, totalPages, token, fetchDriverMine]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (error) { showToast({ type: 'error', title: 'Erreur', message: error }); clearError(); } }, [error, showToast, clearError]);
@@ -95,6 +100,9 @@ export default function DriverOrdersScreen() {
         )}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
         ListEmptyComponent={filteredOrders.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="document-outline" size={48} color={Colors.textMuted} />

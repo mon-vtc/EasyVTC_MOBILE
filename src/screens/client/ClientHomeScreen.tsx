@@ -201,6 +201,7 @@ export default function ClientHomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={styles.newRideBtn}
               onPress={() => navigation.navigate('CreateReservation')}
+              testID="client-home-new-reservation-btn"
             >
               <Ionicons name="add-circle-outline" size={20} color={Colors.bordeaux} />
               <Text style={styles.newRideBtnText}>Nouvelle réservation</Text>

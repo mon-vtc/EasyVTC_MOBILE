@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   ActivityIndicator, Image, Platform, Modal, TextInput, Pressable, Alert, RefreshControl, Linking, ScrollView
@@ -31,7 +31,11 @@ const PRIORITY_LABELS: Record<string, string> = {
 
 export default function SupportListScreen({ navigation }: any) {
   const { user } = useAuth();
-  const { supportTickets, isLoadingSupportTickets, fetchSupportTickets, createSupportTicket, fetchSupportTicketsRaw, markSupportAsRead } = useChat();
+  const {
+    supportTickets, isLoadingSupportTickets, fetchSupportTickets, createSupportTicket,
+    fetchSupportTicketsRaw, markSupportAsRead,
+    supportTicketsPage, supportTicketsTotalPages, isFetchingNextSupportTicketsPage,
+  } = useChat();
   const [activeTab, setActiveTab] = useState<SupportTicketStatus>('pending');
   const [helpModalVisible, setHelpModalVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -57,8 +61,7 @@ export default function SupportListScreen({ navigation }: any) {
   useFocusEffect(
     React.useCallback(() => {
       if (user?.role) {
-        fetchSupportTickets({ status: activeTab });
-        // load all tickets for statistics (non-destructive)
+        fetchSupportTickets({ status: activeTab, page: 1 });
         (async () => {
           const all = await fetchSupportTicketsRaw?.();
           if (all) setAllTickets(all);
@@ -66,6 +69,11 @@ export default function SupportListScreen({ navigation }: any) {
       }
     }, [fetchSupportTickets, user?.role, activeTab]),
   );
+
+  const loadMoreTickets = useCallback(() => {
+    if (isLoadingSupportTickets || isFetchingNextSupportTicketsPage || supportTicketsPage >= supportTicketsTotalPages) return;
+    fetchSupportTickets({ status: activeTab, page: supportTicketsPage + 1 });
+  }, [isLoadingSupportTickets, isFetchingNextSupportTicketsPage, supportTicketsPage, supportTicketsTotalPages, fetchSupportTickets, activeTab]);
 
   const renderContent = () => {
     if (isLoadingSupportTickets && supportTickets.length === 0) {
@@ -104,10 +112,13 @@ export default function SupportListScreen({ navigation }: any) {
         refreshControl={
           <RefreshControl
             refreshing={isLoadingSupportTickets}
-            onRefresh={() => fetchSupportTickets({ status: activeTab })}
+            onRefresh={() => fetchSupportTickets({ status: activeTab, page: 1 })}
             tintColor={Colors.bordeaux}
           />
         }
+        onEndReached={loadMoreTickets}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextSupportTicketsPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
         contentContainerStyle={styles.list}
       />
     );

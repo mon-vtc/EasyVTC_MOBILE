@@ -62,6 +62,7 @@ function StatusCard({
               trackColor={{ false: '#D1D5DB', true: Colors.bordeauxLight }}
               thumbColor={Colors.white}
               ios_backgroundColor="#D1D5DB"
+              testID="driver-status-toggle"
             />
           )
         }
@@ -152,7 +153,7 @@ function RideCard({
   origin, destination, date, time, price, status, onDetails,
 }: RideCardProps) {
   return (
-    <View style={rc.card}>
+    <TouchableOpacity style={rc.card} onPress={() => onDetails(id)}>
       {/* En-tête référence + badge */}
       <View style={rc.header}>
         <Text style={rc.ref}>{ref_number}</Text>
@@ -181,7 +182,7 @@ function RideCard({
 
       {/* Destination */}
       <View style={rc.infoRow}>
-        <AppIcon name="navigate-outline" size={16} color="#10B981" />
+        <AppIcon name="location" size={16} color={Colors.bordeauxLight}/>
         <View style={rc.infoTexts}>
           <Text style={rc.infoLabel}>Destination</Text>
           <Text style={rc.infoMain}>{destination}</Text>
@@ -189,7 +190,7 @@ function RideCard({
       </View>
 
       {/* Date + heure */}
-      <View style={rc.dateRow}>
+      <View style={[rc.dateRow, {flexDirection: 'row', justifyContent: 'space-between',}]}>
         <View style={rc.dateItem}>
           <AppIcon name="calendar-outline" size={14} color={Colors.textSecondary} />
           <Text style={rc.dateText}>{date}</Text>
@@ -211,7 +212,7 @@ function RideCard({
           <Text style={rc.detailBtnText}>Voir les détails</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

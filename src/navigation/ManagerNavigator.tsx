@@ -47,6 +47,7 @@ import type {
 const Drawer = createDrawerNavigator<ManagerDrawerParamList>();
 const ReservationsStack = createNativeStackNavigator<ManagerReservationsStackParamList>();
 const NotificationsStack = createNativeStackNavigator<ManagerNotificationsStackParamList>();
+const ManagerRootStack = createNativeStackNavigator();
 const DriversStack = createNativeStackNavigator<ManagerDriversStackParamList>();
 const ClientsStack = createNativeStackNavigator<ManagerClientsStackParamList>();
 const OrdersStack = createNativeStackNavigator<ManagerOrdersStackParamList>();
@@ -65,8 +66,8 @@ function ManagerReservationsStack() {
 function ManagerDriversStack() {
   return (
     <DriversStack.Navigator screenOptions={{ headerShown: false }}>
-      <DriversStack.Screen name="DriversList" component={AdminDriversScreen} />
-      <DriversStack.Screen name="DriverDetail" component={AdminDriverDetailScreen} />
+      <DriversStack.Screen name="DriversList" component={AdminDriversScreen as React.ComponentType<any>} />
+      <DriversStack.Screen name="DriverDetail" component={AdminDriverDetailScreen as React.ComponentType<any>} />
     </DriversStack.Navigator>
   );
 }
@@ -74,8 +75,8 @@ function ManagerDriversStack() {
 function ManagerClientsStack() {
   return (
     <ClientsStack.Navigator screenOptions={{ headerShown: false }}>
-      <ClientsStack.Screen name="ClientsList" component={AdminClientsScreen} />
-      <ClientsStack.Screen name="ClientDetail" component={AdminClientDetailScreen} />
+      <ClientsStack.Screen name="ClientsList"  component={AdminClientsScreen as React.ComponentType<any>} />
+      <ClientsStack.Screen name="ClientDetail" component={AdminClientDetailScreen as React.ComponentType<any>} />
     </ClientsStack.Navigator>
   );
 }
@@ -83,8 +84,8 @@ function ManagerClientsStack() {
 function ManagerOrdersStack() {
   return (
     <OrdersStack.Navigator screenOptions={{ headerShown: false }}>
-      <OrdersStack.Screen name="ManagerOrdersList" component={AdminOrdersScreen} />
-      <OrdersStack.Screen name="OrderDetails" component={AdminOrdersDetailScreen} />
+      <OrdersStack.Screen name="ManagerOrdersList" component={AdminOrdersScreen as React.ComponentType<any>} />
+      <OrdersStack.Screen name="OrderDetails"      component={AdminOrdersDetailScreen as React.ComponentType<any>} />
     </OrdersStack.Navigator>
   );
 }
@@ -92,8 +93,8 @@ function ManagerOrdersStack() {
 function ManagerInvoicesStack() {
   return (
     <InvoicesStack.Navigator screenOptions={{ headerShown: false }}>
-      <InvoicesStack.Screen name="ManagerInvoicesList" component={AdminInvoicesScreen} />
-      <InvoicesStack.Screen name="InvoiceDetails" component={AdminInvoiceDetailsScreen} />
+      <InvoicesStack.Screen name="ManagerInvoicesList" component={AdminInvoicesScreen as React.ComponentType<any>} />
+      <InvoicesStack.Screen name="InvoiceDetails"      component={AdminInvoiceDetailsScreen as React.ComponentType<any>} />
     </InvoicesStack.Navigator>
   );
 }
@@ -179,7 +180,7 @@ function ManagerDrawerContent(props: DrawerContentComponentProps) {
           />
         )}
 
-        {hasAnyPermission('view_pricing', 'manage_pricing') && (
+        {hasAnyPermission('view_pricing') && (
           <>
             <DrawerItem
               label={() => <DrawerLabel icon="pricetag-outline" label="Grille tarifaire" />}
@@ -261,7 +262,7 @@ const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions =>
     </TouchableOpacity>
   ),
     headerRight: () => (
-      <TouchableOpacity onPress={() => console.log('Notifications')} style={{ marginRight: 20 }}>
+      <TouchableOpacity onPress={() => navigation.getParent()?.navigate('ManagerNotificationList')} style={{ marginRight: 20 }}>
         <AppIcon name="notifications-outline" size={24} color={Colors.white} />
       </TouchableOpacity>
     ),
@@ -273,7 +274,7 @@ const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions =>
 
 // ── Navigator ────────────────────────────────────────────────────
 
-export default function ManagerNavigator() {
+function ManagerDrawerNavigator() {
   return (
     <Drawer.Navigator
       drawerContent={(props) => <ManagerDrawerContent {...props} />}
@@ -291,6 +292,16 @@ export default function ManagerNavigator() {
       <Drawer.Screen name="BaseGrid"            component={AdminPricingScreen as React.ComponentType<any>}        options={{ drawerItemStyle: { display: 'none' }, headerShown: false, }} />
       <Drawer.Screen name="FlatRates"           component={AdminFlatRatesScreen as React.ComponentType<any>}      options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
     </Drawer.Navigator>
+  );
+}
+
+export default function ManagerNavigator() {
+  return (
+    <ManagerRootStack.Navigator screenOptions={{ headerShown: false }}>
+      <ManagerRootStack.Screen name="ManagerMain" component={ManagerDrawerNavigator} />
+      <ManagerRootStack.Screen name="ManagerNotificationList" component={NotificationsScreen} />
+      <ManagerRootStack.Screen name="NotificationDetails" component={NotificationDetailsScreen} />
+    </ManagerRootStack.Navigator>
   );
 }
 

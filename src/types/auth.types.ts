@@ -44,6 +44,7 @@ export type AuthStackParamList = {
   RegisterClient: undefined;
   RegisterDriver: undefined;
   ForgotPassword: undefined;
+  CGU            : undefined;
   ResetPassword:  { email?: string };
 };
 
@@ -53,9 +54,8 @@ export type ClientTabParamList = {
   CreateReservationTab: undefined; // FAB tab button, redirige vers le stack racine
   Messages:            undefined;
   ClientProfile:       undefined;
-  Notifications:        undefined;
-  NotificationDetails:  { notification: Notification };
   MyOrders:             undefined;
+  CGU :                 undefined;
   MyInvoices:           { reservationId?: string } | undefined;
   ReservationDetails: { reservationId?: string }
 };
@@ -76,14 +76,15 @@ export type ClientStackParamList = {
   ReservationDetails:   { reservationId: string };
   OrderDetails:         { orderId: string };
   InvoiceDetails:       { invoiceId: string };
-  MyOrders:             undefined; // Note: Peut-être à déplacer dans les onglets aussi
-  MyInvoices:           { reservationId?: string } | undefined; // Note: Peut-être à déplacer dans les onglets aussi
+  MyOrders:             undefined;
+  MyInvoices:           { reservationId?: string } | undefined;
   SupportList:          undefined;
   SupportChat:          { ticketId: string; subject: string };
   ChatScreen:           { reservationId?: string };
   MyFavorites:          undefined;
   PromoCodes:           undefined;
-
+  Notifications:        undefined;
+  NotificationDetails:  { notification: Notification };
 };
 
 export type DriverReservationsStackParamList = {
@@ -133,7 +134,10 @@ export type SupportStackParamList = {
   SupportList: undefined,
   SupportChat: { ticketId: string, subject: string }
 }
-
+export type RevenuStackParamList = {
+  DriverRevenuesList:     undefined;
+  DriverInvoiceDetails: { invoiceId?: string; reservationId?: string };
+}
 export type DriverDrawerParamList = {
   DriverHome:         undefined;
   DriverReservationDetails: { reservationId: string };
@@ -148,7 +152,8 @@ export type DriverDrawerParamList = {
   DriverOrders:       NavigatorScreenParams<DriverOrdersStackParamList>;
   DriverInvoices:     NavigatorScreenParams<DriverInvoicesStackParamList>;
   DriverReviews:      undefined;
-  DriverRevenues:     undefined;
+  DriverRevenues:     NavigatorScreenParams<RevenuStackParamList>;
+  CGU:                undefined;
 };
 
 
@@ -207,7 +212,9 @@ export type ClientsStackParamList = {
 // ── Stack interne Chauffeurs (dans le Drawer Admin) ──────────────
 export type DriversStackParamList = {
   DriversList:  undefined;
-  DriverDetail: { driverId: string };
+  DriverDetail: { 
+    driverId: string;
+  };
 };
 
 // ── Stack interne Gestionnaires (dans le Drawer Admin) ───────────
@@ -223,6 +230,10 @@ export type ManagersStackParamList = {
 export type ReservationsStackParamList = {
   ReservationsList:     undefined;
   AdminReservationDetail: { reservationId: string };
+  DriverDetail: { driverId: string };
+  InvoiceDetails:      { invoiceId: string };
+  ClientDetail: { clientId: string };
+
 };
 
 // ── Stack interne Discussions (dans le Drawer Admin) ───────────

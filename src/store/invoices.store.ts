@@ -13,14 +13,15 @@ import type {
 } from '../types/invoices.types';
 
 interface InvoicesState {
-  invoices:   Invoice[];
-  total:      number;
-  page:       number;
-  totalPages: number;
-  selected:   Invoice | null;
-  isLoading:  boolean;
-  isAdjusting: boolean;
-  error:      string | null;
+  invoices:           Invoice[];
+  total:              number;
+  page:               number;
+  totalPages:         number;
+  selected:           Invoice | null;
+  isLoading:          boolean;
+  isFetchingNextPage: boolean;
+  isAdjusting:        boolean;
+  error:              string | null;
 
   fetch:       (token: string, filters?: InvoiceListFilters) => Promise<void>;
   fetchById:   (token: string, id: string)                   => Promise<void>;
@@ -30,33 +31,38 @@ interface InvoicesState {
   clearSelected: () => void;
 }
 
-const applyList = (set: any, result: InvoiceListResult) =>
-  set({
-    invoices:   result.invoices,
-    total:      result.total,
-    page:       result.page,
-    totalPages: result.total_pages,
-    isLoading:  false,
-  });
-
 export const useInvoicesStore = create<InvoicesState>((set) => ({
-  invoices:    [],
-  total:       0,
-  page:        1,
-  totalPages:  1,
-  selected:    null,
-  isLoading:   false,
-  isAdjusting: false,
-  error:       null,
+  invoices:           [],
+  total:              0,
+  page:               1,
+  totalPages:         1,
+  selected:           null,
+  isLoading:          false,
+  isFetchingNextPage: false,
+  isAdjusting:        false,
+  error:              null,
 
   fetch: async (token, filters) => {
-    set({ isLoading: true, error: null });
+    const page = filters?.page ?? 1;
+    if (page > 1) {
+      set({ isFetchingNextPage: true });
+    } else {
+      set({ isLoading: true, error: null });
+    }
     try {
       const res = await invoicesApi.list(token, filters);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      applyList(set, res.data);
+      const result = res.data;
+      set(state => ({
+        invoices:           page > 1 ? [...state.invoices, ...result.invoices] : result.invoices,
+        total:              result.total,
+        page:               result.page,
+        totalPages:         result.total_pages,
+        isLoading:          false,
+        isFetchingNextPage: false,
+      }));
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false, isFetchingNextPage: false });
       throw err;
     }
   },

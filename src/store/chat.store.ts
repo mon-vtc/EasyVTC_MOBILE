@@ -17,11 +17,17 @@ import type {
 
 interface ChatState {
   conversations: ConversationSummary[];
+  conversationsPage: number;
+  conversationsTotalPages: number;
+  isFetchingNextConversationsPage: boolean;
   activeConversationMessages: ChatMessage[];
   activeConversationMessagesPage: number;
   activeConversationMessagesTotal: number;
   activeConversationMessagesTotalPages: number;
   supportTickets: SupportTicketRow[];
+  supportTicketsPage: number;
+  supportTicketsTotalPages: number;
+  isFetchingNextSupportTicketsPage: boolean;
   activeSupportTicket: SupportTicketDetail | null;
   // Supervision admin
   supervisedConversations: import('../types').ActiveConversation[];
@@ -63,6 +69,9 @@ interface ChatActions {
 export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
   // ─── STATE ────────────────────────────────────────────────────────────────
   conversations: [],
+  conversationsPage: 1,
+  conversationsTotalPages: 1,
+  isFetchingNextConversationsPage: false,
   activeConversationMessages: [],
   activeConversationMessagesPage: 1,
   activeConversationMessagesTotal: 0,
@@ -71,6 +80,9 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
   isLoadingMessages: false,
   isSendingMessage: false,
   supportTickets: [],
+  supportTicketsPage: 1,
+  supportTicketsTotalPages: 1,
+  isFetchingNextSupportTicketsPage: false,
   activeSupportTicket: null,
   isLoadingSupportTickets: false,
   isLoadingSupportTicketDetail: false,
@@ -100,16 +112,20 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
    * Récupère les conversations actives depuis /admin/chat.
    */
   fetchConversations: async (token, role, page = 1, limit = 20) => {
-    set({ isLoadingConversations: true, error: null });
+    const append = page > 1;
+    if (append) {
+      set({ isFetchingNextConversationsPage: true });
+    } else {
+      set({ isLoadingConversations: true, error: null });
+    }
     try {
       if (role === 'admin' || role === 'manager') {
         const response = await chatApi.listAdminConversations(token, page, limit);
         if (response.ok && response.data) {
-          const conversations = response.data.conversations ?? [];
-          // Mapper ActiveConversation vers ConversationSummary
-          const mappedConversations: ConversationSummary[] = conversations.map(c => ({
+          const incoming = response.data.conversations ?? [];
+          const mappedConversations: ConversationSummary[] = incoming.map(c => ({
             reservation_id: c.reservation_id,
-            status: 'unknown', // Le statut de la réservation n'est pas dans ActiveConversation
+            status: 'unknown',
             scheduled_at: c.scheduled_at,
             pickup_address: c.pickup_address,
             dest_address: c.dest_address,
@@ -124,18 +140,27 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
               content: c.last_message,
               created_at: c.last_message_at!,
               sender_role: 'unknown',
-              is_mine: false, // On ne peut pas savoir pour l'admin
+              is_mine: false,
             } : null,
             unread_count: c.unread_count,
           }));
-          set({ conversations: mappedConversations });
+          set(state => ({
+            conversations: append ? [...state.conversations, ...mappedConversations] : mappedConversations,
+            conversationsPage: page,
+            conversationsTotalPages: Math.ceil((response.data!.total ?? 0) / limit) || 1,
+          }));
         } else {
           throw new Error(response.message || 'Erreur lors du chargement des conversations.');
         }
       } else {
         const response = await chatApi.listMyConversations(token, page, limit);
         if (response.ok && response.data) {
-          set({ conversations: response.data.conversations ?? [] });
+          const incoming = response.data.conversations ?? [];
+          set(state => ({
+            conversations: append ? [...state.conversations, ...incoming] : incoming,
+            conversationsPage: response.data!.page ?? page,
+            conversationsTotalPages: response.data!.total_pages ?? 1,
+          }));
         } else {
           throw new Error(response.message || 'Erreur lors du chargement des conversations.');
         }
@@ -143,7 +168,7 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
     } catch (err: any) {
       set({ error: err.message ?? 'Erreur inconnue' });
     } finally {
-      set({ isLoadingConversations: false });
+      set({ isLoadingConversations: false, isFetchingNextConversationsPage: false });
     }
   },
 
@@ -248,18 +273,29 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
   // ─── ACTIONS SUPPORT ──────────────────────────────────────────────────────
 
   fetchSupportTickets: async (token, filters) => {
-    set({ isLoadingSupportTickets: true, supportError: null });
+    const page = filters?.page ?? 1;
+    const append = page > 1;
+    if (append) {
+      set({ isFetchingNextSupportTicketsPage: true });
+    } else {
+      set({ isLoadingSupportTickets: true, supportError: null });
+    }
     try {
       const response = await chatApi.listSupportTickets(token, filters);
       if (response.ok && response.data) {
-        set({ supportTickets: response.data.tickets ?? [] });
+        const incoming = response.data.tickets ?? [];
+        set(state => ({
+          supportTickets: append ? [...state.supportTickets, ...incoming] : incoming,
+          supportTicketsPage: response.data!.page ?? page,
+          supportTicketsTotalPages: response.data!.total_pages ?? 1,
+        }));
       } else {
         throw new Error(response.message || 'Erreur lors du chargement des tickets.');
       }
     } catch (err: any) {
       set({ supportError: err.message ?? 'Erreur inconnue' });
     } finally {
-      set({ isLoadingSupportTickets: false });
+      set({ isLoadingSupportTickets: false, isFetchingNextSupportTicketsPage: false });
     }
   },
 

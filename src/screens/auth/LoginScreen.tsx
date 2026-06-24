@@ -100,6 +100,7 @@ export default function LoginScreen({ navigation }: Props) {
                 editable={!anyLoading}
                 error={errors.email?.message}
                 icon="mail-outline"
+                testID="login-email-input"
               />
 
               <FormField<FormData>
@@ -112,6 +113,7 @@ export default function LoginScreen({ navigation }: Props) {
                 editable={!anyLoading}
                 error={errors.password?.message}
                 icon="lock-closed-outline"
+                testID="login-password-input"
               />
 
               {/* FIX: "Se souvenir" — le TouchableOpacity prend flex:1
@@ -140,6 +142,7 @@ export default function LoginScreen({ navigation }: Props) {
                 size="lg"
                 disabled={anyLoading}
                 style={styles.button}
+                testID="login-submit-btn"
               />
 
               <View style={styles.separatorContainer}>
@@ -169,11 +172,11 @@ export default function LoginScreen({ navigation }: Props) {
               {/* <Text style={styles.registrationLabel}>Pas encore de compte ?</Text> */}
               <View style={styles.registrationRow}>
                 <Text style={styles.registrationLabel}>Créer un compte </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('RegisterClient')} disabled={anyLoading}>
+                <TouchableOpacity onPress={() => navigation.navigate('RegisterClient')} disabled={anyLoading} testID="login-register-client-link">
                   <Text style={styles.registrationBold}> Client</Text>
                 </TouchableOpacity>
                 <Text style={styles.registrationLabel}> ou </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('RegisterDriver')} disabled={anyLoading}>
+                <TouchableOpacity onPress={() => navigation.navigate('RegisterDriver')} disabled={anyLoading} testID="login-register-driver-link">
                   <Text style={styles.registrationBold}> Chauffeur</Text>
                 </TouchableOpacity>
               </View>
@@ -193,11 +196,11 @@ export default function LoginScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, paddingVertical: Spacing.xl },
+  scroll: { flexGrow: 1, paddingTop: Spacing.xl },
 
   /* ── Header ── */
   header: { alignItems: 'center', marginBottom: Spacing.xl, marginTop: Spacing.lg },
-  title: { fontSize: Fonts.size.xl, fontWeight: '800', color: '#FFF', marginBottom: Spacing.xs },
+  title: { fontSize: Fonts.size.lg, fontWeight: '800', color: '#FFF', marginBottom: Spacing.xs },
   /* FIX: alignSelf: 'stretch' empêche alignItems:'center' du parent
      de réduire la largeur du Text à son contenu intrinsèque */
   subtitle: {
@@ -205,7 +208,7 @@ const styles = StyleSheet.create({
     color: Colors.surface,
     opacity: 0.5,
     textAlign: 'center',
-    paddingHorizontal: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
     alignSelf: 'stretch',
   },
   
@@ -229,7 +232,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   cardTopLine: { height: 6, width: '100%', marginTop: Spacing.xxs },
-  cardContent: { padding: Spacing.lg },
+  cardContent: { paddingTop: Spacing.lg, paddingBottom: Spacing.sm, paddingHorizontal: Spacing.md },
   
   /* ── Se souvenir / Mot de passe oublié ── */
   rowBetween: {
@@ -252,7 +255,7 @@ const styles = StyleSheet.create({
   button: { marginTop: Spacing.sm },
   
   /* ── Séparateur ── */
-  separatorContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: Spacing.xl },
+  separatorContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: Spacing.lg },
   line: { flex: 1, height: 1, backgroundColor: '#E0E0E0' },
   separatorText: { marginHorizontal: Spacing.md, color: Colors.textCallToAction, fontSize: Fonts.size.sm },
   
@@ -276,7 +279,7 @@ const styles = StyleSheet.create({
   registration: {
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
+    paddingVertical: Spacing.lg,
   },
   registrationRow: {
     flexDirection: 'row',

@@ -21,14 +21,19 @@ const PERMISSION_GROUPS: { title: string; icon: string; permissions: ManagerPerm
     permissions: ['view_reservations', 'assign_reservation', 'cancel_reservation'],
   },
   {
-    title: 'Équipe',
+    title: 'Utilisateurs & équipe',
     icon: 'people-outline',
-    permissions: ['view_drivers', 'view_clients'],
+    permissions: ['view_users', 'view_drivers', 'view_clients'],
   },
   {
     title: 'Tarification',
     icon: 'pricetag-outline',
-    permissions: ['view_pricing', 'manage_pricing'],
+    permissions: ['view_pricing'],
+  },
+  {
+    title: 'Documents chauffeurs',
+    icon: 'document-text-outline',
+    permissions: ['view_documents'],
   },
   {
     title: 'Documents financiers',
@@ -36,9 +41,14 @@ const PERMISSION_GROUPS: { title: string; icon: string; permissions: ManagerPerm
     permissions: ['view_orders', 'view_invoices'],
   },
   {
-    title: 'Documents chauffeurs',
-    icon: 'document-text-outline',
-    permissions: ['view_documents'],
+    title: 'Évaluations',
+    icon: 'star-outline',
+    permissions: ['view_ratings'],
+  },
+  {
+    title: 'Support & chat',
+    icon: 'chatbubbles-outline',
+    permissions: ['manage_support'],
   },
 ];
 

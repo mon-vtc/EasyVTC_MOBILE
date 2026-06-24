@@ -68,6 +68,7 @@ const ReservationsStack = createNativeStackNavigator<ReservationsStackParamList>
 const InvoicesStack = createNativeStackNavigator<AdminInvoicesStackParamList>();
 const OrderStack = createNativeStackNavigator<AdminOrderStackParamList>();
 const NotificationsStack = createNativeStackNavigator<AdminNotificationsStackParamList>();
+const AdminRootStack = createNativeStackNavigator();
 const SupportStack = createNativeStackNavigator<SupportStackParamList>();
 
 // Stack pour les discussions (supervision)
@@ -91,6 +92,9 @@ function AdminReservationsStack() {
     <ReservationsStack.Navigator screenOptions={{ headerShown: false }}>
       <ReservationsStack.Screen name="ReservationsList" component={AdminReservationsScreen} />
       <ReservationsStack.Screen name="AdminReservationDetail" component={AdminReservationScreen} />
+      <ReservationsStack.Screen name="DriverDetail" component={AdminDriverDetailScreen} />
+      <ReservationsStack.Screen name="InvoiceDetails" component={AdminInvoicesDetailScreen} />
+      <ReservationsStack.Screen name="ClientDetail" component={AdminClientDetailScreen} />
     </ReservationsStack.Navigator>
   );
 }
@@ -210,7 +214,7 @@ function AdminAuditLogsNavigator() {
 // ── Drawer ──────────────────────────────────────────────────────
 const Drawer = createDrawerNavigator<AdminDrawerParamList>();
 
-export default function AdminNavigator() {
+function AdminDrawerNavigator() {
   const { unreadCount, unreadMessagesCount, unreadSupportCount } = useNotifications();
 
   const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions => ({
@@ -229,7 +233,7 @@ export default function AdminNavigator() {
     ),
   
     headerRight: () => (
-      <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Notifications')}>
+      <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.getParent()?.navigate('AdminNotificationList')}>
         <AppIcon name="notifications-outline" size={26} color={Colors.white} />
         {unreadCount > 0 && (
           <View style={styles.notifBadge}>
@@ -414,6 +418,16 @@ export default function AdminNavigator() {
         }} // Pas de label dans le drawer, accès uniquement via la section Tarification
       />
     </Drawer.Navigator>
+  );
+}
+
+export default function AdminNavigator() {
+  return (
+    <AdminRootStack.Navigator screenOptions={{ headerShown: false }}>
+      <AdminRootStack.Screen name="AdminMain" component={AdminDrawerNavigator} />
+      <AdminRootStack.Screen name="AdminNotificationList" component={NotificationsScreen} />
+      <AdminRootStack.Screen name="NotificationDetails" component={NotificationDetailsScreen} />
+    </AdminRootStack.Navigator>
   );
 }
 

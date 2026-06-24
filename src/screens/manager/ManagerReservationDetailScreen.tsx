@@ -562,6 +562,8 @@ export default function ManagerReservationDetailScreen() {
         visible={pickerVisible}
         reservationRef={reservationRef}
         vehicleType={reservation?.vehicle_type}
+        scheduledAt={reservation?.scheduled_at}
+        durationMin={reservation?.duration_min}
         onConfirm={handleAssignConfirm}
         onClose={() => setPickerVisible(false)}
       />

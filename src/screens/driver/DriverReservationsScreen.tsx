@@ -215,7 +215,7 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
             <AppIcon name="menu-outline" size={28} color={Colors.white} />
           </TouchableOpacity>
           <Image source={Logo.LogoEasyVTC} style={styles.logo} resizeMode="contain" />
-          <TouchableOpacity style={styles.navBtn}>
+          <TouchableOpacity style={styles.navBtn} onPress={() => navigation.getParent()?.getParent()?.navigate('DriverNotificationList' as any)}>
             <AppIcon name="notifications-outline" size={24} color={Colors.white} />
           </TouchableOpacity>
         </View>

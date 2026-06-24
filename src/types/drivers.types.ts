@@ -70,6 +70,17 @@ export interface DriverRevenuesResult {
   currency: string;
   revenue_by_currency: { EUR: number; XOF: number };
   trips: RevenueTrip[];
+  page?: number;
+  limit?: number;
+  total_trips_unfiltered?: number;
+}
+
+export type RevenueStatus = 'completed' | 'cancelled';
+
+export interface RevenuesFilters {
+  status?: RevenueStatus;
+  page?: number;
+  limit?: number;
 }
 
 // ── Planning hebdomadaire récurrent ───────────────────────────────────────────

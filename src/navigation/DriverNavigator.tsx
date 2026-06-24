@@ -25,8 +25,8 @@ import SupportListScreen from '../screens/support/SupportListScreen';
 import SupportChatScreen from '../screens/support/SupportChatScreen';
 import DriverReviewScreen        from '../screens/driver/DriverReviewScreen';
 import DriverRevenuesScreen from '../screens/driver/DriverRevenuesScreen';
-
-import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList, DriverNotificationsStackParamList, DriverMessagesStackParamList, SupportStackParamList, DriverTripsStackParamList } from '../types/auth.types';
+import CGU from '../screens/CGU';
+import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList, DriverNotificationsStackParamList, DriverMessagesStackParamList, SupportStackParamList, DriverTripsStackParamList, RevenuStackParamList } from '../types/auth.types';
 
 import { Logo }                  from  '../constants/logo';
  import { useNotifications } from '../hooks/useNotifications';
@@ -101,6 +101,17 @@ function  DriverSupportStackScreen() {
     </DriverSupportStack.Navigator>
   );
 }
+
+const DriverRevenuStack = createNativeStackNavigator<RevenuStackParamList>();
+
+function DriverRevenuStackScreen() {
+  return (
+    <DriverRevenuStack.Navigator screenOptions={{ headerShown: false }}>
+        <DriverRevenuStack.Screen name="DriverRevenuesList" component={DriverRevenuesScreen} />
+        <DriverRevenuStack.Screen name="DriverInvoiceDetails" component={DriverInvoiceDetailScreen} />
+    </DriverRevenuStack.Navigator>
+  );
+}
   
 
 
@@ -116,8 +127,9 @@ function DriverInvoicesStackScreen() {
 }
 
 const Drawer = createDrawerNavigator<DriverDrawerParamList>();
+const DriverRootStack = createNativeStackNavigator();
 
-export default function DriverNavigator() {
+function DriverDrawerNavigator() {
   const { unreadCount, unreadMessagesCount, unreadSupportCount } = useNotifications();
 
   const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions => ({
@@ -149,7 +161,7 @@ export default function DriverNavigator() {
   
     // --- Bouton Notification à Droite ---
     headerRight: () => (
-      <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('DriverNotifications')}>
+      <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.getParent()?.navigate('DriverNotificationList')}>
         <AppIcon name="notifications-outline" size={26} color={Colors.white} />
         {unreadCount > 0 && (
           <View style={styles.notifBadge}>
@@ -232,9 +244,10 @@ export default function DriverNavigator() {
 
       <Drawer.Screen
         name="DriverRevenues"
-        component={DriverRevenuesScreen}
+        component={DriverRevenuStackScreen}
         options={{
           drawerLabel: () => <DrawerLabel icon="cash-outline" label="Revenus" />,
+          headerShown: false,
         }}
       />
 
@@ -271,7 +284,14 @@ export default function DriverNavigator() {
           drawerLabel: () => <DrawerLabel icon="person-outline" label="Mon compte" />,
         }}
       />
-
+       <Drawer.Screen
+              name="CGU"
+              component={CGU}
+              options={{
+                drawerItemStyle: { display: 'none' },
+                headerShown: false,
+              }} // Pas de label dans le drawer, accès uniquement via la section Tarification
+            />
 
       <Drawer.Screen
         name="DriverSupport"
@@ -279,7 +299,18 @@ export default function DriverNavigator() {
         options={{ drawerLabel: () => <DrawerLabel icon="headset-outline" label="Support" badgeCount={unreadSupportCount} />, headerShown: false }}
       />
 
+
     </Drawer.Navigator>
+  );
+}
+
+export default function DriverNavigator() {
+  return (
+    <DriverRootStack.Navigator screenOptions={{ headerShown: false }}>
+      <DriverRootStack.Screen name="DriverMain" component={DriverDrawerNavigator} />
+      <DriverRootStack.Screen name="DriverNotificationList" component={NotificationsScreen} />
+      <DriverRootStack.Screen name="NotificationDetails" component={NotificationDetailsScreen} />
+    </DriverRootStack.Navigator>
   );
 }
 

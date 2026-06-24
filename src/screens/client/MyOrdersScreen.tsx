@@ -20,7 +20,7 @@ import { OrderCard } from '../../components/common/OrderCard';
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function MyOrdersScreen({ navigation } : {navigation: any}) {
-  const { orders, total, isLoading, error, fetchMine, clearError } = useOrdersStore();
+  const { orders, total, page, totalPages, isLoading, isFetchingNextPage, error, fetchMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const { showToast } = useToast();
 
@@ -29,6 +29,11 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
   const load = useCallback(async () => {
     try { await fetchMine(token); } catch { /* handled in store */ }
   }, [token]);
+
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetchMine(token, { page: page + 1 }).catch(() => {});
+  }, [isLoading, isFetchingNextPage, page, totalPages, token, fetchMine]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -95,6 +100,9 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />
         }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
         ListEmptyComponent={filteredOrders.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="document-outline" size={48} color={Colors.textMuted} />

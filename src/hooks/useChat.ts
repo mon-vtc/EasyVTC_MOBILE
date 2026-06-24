@@ -18,9 +18,12 @@ export function useChat() {
   const user = useAuthStore(s => s.user);
   // ✅ Sélecteurs atomiques : chaque valeur a sa propre subscription Zustand,
   //    ce qui évite les re-renders inutiles et stabilise les refs dans useCallback.
-  const conversations              = useChatStore(s => s.conversations);
-  const activeConversationMessages = useChatStore(s => s.activeConversationMessages);
-  const isLoadingConversations     = useChatStore(s => s.isLoadingConversations);
+  const conversations                    = useChatStore(s => s.conversations);
+  const conversationsPage                = useChatStore(s => s.conversationsPage);
+  const conversationsTotalPages          = useChatStore(s => s.conversationsTotalPages);
+  const isFetchingNextConversationsPage  = useChatStore(s => s.isFetchingNextConversationsPage);
+  const activeConversationMessages       = useChatStore(s => s.activeConversationMessages);
+  const isLoadingConversations           = useChatStore(s => s.isLoadingConversations);
   const isLoadingMessages          = useChatStore(s => s.isLoadingMessages);
   const activeConversationMessagesPage = useChatStore(s => s.activeConversationMessagesPage);
   const activeConversationMessagesTotal = useChatStore(s => s.activeConversationMessagesTotal);
@@ -28,9 +31,12 @@ export function useChat() {
   const isSendingMessage           = useChatStore(s => s.isSendingMessage);
   const error                      = useChatStore(s => s.error);
   // Support
-  const supportTickets             = useChatStore(s => s.supportTickets);
-  const activeSupportTicket        = useChatStore(s => s.activeSupportTicket);
-  const isLoadingSupportTickets    = useChatStore(s => s.isLoadingSupportTickets);
+  const supportTickets                    = useChatStore(s => s.supportTickets);
+  const supportTicketsPage                = useChatStore(s => s.supportTicketsPage);
+  const supportTicketsTotalPages          = useChatStore(s => s.supportTicketsTotalPages);
+  const isFetchingNextSupportTicketsPage  = useChatStore(s => s.isFetchingNextSupportTicketsPage);
+  const activeSupportTicket               = useChatStore(s => s.activeSupportTicket);
+  const isLoadingSupportTickets           = useChatStore(s => s.isLoadingSupportTickets);
   const isLoadingSupportTicketDetail = useChatStore(s => s.isLoadingSupportTicketDetail);
   const isSendingSupportMessage    = useChatStore(s => s.isSendingSupportMessage);
   const supportError               = useChatStore(s => s.supportError);
@@ -66,9 +72,9 @@ export function useChat() {
 
   // ✅ useCallback avec dépendances stables (accessToken + action Zustand stable)
   const fetchConversations = useCallback(
-    () => {
+    (page = 1) => {
       if (!user?.role) return;
-      _fetchConversations(accessToken, user.role)
+      _fetchConversations(accessToken, user.role, page);
     },
     [accessToken, _fetchConversations, user?.role],
   );
@@ -147,6 +153,9 @@ export function useChat() {
   return {
     // ── State ──────────────────────────────────────────────────────────────
     conversations,
+    conversationsPage,
+    conversationsTotalPages,
+    isFetchingNextConversationsPage,
     activeConversationMessages,
     activeConversationMessagesPage,
     activeConversationMessagesTotal,
@@ -157,6 +166,9 @@ export function useChat() {
     error,
     // Support State
     supportTickets,
+    supportTicketsPage,
+    supportTicketsTotalPages,
+    isFetchingNextSupportTicketsPage,
     activeSupportTicket,
     isLoadingSupportTickets,
     isLoadingSupportTicketDetail,

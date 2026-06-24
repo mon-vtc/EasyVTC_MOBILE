@@ -94,7 +94,7 @@ function InvoiceCard({ invoice, token, onPress }: { invoice: Invoice; token: str
 
 export default function DriverInvoicesScreen() {
   const navigation = useNavigation<NavigationProp<any>>();
-  const { invoices, total, isLoading, error, fetch, clearError } = useInvoicesStore();
+  const { invoices, total, page, totalPages, isLoading, isFetchingNextPage, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const { showToast } = useToast();
 
@@ -103,6 +103,11 @@ export default function DriverInvoicesScreen() {
   const load = useCallback(async () => {
     try { await fetch(token); } catch { /* handled */ }
   }, [token]);
+
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetch(token, { page: page + 1 }).catch(() => {});
+  }, [isLoading, isFetchingNextPage, page, totalPages, token, fetch]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (error) { showToast({ type: 'error', title: 'Erreur', message: error }); clearError(); } }, [error, showToast, clearError]);
@@ -163,6 +168,9 @@ export default function DriverInvoicesScreen() {
         renderItem={({ item }) => <InvoiceCard invoice={item} token={token} onPress={handleViewInvoice} />}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
         ListEmptyComponent={filteredInvoices.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="receipt-outline" size={48} color={Colors.textMuted} />
