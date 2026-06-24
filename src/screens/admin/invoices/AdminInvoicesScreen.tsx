@@ -234,7 +234,7 @@ function InvoiceRow({ invoice, token, onAdjust, onPress }: {
 
 export default function AdminInvoicesScreen() {
   const navigation = useNavigation<NavigationProp<any>>();
-  const { invoices, total, isLoading, error, fetch, clearError } = useInvoicesStore();
+  const { invoices, total, page, totalPages, isLoading, isFetchingNextPage, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const [adjustTarget, setAdjustTarget] = useState<Invoice | null>(null);
   const [search, setSearch] = useState('');
@@ -243,6 +243,11 @@ export default function AdminInvoicesScreen() {
   const load = useCallback(async () => {
     try { await fetch(token); } catch { /* handled */ }
   }, [token]);
+
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetch(token, { page: page + 1 }).catch(() => {});
+  }, [isLoading, isFetchingNextPage, page, totalPages, token, fetch]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (error) { showToast({ type: 'error', message: error }); clearError(); } }, [error]);
@@ -300,6 +305,9 @@ export default function AdminInvoicesScreen() {
         )}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="receipt-outline" size={48} color={Colors.textMuted} />

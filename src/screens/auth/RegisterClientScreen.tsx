@@ -159,6 +159,7 @@ export default function RegisterClientScreen({ navigation }: Props) {
                     autoCapitalize="words"
                     editable={!isLoading}
                     error={errors.first_name?.message}
+                    testID="register-client-firstname-input"
                   />
                 </View>
                 <View style={[styles.half, { marginLeft: Spacing.sm }]}>
@@ -171,6 +172,7 @@ export default function RegisterClientScreen({ navigation }: Props) {
                     autoCapitalize="words"
                     editable={!isLoading}
                     error={errors.last_name?.message}
+                    testID="register-client-lastname-input"
                   />
                 </View>
               </View>
@@ -184,6 +186,7 @@ export default function RegisterClientScreen({ navigation }: Props) {
                 keyboardType="phone-pad"
                 editable={!isLoading}
                 error={errors.phone?.message}
+                testID="register-client-phone-input"
               />
 
               <FormField<FormData>
@@ -195,6 +198,7 @@ export default function RegisterClientScreen({ navigation }: Props) {
                 keyboardType="email-address"
                 editable={!isLoading}
                 error={errors.email?.message}
+                testID="register-client-email-input"
               />
 
               <FormField<FormData>
@@ -207,29 +211,34 @@ export default function RegisterClientScreen({ navigation }: Props) {
                 showToggle
                 editable={!isLoading}
                 error={errors.password?.message}
+                testID="register-client-password-input"
               />
 
               {/* Checklist live — textes désormais non tronqués grâce à flex:1 */}
               <PasswordStrength value={passwordValue} />
 
               {/* CGU checkbox */}
-              <TouchableOpacity
-                style={styles.cguRow}
-                onPress={() => setCguAccepted(!cguAccepted)}
-                disabled={isLoading}
-              >
-                <Ionicons
-                  name={cguAccepted ? 'checkbox' : 'square-outline'}
-                  size={20}
-                  color={cguAccepted ? Colors.bordeaux : Colors.textMuted}
-                />
-                <Text style={styles.cguText}>
-                  J'accepte les{' '}
-                  <Text style={styles.cguLink}>conditions d'utilisation</Text>
-                  {' '}et la{' '}
-                  <Text style={styles.cguLink}>politique de confidentialité</Text>
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.cguRow}>
+                <TouchableOpacity
+                  onPress={() => setCguAccepted(!cguAccepted)}
+                  disabled={isLoading}
+                >
+                  <Ionicons
+                    name={cguAccepted ? 'checkbox' : 'square-outline'}
+                    size={20}
+                    color={cguAccepted ? Colors.bordeaux : Colors.textMuted}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('CGU')}>
+                  <Text style={styles.cguText}>
+                    J'accepte les{' '}
+                    <Text style={styles.cguLink}>conditions d'utilisation</Text>
+                    {' '}et la{' '}
+                    <Text style={styles.cguLink}>politique de confidentialité</Text>
+                  </Text>
+                </TouchableOpacity>
+
+              </View>
 
               <AppButton
                 label={isLoading ? 'Création...' : 'Créer mon compte'}
@@ -237,6 +246,7 @@ export default function RegisterClientScreen({ navigation }: Props) {
                 disabled={isLoading || !cguAccepted}
                 size="lg"
                 style={styles.button}
+                testID="register-client-submit-btn"
               />
 
               {/* Séparateur Google */}
@@ -286,7 +296,7 @@ export default function RegisterClientScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   flex:   { flex: 1 },
-  scroll: { flexGrow: 1, paddingVertical: Spacing.xl },
+  scroll: { flexGrow: 1, paddingTop: Spacing.xl },
 
   /* ── Header ── */
   header:   { alignItems: 'center', marginBottom: Spacing.xl, marginTop: Spacing.lg },
@@ -317,7 +327,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg, overflow: 'hidden', elevation: 5,
   },
   cardTopLine: { height: 6, width: '100%', marginTop: Spacing.xxs },
-  cardContent: { padding: Spacing.lg },
+  cardContent: { paddingTop: Spacing.lg, paddingHorizontal: Spacing.lg  },
 
   /* ── Erreur ── */
   errorBanner: { backgroundColor: Colors.errorLight, borderRadius: Radius.sm, borderLeftWidth: 3, borderLeftColor: Colors.error, padding: Spacing.md, marginBottom: Spacing.md },

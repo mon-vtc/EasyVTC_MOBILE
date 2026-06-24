@@ -389,6 +389,17 @@ export default function ClientProfileScreen({ navigation }: Props) {
               </View>
               <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
             </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => navigation.navigate('CGU')}
+            >
+              <View style={styles.actionLeft}>
+                <Ionicons name="document-outline" size={20} color={Colors.textPrimary} />
+                <Text style={styles.actionLabel}>Conditions Générales d'Utilisation</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -419,6 +430,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
 
           <TouchableOpacity
             style={styles.actionRow}
+            testID="profile-logout-btn"
             onPress={() => {
               showAlert({title: 'Déconnexion', message: 'Voulez-vous vraiment vous déconnecter ?', buttons: [
                 { text: 'Annuler',      style: 'cancel' },

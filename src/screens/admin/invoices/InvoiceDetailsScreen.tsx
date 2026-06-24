@@ -141,6 +141,14 @@ export default function InvoiceDetailsScreen() {
   const tvaAmount = invoice.tva_rate > 0
     ? Math.round((invoice.amount_ttc - invoice.amount_ht) * 100) / 100
     : 0;
+  const discountAmountHt = invoice.discount_amount
+    ? (invoice.tva_rate > 0
+        ? Math.round((invoice.discount_amount / (1 + invoice.tva_rate / 100)) * 100) / 100
+        : invoice.discount_amount)
+    : null;
+  const grossAmountHt = discountAmountHt !== null
+    ? Math.round((invoice.amount_ht + discountAmountHt) * 100) / 100
+    : invoice.amount_ht;
 
   // ── Rendu ────────────────────────────────────────────────────────────────────
 
@@ -268,12 +276,20 @@ export default function InvoiceDetailsScreen() {
               <Text style={[styles.tableHeaderCell, styles.cellQty]}>Quantité</Text>
               <Text style={[styles.tableHeaderCell, styles.cellAmt]}>Montant HT</Text>
             </View>
-            {/* Ligne transport */}
+            {/* Ligne transport (montant brut HT, avant remise éventuelle) */}
             <View style={styles.tableRow}>
               <Text style={[styles.tableCell, styles.cellDesig]}>Transport de voyage (Course VTC)</Text>
               <Text style={[styles.tableCell, styles.cellQty, { textAlign: 'center' }]}>1</Text>
-              <Text style={[styles.tableCell, styles.cellAmt, { textAlign: 'right' }]}>{fmtAmount(invoice.amount_ht)} {currency}</Text>
+              <Text style={[styles.tableCell, styles.cellAmt, { textAlign: 'right' }]}>{fmtAmount(grossAmountHt)} {currency}</Text>
             </View>
+            {/* Ligne réduction (si code promo appliqué) */}
+            {discountAmountHt !== null && (
+              <View style={[styles.tableRow, styles.tableRowDiscount]}>
+                <Text style={[styles.tableCell, styles.cellDesig, styles.tableCellDiscount]}>Réduction (code promo)</Text>
+                <Text style={[styles.tableCell, styles.cellQty, styles.tableCellDiscount, { textAlign: 'center' }]}>—</Text>
+                <Text style={[styles.tableCell, styles.cellAmt, styles.tableCellDiscount, { textAlign: 'right' }]}>-{fmtAmount(discountAmountHt)} {currency}</Text>
+              </View>
+            )}
           </View>
 
           {/* ── Totaux ── */}
@@ -589,6 +605,14 @@ const styles = StyleSheet.create({
     paddingVertical:   10,
     borderTopWidth:    1,
     borderTopColor:    Colors.border,
+  },
+  tableRowDiscount: {
+    backgroundColor: '#FFF8F0',
+  },
+  tableCellDiscount: {
+    color:      Colors.bordeaux,
+    fontStyle:  'italic',
+    fontWeight: '600',
   },
   tableCell: {
     fontSize:          Fonts.size.xs,

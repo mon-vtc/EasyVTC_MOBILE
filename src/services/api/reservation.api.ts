@@ -187,8 +187,14 @@ export const reservationApi = {
   getAvailableDrivers: (
     token: string,
     vehicleType?: string,
+    scheduledAt?: string,
+    durationMin?: number | null,
   ): Promise<ApiResponse<AvailableDriverDto[]>> => {
-    const qs = vehicleType ? `?vehicle_type=${encodeURIComponent(vehicleType)}` : '';
+    const params = new URLSearchParams();
+    if (vehicleType)  params.set('vehicle_type',  encodeURIComponent(vehicleType));
+    if (scheduledAt)  params.set('scheduled_at',  scheduledAt);
+    if (durationMin != null) params.set('duration_min', String(durationMin));
+    const qs = params.toString() ? `?${params.toString()}` : '';
     return api.get(`/reservations/drivers/available${qs}`, token);
   },
   

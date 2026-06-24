@@ -5,7 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAdmin } from '../../hooks/useAdmin';
 import { useReservation } from '../../hooks/useReservation';
-import type { AdminStats, Reservation } from '../../types';
+import type { AdminStats, AvailableDriverDto, Reservation } from '../../types';
+import DriverPickerModal from './DriverPickerModal';
+
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES & MOCK DATA
@@ -54,8 +56,19 @@ const StatCard = ({ icon, value, label, colors }: { icon: keyof typeof Ionicons.
   </LinearGradient>
 );
 
-const BookingCard = ({ booking }: { booking: Booking }) => (
-  <View style={styles.bookingCard}>
+const BookingCard = ({
+  booking,
+  onAssign,
+  onPress,
+}: {
+  booking: Booking;
+  onAssign: () => void;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    style={styles.bookingCard}
+    onPress={onPress}
+    activeOpacity={0.9}>
     <View style={styles.bookingRow1}>
       <Text style={styles.bookingCode}>{booking.bookingCode}</Text>
       <View style={styles.bookingBadge}>
@@ -74,10 +87,10 @@ const BookingCard = ({ booking }: { booking: Booking }) => (
       <Text style={styles.bookingDateTime}>{booking.dateTime}</Text>
       <Text style={styles.bookingPrice}>{booking.price} €</Text>
     </View>
-    <TouchableOpacity style={styles.assignButton} activeOpacity={0.8}>
+    <TouchableOpacity style={styles.assignButton} activeOpacity={0.8} onPress={onAssign}>
       <Text style={styles.assignButtonText}>Attribuer un chauffeur</Text>
     </TouchableOpacity>
-  </View>
+  </TouchableOpacity>
 );
 
 const DriverItem = ({ driver }: { driver: Driver }) => (
@@ -103,7 +116,16 @@ const DriverItem = ({ driver }: { driver: Driver }) => (
 
 export default function AdminHomeScreen({ navigation }: any) {
   const { fetchDashboardStats, drivers, fetchDrivers } = useAdmin();
-  const { adminHomeReservations, fetchAdminHomeReservations } = useReservation();
+  const {
+    adminHomeReservations,
+    fetchAdminHomeReservations,
+    assign,
+  } = useReservation();
+
+  const [pickerVisible, setPickerVisible] = useState(false);
+
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -171,6 +193,32 @@ export default function AdminHomeScreen({ navigation }: any) {
     return <View style={styles.container}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>;
   }
 
+  const handleAssignConfirm = async (driver: AvailableDriverDto) => {
+    if (!selectedReservation) return;
+
+    try {
+      await assign(selectedReservation.id, driver.id);
+
+      setPickerVisible(false);
+      setSelectedReservation(null);
+
+      await fetchAdminHomeReservations();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleAssignDriver = (reservationId: string) => {
+  const reservation = adminHomeReservations.find(
+      r => r.id === reservationId
+    );
+  
+    if (!reservation) return;
+  
+    setSelectedReservation(reservation);
+    setPickerVisible(true);
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -188,7 +236,21 @@ export default function AdminHomeScreen({ navigation }: any) {
       {/* Section Réservations en attente */}
       <View style={styles.section}>
         <SectionHeader title="Réservations en attente" actionText="Voir tout" actionOnPress={() => navigation.navigate('AdminReservations')} />
-        {dashboardBookings.map(booking => <BookingCard key={booking.id} booking={booking} />)}
+        {dashboardBookings.map(booking => (
+         <BookingCard
+           key={booking.id}
+           booking={booking}
+           onAssign={() => handleAssignDriver(booking.id)}
+           onPress={() =>
+             navigation.navigate('AdminReservations', {
+               screen: 'AdminReservationDetail',
+               params: {
+                 reservationId: booking.id,
+               },
+             })
+           }
+         />
+        ))}
       </View>
 
       {/* Section Chauffeurs disponibles */}
@@ -196,6 +258,22 @@ export default function AdminHomeScreen({ navigation }: any) {
         <SectionHeader title="Chauffeurs disponibles" actionText={`${dashboardDrivers.length} en ligne`} />
         {dashboardDrivers.map(driver => <DriverItem key={driver.id} driver={driver} />)}
       </View>
+      <DriverPickerModal
+        visible={pickerVisible}
+        reservationRef={
+          selectedReservation
+            ? `RES-${selectedReservation.id.split('-').pop()?.toUpperCase()}`
+            : undefined
+        }
+        vehicleType={selectedReservation?.vehicle_type}
+        scheduledAt={selectedReservation?.scheduled_at}
+        durationMin={selectedReservation?.duration_min}
+        onConfirm={handleAssignConfirm}
+        onClose={() => {
+          setPickerVisible(false);
+          setSelectedReservation(null);
+        }}
+      />
     </ScrollView>
   );
 }

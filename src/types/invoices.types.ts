@@ -57,6 +57,8 @@ export interface Invoice {
   trip_snapshot:   TripInvoiceSnapshot;
   amount_ht:       number;
   tva_rate:        number;
+  /** Montant TTC de la remise appliquée via code promo — null si aucune remise */
+  discount_amount: number | null;
   amount_ttc:      number;
   adjustments:     InvoiceAdjustment[];
   issued_at:       string;
@@ -68,6 +70,7 @@ export interface Invoice {
     reservation_id: string;
   };
 }
+
 
 // ── Liste paginée ─────────────────────────────────────────────────────────────
 

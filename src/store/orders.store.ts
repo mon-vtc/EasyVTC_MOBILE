@@ -8,13 +8,14 @@ import { ordersApi } from '../services/api/orders.api';
 import type { Order, OrderListFilters, OrderListResult } from '../types/orders.types';
 
 interface OrdersState {
-  orders:     Order[];
-  total:      number;
-  page:       number;
-  totalPages: number;
-  selected:   Order | null;
-  isLoading:  boolean;
-  error:      string | null;
+  orders:             Order[];
+  total:              number;
+  page:               number;
+  totalPages:         number;
+  selected:           Order | null;
+  isLoading:          boolean;
+  isFetchingNextPage: boolean;
+  error:              string | null;
 
   fetchMine:       (token: string, filters?: OrderListFilters) => Promise<void>;
   fetchDriverMine: (token: string, filters?: OrderListFilters) => Promise<void>;
@@ -26,56 +27,78 @@ interface OrdersState {
   clearSelected: () => void;
 }
 
-const applyList = (set: any, result: OrderListResult) =>
-  set({
-    orders:     result.orders,
-    total:      result.total,
-    page:       result.page,
-    totalPages: result.total_pages,
-    isLoading:  false,
-  });
-
 export const useOrdersStore = create<OrdersState>((set) => ({
-  orders:     [],
-  total:      0,
-  page:       1,
-  totalPages: 1,
-  selected:   null,
-  isLoading:  false,
-  error:      null,
+  orders:             [],
+  total:              0,
+  page:               1,
+  totalPages:         1,
+  selected:           null,
+  isLoading:          false,
+  isFetchingNextPage: false,
+  error:              null,
 
   fetchMine: async (token, filters) => {
-    set({ isLoading: true, error: null });
+    const page = filters?.page ?? 1;
+    if (page > 1) set({ isFetchingNextPage: true });
+    else set({ isLoading: true, error: null });
     try {
       const res = await ordersApi.listMine(token, filters);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      applyList(set, res.data);
+      const result = res.data;
+      set(state => ({
+        orders:             page > 1 ? [...state.orders, ...result.orders] : result.orders,
+        total:              result.total,
+        page:               result.page,
+        totalPages:         result.total_pages,
+        isLoading:          false,
+        isFetchingNextPage: false,
+      }));
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false, isFetchingNextPage: false });
       throw err;
     }
   },
 
   fetchDriverMine: async (token, filters) => {
-    set({ isLoading: true, error: null });
+    const page = filters?.page ?? 1;
+    if (page > 1) set({ isFetchingNextPage: true });
+    else set({ isLoading: true, error: null });
     try {
       const res = await ordersApi.listDriverMine(token, filters);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      applyList(set, res.data);
+      const result = res.data;
+      set(state => ({
+        orders:             page > 1 ? [...state.orders, ...result.orders] : result.orders,
+        total:              result.total,
+        page:               result.page,
+        totalPages:         result.total_pages,
+        isLoading:          false,
+        isFetchingNextPage: false,
+      }));
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false, isFetchingNextPage: false });
       throw err;
     }
   },
 
   fetchAll: async (token, filters) => {
-    set({ isLoading: true, error: null });
+    const page = filters?.page ?? 1;
+    if (page > 1) set({ isFetchingNextPage: true });
+    else set({ isLoading: true, error: null });
     try {
       const res = await ordersApi.listAll(token, filters);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      applyList(set, res.data);
+      const result = res.data;
+      set(state => ({
+        orders:             page > 1 ? [...state.orders, ...result.orders] : result.orders,
+        total:              result.total,
+        page:               result.page,
+        totalPages:         result.total_pages,
+        isLoading:          false,
+        isFetchingNextPage: false,
+      }));
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false, isFetchingNextPage: false });
       throw err;
     }
   },

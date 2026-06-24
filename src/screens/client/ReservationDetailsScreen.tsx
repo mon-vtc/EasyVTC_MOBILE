@@ -9,7 +9,7 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import {
   View, Text, Image, ScrollView, TouchableOpacity,
-  StyleSheet, Animated, Platform, Easing, ActivityIndicator,
+  StyleSheet, Animated, Platform, Easing, ActivityIndicator, Linking
 } from 'react-native';
 import {
   useNavigation, useRoute,
@@ -127,15 +127,15 @@ export default function ReservationDetailsScreen() {
   // ── Handlers d'actions ──────────────────────────────────────────────────────
   const handleCall = useCallback(() => {
     if (reservation?.driver?.user?.phone) {
-      showToast({
-        title: 'Appel',
-        message: `Appel au chauffeur: ${reservation.driver.user.phone}`,
-        type: 'info',
-      });
-      // Débloquer ce code en production :
-      // Linking.openURL(`tel:${reservation.driver.user.phone}`).catch(() => {
-      //   Alert.alert('Erreur', 'Impossible d\'appeler ce numéro');
+      // showToast({
+      //   title: 'Appel',
+      //   message: `Appel au chauffeur: ${reservation.driver.user.phone}`,
+      //   type: 'info',
       // });
+      // Débloquer ce code en production :
+      Linking.openURL(`tel:${reservation.driver.user.phone}`).catch(() => {
+        showToast({type:'error', title: 'Erreur', message: 'Impossible d\'appeler ce numéro'});
+      });
     } else {
       showToast({ title: 'Non disponible', message: 'Le numéro du chauffeur n\'est pas disponible', type: 'warning' });
     }
@@ -461,7 +461,7 @@ export default function ReservationDetailsScreen() {
               onPress={handleViewInvoice}
             >
               <AppIcon name="document-text-outline" size={18} color={BORDEAUX} />
-              <Text style={styles.btnSecondaryText}>Voir les détails</Text>
+              <Text style={styles.btnSecondaryText}>Voir la facture</Text>
             </TouchableOpacity>
           )}
         </Animated.View>

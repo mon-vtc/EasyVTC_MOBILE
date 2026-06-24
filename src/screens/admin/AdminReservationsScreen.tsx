@@ -425,6 +425,8 @@ export default function AdminReservationsScreen({ navigation }: any) {
         visible={pickerVisible}
         reservationRef={targetRef}
         vehicleType={targetReservation?.vehicle_type}
+        scheduledAt={targetReservation?.scheduled_at}
+        durationMin={targetReservation?.duration_min}
         onConfirm={handleAssignConfirm}
         onClose={() => {
           setPickerVisible(false);

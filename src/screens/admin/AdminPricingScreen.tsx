@@ -100,12 +100,18 @@ function PricingField({
   unit,
   onChange,
   editable,
+  keyboardType = 'decimal-pad',
+  placeholder = '0.00',
+  hint,
 }: {
   label: string;
   value: string;
   unit: string;
   onChange: (v: string) => void;
   editable: boolean;
+  keyboardType?: 'decimal-pad' | 'default' | 'numbers-and-punctuation';
+  placeholder?: string;
+  hint?: string;
 }) {
   return (
     <View style={pf.container}>
@@ -115,8 +121,8 @@ function PricingField({
           style={[pf.input, !editable && pf.inputDisabled]}
           value={value}
           onChangeText={onChange}
-          keyboardType="decimal-pad"
-          placeholder="0.00"
+          keyboardType={keyboardType}
+          placeholder={placeholder}
           placeholderTextColor={Colors.textSecondary}
           editable={editable}
         />
@@ -124,6 +130,7 @@ function PricingField({
           <Text style={pf.unit}>{unit}</Text>
         </View>
       </View>
+      {hint && <Text style={pf.hint}>{hint}</Text>}
     </View>
   );
 }
@@ -211,14 +218,15 @@ export default function AdminPricingScreen() {
 
   // ── État local du formulaire ─────────────────────────────────────────────
   const [form, setForm] = useState<PricingFormValues>({
-    base_price:          '',
-    price_per_km:        '',
-    price_per_min:       '',
-    minimum_price:       '',
-    // commission_rate:     '',
-    // commission_vat_rate: '',
-    // airport_fee:         '',
-    // night_rate:          '',
+    base_price:            '',
+    price_per_km:          '',
+    price_per_min:         '',
+    minimum_price:         '',
+    tva_rate:              '',
+    airport_supplement:    '',
+    night_supplement_rate: '',
+    night_start:           '',
+    night_end:             '',
   });
 
   // Snapshot pour annulation
@@ -369,45 +377,63 @@ export default function AdminPricingScreen() {
             />
           </Section>
 
-          {/* ── Commissions ──────────────────────────────────────────────── */}
-          {/* <Section
-            title="Commissions EasyVTC"
-            subtitle="Montant facturé au chauffeur pour le service plateforme"
+          {/* ── TVA ──────────────────────────────────────────────────────── */}
+          <Section
+            title="Fiscalité"
+            subtitle="Taux de TVA appliqué sur le montant HT de la course (0 = exonéré)"
           >
             <PricingField
-              label="Taux de commission"
-              value={form.commission_rate}
+              label="Taux de TVA"
+              value={form.tva_rate}
               unit="%"
-              onChange={set('commission_rate')}
+              onChange={set('tva_rate')}
               editable={isEditing}
+              hint="Ex : 10 pour 10 %"
             />
-            <PricingField
-              label="TVA sur commission"
-              value={form.commission_vat_rate}
-              unit="%"
-              onChange={set('commission_vat_rate')}
-              editable={isEditing}
-            />
-            <Text style={styles.hint}>Base de calcul : sur le montant HT de la course</Text>
-          </Section> */}
+          </Section>
 
           {/* ── Suppléments ──────────────────────────────────────────────── */}
-          {/* <Section title="Suppléments">
+          <Section
+            title="Suppléments"
+            subtitle="Montants et plages appliqués automatiquement selon le contexte"
+          >
             <PricingField
               label="Supplément aéroport"
-              value={form.airport_fee}
+              value={form.airport_supplement}
               unit={currencySymbol}
-              onChange={set('airport_fee')}
+              onChange={set('airport_supplement')}
               editable={isEditing}
+              hint="Montant fixe HT ajouté aux courses aéroport"
             />
             <PricingField
-              label="Supplément nocturne (19h-7h)"
-              value={form.night_rate}
+              label="Supplément nocturne"
+              value={form.night_supplement_rate}
               unit="%"
-              onChange={set('night_rate')}
+              onChange={set('night_supplement_rate')}
               editable={isEditing}
+              hint="Ex : 15 pour +15 % — 0 pour désactiver"
             />
-          </Section> */}
+            <PricingField
+              label="Début plage nocturne"
+              value={form.night_start}
+              unit="heure"
+              onChange={set('night_start')}
+              editable={isEditing}
+              keyboardType="numbers-and-punctuation"
+              placeholder="HH:MM"
+              hint="Format 24h — ex : 21:00"
+            />
+            <PricingField
+              label="Fin plage nocturne"
+              value={form.night_end}
+              unit="heure"
+              onChange={set('night_end')}
+              editable={isEditing}
+              keyboardType="numbers-and-punctuation"
+              placeholder="HH:MM"
+              hint="Format 24h — ex : 06:00"
+            />
+          </Section>
 
           {/* ── Exemple de calcul ─────────────────────────────────────────── */}
           <LinearGradient
@@ -539,12 +565,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 14,
   },
-  hint: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 6,
-    fontStyle: 'italic',
-  },
   readonlyBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -664,6 +684,12 @@ const pf = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
     fontWeight: '600',
+  },
+  hint: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
+    marginTop: 3,
   },
 });
 

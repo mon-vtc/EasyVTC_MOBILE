@@ -24,7 +24,8 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
 export default function ManagersListScreen() {
   const navigation = useNavigation<Nav>();
   const {
-    managers, isManagersLoading,
+    managers, isManagersLoading, isFetchingNextManagersPage,
+    managersPage, managersPageTotal,
     fetchManagers, clearManagersError,
   } = useAdmin();
 
@@ -41,6 +42,11 @@ export default function ManagersListScreen() {
       await fetchManagersRef.current({ search: q || undefined });
     } catch (_) {}
   }, []);
+
+  const loadMore = useCallback(() => {
+    if (isManagersLoading || isFetchingNextManagersPage || managersPage >= managersPageTotal) return;
+    fetchManagersRef.current({ search: search || undefined, page: managersPage + 1 }).catch(() => {});
+  }, [isManagersLoading, isFetchingNextManagersPage, managersPage, managersPageTotal, search]);
 
   useFocusEffect(
     useCallback(() => {
@@ -163,6 +169,9 @@ export default function ManagersListScreen() {
             colors={[Colors.bordeaux]}
           />
         }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextManagersPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
         ListEmptyComponent={
           <View style={styles.center}>
             {isManagersLoading ? (

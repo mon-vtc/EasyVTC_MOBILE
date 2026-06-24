@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
   TextInput, Image, RefreshControl, Modal, ActivityIndicator,
   Platform,
 } from 'react-native';
@@ -251,12 +251,12 @@ const cardSt = StyleSheet.create({
   topRow:    { flexDirection: 'row', alignItems: 'flex-start', marginBottom: Spacing.sm },
   avatar: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: Colors.beigeLight,
+    backgroundColor: Colors.bordeauxLight,
     alignItems: 'center', justifyContent: 'center',
     marginRight: Spacing.md, overflow: 'hidden', flexShrink: 0,
   },
   avatarImg:      { width: '100%', height: '100%' },
-  avatarInitials: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeaux },
+  avatarInitials: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.white },
   nameBlock:  { flex: 1 },
   nameRow:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.xs, marginBottom: 2 },
   name:       { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
@@ -279,7 +279,7 @@ const cardSt = StyleSheet.create({
   },
   stat:       { alignItems: 'center', flex: 1 },
   statLabel:  { fontSize: 10, color: Colors.textMuted, marginBottom: 1 },
-  statValue:  { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary },
+  statValue:  { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.bordeauxLight },
   actionBtn:  { flexDirection: 'row', alignItems: 'center', gap: 3 },
   actionText: { fontSize: Fonts.size.sm, color: Colors.bordeaux, fontWeight: '500' },
 });
@@ -319,10 +319,17 @@ export default function AdminClientsScreen() {
 
   const { showToast } = useToast();
 
-  const {
-    clients, total, globalStats, isLoading,
-    fetchClients, changeClientStatus, error, clearError,
-  } = useClientsStore();
+  const clients            = useClientsStore(s => s.clients);
+  const total              = useClientsStore(s => s.total);
+  const page               = useClientsStore(s => s.page);
+  const totalPages         = useClientsStore(s => s.totalPages);
+  const globalStats        = useClientsStore(s => s.globalStats);
+  const isLoading          = useClientsStore(s => s.isLoading);
+  const isFetchingNextPage = useClientsStore(s => s.isFetchingNextPage);
+  const error              = useClientsStore(s => s.error);
+  const fetchClients       = useClientsStore(s => s.fetchClients);
+  const changeClientStatus = useClientsStore(s => s.changeClientStatus);
+  const clearError         = useClientsStore(s => s.clearError);
 
   const [activeTab,     setActiveTab]     = useState<FilterTab>('tous');
   const [search,        setSearch]        = useState('');
@@ -331,13 +338,22 @@ export default function AdminClientsScreen() {
   const [modalVisible,  setModalVisible]  = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const load = useCallback(async (tab: FilterTab, q: string) => {
-    const params: ClientListFilters = {};
+  const buildParams = (tab: FilterTab, q: string, p = 1): ClientListFilters => {
+    const params: ClientListFilters = { page: p };
     if (tab === 'actifs')   params.status = 'active';
     if (tab === 'inactifs') params.status = 'inactive';
     if (q.trim()) params.search = q.trim();
-    await fetchClients(accessToken!, params);
+    return params;
+  };
+
+  const load = useCallback(async (tab: FilterTab, q: string) => {
+    await fetchClients(accessToken!, buildParams(tab, q, 1));
   }, [fetchClients, accessToken]);
+
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetchClients(accessToken!, buildParams(activeTab, search, page + 1));
+  }, [isLoading, isFetchingNextPage, page, totalPages, fetchClients, accessToken, activeTab, search]);
 
   useEffect(() => { load('tous', ''); }, []);
 
@@ -460,7 +476,16 @@ export default function AdminClientsScreen() {
           <ActivityIndicator size="large" color={Colors.bordeaux} />
         </View>
       ) : (
-        <ScrollView
+        <FlatList
+          data={clients}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <ClientCard
+              client={item}
+              onPress={client => navigation.navigate('ClientDetail', { clientId: client.id })}
+              onAction={client => { setActionClient(client); setModalVisible(true); }}
+            />
+          )}
           contentContainerStyle={styles.list}
           refreshControl={
             <RefreshControl
@@ -471,23 +496,16 @@ export default function AdminClientsScreen() {
             />
           }
           keyboardShouldPersistTaps="handled"
-        >
-          {clients.length === 0 ? (
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={
             <View style={styles.empty}>
               <Ionicons name="people-outline" size={48} color={Colors.border} />
               <Text style={styles.emptyText}>Aucun client trouvé</Text>
             </View>
-          ) : (
-            clients.map(c => (
-              <ClientCard
-                key={c.id}
-                client={c}
-                onPress={client => navigation.navigate('ClientDetail', { clientId: client.id })}
-                onAction={client => { setActionClient(client); setModalVisible(true); }}
-              />
-            ))
-          )}
-        </ScrollView>
+          }
+          ListFooterComponent={isFetchingNextPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
+        />
       )}
 
       <StatusModal
@@ -553,7 +571,7 @@ const styles = StyleSheet.create({
     padding:          3,
   },
   tab:          { flex: 1, paddingVertical: Spacing.xs, borderRadius: Radius.sm - 1, alignItems: 'center' },
-  tabActive:    { backgroundColor: Colors.bordeaux },
+  tabActive:    { backgroundColor: Colors.bordeauxLight },
   tabText:      { fontSize: Fonts.size.sm, color: Colors.textMuted,  fontWeight: '600' },
   tabTextActive:{ fontSize: Fonts.size.sm, color: Colors.white,      fontWeight: '700' },
 

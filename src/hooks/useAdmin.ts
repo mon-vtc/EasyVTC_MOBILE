@@ -44,11 +44,21 @@ export function useAdmin() {
   const driversTotal     = useDriversStore(s => s.total);
   const driversPage      = useDriversStore(s => s.page);
   const driversPageTotal = useDriversStore(s => s.totalPages);
+  const isFetchingNextPage = useDriversStore(s => s.isFetchingNextPage);
   const isDriversLoading = useDriversStore(s => s.isLoading);
   const driversError     = useDriversStore(s => s.error);
+  const monthlyStats     = useDriversStore(s => s.monthlyStats);
+  const isFetchingMonthlyStats = useDriversStore(s => s.isFetchingMonthlyStats);
+  const monthlyStatsError = useDriversStore(s => s.monthlyStatsError);
+  const tripsHistory     = useDriversStore(s => s.tripsHistory);
+  const isFetchingTripsHistory = useDriversStore(s => s.isFetchingTripsHistory);
+  const tripsHistoryError = useDriversStore(s => s.tripsHistoryError);
   const _fetchDrivers       = useDriversStore(s => s.fetchDrivers);
+  const _fetchNextDriversPage = useDriversStore(s => s.fetchNextDriversPage);
   const _fetchDriverById    = useDriversStore(s => s.fetchDriverById);
   const _changeDriverStatus = useDriversStore(s => s.changeDriverStatus);
+  const _fetchMonthlyStats  = useDriversStore(s => s.fetchMonthlyStats);
+  const _fetchTripsHistory  = useDriversStore(s => s.fetchTripsHistory);
   const clearDriversError   = useDriversStore(s => s.clearError);
 
   // ── Store Clients (endpoint /admin/clients) ──────────────────
@@ -109,13 +119,14 @@ export function useAdmin() {
   const clearAuditLogsError   = useAuditLogsStore(s => s.clearError);
 
   // ── Store Gestionnaires (endpoint /admin/managers) ────────────
-  const managers          = useManagersStore(s => s.managers);
-  const managersTotal     = useManagersStore(s => s.total);
-  const managersPage      = useManagersStore(s => s.page);
-  const managersPageTotal = useManagersStore(s => s.totalPages);
-  const isManagersLoading = useManagersStore(s => s.isLoading);
-  const managersError     = useManagersStore(s => s.error);
-  const _fetchManagers    = useManagersStore(s => s.fetchManagers);
+  const managers                    = useManagersStore(s => s.managers);
+  const managersTotal               = useManagersStore(s => s.total);
+  const managersPage                = useManagersStore(s => s.page);
+  const managersPageTotal           = useManagersStore(s => s.totalPages);
+  const isManagersLoading           = useManagersStore(s => s.isLoading);
+  const isFetchingNextManagersPage  = useManagersStore(s => s.isFetchingNextPage);
+  const managersError               = useManagersStore(s => s.error);
+  const _fetchManagers              = useManagersStore(s => s.fetchManagers);
   const _createManager    = useManagersStore(s => s.createManager);
   const _updateManager    = useManagersStore(s => s.updateManager);
   const _fetchManagerById   = useManagersStore(s => s.fetchManagerById);
@@ -127,8 +138,11 @@ export function useAdmin() {
   const _fetchUserByIdRef       = useRef(_fetchUserById);
   const _updateStatusRef        = useRef(_updateStatus);
   const _fetchDriversRef        = useRef(_fetchDrivers);
+  const _fetchNextDriversPageRef = useRef(_fetchNextDriversPage);
   const _fetchDriverByIdRef     = useRef(_fetchDriverById);
   const _changeDriverStatusRef  = useRef(_changeDriverStatus);
+  const _fetchMonthlyStatsRef   = useRef(_fetchMonthlyStats);
+  const _fetchTripsHistoryRef   = useRef(_fetchTripsHistory);
   const _fetchClientsRef        = useRef(_fetchClients);
   const _fetchClientByIdRef     = useRef(_fetchClientById);
   const _fetchClientTripsRef    = useRef(_fetchClientTrips);
@@ -156,8 +170,11 @@ export function useAdmin() {
   useEffect(() => { _fetchUserByIdRef.current       = _fetchUserById; },      [_fetchUserById]);
   useEffect(() => { _updateStatusRef.current        = _updateStatus; },       [_updateStatus]);
   useEffect(() => { _fetchDriversRef.current        = _fetchDrivers; },       [_fetchDrivers]);
+  useEffect(() => { _fetchNextDriversPageRef.current = _fetchNextDriversPage; }, [_fetchNextDriversPage]);
   useEffect(() => { _fetchDriverByIdRef.current     = _fetchDriverById; },    [_fetchDriverById]);
   useEffect(() => { _changeDriverStatusRef.current  = _changeDriverStatus; }, [_changeDriverStatus]);
+  useEffect(() => { _fetchMonthlyStatsRef.current   = _fetchMonthlyStats; },  [_fetchMonthlyStats]);
+  useEffect(() => { _fetchTripsHistoryRef.current   = _fetchTripsHistory; },  [_fetchTripsHistory]);
   useEffect(() => { _fetchClientsRef.current        = _fetchClients; },       [_fetchClients]);
   useEffect(() => { _fetchClientByIdRef.current     = _fetchClientById; },    [_fetchClientById]);
   useEffect(() => { _fetchClientTripsRef.current    = _fetchClientTrips; },   [_fetchClientTrips]);
@@ -207,11 +224,20 @@ export function useAdmin() {
   const fetchDrivers = useCallback((params?: ListDriversParams) =>
     _fetchDriversRef.current(accessTokenRef.current!, params), []);
 
+  const fetchNextDriversPage = useCallback((params?: ListDriversParams) =>
+    _fetchNextDriversPageRef.current(accessTokenRef.current!, params), []);
+
   const fetchDriverById = useCallback((driverId: string) =>
     _fetchDriverByIdRef.current(accessTokenRef.current!, driverId), []);
 
   const changeDriverStatus = useCallback((driverId: string, payload: ChangeDriverStatusPayload) =>
     _changeDriverStatusRef.current(accessTokenRef.current!, driverId, payload), []);
+
+  const fetchMonthlyStats = useCallback((driverId: string, date?: string) =>
+    _fetchMonthlyStatsRef.current(accessTokenRef.current!, driverId, date), []);
+
+  const fetchTripsHistory = useCallback((driverId: string, status?: string, page?: number, limit?: number) =>
+    _fetchTripsHistoryRef.current(accessTokenRef.current!, driverId, status, page, limit), []);
 
   const fetchManagers = useCallback((params?: ManagerListFilters) =>
     _fetchManagersRef.current(accessTokenRef.current!, params), []);
@@ -331,8 +357,15 @@ export function useAdmin() {
     driversTotal,
     driversPage,
     driversPageTotal,
+    isFetchingNextPage,
     isDriversLoading,
     driversError,
+    monthlyStats,
+    isFetchingMonthlyStats,
+    monthlyStatsError,
+    tripsHistory,
+    isFetchingTripsHistory,
+    tripsHistoryError,
     clearDriversError,
 
     // Gestion des managers
@@ -341,6 +374,7 @@ export function useAdmin() {
     managersPage,
     managersPageTotal,
     isManagersLoading,
+    isFetchingNextManagersPage,
     managersError,
     clearManagersError,
 
@@ -355,8 +389,11 @@ export function useAdmin() {
 
     // Actions admin — gestion chauffeurs
     fetchDrivers,
+    fetchNextDriversPage,
     fetchDriverById,
     changeDriverStatus,
+    fetchMonthlyStats,
+    fetchTripsHistory,
 
     // Actions admin — gestion managers
     fetchManagers,

@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
   Image,
+  Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp, NavigationProp } from '@react-navigation/native';
@@ -16,6 +17,8 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 import { useToast } from '../../hooks/useToast';
 import DriverPickerModal from './DriverPickerModal';
+import { useAuthStore } from '../../store/auth.store';
+import { useInvoicesStore } from '../../store/invoices.store';
 import  CancelReservationModal from '../../components/common/CancelReservationModal';
 import type { Reservation , AvailableDriverDto} from '../../types/reservations.types';
 import { AppIcon } from '../../components/common/AppIcon';
@@ -146,7 +149,33 @@ function HistoryItem({ color, label, date }: { color: string; label: string; dat
 }
 
 /* ── CLIENT TAB ── */
-function ClientTab({ client }: { client: Reservation['client'] }) {
+function ClientTab(
+  {
+     client,
+     handleClientProfile
+  }: { 
+
+  client: Reservation['client'],
+  handleClientProfile : (clientId : string ) => void
+
+ }) {
+  const { showToast } = useToast();
+  // Fonction pour gérer l'appel téléphonique sécurisé
+  const handleCall = () => {
+    if (client?.phone) {
+      Linking.openURL(`tel:${client.phone}`);
+    } else {
+      showToast({ type: 'error', title:'Erreur', message:'Aucun numéro de téléphone disponible pour ce client.'})
+    }
+  };
+
+  // Fonction pour gérer l'envoi d'un e-mail
+  const handleEmail = () => {
+    if (client?.email) {
+      Linking.openURL(`mailto:${client.email}?subject=Réservation`);
+    }
+  };
+
   return (
     <View style={S.card}>
       <View style={S.profileRow}>
@@ -171,12 +200,14 @@ function ClientTab({ client }: { client: Reservation['client'] }) {
           <Text style={S.contactLabel}>Téléphone</Text>
           <Text style={S.contactValue}>{client?.phone || 'N/A'}</Text>
         </View>
-        <TouchableOpacity
-          style={S.contactAction}
-          onPress={() => Alert.alert('Appeler', client?.phone || '')}
-        >
-          <Ionicons name="call" size={18} color={Colors.white} />
-        </TouchableOpacity>
+        {client?.phone ? (
+          <TouchableOpacity
+            style={S.contactAction}
+            onPress={handleCall}
+          >
+            <Ionicons name="call" size={18} color={Colors.white} />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {client?.email ? (
@@ -190,16 +221,17 @@ function ClientTab({ client }: { client: Reservation['client'] }) {
           </View>
           <TouchableOpacity
             style={S.contactAction}
-            onPress={() => Alert.alert('Email', client.email)}
+            onPress={handleEmail}
           >
             <Ionicons name="mail" size={18} color={Colors.white} />
           </TouchableOpacity>
         </View>
       ) : null}
 
+      {/* Remplacement du Linking fictif ici par votre logique de navigation si nécessaire */}
       <TouchableOpacity
         style={S.profileBtn}
-        onPress={() => Alert.alert('Profil', 'Voir profil client')}
+        onPress={() => handleClientProfile(client!.id)}
       >
         <Text style={S.profileBtnText}>Voir le profil complet</Text>
       </TouchableOpacity>
@@ -207,16 +239,23 @@ function ClientTab({ client }: { client: Reservation['client'] }) {
   );
 }
 
+
 /* ── DRIVER TAB ── */
 function DriverTab({
   driver,
   onAssign,
   status,
+  navigation,
+  handleDriverProfile,
 }: {
   driver: Reservation['driver'] | null;
   onAssign: () => void;
   status: Reservation['status'];
+  navigation: any;  
+  handleDriverProfile: (driverId: string) => void
 }) {
+
+  const {showToast} = useToast();
   if (!driver) {
     return (
       <View style={S.card}>
@@ -274,7 +313,7 @@ function DriverTab({
         </View>
         <TouchableOpacity
           style={S.contactAction}
-          onPress={() => Alert.alert('Appeler', driver.user.phone || '')}
+          onPress={() =>  Linking.openURL(`tel:${driver.user.phone || ''}` )}
         >
           <Ionicons name="call" size={18} color={Colors.white} />
         </TouchableOpacity>
@@ -292,9 +331,9 @@ function DriverTab({
         </View>
       </View>
 
-      <TouchableOpacity
+        <TouchableOpacity
         style={S.profileBtn}
-        onPress={() => Alert.alert('Profil', 'Voir profil chauffeur')}
+        onPress={() => handleDriverProfile(driver!.id)}
       >
         <Text style={S.profileBtnText}>Voir le profil complet</Text>
       </TouchableOpacity>
@@ -376,9 +415,9 @@ function PaymentTab({ reservation }: { reservation: Reservation }) {
 /* ══════════════════════════════════════
    MAIN SCREEN
 ══════════════════════════════════════ */
-export default function AdminReservationScreen() {
+export default function AdminReservationScreen({ navigation }: any) {
   const route      = useRoute<ScreenRoute>();
-  const navigation = useNavigation<ScreenNav>();
+  // const navigation = useNavigation<ScreenNav>();
   const { reservations, selected, fetchById, assign, isLoading, cancel } = useReservation();
   const { showToast } = useToast();
 
@@ -386,6 +425,10 @@ export default function AdminReservationScreen() {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
 
+  const [isFetchingInvoice, setIsFetchingInvoice] = useState(false);
+  // En haut du composant, avec les autres extractions de stores
+  const { fetchById: fetchInvoiceById } = useInvoicesStore();
+  const token = useAuthStore((s) => s.accessToken) ?? '';
 
   const reservationId = route.params?.reservationId;
 
@@ -415,6 +458,29 @@ export default function AdminReservationScreen() {
     }
   };
 
+const handleViewInvoice = async () => {
+  if (!reservation) return;
+  setIsFetchingInvoice(true);
+  try {
+    await fetchInvoiceById(token, reservation.id);
+    const invoiceId = useInvoicesStore.getState().selected?.id;
+    if (!invoiceId) throw new Error('Facture introuvable');
+    navigation.navigate('InvoiceDetails', { invoiceId });
+  } catch (err: any) {
+    showToast({ type: 'error', title: 'Erreur', message: err?.message ?? 'Impossible de charger la facture.' });
+  } finally {
+    setIsFetchingInvoice(false);
+  }
+};
+    
+  const handleClientProfile = (clientId : string ) => {
+    navigation.navigate('ClientDetail',{ clientId });
+  }
+
+  const handleDriverProfile = (driverId : string ) => {
+    navigation.navigate('DriverDetail',{ driverId });
+  }
+
   /* ── Actions bas d'écran ── */
   const canCancel = reservation && ['pending', 'assigned'].includes(reservation.status);
 
@@ -428,11 +494,11 @@ export default function AdminReservationScreen() {
       case 'cancelled':
         return null; // Pas d'action principale si annulé
       case 'completed':
-        return { label: 'Voir facture', cb: () => showToast({ title: 'Action', message: 'Voir Facture' }) };
+        return { label: 'Voir la facture', cb: () => handleViewInvoice()};
       default:
         return null;
     }
-  }, [reservation]);
+  }, [reservation, isFetchingInvoice]);
 
   const reservationRef = reservation
     ? `BC-${reservation.id.split('-').pop()?.toUpperCase()}`
@@ -474,12 +540,14 @@ export default function AdminReservationScreen() {
 
   const TabContent = () => {
     switch (selectedTab) {
-      case 'client':  return <ClientTab client={reservation.client} />;
-      case 'driver':  return (
+      case 'client':  return <ClientTab client={reservation.client} handleClientProfile={() => handleClientProfile(reservation.client_id)} />;
+      case 'driver': return (
         <DriverTab
           driver={reservation.driver || null}
           onAssign={() => setPickerVisible(true)}
           status={reservation.status}
+          navigation={navigation}   
+          handleDriverProfile={handleDriverProfile}
         />
       );
       case 'payment': return <PaymentTab reservation={reservation} />;
@@ -555,6 +623,8 @@ export default function AdminReservationScreen() {
         visible={pickerVisible}
         reservationRef={reservationRef}
         vehicleType={reservation?.vehicle_type}
+        scheduledAt={reservation?.scheduled_at}
+        durationMin={reservation?.duration_min}
         onConfirm={handleAssignConfirm}
         onClose={() => setPickerVisible(false)}
       />
