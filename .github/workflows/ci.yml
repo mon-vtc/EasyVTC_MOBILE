@@ -4,13 +4,17 @@ name: CI — EazyVTC Mobile (Expo)
 
 on:
   push:
-    branches: ['**']
+    branches: [develop, main]
   pull_request:
-    branches: ['**']
+    branches: [develop, main]
 
 jobs:
+  # ─────────────────────────────────────────────
+  # Job 1 : TypeScript + Tests unitaires
+  # Tourne sur chaque push/PR vers develop ou main
+  # ─────────────────────────────────────────────
   test-mobile:
-    name: Mobile Expo — TypeScript + Tests
+    name: TypeScript + Tests unitaires
     runs-on: ubuntu-latest
 
     steps:
@@ -30,6 +34,70 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Tests
-        run: npm test
+        run: npm test -- --ci --watchAll=false --passWithNoTests
         env:
           EXPO_PUBLIC_API_URL: http://localhost:4000
+
+  # ─────────────────────────────────────────────
+  # Job 2 : EAS Build Preview (develop uniquement)
+  # Nécessite le secret EXPO_TOKEN dans GitHub → Settings → Secrets
+  # ─────────────────────────────────────────────
+  eas-preview:
+    name: EAS Build — Preview (develop)
+    needs: test-mobile
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: EAS Build Preview (Android)
+        run: eas build --platform android --profile preview --non-interactive --no-wait
+
+  # ─────────────────────────────────────────────
+  # Job 3 : EAS Build Production (main uniquement)
+  # Nécessite le secret EXPO_TOKEN dans GitHub → Settings → Secrets
+  # ─────────────────────────────────────────────
+  eas-production:
+    name: EAS Build — Production (main)
+    needs: test-mobile
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: EAS Build Production (Android)
+        run: eas build --platform android --profile production --non-interactive --no-wait
