@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   ActivityIndicator, Image, Platform, Modal, TextInput, Pressable, Alert, RefreshControl, Linking, ScrollView
@@ -12,6 +12,7 @@ import { AppIcon } from '../../components/common/AppIcon';
 import TicketCard from '../../components/support/TicketCard';
 import { Logo } from '../../constants/logo';
 import { AppIconProps } from '../../types/app-icon-props.types';
+import { useToast } from '../../hooks/useToast';
 
 import type { SupportTicketRow, SupportTicketStatus, CreateSupportTicketDto, SupportTicketCategory} from '../../types/chats.type';
 
@@ -30,10 +31,15 @@ const PRIORITY_LABELS: Record<string, string> = {
 
 export default function SupportListScreen({ navigation }: any) {
   const { user } = useAuth();
-  const { supportTickets, isLoadingSupportTickets, fetchSupportTickets, createSupportTicket, fetchSupportTicketsRaw } = useChat();
+  const {
+    supportTickets, isLoadingSupportTickets, fetchSupportTickets, createSupportTicket,
+    fetchSupportTicketsRaw, markSupportAsRead,
+    supportTicketsPage, supportTicketsTotalPages, isFetchingNextSupportTicketsPage,
+  } = useChat();
   const [activeTab, setActiveTab] = useState<SupportTicketStatus>('pending');
   const [helpModalVisible, setHelpModalVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const { showToast } = useToast();
   const [allTickets, setAllTickets] = useState<SupportTicketRow[]>([]);
 
   // Counts computed from the full tickets set (allTickets) so they are independent
@@ -55,8 +61,7 @@ export default function SupportListScreen({ navigation }: any) {
   useFocusEffect(
     React.useCallback(() => {
       if (user?.role) {
-        fetchSupportTickets({ status: activeTab });
-        // load all tickets for statistics (non-destructive)
+        fetchSupportTickets({ status: activeTab, page: 1 });
         (async () => {
           const all = await fetchSupportTicketsRaw?.();
           if (all) setAllTickets(all);
@@ -64,6 +69,11 @@ export default function SupportListScreen({ navigation }: any) {
       }
     }, [fetchSupportTickets, user?.role, activeTab]),
   );
+
+  const loadMoreTickets = useCallback(() => {
+    if (isLoadingSupportTickets || isFetchingNextSupportTicketsPage || supportTicketsPage >= supportTicketsTotalPages) return;
+    fetchSupportTickets({ status: activeTab, page: supportTicketsPage + 1 });
+  }, [isLoadingSupportTickets, isFetchingNextSupportTicketsPage, supportTicketsPage, supportTicketsTotalPages, fetchSupportTickets, activeTab]);
 
   const renderContent = () => {
     if (isLoadingSupportTickets && supportTickets.length === 0) {
@@ -87,7 +97,10 @@ export default function SupportListScreen({ navigation }: any) {
         renderItem={({ item }) => (
           <TicketCard
             ticket={item}
-            onPress={() => navigation.navigate('SupportChat', { ticketId: item.id, subject: item.subject })}
+            onPress={() => {
+              markSupportAsRead(item.id);
+              navigation.navigate('SupportChat', { ticketId: item.id, subject: item.subject });
+            }}
           />
         )}
         ListEmptyComponent={
@@ -99,10 +112,13 @@ export default function SupportListScreen({ navigation }: any) {
         refreshControl={
           <RefreshControl
             refreshing={isLoadingSupportTickets}
-            onRefresh={() => fetchSupportTickets({ status: activeTab })}
+            onRefresh={() => fetchSupportTickets({ status: activeTab, page: 1 })}
             tintColor={Colors.bordeaux}
           />
         }
+        onEndReached={loadMoreTickets}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextSupportTicketsPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
         contentContainerStyle={styles.list}
       />
     );
@@ -181,9 +197,9 @@ export default function SupportListScreen({ navigation }: any) {
               const all = await fetchSupportTicketsRaw?.();
               if (all) setAllTickets(all);
             })();
-            Alert.alert('Ticket créé', 'Votre demande a bien été envoyée au support.');
+            showToast({ type: 'success', title: 'Ticket créé', message: 'Votre demande a bien été envoyée au support.' });
           } catch (err: any) {
-            Alert.alert('Erreur', err?.message ?? 'Impossible de créer le ticket.');
+            showToast({ type: 'error', title: 'Erreur', message: err?.message ?? 'Impossible de créer le ticket.' });
           }
         }}
       />
@@ -209,11 +225,12 @@ function SupportTicketModal({
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState<SupportTicketCategory>('other');
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
 
   const submit = async () => {
     if (!subject.trim() || !message.trim()) {
-      Alert.alert('Champs requis', 'Veuillez remplir le sujet et le message.');
+      showToast({ type: 'warning', title: 'Champs requis', message: 'Veuillez remplir le sujet et le message.' });
       return;
     }
     setLoading(true);

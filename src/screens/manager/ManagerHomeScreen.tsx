@@ -19,11 +19,12 @@ interface TileProps {
   color: string;
   bg: string;
   onPress: () => void;
+  testID?: string;
 }
 
-function Tile({ icon, label, color, bg, onPress }: TileProps) {
+function Tile({ icon, label, color, bg, onPress, testID }: TileProps) {
   return (
-    <TouchableOpacity style={styles.tile} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity style={styles.tile} onPress={onPress} activeOpacity={0.7} testID={testID}>
       <View style={[styles.tileIcon, { backgroundColor: bg }]}>
         <Ionicons name={icon as any} size={26} color={color} />
       </View>
@@ -97,7 +98,7 @@ export default function ManagerHomeScreen() {
   ].filter(t => hasPermission(t.perm));
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} testID="manager-home-scroll">
       {/* Bandeau bienvenue */}
       <View style={styles.banner}>
         <View style={styles.bannerAvatar}>
@@ -130,6 +131,7 @@ export default function ManagerHomeScreen() {
                 color={t.color}
                 bg={t.bg}
                 onPress={() => navigation.navigate(t.screen as any)}
+                testID={`manager-tile-${t.label.toLowerCase().replace(/\s/g, '-')}`}
               />
             ))}
           </View>

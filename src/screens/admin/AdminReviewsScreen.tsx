@@ -7,11 +7,13 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
-  TouchableOpacity, RefreshControl, Alert, Platform,
+  TouchableOpacity, RefreshControl, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuthStore }    from '../../store/auth.store';
+import { useAlert } from '../../hooks/useAlert';
+import { useToast } from '../../hooks/useToast';
 import { useRatingsStore } from '../../store/ratings.store';
 import type { RatingAdmin } from '../../types/ratings.types';
 
@@ -49,16 +51,17 @@ function RatingCard({
     .filter(Boolean).join(' ') || 'Client inconnu';
   const driverName = [rating.driver_first_name, rating.driver_last_name]
     .filter(Boolean).join(' ') || 'Chauffeur inconnu';
+  const { showAlert } = useAlert();
 
   const handleDelete = () => {
-    Alert.alert(
-      'Supprimer l\'évaluation',
-      `Êtes-vous sûr de vouloir supprimer cette évaluation de ${clientName} (${rating.note}/5) ?`,
-      [
+    showAlert({
+      title: 'Supprimer l\'évaluation',
+      message: `Êtes-vous sûr de vouloir supprimer cette évaluation de ${clientName} (${rating.note}/5) ?`,
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         { text: 'Supprimer', style: 'destructive', onPress: () => onDelete(rating.id) },
       ],
-    );
+    });
   };
 
   return (
@@ -120,6 +123,7 @@ export default function AdminReviewsScreen() {
   const isLoading    = useRatingsStore(s => s.isLoading);
   const listAll      = useRatingsStore(s => s.listAll);
   const deleteRating = useRatingsStore(s => s.deleteRating);
+  const { showToast } = useToast();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -140,7 +144,7 @@ export default function AdminReviewsScreen() {
     try {
       await deleteRating(accessToken, ratingId);
     } catch (err: unknown) {
-      Alert.alert('Erreur', err instanceof Error ? err.message : 'Impossible de supprimer cette évaluation');
+      showToast({ type: 'error', title: 'Erreur', message: err instanceof Error ? err.message : 'Impossible de supprimer cette évaluation' });
     } finally {
       setDeletingId(null);
     }

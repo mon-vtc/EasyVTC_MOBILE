@@ -19,6 +19,7 @@ interface FormFieldProps<T extends FieldValues> extends Omit<TextInputProps, 're
   secureTextEntry?: boolean;
   showToggle?:      boolean;
   icon?:            IconName;
+  testID?:          string;
 }
 
 export function FormField<T extends FieldValues>({
@@ -30,6 +31,7 @@ export function FormField<T extends FieldValues>({
   secureTextEntry = false,
   showToggle = false,
   icon,
+  testID,
   ...props
 }: FormFieldProps<T>) {
   const [isSecure, setIsSecure] = useState(secureTextEntry);
@@ -61,6 +63,7 @@ export function FormField<T extends FieldValues>({
               placeholderTextColor={Colors.textPlaceholder}
               secureTextEntry={isSecure}
               autoCapitalize="none"
+              testID={testID}
               {...props}
             />
           )}

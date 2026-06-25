@@ -2,14 +2,15 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TextInput,
   TouchableOpacity, KeyboardAvoidingView, Platform,
-  ActivityIndicator, Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useChat } from '../../hooks/useChat';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors, Fonts, Spacing } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
 import type { SupportMessage } from '../../types/chats.type';
+import { useToast } from '../../hooks/useToast';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MessageBubble
@@ -80,16 +81,24 @@ export default function SupportChatScreen() {
     activeSupportTicket,
     isLoadingSupportTicketDetail,
     sendSupportMessage,
+    markSupportAsRead,
     updateSupportTicketStatus,
     addSupportMessageOptimistically,
     fetchSupportTicketDetail,
   } = useChat();
 
+  const { showToast } = useToast();
   const [text, setText]       = useState('');
   const [sending, setSending] = useState(false);
   const flatListRef           = useRef<FlatList>(null);
 
   const { ticketId, subject } = route.params;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (ticketId) markSupportAsRead(ticketId);
+    }, [ticketId, markSupportAsRead])
+  );
 
   useEffect(() => {
     fetchSupportTicketDetail(ticketId);
@@ -143,9 +152,9 @@ export default function SupportChatScreen() {
     try {
       await updateSupportTicketStatus(ticketId, 'resolved');
       await fetchSupportTicketDetail(ticketId);
-      Alert.alert('Ticket clôturé', 'Le ticket a bien été marqué comme résolu.');
+      showToast({ type: 'success', title: 'Ticket clôturé', message: 'Le ticket a bien été marqué comme résolu.' });
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message ?? 'Impossible de clôturer le ticket.');
+      showToast({ type: 'error', title: 'Erreur', message: err?.message ?? 'Impossible de clôturer le ticket.' });
     }
   }, [ticketId, updateSupportTicketStatus, fetchSupportTicketDetail, activeSupportTicket]);
 

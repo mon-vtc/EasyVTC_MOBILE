@@ -67,9 +67,9 @@ function DriverCard({
     }
   };
   const lastSeen   = (driver as any).last_seen_label ?? (isOnline ? 'En ligne' : 'Hors ligne');
-  const rating     = (driver as any).rating ?? 0;
-  const trips      = (driver as any).trips_count ?? 0;
-  const vehicle    = driver.driver?.vehicle_type;
+  const rating     = (driver as any).driver?.average_rating ?? 0;
+  const trips      = (driver as any).driver?.trips_count ?? 0;
+  const vehicle    = (driver as any).driver?.vehicle_type;
   const vehicleStr = vehicle;
 
   const initials = `${driver.first_name?.[0] ?? ''}${driver.last_name?.[0] ?? ''}`.toUpperCase();
@@ -175,14 +175,16 @@ const cardStyles = StyleSheet.create({
 
 // ── Screen ──────────────────────────────────────────────────────
 export default function AdminDriversScreen({ navigation }: Props) {
-  const { fetchDrivers, drivers, isDriversLoading, driversError, changeDriverStatus } = useAdmin();
+  const { fetchDrivers, drivers, isDriversLoading, driversError, changeDriverStatus, fetchNextDriversPage, isFetchingNextPage, driversPageTotal, driversPage } = useAdmin();
 
   const [search,     setSearch]     = useState('');
   const [activeTab,  setActiveTab]  = useState<FilterTab>('tous');
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchDriversRef = useRef(fetchDrivers);
+  const fetchNextDriversPageRef = useRef(fetchNextDriversPage);
   useEffect(() => { fetchDriversRef.current = fetchDrivers; });
+  useEffect(() => { fetchNextDriversPageRef.current = fetchNextDriversPage; });
 
   const load = useCallback(async () => {
     const params = search.trim() ? { search: search.trim() } : undefined;
@@ -197,6 +199,14 @@ export default function AdminDriversScreen({ navigation }: Props) {
     await load();
     setRefreshing(false);
   };
+
+  // Détection du scroll au dernier élément pour charger la page suivante
+  const handleEndReached = useCallback(() => {
+    if (driversPage < driversPageTotal && !isFetchingNextPage) {
+      const params = search.trim() ? { search: search.trim() } : undefined;
+      fetchNextDriversPageRef.current(params).catch(_ => {});
+    }
+  }, [driversPage, driversPageTotal, isFetchingNextPage, search]);
 
   const filtered = useMemo(() => {
     return drivers
@@ -268,6 +278,15 @@ export default function AdminDriversScreen({ navigation }: Props) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.bordeaux]} />}
+        onMomentumScrollEnd={(e) => {
+          const contentHeight = e.nativeEvent.contentSize.height;
+          const scrollHeight = e.nativeEvent.layoutMeasurement.height;
+          const scrollPos = e.nativeEvent.contentOffset.y;
+          // Déclencher le chargement quand on est à 90% du bas
+          if (scrollPos + scrollHeight >= contentHeight * 0.9) {
+            handleEndReached();
+          }
+        }}
       >
         {/* Compteur */}
         <Text style={styles.count}>
@@ -298,6 +317,13 @@ export default function AdminDriversScreen({ navigation }: Props) {
               onRefresh={load}
             />
           ))
+        )}
+
+        {/* Indicateur de chargement pagination */}
+        {isFetchingNextPage && (
+          <View style={{ padding: Spacing.lg, alignItems: 'center' }}>
+            <Text style={{ color: Colors.textMuted, fontSize: Fonts.size.sm }}>Chargement...</Text>
+          </View>
         )}
       </ScrollView>
     </View>

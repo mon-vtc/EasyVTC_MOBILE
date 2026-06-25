@@ -6,12 +6,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useMemo } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, Alert,
+  View, Text, FlatList, TouchableOpacity,
   StyleSheet, ActivityIndicator, Linking, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useOrdersStore } from '../../store/orders.store';
 import { useAuthStore } from '../../store/auth.store';
+import { useToast } from '../../hooks/useToast';
 import type { Order } from '../../types/orders.types';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { OrderCard } from '../../components/common/OrderCard';
@@ -19,8 +20,9 @@ import { OrderCard } from '../../components/common/OrderCard';
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function MyOrdersScreen({ navigation } : {navigation: any}) {
-  const { orders, total, isLoading, error, fetchMine, clearError } = useOrdersStore();
+  const { orders, total, page, totalPages, isLoading, isFetchingNextPage, error, fetchMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
+  const { showToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -28,14 +30,19 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
     try { await fetchMine(token); } catch { /* handled in store */ }
   }, [token]);
 
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetchMine(token, { page: page + 1 }).catch(() => {});
+  }, [isLoading, isFetchingNextPage, page, totalPages, token, fetchMine]);
+
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
     if (error) {
-      Alert.alert('Erreur', error);
+      showToast({ type: 'error', title: 'Erreur', message: error });
       clearError();
     }
-  }, [error]);
+  }, [error, showToast, clearError]);
 
   const filteredOrders = useMemo(() => {
     if (!searchQuery) return orders;
@@ -93,6 +100,9 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />
         }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
         ListEmptyComponent={filteredOrders.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="document-outline" size={48} color={Colors.textMuted} />

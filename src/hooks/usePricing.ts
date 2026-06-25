@@ -70,16 +70,21 @@ export function usePricing() {
     _setCountry(country);
   }, [_setCountry]);
 
-  // // ── Valeurs initiales du formulaire depuis la config chargée ─────────────
+  // ── Valeurs initiales du formulaire depuis la config chargée ─────────────
   const getInitialFormValues = useCallback((): PricingFormValues => ({
-    base_price:          String(config?.grid.base_price          ?? ''),
-    price_per_km:        String(config?.grid.price_per_km        ?? ''),
-    price_per_min:       String(config?.grid.price_per_min       ?? ''),
-    minimum_price:       String(config?.grid.minimum_price       ?? ''),
-    // commission_rate:     String(config?.commission.commission_rate     ?? ''),
-    // commission_vat_rate: String(config?.commission.commission_vat_rate ?? ''),
-    // airport_fee:         String(config?.supplement.airport_fee   ?? ''),
-    // night_rate:          String(config?.supplement.night_rate    ?? ''),
+    base_price:            String(config?.grid.base_price             ?? ''),
+    price_per_km:          String(config?.grid.price_per_km           ?? ''),
+    price_per_min:         String(config?.grid.price_per_min          ?? ''),
+    minimum_price:         String(config?.grid.minimum_price          ?? ''),
+    tva_rate:              config?.grid.tva_rate != null
+                             ? String(Math.round(config.grid.tva_rate * 100))
+                             : '',
+    airport_supplement:    String(config?.grid.airport_supplement     ?? ''),
+    night_supplement_rate: config?.grid.night_supplement_rate != null
+                             ? String(Math.round(config.grid.night_supplement_rate * 100))
+                             : '',
+    night_start:           config?.grid.night_start?.slice(0, 5)     ?? '',
+    night_end:             config?.grid.night_end?.slice(0, 5)       ?? '',
   }), [config]);
 
   // ── Calcul dynamique de l'exemple ────────────────────────────────────────
@@ -133,19 +138,16 @@ export function usePricing() {
   const saveConfig = useCallback(async (values: PricingFormValues) => {
     const dto: SavePricingConfigDto = {
       grid: {
-        base_price:    toNum(values.base_price),
-        price_per_km:  toNum(values.price_per_km),
-        price_per_min: toNum(values.price_per_min),
-        minimum_price: toNum(values.minimum_price),
+        base_price:            toNum(values.base_price),
+        price_per_km:          toNum(values.price_per_km),
+        price_per_min:         toNum(values.price_per_min),
+        minimum_price:         toNum(values.minimum_price),
+        tva_rate:              round2(toNum(values.tva_rate) / 100),
+        airport_supplement:    toNum(values.airport_supplement),
+        night_supplement_rate: round2(toNum(values.night_supplement_rate) / 100),
+        night_start:           values.night_start || undefined,
+        night_end:             values.night_end   || undefined,
       },
-      // commission: {
-      //   commission_rate:     toNum(values.commission_rate),
-      //   commission_vat_rate: toNum(values.commission_vat_rate),
-      // },
-      // supplement: {
-      //   airport_fee: toNum(values.airport_fee),
-      //   night_rate:  toNum(values.night_rate),
-      // },
     };
     await _saveConfig(accessToken!, activeCountry, dto);
   }, [accessToken, activeCountry, _saveConfig]);

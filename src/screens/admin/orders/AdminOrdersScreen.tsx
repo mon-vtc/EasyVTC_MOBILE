@@ -23,13 +23,18 @@ export default function AdminOrdersScreen() {
   const navigation = useNavigation<NavigationProp<any>>();
   const { showToast } = useToast();
 
-  const { orders, total, isLoading, error, fetchAll, clearError } = useOrdersStore();
+  const { orders, total, page, totalPages, isLoading, isFetchingNextPage, error, fetchAll, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
     try { await fetchAll(token); } catch { /* handled */ }
   }, [token]);
+
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetchAll(token, { page: page + 1 }).catch(() => {});
+  }, [isLoading, isFetchingNextPage, page, totalPages, token, fetchAll]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (error) { 
@@ -89,6 +94,9 @@ export default function AdminOrdersScreen() {
         renderItem={({ item }) => <OrderCard order={item} token={token} role="admin" onPress={handleViewOrder} />}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Ionicons name="document-outline" size={48} color={Colors.textMuted} />

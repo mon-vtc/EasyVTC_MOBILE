@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, Platform, TextInput
+  StyleSheet, ActivityIndicator, Linking, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import type { NavigationProp }      from '@react-navigation/native';
@@ -165,19 +165,24 @@ export default function MyInvoicesScreen({
   route?: RouteProp<ClientTabParamList, 'MyInvoices'>
 }) {
   const navigation = useNavigation<NavigationProp<ClientStackParamList>>();
-  const { invoices, isLoading, error, fetch, clearError } = useInvoicesStore();
+  const { invoices, page, totalPages, isLoading, isFetchingNextPage, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
-
+  const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
 
   const load = useCallback(async () => {
     try { await fetch(token); } catch { /* handled in store */ }
   }, [token, fetch]);
 
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetch(token, { page: page + 1 }).catch(() => {});
+  }, [isLoading, isFetchingNextPage, page, totalPages, token, fetch]);
+
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    if (error) { Alert.alert('Erreur', error); clearError(); }
+    if (error) { showToast({ type: 'error', title: 'Erreur', message: error }); clearError(); }
   }, [error, clearError]);
 
   const filteredInvoices = useMemo(() => {
@@ -237,6 +242,9 @@ export default function MyInvoicesScreen({
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />
         }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
         ListEmptyComponent={filteredInvoices.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="receipt-outline" size={48} color={Colors.textMuted} />

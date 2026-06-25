@@ -5,10 +5,11 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View, Text, ScrollView, Switch, StyleSheet,
-  ActivityIndicator, Alert, TouchableOpacity,
+  ActivityIndicator, TouchableOpacity,
 } from 'react-native';
 import { useDriver }   from '../../hooks/useDriver';
 import { AppIcon }     from '../../components/common/AppIcon';
+import { useAlert } from '../../hooks/useAlert';
 import { Colors }      from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 
@@ -61,6 +62,7 @@ function StatusCard({
               trackColor={{ false: '#D1D5DB', true: Colors.bordeauxLight }}
               thumbColor={Colors.white}
               ios_backgroundColor="#D1D5DB"
+              testID="driver-status-toggle"
             />
           )
         }
@@ -151,7 +153,7 @@ function RideCard({
   origin, destination, date, time, price, status, onDetails,
 }: RideCardProps) {
   return (
-    <View style={rc.card}>
+    <TouchableOpacity style={rc.card} onPress={() => onDetails(id)}>
       {/* En-tête référence + badge */}
       <View style={rc.header}>
         <Text style={rc.ref}>{ref_number}</Text>
@@ -180,7 +182,7 @@ function RideCard({
 
       {/* Destination */}
       <View style={rc.infoRow}>
-        <AppIcon name="navigate-outline" size={16} color="#10B981" />
+        <AppIcon name="location" size={16} color={Colors.bordeauxLight}/>
         <View style={rc.infoTexts}>
           <Text style={rc.infoLabel}>Destination</Text>
           <Text style={rc.infoMain}>{destination}</Text>
@@ -188,7 +190,7 @@ function RideCard({
       </View>
 
       {/* Date + heure */}
-      <View style={rc.dateRow}>
+      <View style={[rc.dateRow, {flexDirection: 'row', justifyContent: 'space-between',}]}>
         <View style={rc.dateItem}>
           <AppIcon name="calendar-outline" size={14} color={Colors.textSecondary} />
           <Text style={rc.dateText}>{date}</Text>
@@ -210,7 +212,7 @@ function RideCard({
           <Text style={rc.detailBtnText}>Voir les détails</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -229,6 +231,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default function DriverHomeScreen({ navigation }: any) {
   const { isOnline, status, setOnlineStatus, isLoading: isDriverLoading } = useDriver();
   const { driverHomeReservations, fetchDriverHomeReservations, isLoading: isReservationsLoading } = useReservation();
+  const { showAlert } = useAlert();
 
   const [isToggling, setIsToggling]   = useState(false);
   // Stats mockées — à remplacer par un hook dédié quand l'API stats sera disponible
@@ -264,11 +267,11 @@ export default function DriverHomeScreen({ navigation }: any) {
   // ── Toggle disponibilité ──────────────────────────────────────────────────
   const handleToggle = useCallback(async (value: boolean) => {
     if (value && status !== 'active' && status !== 'probationary') {
-      Alert.alert(
-        'Profil non validé',
-        'Votre profil chauffeur doit être validé par un administrateur avant de pouvoir passer en ligne.',
-        [{ text: 'Compris', style: 'default' }],
-      );
+      showAlert({
+        title: 'Profil non validé',
+        message: 'Votre profil chauffeur doit être validé par un administrateur avant de pouvoir passer en ligne.',
+        buttons: [{ text: 'Compris', style: 'default' }],
+      });
       return;
     }
 
@@ -276,7 +279,7 @@ export default function DriverHomeScreen({ navigation }: any) {
     try {
       await setOnlineStatus(value);
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message ?? 'Impossible de changer le statut.');
+      showAlert({ title: 'Erreur', message: err?.message ?? 'Impossible de changer le statut.', buttons: [{ text: 'OK' }] });
     } finally {
       setIsToggling(false);
     }

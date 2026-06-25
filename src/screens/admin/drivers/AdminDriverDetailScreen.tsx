@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform, Alert, Image, ActivityIndicator,
+  Platform, Image, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useAdmin }  from '../../../hooks/useAdmin';
 import { useVehicleTypesStore } from '../../../store/vehicleTypes.store';
+import { useAlert } from '../../../hooks/useAlert';
+import { useDriverDocuments } from '../../../hooks/useDriverDocuments';
+import { driverApi } from '../../../services/api/drivers.api';
+import { useAuthStore } from '../../../store';
 import type { AuthUser, DriverUser } from '../../../types';
+import type { DriverDocument, DocumentType } from '../../../hooks/useDriverDocuments';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriversStackParamList }  from '../../../types/auth.types';
 import { useToast } from '../../../hooks/useToast';
@@ -53,12 +58,14 @@ const infoStyles = StyleSheet.create({
 });
 
 // ── Tab Informations ────────────────────────────────────────────
-function TabInformations({ driver }: { driver: DriverUser }) {
-  const vehicle    = driver.vehicle;
+function TabInformations({ driver, documents, isFetchingDocuments }: { driver: AuthUser; documents?: DriverDocument[]; isFetchingDocuments?: boolean }) {
+  const driverUser = driver as any;
+  const vehicle = driverUser.vehicle;
   const allTypes   = useVehicleTypesStore(s => s.allTypes);
   const activeTypes = useVehicleTypesStore(s => s.activeTypes);
+  const { DOCUMENT_TYPE_LABELS, DOCUMENT_STATUS_LABELS, DOCUMENT_STATUS_COLORS } = useDriverDocuments();
 
-  const vehicleTypeCode  = driver.vehicle_type;
+  const vehicleTypeCode  = driverUser.driver?.vehicle_type;
   const matchedType      = [...allTypes, ...activeTypes].find(t => t.code === vehicleTypeCode);
   const vehicleTypeLabel = matchedType?.label
     ?? (vehicleTypeCode
@@ -72,15 +79,29 @@ function TabInformations({ driver }: { driver: DriverUser }) {
       { label: 'Immatriculation',  value: vehicle.plate_number ?? '—' },
       { label: 'Couleur',          value: vehicle.color ?? '—' },
       { label: 'Année',            value: vehicle.year ? String(vehicle.year) : '—' },
-    ] : []),
+    ] : [
+      { label: 'Marque / Modèle', value: '—' },
+      { label: 'Immatriculation',  value: '—' },
+      { label: 'Couleur',          value: '—' },
+      { label: 'Année',            value: '—' },
+    ]),
   ];
 
-  const docs: { label: string; expiry: string; status: 'valid' | 'expired' }[] = [
-    { label: 'Permis de conduire', expiry: '15/03/2028', status: 'valid'   },
-    { label: 'Carte VTC',          expiry: '15/03/2026', status: 'valid'   },
-    { label: 'Assurance',          expiry: '15/03/2025', status: 'valid'   },
-    { label: 'Carte grise',        expiry: '15/03/2025', status: 'valid'   },
-  ];
+  // Index : doc_type → document le plus récent (updated_at desc)
+  const latestByType = (documents ?? []).reduce<Record<string, DriverDocument>>((acc, doc) => {
+    const existing = acc[doc.doc_type];
+    if (!existing || new Date(doc.updated_at) > new Date(existing.updated_at)) {
+      acc[doc.doc_type] = doc;
+    }
+    return acc;
+  }, {});
+
+  // Tous les types connus, dans l'ordre de DOCUMENT_TYPE_LABELS
+  const allDocRows: Array<{ type: DocumentType; doc: DriverDocument | null }> =
+    (Object.keys(DOCUMENT_TYPE_LABELS) as DocumentType[]).map(docType => ({
+      type: docType,
+      doc: latestByType[docType] ?? null,
+    }));
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -96,35 +117,100 @@ function TabInformations({ driver }: { driver: DriverUser }) {
       </View>
 
       {/* Documents */}
-      <View style={tabStyles.card}>
-        <Text style={tabStyles.cardTitle}>Documents</Text>
-        {docs.map(doc => (
-          <View key={doc.label} style={tabStyles.docRow}>
-            <View style={tabStyles.docLeft}>
-              <Ionicons name="document-outline" size={18} color={Colors.textMuted} />
-              <View>
-                <Text style={tabStyles.docLabel}>{doc.label}</Text>
-                <Text style={tabStyles.docExpiry}>Expire le {doc.expiry}</Text>
+      {isFetchingDocuments && !documents ? (
+        <View style={{ padding: Spacing.lg, alignItems: 'center' }}>
+          <ActivityIndicator size="small" color={Colors.bordeauxLight} />
+        </View>
+      ) : (
+        <View style={tabStyles.card}>
+          <Text style={tabStyles.cardTitle}>Documents</Text>
+          {allDocRows.map(({ type, doc }) => {
+            const docLabel = DOCUMENT_TYPE_LABELS[type as DocumentType];
+            if (doc) {
+              const colors = DOCUMENT_STATUS_COLORS[doc.status] || { bg: '#F5F5F5', text: '#666' };
+              const statusLabel = DOCUMENT_STATUS_LABELS[doc.status] || doc.status;
+              const docIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
+                validated: 'checkmark-circle-outline',
+                pending:   'time-outline',
+                rejected:  'close-circle-outline',
+                expired:   'alert-circle-outline',
+              };
+              const docIconColor: Record<string, string> = {
+                validated: Colors.success  ?? '#2E7D32',
+                pending:   Colors.warning  ?? '#E65100',
+                rejected:  Colors.error,
+                expired:   Colors.error,
+              };
+              return (
+                <View key={type as string} style={tabStyles.docRow}>
+                  <View style={tabStyles.docLeft}>
+                    <Ionicons
+                      name={docIcon[doc.status] ?? 'document-outline'}
+                      size={16}
+                      color={docIconColor[doc.status] ?? Colors.textMuted}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <Text style={tabStyles.docLabel}>{docLabel}</Text>
+                      {doc.expiry_date && (
+                        <Text style={tabStyles.docExpiry}>
+                          Expire : {new Date(doc.expiry_date).toLocaleDateString('fr-FR')}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <View style={[tabStyles.docBadge, { backgroundColor: colors.bg }]}>
+                    <Text style={[tabStyles.docBadgeText, { color: colors.text }]}>
+                      {statusLabel}
+                    </Text>
+                  </View>
+                </View>
+              );
+            }
+            return (
+              <View key={type} style={tabStyles.docRow}>
+                <View style={tabStyles.docLeft}>
+                  <Ionicons name="document-outline" size={16} color={Colors.textMuted} />
+                  <Text style={tabStyles.docLabel}>{docLabel}</Text>
+                </View>
+                <View style={[tabStyles.docBadge, { backgroundColor: '#F5F5F5' }]}>
+                  <Text style={[tabStyles.docBadgeText, { color: '#9E9E9E' }]}>Non fourni</Text>
+                </View>
               </View>
-            </View>
-            <View style={[tabStyles.docBadge, { backgroundColor: doc.status === 'valid' ? '#E8F5E9' : '#FCE4EC' }]}>
-              <Text style={[tabStyles.docBadgeText, { color: doc.status === 'valid' ? '#2E7D32' : '#C62828' }]}>
-                {doc.status === 'valid' ? 'Valide' : 'Expiré'}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </View>
+            );
+          })}
+        </View>
+      )}
     </ScrollView>
   );
 }
 
+
 // ── Tab Statistiques ────────────────────────────────────────────
-function TabStatistiques({ driver }: { driver: DriverUser }) {
-  const thisMonth = { courses: 45, gains: 2340, note: 4.9 };
-  const lastMonth = { courses: 52, gains: 2680, note: 4.8 };
-  const evolution = (((thisMonth.courses - lastMonth.courses) / lastMonth.courses) * 100).toFixed(1);
+function TabStatistiques({ monthlyStats, lastMonthStats, isFetching }: { monthlyStats?: any; lastMonthStats?: any; isFetching: boolean }) {
+  const thisMonth = monthlyStats || { 
+    total_courses: 0, 
+    total_earning: 0, 
+    average_rating: null
+  };
+  const lastMonth = lastMonthStats || { 
+    total_courses: 0, 
+    total_earning: 0, 
+    average_rating: null
+  };
+  
+  const coursesDiff = thisMonth.total_courses - lastMonth.total_courses;
+  const evolution = lastMonth.total_courses > 0 
+    ? ((coursesDiff / lastMonth.total_courses) * 100).toFixed(1)
+    : '0';
   const isPositive = parseFloat(evolution) >= 0;
+
+  if (isFetching && !monthlyStats) {
+    return (
+      <View style={[styles.flex, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.bordeauxLight} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -133,9 +219,9 @@ function TabStatistiques({ driver }: { driver: DriverUser }) {
         <Text style={tabStyles.cardTitle}>Ce mois-ci</Text>
         <View style={statsStyles.row}>
           {[
-            { value: thisMonth.courses.toString(), label: 'Courses' },
-            { value: `${thisMonth.gains}€`,        label: 'Gains'   },
-            { value: thisMonth.note.toFixed(1),    label: 'Note'    },
+            { value: thisMonth.total_courses?.toString() ?? '0', label: 'Courses' },
+            { value: `${(thisMonth.total_earning ?? 0).toFixed(2)}€`,        label: 'Gains'   },
+            { value: (thisMonth.average_rating?.toFixed(1) ?? '—'),    label: 'Note'    },
           ].map(stat => (
             <View key={stat.label} style={statsStyles.statItem}>
               <Text style={statsStyles.statValue}>{stat.value}</Text>
@@ -150,9 +236,9 @@ function TabStatistiques({ driver }: { driver: DriverUser }) {
         <Text style={tabStyles.cardTitle}>Mois dernier</Text>
         <View style={statsStyles.row}>
           {[
-            { value: lastMonth.courses.toString(), label: 'Courses' },
-            { value: `${lastMonth.gains}€`,        label: 'Gains'   },
-            { value: lastMonth.note.toFixed(1),    label: 'Note'    },
+            { value: lastMonth.total_courses?.toString() ?? '0', label: 'Courses' },
+            { value: `${(lastMonth.total_earning ?? 0).toFixed(2)}€`,        label: 'Gains'   },
+            { value: (lastMonth.average_rating?.toFixed(1) ?? '—'),    label: 'Note'    },
           ].map(stat => (
             <View key={stat.label} style={statsStyles.statItem}>
               <Text style={statsStyles.statValue}>{stat.value}</Text>
@@ -166,7 +252,7 @@ function TabStatistiques({ driver }: { driver: DriverUser }) {
       <View style={[tabStyles.card, { backgroundColor: Colors.bordeauxLight }]}>
         <View style={statsStyles.evoHeader}>
           <Text style={statsStyles.evoTitle}>Évolution</Text>
-          <Ionicons name="trending-up-outline" size={22} color="rgba(255,255,255,0.7)" />
+          <Ionicons name={isPositive ? 'trending-up-outline' : 'trending-down-outline'} size={22} color="rgba(255,255,255,0.7)" />
         </View>
         <Text style={[statsStyles.evoValue, { color: isPositive ? '#A5D6A7' : '#EF9A9A' }]}>
           {isPositive ? '+' : ''}{evolution}%
@@ -189,41 +275,70 @@ const statsStyles = StyleSheet.create({
 });
 
 // ── Tab Historique ──────────────────────────────────────────────
-function TabHistorique() {
-  const trips = [
-    { id: '1', client: 'Marie Dubois',   date: '15 janvier 2026 à 14:30', from: 'Massy, 91300',  to: 'Aéroport Paris-Orly', rating: 5, price: 65  },
-    { id: '2', client: 'Jean Martin',    date: '14 janvier 2026 à 09:15', from: 'Paris 12e',     to: 'Gare de Lyon',         rating: 4, price: 35  },
-    { id: '3', client: 'Sophie Bernard', date: '13 janvier 2026 à 18:45', from: 'Versailles',    to: 'Paris 8e',             rating: 5, price: 55  },
-  ];
+function TabHistorique({ tripsData, isFetching }: { tripsData?: any; isFetching: boolean }) {
+  const trips = tripsData?.trips ?? [];
+
+  if (isFetching && !tripsData) {
+    return (
+      <View style={[styles.flex, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.bordeauxLight} />
+      </View>
+    );
+  }
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleString('fr-FR', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  if (trips.length === 0) {
+    return (
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={{ padding: Spacing.lg, alignItems: 'center' }}>
+          <Text style={{ color: Colors.textMuted }}>Aucune course trouvée</Text>
+        </View>
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      {trips.map(trip => (
-        <View key={trip.id} style={histStyles.card}>
+      {trips.map((trip: any, idx: number) => (
+        <View key={trip.reservation_id || idx} style={histStyles.card}>
           {/* Client + Note */}
           <View style={histStyles.top}>
-            <Text style={histStyles.client}>{trip.client}</Text>
+            <Text style={histStyles.client}>{`${trip.client_first_name || ''} ${trip.client_last_name || ''}`.trim() || 'Client'}</Text>
             <View style={histStyles.ratingRow}>
               <Ionicons name="star" size={14} color="#F5A623" />
-              <Text style={histStyles.rating}>{trip.rating}</Text>
+              <Text style={histStyles.rating}>{trip.client_rating ?? '—'}</Text>
             </View>
           </View>
-          <Text style={histStyles.date}>{trip.date}</Text>
+          <Text style={histStyles.date}>{formatDate(trip.scheduled_at)}</Text>
 
           {/* Trajet */}
           <View style={histStyles.routeRow}>
             <Ionicons name="radio-button-on" size={12} color="#4CAF50" />
-            <Text style={histStyles.routeText}>{trip.from}</Text>
+            <Text style={histStyles.routeText}>{trip.pickup_address}</Text>
           </View>
           <View style={histStyles.routeRow}>
             <Ionicons name="location" size={12} color={Colors.bordeauxLight} />
-            <Text style={histStyles.routeText}>{trip.to}</Text>
+            <Text style={histStyles.routeText}>{trip.dest_address}</Text>
           </View>
 
           {/* Prix */}
           <View style={histStyles.priceRow}>
             <Text style={histStyles.priceLabel}>Prix</Text>
-            <Text style={histStyles.price}>{trip.price}€</Text>
+            <Text style={histStyles.price}>{trip.price_final ? `${trip.price_final}€` : '—'}</Text>
           </View>
         </View>
       ))}
@@ -256,8 +371,17 @@ const tabStyles = StyleSheet.create({
   infoRow:    { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.xs, borderBottomWidth: 1, borderBottomColor: Colors.border },
   infoLabel:  { fontSize: Fonts.size.sm, color: Colors.textMuted },
   infoValue:  { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary },
-  docRow:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  docLeft:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  docRow: {
+    paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  docLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   docLabel:   { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary },
   docExpiry:  { fontSize: Fonts.size.xs, color: Colors.textMuted },
   docBadge:   { borderRadius: Radius.full, paddingVertical: 3, paddingHorizontal: Spacing.sm },
@@ -267,17 +391,70 @@ const tabStyles = StyleSheet.create({
 // ── Screen principal ────────────────────────────────────────────
 export default function AdminDriverDetailScreen({ navigation, route }: Props) {
   const { driverId } = route.params as { driverId: string };
-  const { fetchDriverById, activateUser, deactivateUser, lockUser, changeDriverStatus, isLoading } = useAdmin();
+  const { 
+    fetchDriverById, activateUser, deactivateUser, lockUser, changeDriverStatus, isLoading,
+    fetchMonthlyStats, isFetchingMonthlyStats, monthlyStats,
+    fetchTripsHistory, isFetchingTripsHistory, tripsHistory,
+  } = useAdmin();
+  const { fetchDriverDocuments } = useDriverDocuments();
+  const { showAlert } = useAlert();
 
   const [driver,  setDriver]  = useState<AuthUser | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('informations');
+  const [lastMonthStats, setLastMonthStats] = useState<any>(null);
+  const [isFetchingLastMonth, setIsFetchingLastMonth] = useState(false);
+  const [documents, setDocuments] = useState<DriverDocument[] | null>(null);
+  const [isFetchingDocuments, setIsFetchingDocuments] = useState(false);
 
   const fetchDriverByIdRef = useRef(fetchDriverById);
+  const fetchMonthlyStatsRef = useRef(fetchMonthlyStats);
+  const fetchTripsHistoryRef = useRef(fetchTripsHistory);
+  const fetchDriverDocumentsRef = useRef(fetchDriverDocuments);
+  
   useEffect(() => { fetchDriverByIdRef.current = fetchDriverById; });
+  useEffect(() => { fetchMonthlyStatsRef.current = fetchMonthlyStats; });
+  useEffect(() => { fetchTripsHistoryRef.current = fetchTripsHistory; });
+  useEffect(() => { fetchDriverDocumentsRef.current = fetchDriverDocuments; });
 
   const load = useCallback(async () => {
     const data = await fetchDriverByIdRef.current(driverId);
-    if (data) setDriver(data);
+    if (data) {
+      setDriver(data);
+      // Charger également les stats mensuelles et l'historique des courses
+      if (data.driver?.id) {
+        // Charger les documents
+        setIsFetchingDocuments(true);
+        try {
+          const docs = await fetchDriverDocumentsRef.current(data.driver.id);
+          setDocuments(docs);
+        } catch (err) {
+          console.error('Erreur lors de la récupération des documents:', err);
+          setDocuments([]);
+        } finally {
+          setIsFetchingDocuments(false);
+        }
+
+        // Charger stats du mois courant via le store
+        await fetchMonthlyStatsRef.current(data.driver.id);
+        // Charger stats du mois dernier directement (hors du store pour ne pas écraser le mois courant)
+        setIsFetchingLastMonth(true);
+        try {
+          const now = new Date();
+          const prevMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+          const dateParam = `${prevMonth.getUTCFullYear()}-${String(prevMonth.getUTCMonth() + 1).padStart(2, '0')}`;
+          const token = useAuthStore.getState().accessToken ?? undefined;
+          const res = await driverApi.getMonthlyStats(token!, data.driver.id, dateParam);
+          setLastMonthStats(res.ok && res.data ? res.data : null);
+        } catch (err) {
+          console.error('Erreur lors de la récupération des stats du mois dernier:', err);
+          setLastMonthStats(null);
+        } finally {
+          setIsFetchingLastMonth(false);
+        }
+        
+        await fetchTripsHistoryRef.current(data.driver.id);
+      }
+    }
   }, [driverId]); // ← driverId seulement, stable
 
   const { showToast } = useToast();
@@ -289,12 +466,12 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
     const status   = driver.status;
     const isActive = status === 'active';
 
-    Alert.alert(
-      isActive ? 'Désactiver ce chauffeur ?' : 'Réactiver ce chauffeur ?',
-      isActive
+    showAlert({
+      title: isActive ? 'Désactiver ce chauffeur ?' : 'Réactiver ce chauffeur ?',
+      message: isActive
         ? 'Le chauffeur ne pourra plus se connecter.'
         : 'Le chauffeur pourra à nouveau se connecter.',
-      [
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: isActive ? 'Désactiver' : 'Réactiver',
@@ -310,16 +487,16 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
             } catch (_) {}
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleLock = () => {
     if (!driver) return;
-    Alert.alert(
-      'Verrouiller ce compte ?',
-      'Le chauffeur sera temporairement bloqué.',
-      [
+    showAlert({
+      title: 'Verrouiller ce compte ?',
+      message: 'Le chauffeur sera temporairement bloqué.',
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Verrouiller', style: 'destructive',
@@ -330,8 +507,8 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
             } catch (err: any) { showToast({ type: 'error', message: err.message ?? 'Impossible de verrouiller le compte.' }); }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleDriverStatusChange = (status: 'pending' | 'probationary' | 'active' | 'rejected' | 'suspended' ) => {
@@ -353,10 +530,10 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
       suspended:    'Le chauffeur sera temporairement suspendu.',
     } as const;
 
-    Alert.alert(
-      `${labels[status]} ce chauffeur ?`,
-      messages[status],
-      [
+    showAlert({
+      title: `${labels[status]} ce chauffeur ?`,
+      message: messages[status],
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: labels[status],
@@ -367,14 +544,13 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
                 status,
                 reason: `Changement de statut par l'administrateur : ${labels[status]}.`,
               });
-            
               showToast({ type: 'success', message: 'Le statut du chauffeur a été mis à jour.' });
               await load();
             } catch (err: any) { showToast({ type: 'error', message: err.message ?? 'Impossible de changer le statut.' }); }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   if (isLoading && !driver) {
@@ -394,8 +570,6 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
   }
 
   const statusConfig = STATUS_CONFIG[driver.status] ?? STATUS_CONFIG.active;
-  const driverStatusConfig = DRIVER_STATUS_CONFIG[driver.driver?.status ?? 'pending'] ?? DRIVER_STATUS_CONFIG.pending;
-  const initials     = `${driver.first_name?.[0] ?? ''}${driver.last_name?.[0] ?? ''}`.toUpperCase();
   // FIX: driver.rating and driver.trips_count are not directly on AuthUser. They are on DriverUser.
   const rating       = (driver as any).rating     ?? 0;
   const tripsCount   = (driver as any).trips_count ?? 0;
@@ -613,11 +787,22 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
         </View>
 
 
-        {/* ── Contenu du tab ── */}
+        {/* ── Contenu del tab ── */}
         <View style={styles.tabContent}>
-          {activeTab === 'informations' && <TabInformations driver={driver as DriverUser} />}
-          {activeTab === 'statistiques' && <TabStatistiques driver={driver as DriverUser} />}
-          {activeTab === 'historique'   && <TabHistorique />}
+          {activeTab === 'informations' && <TabInformations driver={driver as DriverUser} documents={documents ?? undefined} isFetchingDocuments={isFetchingDocuments} />}
+          {activeTab === 'statistiques' && (
+            <TabStatistiques 
+              monthlyStats={driver?.driver?.id ? monthlyStats?.[driver.driver.id] : undefined}
+              lastMonthStats={lastMonthStats}
+              isFetching={isFetchingMonthlyStats || isFetchingLastMonth}
+            />
+          )}
+          {activeTab === 'historique' && (
+            <TabHistorique 
+              tripsData={driver?.driver?.id ? tripsHistory?.[driver.driver.id] : undefined}
+              isFetching={isFetchingTripsHistory}
+            />
+          )}
         </View>
 
       </ScrollView>

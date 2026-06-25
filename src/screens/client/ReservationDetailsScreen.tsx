@@ -9,7 +9,7 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import {
   View, Text, Image, ScrollView, TouchableOpacity,
-  StyleSheet, Animated, Platform, Easing,
+  StyleSheet, Animated, Platform, Easing, ActivityIndicator, Linking
 } from 'react-native';
 import {
   useNavigation, useRoute,
@@ -28,6 +28,7 @@ import { Logo }                      from '../../constants/logo';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
 import RatingModal            from '../../components/common/RatingModal';
 import { useToast }           from '../../hooks/useToast';
+import { useAlert } from '../../hooks/useAlert';
 
 // ── Types navigation typés ──────────────────────────────────────────────────
 type ConfirmationNav   = NavigationProp<ClientStackParamList, 'ReservationDetails'>;
@@ -79,6 +80,7 @@ export default function ReservationDetailsScreen() {
   const nav   = useNavigation<ConfirmationNav>();
   const route = useRoute<ConfirmationRoute>();
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
 
   const reservationId = route.params?.reservationId;
 
@@ -116,22 +118,24 @@ export default function ReservationDetailsScreen() {
   const isSubmitting  = useRatingsStore(s => s.isSubmitting);
   const submitRating  = useRatingsStore(s => s.submitRating);
 
+  // Toujours récupérer les données fraîches (driver.rating = note de cette course, ou null si non évalué).
+  // Sans ce fetch, `selected` pourrait contenir des données périmées depuis un précédent fetchById.
   useEffect(() => {
-    if (!reservation && accessToken) fetchById(reservationId);
-  }, [reservationId, reservation, accessToken, fetchById]);
+    if (accessToken) fetchById(reservationId);
+  }, [reservationId, accessToken, fetchById]);
 
   // ── Handlers d'actions ──────────────────────────────────────────────────────
   const handleCall = useCallback(() => {
     if (reservation?.driver?.user?.phone) {
-      showToast({
-        title: 'Appel',
-        message: `Appel au chauffeur: ${reservation.driver.user.phone}`,
-        type: 'info',
-      });
-      // Débloquer ce code en production :
-      // Linking.openURL(`tel:${reservation.driver.user.phone}`).catch(() => {
-      //   Alert.alert('Erreur', 'Impossible d\'appeler ce numéro');
+      // showToast({
+      //   title: 'Appel',
+      //   message: `Appel au chauffeur: ${reservation.driver.user.phone}`,
+      //   type: 'info',
       // });
+      // Débloquer ce code en production :
+      Linking.openURL(`tel:${reservation.driver.user.phone}`).catch(() => {
+        showToast({type:'error', title: 'Erreur', message: 'Impossible d\'appeler ce numéro'});
+      });
     } else {
       showToast({ title: 'Non disponible', message: 'Le numéro du chauffeur n\'est pas disponible', type: 'warning' });
     }
@@ -160,22 +164,22 @@ export default function ReservationDetailsScreen() {
       showToast({ title: 'Déjà évalué', message: 'Vous avez déjà soumis une évaluation pour cette course.', type: 'info' });
       return;
     }
+    setRatingModalVisible(true);
   }, [alreadyRated, showToast]);
 
-const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
-  if (!accessToken || !reservation?.id) return;
-  try {
-    await submitRating(accessToken, reservation.id, dto);
-    setRatingModalVisible(false);
-    // ✅ Plus besoin de setAlreadyRated — reservation.driver.rating 
-    //    sera mis à jour par le store
-    showToast({ title: 'Merci !', message: `Votre note de ${dto.note}/5 a bien été enregistrée.`, type: 'success' });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
-    setRatingModalVisible(false);
-    showToast({ title: 'Erreur', message: msg, type: 'error' });
-  }
-}, [accessToken, reservation?.id, submitRating, showToast]);
+  const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
+    if (!accessToken || !reservation?.id) return;
+    try {
+      await submitRating(accessToken, reservation.id, dto);
+      setRatingModalVisible(false);
+      showToast({ title: 'Merci !', message: `Votre note de ${dto.note}/5 a bien été enregistrée.`, type: 'success' });
+      fetchById(reservationId);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission';
+      setRatingModalVisible(false);
+      showToast({ title: 'Erreur', message: msg, type: 'error' });
+    }
+  }, [accessToken, reservation?.id, submitRating, showToast, fetchById, reservationId]);
 
   const handleCancel = useCallback(() => {
     setCancelModalVisible(true);
@@ -457,7 +461,7 @@ const handleRatingSubmit = useCallback(async (dto: SubmitRatingDto) => {
               onPress={handleViewInvoice}
             >
               <AppIcon name="document-text-outline" size={18} color={BORDEAUX} />
-              <Text style={styles.btnSecondaryText}>Voir les détails</Text>
+              <Text style={styles.btnSecondaryText}>Voir la facture</Text>
             </TouchableOpacity>
           )}
         </Animated.View>

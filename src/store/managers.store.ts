@@ -14,13 +14,14 @@ import type {
 
 
 interface ManagersState {
-  managers:   UserProfile[];
-  total:      number;
-  page:       number;
-  totalPages: number;
-  isLoading:  boolean;
-  isSaving:   boolean;
-  error:      string | null;
+  managers:           UserProfile[];
+  total:              number;
+  page:               number;
+  totalPages:         number;
+  isLoading:          boolean;
+  isFetchingNextPage: boolean;
+  isSaving:           boolean;
+  error:              string | null;
 
   fetchManagers: (token: string, filters?: ManagerListFilters) => Promise<void>;
   createManager: (token: string, dto: CreateManagerDto) => Promise<UserProfile | null>;
@@ -32,28 +33,32 @@ interface ManagersState {
 }
 
 export const useManagersStore = create<ManagersState>((set, get) => ({
-  managers:   [],
-  total:      0,
-  page:       1,
-  totalPages: 1,
-  isLoading:  false,
-  isSaving:   false,
-  error:      null,
+  managers:           [],
+  total:              0,
+  page:               1,
+  totalPages:         1,
+  isLoading:          false,
+  isFetchingNextPage: false,
+  isSaving:           false,
+  error:              null,
 
   fetchManagers: async (token, filters) => {
-    set({ isLoading: true, error: null });
+    const page = filters?.page ?? 1;
+    if (page > 1) set({ isFetchingNextPage: true });
+    else set({ isLoading: true, error: null });
     try {
       const res = await managersApi.list(token, filters);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de chargement');
-      set({
-        managers:   res.data.managers,
-        total:      res.data.total,
-        page:       res.data.page,
-        totalPages: res.data.total_pages,
-        isLoading:  false,
-      });
+      set(state => ({
+        managers:           page > 1 ? [...state.managers, ...res.data!.managers] : res.data!.managers,
+        total:              res.data!.total,
+        page:               res.data!.page,
+        totalPages:         res.data!.total_pages,
+        isLoading:          false,
+        isFetchingNextPage: false,
+      }));
     } catch (err: unknown) {
-      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false, isFetchingNextPage: false });
       throw err;
     }
   },

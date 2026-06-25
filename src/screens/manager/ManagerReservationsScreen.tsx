@@ -223,6 +223,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useReservation } from '../../hooks/useReservation';
 import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
 import DriverPickerModal from '../admin/DriverPickerModal';
+import { useToast } from '../../hooks/useToast';
 import type { Reservation, ReservationStatus, AvailableDriverDto } from '../../types/reservations.types';
 import { usePermissions } from '../../hooks/usePermissions';
 
@@ -389,8 +390,9 @@ const cardStyles = StyleSheet.create({
 
 // ── ÉCRAN PRINCIPAL ───────────────────────────────────────────────────────────
 export default function ManagerReservationsScreen({ navigation }: any) {
-  const { reservations, fetchAll, isLoading, error, clearError, assign } = useReservation();
+  const { reservations, fetchAll, isLoading, isFetchingNextPage, page, totalPages, error, clearError, assign } = useReservation();
   const { hasPermission } = usePermissions();
+  const { showToast } = useToast();
 
   const [activeTab,   setActiveTab]   = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -403,21 +405,31 @@ export default function ManagerReservationsScreen({ navigation }: any) {
   const activeTabRef = useRef(activeTab);
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
 
+  const buildFilters = useCallback((p?: number): any => {
+    const filters: any = {};
+    if (activeTabRef.current !== 'all') {
+      const tab = TABS.find(t => t.key === activeTabRef.current);
+      if (tab?.statusFilter) filters.status = tab.statusFilter;
+    }
+    if (p) filters.page = p;
+    return filters;
+  }, []);
+
   const load = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
     try {
-      const filters: any = {};
-      if (activeTabRef.current !== 'all') {
-        const tab = TABS.find(t => t.key === activeTabRef.current);
-        if (tab?.statusFilter) filters.status = tab.statusFilter;
-      }
-      await fetchAll(filters);
+      await fetchAll(buildFilters());
     } catch (err) {
       console.error(err);
     } finally {
       if (showRefresh) setRefreshing(false);
     }
-  }, [fetchAll]);
+  }, [fetchAll, buildFilters]);
+
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetchAll(buildFilters(page + 1)).catch(() => {});
+  }, [isLoading, isFetchingNextPage, page, totalPages, fetchAll, buildFilters]);
 
   useEffect(() => { load(); }, [activeTab]);
 
@@ -455,10 +467,10 @@ export default function ManagerReservationsScreen({ navigation }: any) {
       await assign(targetReservation.id, driver.id);
       setPickerVisible(false);
       setTargetReservation(null);
-      Alert.alert('Succès', `${driver.user.first_name} ${driver.user.last_name} assigné avec succès.`);
+      showToast({ type: 'success', title: 'Succès', message: `${driver.user.first_name} ${driver.user.last_name} a été assigné avec succès.` });
       load();
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || "Erreur lors de l'assignation.");
+      showToast({ type: 'error', title: 'Erreur', message: err?.message || "Erreur lors de l'assignation." });
       throw err; // laisse le modal ouvert
     }
   };
@@ -539,6 +551,9 @@ export default function ManagerReservationsScreen({ navigation }: any) {
           keyExtractor={item => item.id}
           renderItem={renderReservation}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
           ListEmptyComponent={
             <View style={styles.empty}>
               <Ionicons name="calendar-outline" size={40} color={Colors.textMuted} />
@@ -564,6 +579,8 @@ export default function ManagerReservationsScreen({ navigation }: any) {
         visible={pickerVisible}
         reservationRef={targetRef}
         vehicleType={targetReservation?.vehicle_type}
+        scheduledAt={targetReservation?.scheduled_at}
+        durationMin={targetReservation?.duration_min}
         onConfirm={handleAssignConfirm}
         onClose={() => {
           setPickerVisible(false);

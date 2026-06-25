@@ -3,6 +3,7 @@
 // Sprint 3 — EasyVTC
 // Pays : France (€)
 // Recalcul d'estimation déclenché à chaque modification d'origine,
+//
 // destination, type de véhicule ou nombre de passagers,
 // sans stale closure grâce aux refs.
 // ══════════════════════════════════════════════════════════════════════════════
@@ -13,6 +14,7 @@ import { useAuthStore }                   from '../store/auth.store';
 import { useReservationStore }            from '../store/reservation.store';
 import { vehicleTypesApi }               from '../services/api/vehicleTypes.api';
 import { useFavorites }                   from './useFavorites';
+import { ordersApi } from '../services/api/orders.api';
 import { pricingApi }                     from '../services/api/pricing.api';
 import { useAuth }                        from './useAuth';
 import type {
@@ -127,6 +129,13 @@ export function useReservation() {
         }
       })
       .catch(() => {});
+  }, []);
+
+  // ── Demande la permission de localisation dès l'affichage de l'écran ───────
+  // Nécessaire pour que geocodeAddress() fonctionne dès la première saisie
+  // d'adresse, sans devoir d'abord utiliser le bouton "ma position".
+  useEffect(() => {
+    Location.requestForegroundPermissionsAsync().catch(() => {});
   }, []);
 
   // ── Géolocalisation ────────────────────────────────────────────────────────
@@ -492,7 +501,12 @@ export function useReservation() {
     fetchAll:              useCallback((filters?: ReservationListFilters) => _fetchAll(accessTokenRef.current!, filters), [_fetchAll]),
     fetchById:             useCallback((id: string)                       => _fetchById(accessTokenRef.current!, id), [_fetchById]),
     fetchDriverActive:     useCallback(()                               => _fetchDriverActive(accessTokenRef.current!), [_fetchDriverActive]),
-    fetchDriverUserActive: useCallback((vehicleType?: string) => _fetchAvailableDrivers(accessTokenRef.current!, vehicleType), []),
+    fetchDriverUserActive: useCallback((vehicleType?: string, scheduledAt?: string, durationMin?: number | null) => _fetchAvailableDrivers(accessTokenRef.current!, vehicleType, scheduledAt, durationMin), []),
+
+    fetchOrderByReservationId: useCallback(async (reservationId: string) => {
+      const res = await ordersApi.getByReservation(accessTokenRef.current!, reservationId);
+      return res.ok ? res.data : null;
+    }, []),
 
     fetchAllPages: useCallback(
       (filters?: ReservationListFilters) => _fetchAllPages(accessTokenRef.current!, filters),

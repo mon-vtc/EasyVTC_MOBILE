@@ -36,6 +36,12 @@ export function useDriver() {
   const isFetchingSchedule = useDriversStore(s => s.isFetchingSchedule);
   const _fetchWeeklySchedule = useDriversStore(s => s.fetchWeeklySchedule);
   const _setWeeklySchedule = useDriversStore(s => s.setWeeklySchedule);
+  const revenues = useDriversStore(s => s.revenues);
+  const isFetchingRevenues = useDriversStore(s => s.isFetchingRevenues);
+  const revenuesError = useDriversStore(s => s.revenuesError);
+  const revenuesStatus = useDriversStore(s => s.revenuesStatus);
+  const revenuesPage = useDriversStore(s => s.revenuesPage);
+  const _fetchRevenues = useDriversStore(s => s.fetchRevenues);
   const accessTokenRef = useRef(accessToken);
 
   // ── Résoudre le token ou throw ──────────────────────────────
@@ -176,8 +182,8 @@ export function useDriver() {
     return res.data;
   }, [accessToken]);
 
-  const getMyRevenues = useCallback(async (period: RevenuesPeriod, date?: string): Promise<DriverRevenuesResult | null> => {
-    const res = await driverApi.getMyRevenues(token(), period, date);
+  const getMyRevenues = useCallback(async (period: RevenuesPeriod, filters?: { status?: 'completed' | 'cancelled'; page?: number; limit?: number }): Promise<DriverRevenuesResult | null> => {
+    const res = await driverApi.getMyRevenues(token(), period, filters);
     if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur récupération revenus');
     return res.data;
   }, [accessToken]);
@@ -191,6 +197,11 @@ export function useDriver() {
     if (!accessTokenRef.current) return false;
     return _setWeeklySchedule(accessTokenRef.current!, dto);
   }, [_setWeeklySchedule]);
+
+  const fetchRevenuesWithFilters = useCallback(async (period: RevenuesPeriod, status?: 'completed' | 'cancelled', page?: number) => {
+    if (!accessTokenRef.current) return;
+    await _fetchRevenues(accessTokenRef.current, period, status, page);
+  }, [_fetchRevenues]);
 
   return {
     user:           driver,
@@ -231,6 +242,12 @@ export function useDriver() {
 
     //Revenues
     getMyRevenues,
+    revenues,
+    isFetchingRevenues,
+    revenuesError,
+    revenuesStatus,
+    revenuesPage,
+    fetchRevenuesWithFilters,
 
     // Weekly Schedule
     weeklySchedule,

@@ -12,15 +12,18 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
-  Alert,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useNotifications } from '../../hooks/useNotifications';
 import NotificationCard from '../../components/NotificationCard';
 import type { AuthUser, Notification } from '../../types';
-import { Colors, Spacing } from '../../theme/colors';
+import { Colors, Spacing, Fonts } from '../../theme/colors';
+import { useAlert } from '../../hooks/useAlert';
+import { useToast } from '../../hooks/useToast';
 import { useAuthStore } from '../../store/auth.store';
 import type { NavigationProp } from '@react-navigation/native';
+import { AppIcon } from '../../components/common/AppIcon';
 
 const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -38,6 +41,8 @@ const NotificationsScreen: React.FC = () => {
     loadMore,
     clearError,
   } = useNotifications();
+  const { showAlert } = useAlert();
+  const { showToast } = useToast();
   const { user } = useAuthStore();
   const handleRefresh = useCallback(() => {
     clearError();
@@ -48,7 +53,7 @@ const NotificationsScreen: React.FC = () => {
     try {
       await markAsRead(id);
     } catch (err) {
-      Alert.alert('Erreur', (err as Error).message);
+      showToast({ type: 'error', title: 'Erreur', message: (err as Error).message });
     }
   }, [markAsRead]);
 
@@ -56,15 +61,15 @@ const NotificationsScreen: React.FC = () => {
     try {
       await markAllAsRead();
     } catch (err) {
-      Alert.alert('Erreur', (err as Error).message);
+      showToast({ type: 'error', title: 'Erreur', message: (err as Error).message });
     }
   }, [markAllAsRead]);
 
   const handleDeleteNotification = useCallback((id: string) => {
-    Alert.alert(
-      'Supprimer la notification',
-      'Êtes-vous sûr de vouloir supprimer cette notification ?',
-      [
+    showAlert({
+      title: 'Supprimer la notification',
+      message: 'Êtes-vous sûr de vouloir supprimer cette notification ?',
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Supprimer',
@@ -73,11 +78,11 @@ const NotificationsScreen: React.FC = () => {
             // For now, client-side removal as no backend DELETE endpoint is specified.
             // A real implementation would call a backend API to delete the notification.
             removeNotificationLocally(id);
-            Alert.alert('Succès', 'Notification supprimée localement.');
+            showToast({ type: 'success', title: 'Succès', message: 'Notification supprimée localement.' });
           },
         },
       ]
-    );
+    });
   }, [removeNotificationLocally]);
 
   const handleViewAction = useCallback((notification: Notification) => {
@@ -95,7 +100,7 @@ const NotificationsScreen: React.FC = () => {
       switch (user?.role) {
         case 'driver':
           if (reservationId) {
-            navigateToNested('DriverReservations', { screen: 'DriverReservationDetails', params: { reservationId } });
+            navigateToNested('DriverNotifications', { screen: 'DriverReservationDetails', params: { reservationId } });
             return true;
           }
           if (invoiceId) {
@@ -211,8 +216,17 @@ const NotificationsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, ((user as AuthUser)?.role === 'client') ? {marginTop: Spacing.xl} : {}]}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Notifications</Text>
+      {(user as AuthUser)?.role === 'driver' && (
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
+              <AppIcon name="arrow-back" size={24} color={Colors.white} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Notifications</Text>
+            <View style={styles.headerBtn} />
+          </View>
+      )}
+      <View style={styles.headerNotif}>
+        <Text style={styles.headerNotifTitle}>Notifications</Text>
         <View style={styles.headerRight}>
           {notifications.length > 0 && unreadCount > 0 && (
             <TouchableOpacity onPress={handleMarkAllAsRead} style={styles.markAllReadButton}>
@@ -249,7 +263,7 @@ const NotificationsScreen: React.FC = () => {
           )}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
-          ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color="#3B82F6" style={styles.loader} /> : null}
+          ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={styles.loader} /> : null}
           refreshControl={
             <RefreshControl refreshing={isLoading && notifications.length > 0} onRefresh={handleRefresh} />
           }
@@ -264,17 +278,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
+  headerNotif: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
   },
-  headerTitle: {
+  headerNotifTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     color: Colors.bordeauxLight,
   },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
+    headerBtn: { padding: Spacing.sm, width: 40 },
+    headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+    
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',

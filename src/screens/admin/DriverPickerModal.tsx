@@ -24,6 +24,8 @@ interface Props {
   visible: boolean;
   reservationRef?: string; // ex: "BC-00A1" — affiché dans le titre
   vehicleType?: string;    // type de véhicule choisi par le client — filtre les chauffeurs
+  scheduledAt?: string;    // date/heure prévue — permet au backend de filtrer les conflits horaires
+  durationMin?: number | null;
   onConfirm: (driver: AvailableDriverDto) => void;
   onClose: () => void;
 }
@@ -119,7 +121,7 @@ const row = StyleSheet.create({
 });
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
-export default function DriverUserPickerModal({ visible, reservationRef, vehicleType, onConfirm, onClose }: Props) {
+export default function DriverUserPickerModal({ visible, reservationRef, vehicleType, scheduledAt, durationMin, onConfirm, onClose }: Props) {
   const { fetchDriverUserActive } = useReservation();
 
   const [drivers, setDriverUsers]   = useState<AvailableDriverDto[]>([]);
@@ -180,7 +182,7 @@ export default function DriverUserPickerModal({ visible, reservationRef, vehicle
     setSelected(null);
     setSearch('');
     setLoading(true);
-    fetchDriverUserActive(vehicleType)
+    fetchDriverUserActive(vehicleType, scheduledAt, durationMin)
       .then((list: AvailableDriverDto[]) => setDriverUsers(list ?? []))
       .catch(console.warn)
       .finally(() => setLoading(false));
@@ -270,7 +272,7 @@ export default function DriverUserPickerModal({ visible, reservationRef, vehicle
           )}
 
           {/* ── Liste ── */}
-          {loading ? (
+          {/* {loading ? (
             <View style={M.centered}>
               <ActivityIndicator size="large" color={Colors.bordeaux} />
               <Text style={M.loadingText}>Chargement des chauffeurs…</Text>
@@ -301,7 +303,7 @@ export default function DriverUserPickerModal({ visible, reservationRef, vehicle
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             />
-          )}
+          )} */}
 
                 {/* Barre de recherche */}
                 <View style={M.searchBar}>

@@ -39,12 +39,12 @@ const QUICK_ACTIONS = [
 ] as const;
 
 // ── Composants ──────────────────────────────────────────────────
-function RideCard({ ride }: { ride: Ride }) {
+function RideCard({ ride, onPress }: { ride: Ride, onPress: () => void}) {
   const status = ride.status === 'confirmed' 
     ? { label: 'Confirmée', bg: Colors.successLight, color: Colors.success }
     : { label: 'En attente', bg: Colors.warningLight, color: Colors.warning };
   return (
-    <View style={cardStyles.wrapper}>
+    <TouchableOpacity style={cardStyles.wrapper} onPress={onPress}>
       {/* Status + Prix */}
       <View style={cardStyles.topRow}>
         <View style={[cardStyles.badge, { backgroundColor: status.bg }]}>
@@ -77,7 +77,7 @@ function RideCard({ ride }: { ride: Ride }) {
           <Text style={cardStyles.infoText}>{ride.vehicle}</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -201,6 +201,7 @@ export default function ClientHomeScreen({ navigation }: Props) {
             <TouchableOpacity
               style={styles.newRideBtn}
               onPress={() => navigation.navigate('CreateReservation')}
+              testID="client-home-new-reservation-btn"
             >
               <Ionicons name="add-circle-outline" size={20} color={Colors.bordeaux} />
               <Text style={styles.newRideBtnText}>Nouvelle réservation</Text>
@@ -250,7 +251,7 @@ export default function ClientHomeScreen({ navigation }: Props) {
             </View>
 
             {upcomingRides.map((ride) => (
-              <RideCard key={ride.id} ride={ride} />
+              <RideCard key={ride.id} ride={ride} onPress={() => navigation.navigate('ReservationDetails', { reservationId: ride.id })} />
             ))}
           </View>
 

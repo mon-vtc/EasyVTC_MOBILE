@@ -6,13 +6,14 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, ScrollView, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Modal, KeyboardAvoidingView,
+  StyleSheet, ActivityIndicator, Modal, KeyboardAvoidingView,
   Platform, Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { usePricing }    from '../../hooks/usePricing';
 import type { PricingFlatRate, PricingCountry } from '../../types/pricing.types';
 import { Logo }          from '../../constants/logo';
+import { useAlert } from '../../hooks/useAlert';
 import { AppIcon }       from '../../components/common/AppIcon';
 import { Colors, Spacing, Radius } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -307,6 +308,7 @@ function CreateModal({
   onClose: () => void;
   onSave: (form: FlatRateFormValues) => void;
 }) {
+  const { showToast } = useToast();
   const [form, setForm] = useState<FlatRateFormValues>(emptyForm());
   const set = (k: keyof FlatRateFormValues) => (v: string) =>
     setForm(prev => ({ ...prev, [k]: v }));
@@ -315,12 +317,11 @@ function CreateModal({
 
   const handleSave = () => {
     if (
-      !form.label.trim() ||
       !form.origin_label.trim() ||
       !form.destination_label.trim() ||
       !form.price.trim()
     ) {
-      Alert.alert('Champs requis', 'Tous les champs sont obligatoires.');
+      showToast({ type: 'warning', title: 'Champs requis', message: 'Tous les champs sont obligatoires.' });
       return;
     }
     onSave(form);
@@ -439,10 +440,11 @@ function FlatRateDetailScreen({
   onSave: (id: string, form: FlatRateFormValues) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
+  const { showAlert } = useAlert();
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm]           = useState<FlatRateFormValues>(flatRateToForm(item));
   const [savedForm, setSavedForm] = useState<FlatRateFormValues>(flatRateToForm(item));
-
+  const { showToast } = useToast();
   const set = (k: keyof FlatRateFormValues) => (v: string) =>
     setForm(prev => ({ ...prev, [k]: v }));
 
@@ -455,26 +457,26 @@ function FlatRateDetailScreen({
 
   const handleToggleEdit = () => {
     if (isEditing) {
-      Alert.alert(
-        'Annuler les modifications',
-        'Les modifications non enregistrées seront perdues.',
-        [
+      showAlert({
+        title: 'Annuler les modifications',
+        message: 'Les modifications non enregistrées seront perdues.',
+        buttons: [
           { text: 'Continuer', style: 'cancel' },
           {
             text: 'Annuler',
             style: 'destructive',
             onPress: () => { setForm(savedForm); setIsEditing(false); },
           },
-        ]
-      );
+        ],
+      });
     } else {
       setIsEditing(true);
     }
   };
 
   const handleSave = async () => {
-    if (!form.label.trim() || !form.price.trim()) {
-      Alert.alert('Champs requis', 'Le libellé et le prix sont obligatoires.');
+    if (!form.price.trim()) {
+      showToast({ type: 'warning', title: 'Champ requis', message: 'Le prix est obligatoire.' });
       return;
     }
     await onSave(item.id, form);
@@ -483,14 +485,14 @@ function FlatRateDetailScreen({
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      'Supprimer le forfait',
-      `Voulez-vous vraiment supprimer le forfait "${item.label}" ?\nCette action est irréversible.`,
-      [
+    showAlert({
+      title: 'Supprimer le forfait',
+      message: `Voulez-vous vraiment supprimer le forfait "${item.label}" ?\nCette action est irréversible.`,
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         { text: 'Supprimer', style: 'destructive', onPress: () => onDelete(item.id) },
-      ]
-    );
+      ],
+    });
   };
 
   return (
@@ -640,9 +642,10 @@ export default function AdminFlatRatesScreen() {
   const [selectedItem,  setSelectedItem]  = useState<PricingFlatRate | null>(null);
   const [createVisible, setCreateVisible] = useState(false);
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
 
   useEffect(() => {
-    if (error) Alert.alert('Erreur', error, [{ text: 'OK', onPress: clearError }]);
+    if (error) showToast({ type: 'error', title: 'Erreur', message: error, onPress: clearError });
   }, [error]);
 
   // ── Chargement ────────────────────────────────────────────────────────────
@@ -691,10 +694,10 @@ export default function AdminFlatRatesScreen() {
     if (action === 'view' || action === 'edit') {
       setSelectedItem(item);
     } else if (action === 'delete') {
-      Alert.alert(
-        'Supprimer le forfait',
-        `Voulez-vous vraiment supprimer le forfait "${item.label}" ?`,
-        [
+      showAlert({
+        title: 'Supprimer le forfait',
+        message: `Voulez-vous vraiment supprimer le forfait "${item.label}" ?`,
+        buttons: [
           { text: 'Annuler', style: 'cancel' },
           {
             text: 'Supprimer',
@@ -704,8 +707,8 @@ export default function AdminFlatRatesScreen() {
               showToast({ type: 'success', title: 'Supprimé', message: 'Le forfait a été désactivé.' });
             },
           },
-        ]
-      );
+        ],
+      });
     }
   };
 

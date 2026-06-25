@@ -157,13 +157,21 @@ const updateSupportTicketStatus = (
   return api.put(`/support/tickets/${ticketId}/status`, payload, token);
 };
 
+/**
+ * Marque les messages d'une conversation de réservation comme lus.
+ * @route PATCH /chat/reservations/:reservationId/messages/read
+ */
+const markChatAsRead = (token: string, reservationId: string): Promise<ApiResponse<{ updated: number }>> => (
+  api.patch(`/chat/reservations/${reservationId}/messages/read`, {}, token)
+);
 
 /**
- * Marque les messages d'une conversation comme lus (non implémenté backend).
+ * Marque les messages d'un ticket de support comme lus.
+ * @route PATCH /support/tickets/:ticketId/messages/read
  */
-const markAsRead = (token: string, conversationId: string): Promise<ApiResponse<void>> => {
-  return api.post<void>(`/chat/reservations/${conversationId}/read`, {}, token);
-};
+const markSupportAsRead = (token: string, ticketId: string): Promise<ApiResponse<{ updated: number }>> => (
+  api.patch(`/support/tickets/${ticketId}/messages/read`, {}, token)
+);
 
 export const chatApi = {
   listMyConversations,
@@ -171,7 +179,8 @@ export const chatApi = {
   listActiveConversationsForSupervision,
   getMessages,
   sendMessage,
-  markAsRead,
+  markChatAsRead,
+  markSupportAsRead,
   createSupportTicket,
   listSupportTickets,
   getSupportTicketDetail,

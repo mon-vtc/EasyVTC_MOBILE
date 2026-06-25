@@ -18,17 +18,19 @@ interface AppButtonProps {
   style?:     ViewStyle;
   textStyle?: TextStyle;
   fullWidth?: boolean;
+  testID?:    string;
 }
 
 export function AppButton({
   label, onPress, loading = false, disabled = false,
-  variant = 'primary', size = 'md', style, textStyle, fullWidth = true,
+  variant = 'primary', size = 'md', style, textStyle, fullWidth = true, testID,
 }: AppButtonProps) {
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
+      testID={testID}
       style={[
         styles.base,
         styles[variant],

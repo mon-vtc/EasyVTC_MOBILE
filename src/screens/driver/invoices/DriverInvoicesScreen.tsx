@@ -8,12 +8,13 @@ import { useNavigation, DrawerActions } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, Platform, TextInput
+  StyleSheet, ActivityIndicator, Linking, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { Ionicons }         from '@expo/vector-icons';
 import { useInvoicesStore } from '../../../store/invoices.store';
 import { useAuthStore }     from '../../../store/auth.store';
 import { invoicesApi }      from '../../../services/api/invoices.api';
+import { useToast } from '../../../hooks/useToast';
 import type { Invoice }     from '../../../types/invoices.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 
@@ -29,6 +30,7 @@ function InvoiceCard({ invoice, token, onPress }: { invoice: Invoice; token: str
   const [opening, setOpening] = useState(false);
   const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
   const snap = invoice.trip_snapshot;
+  const { showToast } = useToast();
 
   const openPdf = async () => {
     setOpening(true);
@@ -36,7 +38,7 @@ function InvoiceCard({ invoice, token, onPress }: { invoice: Invoice; token: str
       const res = await invoicesApi.fetchPdfUrl(token, invoice.id);
       if (!res.ok || !res.data?.url) throw new Error(res.message ?? 'URL indisponible');
       await Linking.openURL(res.data.url);
-    } catch { Alert.alert('Erreur', 'Impossible d\'ouvrir la facture.'); }
+    } catch { showToast({ type: 'error', title: 'Erreur', message: 'Impossible d\'ouvrir la facture.' }); }
     finally { setOpening(false); }
   };
 
@@ -92,8 +94,9 @@ function InvoiceCard({ invoice, token, onPress }: { invoice: Invoice; token: str
 
 export default function DriverInvoicesScreen() {
   const navigation = useNavigation<NavigationProp<any>>();
-  const { invoices, total, isLoading, error, fetch, clearError } = useInvoicesStore();
+  const { invoices, total, page, totalPages, isLoading, isFetchingNextPage, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
+  const { showToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -101,8 +104,13 @@ export default function DriverInvoicesScreen() {
     try { await fetch(token); } catch { /* handled */ }
   }, [token]);
 
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetch(token, { page: page + 1 }).catch(() => {});
+  }, [isLoading, isFetchingNextPage, page, totalPages, token, fetch]);
+
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { if (error) { Alert.alert('Erreur', error); clearError(); } }, [error]);
+  useEffect(() => { if (error) { showToast({ type: 'error', title: 'Erreur', message: error }); clearError(); } }, [error, showToast, clearError]);
 
   const filteredInvoices = useMemo(() => {
     if (!searchQuery) return invoices;
@@ -160,6 +168,9 @@ export default function DriverInvoicesScreen() {
         renderItem={({ item }) => <InvoiceCard invoice={item} token={token} onPress={handleViewInvoice} />}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
         ListEmptyComponent={filteredInvoices.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="receipt-outline" size={48} color={Colors.textMuted} />

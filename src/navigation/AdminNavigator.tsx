@@ -2,9 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { createDrawerNavigator, DrawerNavigationOptions } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { AppIcon }     from '../components/common/AppIcon';
-import DrawerContent   from './DrawerContent';
-import { Colors }      from '../theme/colors';
+import { AppIcon } from '../components/common/AppIcon';
+import DrawerContent, { DrawerLabel } from './DrawerContent';
+import { Colors, Spacing }      from '../theme/colors';
 import { Logo }        from '../constants/logo';
 
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
@@ -43,6 +43,10 @@ import AdminChatScreen from '../screens/admin/AdminChatScreen';
 import AdminAuditLogsScreen from '../screens/admin/AdminAuditLogsScreen';
 import AdminAuditLogDetailScreen from '../screens/admin/AdminAuditLogDetailScreen';
 
+
+import { useNotifications } from '../hooks/useNotifications';  
+
+
 import type {
   AdminDrawerParamList,
   DriversStackParamList,
@@ -64,6 +68,7 @@ const ReservationsStack = createNativeStackNavigator<ReservationsStackParamList>
 const InvoicesStack = createNativeStackNavigator<AdminInvoicesStackParamList>();
 const OrderStack = createNativeStackNavigator<AdminOrderStackParamList>();
 const NotificationsStack = createNativeStackNavigator<AdminNotificationsStackParamList>();
+const AdminRootStack = createNativeStackNavigator();
 const SupportStack = createNativeStackNavigator<SupportStackParamList>();
 
 // Stack pour les discussions (supervision)
@@ -87,6 +92,9 @@ function AdminReservationsStack() {
     <ReservationsStack.Navigator screenOptions={{ headerShown: false }}>
       <ReservationsStack.Screen name="ReservationsList" component={AdminReservationsScreen} />
       <ReservationsStack.Screen name="AdminReservationDetail" component={AdminReservationScreen} />
+      <ReservationsStack.Screen name="DriverDetail" component={AdminDriverDetailScreen} />
+      <ReservationsStack.Screen name="InvoiceDetails" component={AdminInvoicesDetailScreen} />
+      <ReservationsStack.Screen name="ClientDetail" component={AdminClientDetailScreen} />
     </ReservationsStack.Navigator>
   );
 }
@@ -206,43 +214,40 @@ function AdminAuditLogsNavigator() {
 // ── Drawer ──────────────────────────────────────────────────────
 const Drawer = createDrawerNavigator<AdminDrawerParamList>();
 
-const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions => ({
-  headerStyle:      { backgroundColor: Colors.bordeaux, height: 100, elevation: 0, shadowOpacity: 0 },
-  headerTintColor:  Colors.white,
-  headerTitleAlign: 'center',
+function AdminDrawerNavigator() {
+  const { unreadCount, unreadMessagesCount, unreadSupportCount } = useNotifications();
 
-  headerTitle: () => (
-    <Image source={Logo.LogoEasyVTC} style={{ width: 40, height: 40, resizeMode: 'contain' }} />
-  ),
-
-  headerLeft: () => (
-    <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={{ marginLeft: 20 }}>
-      <AppIcon name="menu-outline" size={28} color={Colors.white} />
-    </TouchableOpacity>
-  ),
-
-  headerRight: () => (
-    <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={{ marginRight: 20 }}>
-      <AppIcon name="notifications-outline" size={24} color={Colors.white} />
-    </TouchableOpacity>
-  ),
-
-  drawerStyle:               { backgroundColor: Colors.surface, width: 280 },
-  drawerActiveTintColor:     Colors.bordeaux,
-  drawerInactiveTintColor:   Colors.textSecondary,
-  drawerActiveBackgroundColor: Colors.overlayLight,
-});
-
-function DrawerLabel({ icon, label }: { icon: React.ComponentProps<typeof AppIcon>['name']; label: string }) {
-  return (
-    <View style={styles.labelRow}>
-      <AppIcon name={icon} size={20} color={Colors.bordeauxDark} />
-      <Text style={styles.labelText}>{label}</Text>
-    </View>
-  );
-}
-
-export default function AdminNavigator() {
+  const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions => ({
+    headerStyle:      { backgroundColor: Colors.bordeaux, height: 100, elevation: 0, shadowOpacity: 0 },
+    headerTintColor:  Colors.white,
+    headerTitleAlign: 'center',
+  
+    headerTitle: () => (
+      <Image source={Logo.LogoEasyVTC} style={{ width: 40, height: 40, resizeMode: 'contain' }} />
+    ),
+  
+    headerLeft: () => (
+      <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={{ marginLeft: 20 }}>
+        <AppIcon name="menu-outline" size={28} color={Colors.white} />
+      </TouchableOpacity>
+    ),
+  
+    headerRight: () => (
+      <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.getParent()?.navigate('AdminNotificationList')}>
+        <AppIcon name="notifications-outline" size={26} color={Colors.white} />
+        {unreadCount > 0 && (
+          <View style={styles.notifBadge}>
+            <Text style={styles.notifText}>{unreadCount}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    ),
+  
+    drawerStyle:               { backgroundColor: Colors.surface, width: 280 },
+    drawerActiveTintColor:     Colors.bordeaux,
+    drawerInactiveTintColor:   Colors.textSecondary,
+    drawerActiveBackgroundColor: Colors.overlayLight,
+  });
   
   return (
     <Drawer.Navigator
@@ -273,9 +278,7 @@ export default function AdminNavigator() {
       <Drawer.Screen
         name="AdminDiscussions"
         component={AdminDiscussionStack}
-        options={{
-          drawerLabel: () => <DrawerLabel icon="chatbubbles-outline" label="Supervision chats" />,
-        }}
+        options={{ drawerLabel: () => <DrawerLabel icon="chatbubbles-outline" label="Supervision chats" badgeCount={unreadMessagesCount} /> }}
       />
 
       <Drawer.Screen
@@ -310,10 +313,7 @@ export default function AdminNavigator() {
       <Drawer.Screen
         name="AdminSupport"
         component={AdminSupportStack}
-        options={{
-          drawerLabel: () => <DrawerLabel icon="headset-outline" label="Support" />,
-          headerShown: false,
-        }}
+        options={{ drawerLabel: () => <DrawerLabel icon="headset-outline" label="Support" badgeCount={unreadSupportCount} />, headerShown: false }}
       />
 
       <Drawer.Screen
@@ -421,7 +421,31 @@ export default function AdminNavigator() {
   );
 }
 
+export default function AdminNavigator() {
+  return (
+    <AdminRootStack.Navigator screenOptions={{ headerShown: false }}>
+      <AdminRootStack.Screen name="AdminMain" component={AdminDrawerNavigator} />
+      <AdminRootStack.Screen name="AdminNotificationList" component={NotificationsScreen} />
+      <AdminRootStack.Screen name="NotificationDetails" component={NotificationDetailsScreen} />
+    </AdminRootStack.Navigator>
+  );
+}
+
 const styles = StyleSheet.create({
   labelRow:  { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   labelText: { fontSize: 16, color: Colors.textPrimary, flex: 1 },
+    headerIcons:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginRight: 20},
+    iconBtn:      { position: 'relative', padding: 6,borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', marginRight: 20 },
+    notifBadge: {
+      position:        'absolute',
+      top:             2, right: 2,
+      backgroundColor: '#FF5252',
+      borderRadius:    8,
+      minWidth:        16, height: 16,
+      alignItems:      'center',
+      justifyContent:  'center',
+      paddingHorizontal: 3,
+    },
+    notifText: { color: Colors.white, fontSize: 9, fontWeight: '800' },
+  
 });

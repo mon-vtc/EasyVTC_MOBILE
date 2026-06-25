@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Linking, Platform, Image, Alert,
+  ActivityIndicator, Linking, Platform, Image, Alert, FlatList
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,6 +9,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
 import { useClientsStore, useAuthStore } from '../../../store';
 import type { ClientWithStats, ClientTripItem, ClientsStackParamList } from '../../../types';
+import type { FavoriteAddress, FavoriteAddressType } from '../../../types/favorites.types';
+import { favoritesApi } from '../../../services/api/favorites.api';
 
 type Nav = NativeStackNavigationProp<ClientsStackParamList, 'ClientDetail'>;
 
@@ -19,6 +21,15 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
   inactive: { label: 'Inactif',  bg: '#FFF3E0', color: '#E65100', dot: '#E65100' },
   locked:   { label: 'Suspendu', bg: '#FDECEA', color: '#E53935', dot: '#E53935' },
 };
+
+const ICONS_MAP: Record<FavoriteAddressType, { name: React.ComponentProps<typeof Ionicons>['name'], color: string, bg: string }> = {
+  home: { name: 'home', color: '#3B82F6', bg: '#DBEAFE' },
+  office: { name: 'briefcase', color: '#8B5CF6', bg: '#EDE9FE' },
+  airport: { name: 'airplane', color: '#10B981', bg: '#D1FAE5' },
+  station: { name: 'train', color: '#F97316', bg: '#FFEDD5' },
+  custom: { name: 'location', color: '#6B7280', bg: '#F3F4F6' },
+};
+
 
 // ── Étoiles de notation ───────────────────────────────────────────────────────
 function StarRating({ value }: { value: number | null }) {
@@ -134,35 +145,62 @@ export default function AdminClientDetailScreen() {
   const route       = useRoute<any>();
   const { clientId } = route.params as { clientId: string };
   const accessToken  = useAuthStore(s => s.accessToken);
+  const [favorites, setFavorites] = useState<FavoriteAddress[]>([]);
 
   const { fetchClientById, fetchClientTrips } = useClientsStore();
 
   const [client,   setClient]   = useState<ClientWithStats | null>(null);
   const [trips,    setTrips]    = useState<ClientTripItem[]>([]);
+  const [tripsPage,       setTripsPage]       = useState(1);
+  const [tripsTotalPages, setTripsTotalPages] = useState(1);
   const [loading,  setLoading]  = useState(true);
   const [tripsLoading, setTripsLoading] = useState(false);
+  const [isFetchingNextTripsPage, setIsFetchingNextTripsPage] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('informations');
 
   useEffect(() => {
     (async () => {
       try {
-        const data = await fetchClientById(accessToken!, clientId);
-        setClient(data);
+        const [clientData, favRes] = await Promise.all([
+          fetchClientById(accessToken!, clientId),
+          favoritesApi.list(accessToken!, clientId),
+        ]);
+        setClient(clientData);
+        if (favRes.ok && favRes.data) setFavorites(favRes.data);
       } finally {
         setLoading(false);
       }
     })();
-  }, [clientId]);
+  }, [clientId, accessToken, fetchClientById]);
 
-  const loadTrips = async () => {
-    if (trips.length > 0) return;
-    setTripsLoading(true);
+  const loadTrips = async (page = 1) => {
+    if (page === 1 && trips.length > 0) return;
+    page === 1 ? setTripsLoading(true) : setIsFetchingNextTripsPage(true);
     try {
-      const result = await fetchClientTrips(accessToken!, clientId);
-      if (result) setTrips(result.trips);
+      const result = await fetchClientTrips(accessToken!, clientId, { page });
+      if (result) {
+        setTrips(prev => page === 1 ? result.trips : [...prev, ...result.trips]);
+        setTripsPage(page);
+        setTripsTotalPages(result.totalPages);
+      }
     } finally {
       setTripsLoading(false);
+      setIsFetchingNextTripsPage(false);
     }
+  };
+
+  const loadMoreTrips = useCallback(() => {
+    if (tripsLoading || isFetchingNextTripsPage || tripsPage >= tripsTotalPages) return;
+    loadTrips(tripsPage + 1);
+  }, [tripsLoading, isFetchingNextTripsPage, tripsPage, tripsTotalPages]);
+
+  const getIconForFavorite = (label: string): FavoriteAddressType => {
+    const lowerLabel = label.toLowerCase();
+    if (lowerLabel.includes('domicile') || lowerLabel.includes('maison')) return 'home';
+    if (lowerLabel.includes('bureau') || lowerLabel.includes('travail')) return 'office';
+    if (lowerLabel.includes('aéroport') || lowerLabel.includes('airport') || lowerLabel.includes('cdg') || lowerLabel.includes('orly')) return 'airport';
+    if (lowerLabel.includes('gare')) return 'station';
+    return 'custom';
   };
 
   const handleTabChange = (tab: Tab) => {
@@ -192,6 +230,22 @@ export default function AdminClientDetailScreen() {
   const memberSince = new Date(client.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
+
+   const renderCard = (item: FavoriteAddress) => {
+      const favoriteType = getIconForFavorite(item.label);
+      const iconInfo = ICONS_MAP[favoriteType];
+      return (
+        <View key={item.id} style={styles.card}>
+          <View style={[styles.iconContainer, { backgroundColor: iconInfo.bg }]}>
+            <Ionicons name={iconInfo.name} size={24} color={iconInfo.color} />
+          </View>
+          <View style={styles.cardContent}>
+            <Text style={styles.cardLabel}>{item.label}</Text>
+            <Text style={styles.cardAddress}>{item.address}</Text>
+          </View>
+        </View>
+      );
+    };
 
   return (
     <View style={styles.container}>
@@ -310,13 +364,19 @@ export default function AdminClientDetailScreen() {
                 <Ionicons name="location-outline" size={18} color={Colors.bordeauxLight} />
                 <Text style={styles.sectionTitle}>Adresses favorites</Text>
               </View>
-
-              {/* Vide jusqu'au sprint 6 — module favorites */}
-              <View style={styles.emptyFavorites}>
-                <Ionicons name="location-outline" size={32} color={Colors.border} />
-                <Text style={styles.emptyFavoritesText}>Aucune adresse enregistrée</Text>
-                <Text style={styles.emptyFavoritesHint}>Disponible après la première course</Text>
-              </View>
+              {favorites.length === 0 ? (
+                <View style={styles.emptyFavorites}>
+                  <Ionicons name="location-outline" size={32} color={Colors.border} />
+                  <Text style={styles.emptyFavoritesText}>
+                    Aucune adresse enregistrée
+                  </Text>
+                  <Text style={styles.emptyFavoritesHint}>
+                    Disponible après la première course
+                  </Text>
+                </View>
+              ) : (
+                favorites.map(item => renderCard(item))
+              )}   
             </View>
 
             <View style={styles.sectionCard}>
@@ -349,13 +409,22 @@ export default function AdminClientDetailScreen() {
               <View style={styles.center}>
                 <ActivityIndicator size="small" color={Colors.bordeaux} />
               </View>
-            ) : trips.length === 0 ? (
-              <View style={styles.emptyTrips}>
-                <Ionicons name="car-outline" size={40} color={Colors.border} />
-                <Text style={styles.emptyText}>Aucune course effectuée</Text>
-              </View>
             ) : (
-              trips.map(trip => <TripRow key={trip.id} trip={trip} />)
+              <FlatList
+                data={trips}
+                keyExtractor={item => item.id}
+                renderItem={({ item }) => <TripRow trip={item} />}
+                scrollEnabled={false}
+                onEndReached={loadMoreTrips}
+                onEndReachedThreshold={0.5}
+                ListEmptyComponent={
+                  <View style={styles.emptyTrips}>
+                    <Ionicons name="car-outline" size={40} color={Colors.border} />
+                    <Text style={styles.emptyText}>Aucune course effectuée</Text>
+                  </View>
+                }
+                ListFooterComponent={isFetchingNextTripsPage ? <ActivityIndicator style={{ marginVertical: 12 }} color={Colors.bordeaux} /> : null}
+              />
             )}
           </View>
         )}
@@ -453,4 +522,39 @@ const styles = StyleSheet.create({
 
   emptyTrips: { alignItems: 'center', paddingTop: 40, gap: Spacing.md },
   emptyText:  { fontSize: Fonts.size.md, color: Colors.textMuted },
+
+   card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+  cardContent: {
+    flex: 1,
+  },
+  cardLabel: {
+    fontSize: Fonts.size.md,
+    fontWeight: '700',
+    color: Colors.bordeaux,
+  },
+  cardAddress: {
+    fontSize: Fonts.size.sm,
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
 });

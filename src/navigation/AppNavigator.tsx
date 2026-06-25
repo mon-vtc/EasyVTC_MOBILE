@@ -8,6 +8,7 @@ import AuthNavigator           from './AuthNavigator';
 import ClientNavigator         from './ClientNavigator';
 import DriverNavigator         from './DriverNavigator';
 import AdminNavigator          from './AdminNavigator';
+import { AlertProvider } from '../components/common/AlertProvider';
 import ManagerNavigator        from './ManagerNavigator';
 import { Colors }              from '../theme/colors';
 
@@ -48,11 +49,12 @@ export default function AppNavigator() {
   // Ajouter cette ligne comme attribut de la balise NavigationContainer pour un meilleur debug
   // onStateChange={(state) => console.log('Nouvel État de Navigation:', JSON.stringify(state, null, 2))}
   return (
-    
-    <NavigationContainer
-    >
-      {renderNavigator()}
-    </NavigationContainer>
+    <AlertProvider>
+      <NavigationContainer
+      >
+        {renderNavigator()}
+      </NavigationContainer>
+    </AlertProvider>
   );
 }
 

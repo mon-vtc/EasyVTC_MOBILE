@@ -7,7 +7,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useState, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, Image,
-  StyleSheet, ActivityIndicator, Alert, RefreshControl, Platform, TextInput
+  StyleSheet, ActivityIndicator, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Logo }    from '../../../constants/logo';
 import { useOrdersStore } from '../../../store/orders.store';
 import { useAuthStore } from '../../../store/auth.store';
+import { useToast } from '../../../hooks/useToast';
 import type { Order } from '../../../types/orders.types';
 import type { DriverOrdersStackParamList } from '../../../types/auth.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
@@ -22,8 +23,9 @@ import { OrderCard } from '../../../components/common/OrderCard';
 
 export default function DriverOrdersScreen() {
   const navigation = useNavigation<NavigationProp<DriverOrdersStackParamList>>();
-  const { orders, total, isLoading, error, fetchDriverMine, clearError } = useOrdersStore();
+  const { orders, total, page, totalPages, isLoading, isFetchingNextPage, error, fetchDriverMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
+  const { showToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -31,8 +33,13 @@ export default function DriverOrdersScreen() {
     try { await fetchDriverMine(token); } catch { /* handled */ }
   }, [token]);
 
+  const loadMore = useCallback(() => {
+    if (isLoading || isFetchingNextPage || page >= totalPages) return;
+    fetchDriverMine(token, { page: page + 1 }).catch(() => {});
+  }, [isLoading, isFetchingNextPage, page, totalPages, token, fetchDriverMine]);
+
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { if (error) { Alert.alert('Erreur', error); clearError(); } }, [error]);
+  useEffect(() => { if (error) { showToast({ type: 'error', title: 'Erreur', message: error }); clearError(); } }, [error, showToast, clearError]);
 
   const handleViewOrder = (order: Order) => {
     navigation.navigate('DriverOrderDetails', { orderId: order.id });
@@ -93,6 +100,9 @@ export default function DriverOrdersScreen() {
         )}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ padding: 16 }} /> : null}
         ListEmptyComponent={filteredOrders.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Ionicons name="document-outline" size={48} color={Colors.textMuted} />

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
-  TouchableOpacity, Switch, Platform, Alert, Modal, TextInput,
+  TouchableOpacity, Switch, Platform, Modal, TextInput,
 } from 'react-native';
 import { zodResolver }       from '@hookform/resolvers/zod';
 import { z }                 from 'zod';
 import { useForm, useWatch } from 'react-hook-form';
+import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
 import { Ionicons }          from '@expo/vector-icons';
 import * as ImagePicker      from 'expo-image-picker';
@@ -72,6 +73,7 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 export default function AdminProfileScreen({ navigation }: Props) {
   const { user, logout, changePassword, isLoading, error, clearError, login, updateProfile, uploadAvatar } = useAuth();
   const { showToast } = useToast();
+  const { showAlert } = useAlert();
 
   const [pendingImage,   setPendingImage]   = useState<string | null>(null); // sélectionnée, pas encore uploadée
   const [confirmedImage, setConfirmedImage] = useState<string | null>(null); // uploadée avec succès
@@ -171,25 +173,25 @@ export default function AdminProfileScreen({ navigation }: Props) {
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      'Supprimer mon compte',
-      'Cette action est irréversible. Voulez-vous vraiment supprimer votre compte ?',
-      [
+    showAlert({
+      title: 'Supprimer mon compte',
+      message: 'Cette action est irréversible. Voulez-vous vraiment supprimer votre compte ?',
+      buttons: [
         { text: 'Annuler',    style: 'cancel' },
         { text: 'Supprimer', style: 'destructive', onPress: logout },
       ]
-    );
+    });
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Voulez-vous vraiment vous déconnecter ?',
-      [
+    showAlert({
+      title: 'Déconnexion',
+      message: 'Voulez-vous vraiment vous déconnecter ?',
+      buttons: [
         { text: 'Annuler',      style: 'cancel' },
         { text: 'Déconnecter', style: 'destructive', onPress: logout },
       ]
-    );
+    });
   };
 
   // Priorité d'affichage : pending > confirmed > serveur

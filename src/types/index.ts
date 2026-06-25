@@ -1,8 +1,12 @@
 export type { UserRole, UserStatus, AuthUser, AuthTokens,
               AuthStackParamList, ClientTabParamList,
               DriverDrawerParamList, AdminDrawerParamList,
-              ManagerDrawerParamList, ManagerReservationsStackParamList, 
+              ManagerDrawerParamList, ManagerReservationsStackParamList,
               ManagerNotificationsStackParamList,
+              ManagerDriversStackParamList,
+              ManagerClientsStackParamList,
+              ManagerOrdersStackParamList,
+              ManagerInvoicesStackParamList,
               ManagersStackParamList,
               ClientsStackParamList,
               AdminAuditLogsStackParamList
@@ -10,7 +14,7 @@ export type { UserRole, UserStatus, AuthUser, AuthTokens,
 
 export type { ClientUser, DriverUser, AdminUser,
               ManagerUser, TypedUser,
-              Vehicle, DriverProfile, DriverWithUser } from './user.types';
+              Vehicle, DriverProfile, DriverWithUser , DriverWithUserAndVehicle } from './user.types';
 export { isClient, isDriver, isAdmin, isManager }        from './user.types';
 
 export type { LoginPayload, RegisterPayload,
@@ -40,11 +44,12 @@ export type {
 
 export type {
   DriverPlanningResult,
-  PlanningPeriod,
+  PlanningPeriod, 
   PlanningReservation,
   DriverRevenuesResult,
   RevenuesPeriod,
   RevenueTrip,
+  RevenueStatus,
   WeeklyScheduleDay,
   WeeklyScheduleResult,
   SetScheduleDto,
@@ -138,3 +143,8 @@ export type {
   CommissionDetail,
   CommissionPeriod
 } from './commission.types';
+
+export type {
+  RgpdExport,
+
+} from './rgpd.type';
