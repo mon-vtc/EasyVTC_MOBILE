@@ -14,6 +14,12 @@ export default {
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.EazyVTC",
+    infoPlist: {
+      NSCameraUsageDescription: "Pour photographier vos documents chauffeur et votre photo de profil.",
+      NSPhotoLibraryUsageDescription: "Pour sélectionner votre photo de profil ou vos documents depuis la galerie.",
+      NSLocationWhenInUseUsageDescription: "Pour indiquer votre position de prise en charge lors d'une réservation.",
+      NSUserNotificationsUsageDescription: "Pour recevoir les notifications de course, rappels et alertes importantes.",
+    },
   },
   android: {
     adaptiveIcon: {
@@ -24,6 +30,7 @@ export default {
     },
     predictiveBackGestureEnabled: false,
     package: "com.EazyVTC",
+    usesCleartextTraffic: true,
   },
   web: {
     favicon: "./assets/favicon.png",
@@ -31,7 +38,17 @@ export default {
   // Deep linking — intercepte easyvtc://... après OAuth Google
   scheme: "easyvtc",
 
-  plugins: ["expo-secure-store"],
+  plugins: [
+    "expo-secure-store",
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/icon.png",
+        color: "#1E3A5F",
+        sounds: [],
+      },
+    ],
+  ],
 
   // ── EAS Build config ─────────────────────────────────────────────────────
   // Décommenter pour les builds EAS (production/preview)
