@@ -4,7 +4,7 @@
  * Flux :
  *  1. supabase.auth.signInWithOAuth() → URL Google
  *  2. WebBrowser.openBrowserAsync() → ouvre Chrome Custom Tab
- *  3. Supabase redirige vers easyvtc://#access_token=...
+ *  3. Supabase redirige vers easyvtc://auth/callback#access_token=...
  *  4. Linking.addEventListener intercepte le deep link
  *  5. WebBrowser.dismissBrowser() ferme le tab
  *  6. On extrait les tokens et on appelle loginWithGoogle()
@@ -14,6 +14,12 @@
  * Sur Android, Chrome Custom Tab ne ferme pas automatiquement sur
  * un custom scheme (easyvtc://) → page noire. On gère la fermeture
  * manuellement via Linking + dismissBrowser.
+ *
+ * Pourquoi hardcoder easyvtc://auth/callback plutôt que Linking.createURL() ?
+ * En Expo Go, Linking.createURL() génère exp+EazyVTC_Mobile_App:// (underscore
+ * et + invalides dans un scheme URL) que Supabase refuse d'ajouter en allowlist.
+ * Le scheme easyvtc:// est enregistré dans app.config.js et fonctionne sur
+ * dev build et prod build.
  */
 import { useState, useEffect, useRef } from 'react';
 import * as WebBrowser from 'expo-web-browser';
@@ -21,11 +27,9 @@ import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
-// Génère le scheme correct selon l'environnement :
-//   - Expo Go    → exp+EazyVTC_Mobile_App://
-//   - Dev build  → easyvtc://
-//   - Prod build → easyvtc://
-const REDIRECT_URI = Linking.createURL('');
+// URL de redirection OAuth — scheme déclaré dans app.config.js
+// Valide pour dev build et prod build. Expo Go n'est pas supporté pour OAuth Google.
+const REDIRECT_URI = 'easyvtc://auth/callback';
 
 const SUPABASE_URL  = process.env.EXPO_PUBLIC_SUPABASE_URL  ?? '';
 const SUPABASE_ANON = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
@@ -52,7 +56,7 @@ export function useGoogleAuth() {
   useEffect(() => {
     const subscription = Linking.addEventListener('url', async ({ url }) => {
       if (!pendingRef.current) return;
-      if (!url.startsWith(REDIRECT_URI)) return;
+      if (!url.startsWith('easyvtc://')) return;
 
       pendingRef.current = false;
 
