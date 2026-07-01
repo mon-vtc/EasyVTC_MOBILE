@@ -6,13 +6,27 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gmeaptypqcgxytshadez.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtZWFwdHlwcWNneHl0c2hhZGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NTU5NDQsImV4cCI6MjA5ODEzMTk0NH0.kIilL3IMv3iqFm9lk1KEu7jGweDO6q5mxkjDmTc2JYg"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.easyvtcmassy.fr",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gmeaptypqcgxytshadez.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtZWFwdHlwcWNneHl0c2hhZGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NTU5NDQsImV4cCI6MjA5ODEzMTk0NH0.kIilL3IMv3iqFm9lk1KEu7jGweDO6q5mxkjDmTc2JYg"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.easyvtcmassy.fr",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gmeaptypqcgxytshadez.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtZWFwdHlwcWNneHl0c2hhZGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NTU5NDQsImV4cCI6MjA5ODEzMTk0NH0.kIilL3IMv3iqFm9lk1KEu7jGweDO6q5mxkjDmTc2JYg"
+      }
     }
   },
   "submit": {
