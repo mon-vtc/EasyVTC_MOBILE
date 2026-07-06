@@ -41,6 +41,28 @@ export interface ManagerPermissionsResult {
   permissions: ManagerPermission[];
 }
 
+// ── Configuration app (coordonnées support) ──────────────────────────────────
+
+export type SupportConfigKey =
+  | 'support_phone'
+  | 'support_email'
+  | 'support_address'
+  | 'support_hours';
+
+export interface SupportConfig {
+  support_phone:   string;
+  support_email:   string;
+  support_address: string;
+  support_hours:   string;
+}
+
+export interface AppConfigEntry {
+  key:        string;
+  value:      string;
+  updated_at: string;
+  updated_by: string | null;
+}
+
 export const PERMISSION_LABELS: Record<ManagerPermission, string> = {
   view_reservations:  'Voir les réservations',
   assign_reservation: 'Attribuer un chauffeur',

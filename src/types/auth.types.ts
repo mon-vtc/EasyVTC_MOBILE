@@ -282,6 +282,7 @@ export type AdminDrawerParamList = {
   AdminInvoices:     NavigatorScreenParams<AdminInvoicesStackParamList>;
   AdminSupport:      NavigatorScreenParams<SupportStackParamList>;
   AdminAuditLogs:    NavigatorScreenParams<AdminAuditLogsStackParamList>;
+  AdminAppConfig:    undefined;
 };
 
 export type AdminAuditLogsStackParamList = {

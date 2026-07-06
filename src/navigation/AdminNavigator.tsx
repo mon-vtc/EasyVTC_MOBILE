@@ -42,6 +42,7 @@ import AdminChatScreen from '../screens/admin/AdminChatScreen';
 
 import AdminAuditLogsScreen from '../screens/admin/AdminAuditLogsScreen';
 import AdminAuditLogDetailScreen from '../screens/admin/AdminAuditLogDetailScreen';
+import AdminAppConfigScreen from '../screens/admin/AdminAppConfigScreen';
 
 
 import { useNotifications } from '../hooks/useNotifications';  
@@ -416,6 +417,15 @@ function AdminDrawerNavigator() {
           drawerItemStyle: { display: 'none' },
           headerShown: false,
         }} // Pas de label dans le drawer, accès uniquement via la section Tarification
+      />
+
+      <Drawer.Screen
+        name="AdminAppConfig"
+        component={AdminAppConfigScreen}
+        options={{
+          drawerItemStyle: { display: 'none' },
+          headerShown: false,
+        }} // Pas de label dans le drawer, accès uniquement via "Mon compte"
       />
     </Drawer.Navigator>
   );

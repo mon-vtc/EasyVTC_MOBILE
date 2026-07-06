@@ -293,6 +293,16 @@ export default function AdminProfileScreen({ navigation }: Props) {
 
           <View style={styles.divider} />
 
+          <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('AdminAppConfig')}>
+            <View style={styles.actionLeft}>
+              <Ionicons name="settings-outline" size={20} color={Colors.bordeaux} />
+              <Text style={[styles.actionLabel, { color: Colors.bordeaux }]}>Coordonnées support</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.bordeaux} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
           <TouchableOpacity style={styles.actionRow} onPress={() => { reset(); clearError(); setShowPasswordModal(true); }}>
             <View style={styles.actionLeft}>
               <Ionicons name="lock-closed-outline" size={20} color={Colors.textPrimary} />

@@ -79,7 +79,10 @@ export type {
   RevenueChartEntry,
   TopDriver,
   PopularRoute,
-  PeakHourSlot
+  PeakHourSlot,
+  SupportConfigKey,
+  SupportConfig,
+  AppConfigEntry
 } from './admin.types';
 export { MANAGER_PERMISSIONS, PERMISSION_LABELS } from './admin.types';
 

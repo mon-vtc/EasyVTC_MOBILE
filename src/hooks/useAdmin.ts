@@ -2,12 +2,14 @@ import { useAuth } from './useAuth';
 import { useAuthStore, useUsersStore, useDriversStore, useManagersStore, useClientsStore, usePromoCodesStore, useMarketingStore, useAuditLogsStore } from '../store';
 import { managersApi }  from '../services/api/managers.api';
 import { adminApi } from '../services/api/admin.api';
+import { appConfigApi } from '../services/api/appConfig.api';
 import type {
   AdminUser, CreateCampaignDto, ListUsersParams, ListDriversParams,
   UpdateUserStatusPayload, ChangeDriverStatusPayload, UserRole,
   CreateManagerDto, UpdateManagerDto, ChangeManagerStatusDto, ManagerListFilters, AdminStats,
   ClientListFilters, SetManagerPermissionsDto, ManagerPermissionsResult, ClientBaseFilters, AuditLogListFilters, BulkAssignDto, AdminDashboard, AdminDashboardPeriod,
   PromoCodeListFilters, CreatePromoCodeDto, UpdatePromoCodeDto, PromoCode,
+  SupportConfig, SupportConfigKey,
 } from '../types';
 import { useCallback, useEffect, useRef } from 'react';
 
@@ -335,6 +337,22 @@ export function useAdmin() {
     return res.data;
   }, []);
 
+  // ── Configuration app (coordonnées support) ─────────────────────────────────
+  const fetchSupportConfig = useCallback(async (): Promise<SupportConfig> => {
+    const res = await appConfigApi.getSupportConfig(accessTokenRef.current!);
+    if (!res.ok || !res.data) {
+      throw new Error(res.message ?? 'Erreur lors de la récupération de la configuration');
+    }
+    return res.data;
+  }, []);
+
+  const updateSupportConfig = useCallback(async (key: SupportConfigKey, value: string): Promise<void> => {
+    const res = await appConfigApi.upsert(accessTokenRef.current!, key, value);
+    if (!res.ok) {
+      throw new Error(res.message ?? 'Erreur lors de la mise à jour de la configuration');
+    }
+  }, []);
+
 
   return {
     // Profil admin
@@ -464,6 +482,10 @@ export function useAdmin() {
     // Stats dashboard
     fetchDashboardStats,
     fetchDashboard,
+
+    // Configuration app (coordonnées support)
+    fetchSupportConfig,
+    updateSupportConfig,
 
     // Actions sur son propre compte
     updateProfile: auth.updateProfile,
