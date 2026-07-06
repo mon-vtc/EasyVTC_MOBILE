@@ -1,7 +1,7 @@
 /** @type {import('expo/config').ExpoConfig} */
 export default {
   name: "EasyVTC_Mobile_App",
-  slug: "EazyVTC_Mobile_App",
+  slug: "easyvtc",
   owner: "easyvtc",
   version: "1.0.0",
   orientation: "portrait",
