@@ -1,7 +1,7 @@
 /** @type {import('expo/config').ExpoConfig} */
 export default {
   name: "EasyVTC_Mobile_App",
-  slug: "EasyVTC_Mobile_App",
+  slug: "easyvtc",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -54,7 +54,7 @@ export default {
   // Décommenter pour les builds EAS (production/preview)
   extra: {
     eas: {
-      projectId: "983978ef-6a7b-428d-92a6-ae5f8dc773ac",
+      projectId: "df291dc3-7c81-4a3f-89f7-f0bd17d74a32",
     },
   },
 };
