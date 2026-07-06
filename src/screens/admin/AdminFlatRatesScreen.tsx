@@ -759,7 +759,7 @@ export default function AdminFlatRatesScreen() {
             origin_label:      form.origin_label,
             destination_label: form.destination_label,
             price:             toFloat(form.price),
-            // pickup_surcharge: toFloat(form.pickup_surcharge), // future feature
+            pickup_surcharge:  0, // pas encore réglable depuis ce formulaire
           });
           setCreateVisible(false);
           showToast({ type: 'success', title: 'Créé', message: 'Le forfait a été créé avec succès.' });

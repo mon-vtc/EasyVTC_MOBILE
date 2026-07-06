@@ -364,7 +364,7 @@ describe('pricingApi › forfaits', () => {
     mockApi.post.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
     pricingApi.createFlatRate(TOKEN, {
       label: 'Paris → CDG', origin_label: 'Paris', destination_label: 'CDG',
-      price: 65, country: 'france', currency: 'EUR',
+      price: 65, country: 'france', currency: 'EUR', pickup_surcharge: 0,
     });
     expect(mockApi.post).toHaveBeenCalledWith('/pricing/flat-rates', expect.any(Object), TOKEN);
   });

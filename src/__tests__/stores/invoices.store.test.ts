@@ -23,6 +23,7 @@ const mockInvoice = {
   amount_ht: 45.0,
   tva_rate: 20,
   amount_ttc: 54.0,
+  discount_amount: null,
   adjustments: [],
   issued_at: '2024-01-01T00:00:00Z',
   created_at: '2024-01-01T00:00:00Z',

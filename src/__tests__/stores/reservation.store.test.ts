@@ -43,6 +43,7 @@ const mockReservation = {
   nb_passengers: 2,
   comment: null,
   promo_code_id: null,
+  discount_amount: null,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
 };
@@ -109,14 +110,13 @@ describe('useReservationStore › fetchMine', () => {
     }));
   });
 
-  it('stocke l\'erreur si l\'API échoue', async () => {
+  it('réinitialise silencieusement la liste si l\'API échoue (500 sur date vide = pas une vraie erreur)', async () => {
     mockReservationApi.listMine.mockResolvedValue({ ok: false, message: 'Erreur serveur' });
 
-    await expect(
-      act(async () => { await useReservationStore.getState().fetchMine(TOKEN); })
-    ).rejects.toThrow('Erreur serveur');
+    await act(async () => { await useReservationStore.getState().fetchMine(TOKEN); });
 
-    expect(useReservationStore.getState().error).toBe('Erreur serveur');
+    expect(useReservationStore.getState().reservations).toHaveLength(0);
+    expect(useReservationStore.getState().myReservations).toHaveLength(0);
     expect(useReservationStore.getState().isLoading).toBe(false);
   });
 });
