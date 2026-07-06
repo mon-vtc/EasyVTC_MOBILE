@@ -215,8 +215,10 @@ const NotificationsScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, ((user as AuthUser)?.role === 'client') ? {marginTop: Spacing.xl} : {}]}>
-      {(user as AuthUser)?.role === 'driver' && (
+    <View style={[styles.container, 
+    // ((user as AuthUser)?.role === 'client') ? {marginTop: Spacing.xl} : {}
+    ]}>
+      {/* {((user as AuthUser)?.role === 'driver' || (user as AuthUser)?.role === 'admin') && ( */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
               <AppIcon name="arrow-back" size={24} color={Colors.white} />
@@ -224,7 +226,7 @@ const NotificationsScreen: React.FC = () => {
             <Text style={styles.headerTitle}>Notifications</Text>
             <View style={styles.headerBtn} />
           </View>
-      )}
+      {/* )} */}
       <View style={styles.headerNotif}>
         <Text style={styles.headerNotifTitle}>Notifications</Text>
         <View style={styles.headerRight}>

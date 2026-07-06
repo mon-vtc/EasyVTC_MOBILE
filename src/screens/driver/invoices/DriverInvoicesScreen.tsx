@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // SCREEN — Mes factures (Chauffeur)
-// Sprint 4 — EazyVTC
+// Sprint 4 — EasyVTC
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';

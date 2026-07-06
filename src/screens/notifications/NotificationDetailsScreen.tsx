@@ -955,8 +955,7 @@ const NotificationDetailsScreen: React.FC = () => {
 
   return (
     <View style={[
-      screenSt.container,
-      (user as AuthUser)?.role === 'client' ? { marginTop: Spacing.xl } : {},
+      screenSt.container, { marginTop: Spacing.xl },
     ]}>
       {/* Barre de navigation */}
       <View style={screenSt.navBar}>

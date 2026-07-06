@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // SCREEN — Gestion des évaluations (Admin)
-// Sprint 6 — EazyVTC
+// Sprint 6 — EasyVTC
 // Liste toutes les évaluations avec possibilité de suppression.
 // ══════════════════════════════════════════════════════════════════════════════
 

@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES — Module Destinations Favorites
-// Sprint 6 — EazyVTC
+// Sprint 6 — EasyVTC
 // ══════════════════════════════════════════════════════════════════════════════
 
 export type FavoriteAddressType = 'home' | 'office' | 'airport' | 'station' | 'custom';

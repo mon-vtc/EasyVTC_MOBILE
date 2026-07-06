@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // SCREEN — OrderDetailsScreen
-// Sprint 4 — EazyVTC
+// Sprint 4 — EasyVTC
 // Affiche le détail d'un bon de commande avec rendu fidèle au document PDF,
 // et permet de télécharger / partager le PDF.
 // ══════════════════════════════════════════════════════════════════════════════
@@ -111,8 +111,8 @@ export default function OrderDetailsScreen() {
       await Share.share({
         title: `Bon de commande ${order.order_number}`,
         message: pdfUrl
-          ? `Bon de commande EazyVTC — ${order.order_number}\n${pdfUrl}`
-          : `Bon de commande EazyVTC — ${order.order_number}`,
+          ? `Bon de commande EasyVTC — ${order.order_number}\n${pdfUrl}`
+          : `Bon de commande EasyVTC — ${order.order_number}`,
         url: pdfUrl ?? undefined,
       });
     } catch (err) {

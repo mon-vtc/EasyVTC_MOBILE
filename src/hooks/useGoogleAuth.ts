@@ -16,7 +16,7 @@
  * manuellement via Linking + dismissBrowser.
  *
  * Pourquoi hardcoder easyvtc://auth/callback plutôt que Linking.createURL() ?
- * En Expo Go, Linking.createURL() génère exp+EazyVTC_Mobile_App:// (underscore
+ * En Expo Go, Linking.createURL() génère exp+EasyVTC_Mobile_App:// (underscore
  * et + invalides dans un scheme URL) que Supabase refuse d'ajouter en allowlist.
  * Le scheme easyvtc:// est enregistré dans app.config.js et fonctionne sur
  * dev build et prod build.

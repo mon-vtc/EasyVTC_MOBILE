@@ -341,7 +341,7 @@ function HelpModal({ visible, onClose, role }: { visible: boolean, onClose: () =
   };
 
   const handleEmail = () => {
-    Linking.openURL('mailto:support@eazyvtc.com');
+    Linking.openURL('mailto:support@easyvtc.com');
   };
 
   const FAQ_DATA = role === 'driver' ? FAQ_DATA_DRIVER : FAQ_DATA_CLIENT;

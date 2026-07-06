@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES — Module Bons de commande (Orders)
-// Sprint 4 — EazyVTC
+// Sprint 4 — EasyVTC
 // ══════════════════════════════════════════════════════════════════════════════
 
 // ── Snapshots (données figées au moment de la génération) ─────────────────────

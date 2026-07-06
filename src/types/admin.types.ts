@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES — Module Admin
-// Aligné avec EazyVTC_API
+// Aligné avec EasyVTC_API
 // ══════════════════════════════════════════════════════════════════════════════
 
 import type { UserRole } from './auth.types';

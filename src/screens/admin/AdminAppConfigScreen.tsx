@@ -110,7 +110,7 @@ export default function AdminAppConfigScreen() {
               icon="mail-outline"
               value={form.support_email}
               onChange={(v) => setForm((f) => ({ ...f, support_email: v }))}
-              placeholder="support@eazyvtc.com"
+              placeholder="support@easyvtc.com"
               keyboardType="email-address"
             />
             <Field

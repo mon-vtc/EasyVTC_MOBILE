@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // SCREEN — Mes bons de commande (Chauffeur)
-// Sprint 4 — EazyVTC
+// Sprint 4 — EasyVTC
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect } from 'react';
