@@ -6,10 +6,10 @@ import { useAlert } from '../hooks/useAlert';
 import {
   DrawerContentScrollView,
   DrawerItem,
-  DrawerItemList,
   type DrawerContentComponentProps,
 } from '@react-navigation/drawer';
 import { useAuth } from '../hooks/useAuth';
+import { useNotifications } from '../hooks/useNotifications';
 import { Colors, Fonts, Spacing } from '../theme/colors';
 import { AppIcon } from '../components/common/AppIcon';
 
@@ -49,6 +49,37 @@ function DrawerAccordion({
   );
 }
 
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <Text style={styles.sectionHeader}>{title}</Text>
+  );
+}
+
+// ── Item de menu — navigue vers une route de premier niveau du drawer,
+//    en calculant lui-même l'état "actif" (DrawerItemList n'est plus utilisé) ──
+function MenuItem({
+  routeName, label, icon, badgeCount, props,
+}: {
+  routeName: string;
+  label: string;
+  icon: React.ComponentProps<typeof AppIcon>['name'];
+  badgeCount?: number;
+  props: DrawerContentComponentProps;
+}) {
+  const focused = props.state.routes[props.state.index]?.name === routeName;
+  return (
+    <DrawerItem
+      label={() => <DrawerLabel icon={icon} label={label} badgeCount={badgeCount} />}
+      focused={focused}
+      onPress={() => props.navigation.navigate(routeName as never)}
+      activeTintColor={Colors.bordeaux}
+      inactiveTintColor={Colors.textPrimary}
+      activeBackgroundColor={Colors.overlayLight}
+      style={styles.menuItem}
+    />
+  );
+}
+
 export function DrawerLabel({ icon, label, badgeCount }: { icon: React.ComponentProps<typeof AppIcon>['name']; label: string; badgeCount?: number }) {
   return (
     <View style={styles.labelRow}>
@@ -66,8 +97,10 @@ export function DrawerLabel({ icon, label, badgeCount }: { icon: React.Component
 export default function DrawerContent(props: DrawerContentComponentProps) {
   const { user, logout, localAvatarUri } = useAuth();
   const { showAlert } = useAlert();
+  const { unreadMessagesCount, unreadSupportCount } = useNotifications();
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'manager';
+  const isAdmin  = user?.role === 'admin' || user?.role === 'manager';
+  const isDriver = user?.role === 'driver';
 
   const handleLogout = () => {
     showAlert({title: 'Déconnexion', message: 'Voulez-vous vraiment vous déconnecter ?', buttons: [
@@ -112,37 +145,105 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
         contentContainerStyle={styles.menu}
         showsVerticalScrollIndicator={false}
       >
-        {/* Items standards du navigator (home, chauffeurs, documents, profil...) */}
-        <DrawerItemList {...props} />
+        {isDriver ? (
+          <>
+            
+            {/* ── Mon activité ── */}
+            <SectionHeader title="Mon activité" />
+            <MenuItem props={props} routeName="DriverHome" label="Accueil" icon="home-outline" />
+            <MenuItem props={props} routeName="DriverReservations" label="Mes courses" icon="car-outline" />
+            <MenuItem props={props} routeName="DriverTrips" label="Planning" icon="calendar-outline" />
+            <MenuItem props={props} routeName="DriverAvailability" label="Disponibilité" icon="watch-outline" />
 
-        {/*  Tarification — uniquement pour admin et manager */}
-        {isAdmin && (
-          <DrawerAccordion title="Tarification" icon="pricetag-outline">
-            <DrawerItem
-              label="Grille de base"
-              onPress={() => props.navigation.navigate('BaseGrid')}
-              style={styles.subItem}
-              labelStyle={styles.subItemLabel}
-            />
-            <DrawerItem
-              label="Grille forfaitaire"
-              onPress={() => props.navigation.navigate('FlatRates')}
-              style={styles.subItem}
-              labelStyle={styles.subItemLabel}
-            />
-            <DrawerItem
-              label="Types de véhicule"
-              onPress={() => props.navigation.navigate('AdminVehicleTypes')}
-              style={styles.subItem}
-              labelStyle={styles.subItemLabel}
-            />
-            <DrawerItem
-              label="Règles de commission"
-              onPress={() => props.navigation.navigate('AdminCommissionSettings')}
-              style={styles.subItem}
-              labelStyle={styles.subItemLabel}
-            />
-          </DrawerAccordion>
+            {/* ── Mes finances ── */}
+            {/* <SectionHeader title="Mes finances" /> */}
+            <MenuItem props={props} routeName="DriverRevenues" label="Revenus" icon="cash-outline" />
+            <MenuItem props={props} routeName="DriverOrders" label="Bons de commande" icon="clipboard-outline" />
+            <MenuItem props={props} routeName="DriverInvoices" label="Factures" icon="receipt-outline" />
+
+            {/* ── Échanges ── */}
+            <SectionHeader title="Échanges" />
+            <MenuItem props={props} routeName="DriverMessages" label="Messages" icon="chatbubble-outline" badgeCount={unreadMessagesCount} />
+            <MenuItem props={props} routeName="DriverNotifications" label="Notifications" icon="notifications-outline" />
+            <MenuItem props={props} routeName="DriverSupport" label="Support" icon="headset-outline" badgeCount={unreadSupportCount} />
+
+            {/* ── Mon profil ── */}
+            <SectionHeader title="Mon profil" />
+            <MenuItem props={props} routeName="DriverDocuments" label="Mes documents" icon="folder-open-outline" />
+            <MenuItem props={props} routeName="DriverReviews" label="Mes évaluations" icon="star-outline" />
+            <MenuItem props={props} routeName="DriverProfile" label="Mon compte" icon="person-circle-outline" />
+          </>
+        ) : (
+          <>
+            {/* ── Vue d'ensemble ── */}
+            <SectionHeader title="Vue d'ensemble" />
+            <MenuItem props={props} routeName="AdminHome" label="Accueil" icon="home-outline" />
+
+            {/* ── Opérations ── */}
+            {/* <SectionHeader title="Opérations" /> */}
+            <MenuItem props={props} routeName="AdminReservations" label="Réservations" icon="car-outline" />
+            <MenuItem props={props} routeName="AdminDiscussions" label="Supervision chats" icon="chatbubbles-outline" badgeCount={unreadMessagesCount} />
+
+
+            {/* ── Utilisateurs ── */}
+            {/* <SectionHeader title="Utilisateurs" /> */}
+            <MenuItem props={props} routeName="AdminClients" label="Clients" icon="person-outline" />
+            <MenuItem props={props} routeName="AdminManagers" label="Gestionnaires" icon="shield-checkmark-outline" />
+            <MenuItem props={props} routeName="AdminDrivers" label="Chauffeurs" icon="car-sport-outline" />
+
+            {/* ── Finances ── */}
+            {/* <SectionHeader title="Finances" /> */}
+            <MenuItem props={props} routeName="AdminOrders" label="Bons de commande" icon="clipboard-outline" />
+            <MenuItem props={props} routeName="AdminInvoices" label="Factures" icon="receipt-outline" />
+            {isAdmin && (
+              <DrawerAccordion title="Tarification" icon="pricetag-outline">
+                <DrawerItem
+                  label="Grille de base"
+                  onPress={() => props.navigation.navigate('BaseGrid')}
+                  style={styles.subItem}
+                  labelStyle={styles.subItemLabel}
+                />
+                <DrawerItem
+                  label="Grille forfaitaire"
+                  onPress={() => props.navigation.navigate('FlatRates')}
+                  style={styles.subItem}
+                  labelStyle={styles.subItemLabel}
+                />
+                <DrawerItem
+                  label="Types de véhicule"
+                  onPress={() => props.navigation.navigate('AdminVehicleTypes')}
+                  style={styles.subItem}
+                  labelStyle={styles.subItemLabel}
+                />
+                <DrawerItem
+                  label="Règles de commission"
+                  onPress={() => props.navigation.navigate('AdminCommissionSettings')}
+                  style={styles.subItem}
+                  labelStyle={styles.subItemLabel}
+                />
+              </DrawerAccordion>
+            )}
+
+            {/* ── Marketing ── */}
+            {/* <SectionHeader title="Marketing" /> */}
+            <MenuItem props={props} routeName="AdminPromoCommunication" label="Promo & Marketing" icon="megaphone-outline" />
+
+            {/* ── Qualité & Conformité ── */}
+            {/* <SectionHeader title="Qualité & Conformité" /> */}
+            <MenuItem props={props} routeName="AdminReviews" label="Évaluations" icon="star-outline" />
+            <MenuItem props={props} routeName="AdminDocuments" label="Documents chauffeurs" icon="folder-open-outline" />
+            <MenuItem props={props} routeName="AdminStatistics" label="Statistiques" icon="stats-chart-outline" />
+            <MenuItem props={props} routeName="AdminAuditLogs" label="Audit logs" icon="time-outline" />
+
+            {/* ── Support ── */}
+            <SectionHeader title="Support" />
+            <MenuItem props={props} routeName="AdminSupport" label="Support" icon="headset-outline" badgeCount={unreadSupportCount} />
+
+            {/* ── Compte ── */}
+            <SectionHeader title="Compte" />
+            <MenuItem props={props} routeName="AdminProfile" label="Mon compte" icon="person-circle-outline" />
+            <MenuItem props={props} routeName="Notifications" label="Notifications" icon="notifications-outline" />
+          </>
         )}
       </DrawerContentScrollView>
 
@@ -168,6 +269,8 @@ const styles = StyleSheet.create({
   name:            { color: Colors.white, fontSize: Fonts.size.lg, fontWeight: '700' },
   badgeText:       { color: Colors.placeHolder, opacity: 0.8, marginTop: Spacing.xs },
   menu:            { paddingTop: Spacing.sm },
+  sectionHeader:   { fontSize: 12, fontWeight: '700', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: Spacing.md, marginBottom: Spacing.xs, marginLeft: Spacing.lg },
+  menuItem:        { marginVertical: -2 },
   footer:          { padding: Spacing.lg, paddingBottom: Spacing.lg },
   divider:         { height: 1, backgroundColor: Colors.border, marginBottom: Spacing.md },
   logoutBtn:       { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.sm },
