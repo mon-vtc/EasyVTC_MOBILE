@@ -285,7 +285,7 @@ export default function RegisterClientScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>© 2026 EazyVTC. Tous droits réservés.</Text>
+            <Text style={styles.footerText}>© 2026 EasyVTC. Tous droits réservés.</Text>
           </View>
 
         </ScrollView>

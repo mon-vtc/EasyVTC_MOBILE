@@ -109,23 +109,22 @@ describe('mapApiUser', () => {
     expect(result).toEqual(clientUser);
   });
 
-  // Remplace toutes les assertions du describe('mapApiUser')
+  // mapApiUser aplatit raw.driver.* au niveau racine (pas de champ .driver imbriqué dans le résultat)
   it('aplatit les champs driver depuis raw.driver', () => {
-    const result = mapApiUser(driverRawUser);
-    expect(result.driver?.status).toBe('active' as DriverStatus);
-    expect(result.driver?.vehicle_type).toBe('berline' as VehicleType);
-    expect(result.driver?.siret).toBe('1234567890 1234');
-    expect(result.driver?.zone).toBe('france' as PricingCountry);  // ← voir note ci-dessous
-    expect(result.driver?.tva_rate).toBe(20);
-    expect(result.driver?.is_online).toBe(false);
-    // expect(result.driver?.vehicle).toEqual({ id: 'v-1', brand: 'Tesla', model: '3' });
+    const result = mapApiUser(driverRawUser) as any;
+    expect(result.driverStatus).toBe('active' as DriverStatus);
+    expect(result.vehicle_type).toBe('berline' as VehicleType);
+    expect(result.siret).toBe('1234567890 1234');
+    expect(result.zone).toBe('france' as PricingCountry);
+    expect(result.tva_rate).toBe(20);
+    expect(result.is_online).toBe(false);
   });
 
   it('utilise des valeurs par défaut si driver est absent', () => {
-    const result = mapApiUser({ ...baseUser, role: 'driver' as UserRole, driver: null });
-    expect(result.driver?.status).toBe('pending' as DriverStatus);
-    expect(result.driver?.vehicle_type).toBeNull();
-    expect(result.driver?.is_online).toBe(false);
+    const result = mapApiUser({ ...baseUser, role: 'driver' as UserRole, driver: null }) as any;
+    expect(result.driverStatus).toBe('pending' as DriverStatus);
+    expect(result.vehicle_type).toBeNull();
+    expect(result.is_online).toBe(false);
   });
 });
 

@@ -239,6 +239,7 @@ describe('usePricingStore › createFlatRate', () => {
         price: 65.0,
         currency: 'EUR',     // ← ajouter
         country: 'france',
+        pickup_surcharge: 0,
       });
     });
 

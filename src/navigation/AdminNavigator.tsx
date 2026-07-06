@@ -264,7 +264,7 @@ function AdminDrawerNavigator() {
       <Drawer.Screen
         name="Notifications"
         component={AdminNotificationsStack}
-        options={{ drawerLabel: () => <DrawerLabel icon="notifications-outline" label="Notifications" /> }}
+        options={{ drawerLabel: () => <DrawerLabel icon="notifications-outline" label="Notifications" />, headerShown: false }}
       />
 
       <Drawer.Screen

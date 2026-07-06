@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // SCREEN — Mes évaluations (Driver)
-// Sprint 6 — EazyVTC
+// Sprint 6 — EasyVTC
 // Permet au chauffeur de consulter toutes les notes reçues et sa moyenne.
 // ══════════════════════════════════════════════════════════════════════════════
 

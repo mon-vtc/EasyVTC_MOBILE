@@ -69,7 +69,7 @@ export default function LoginScreen({ navigation }: Props) {
             <View style={styles.logoShadow}>
               <Image source={Logo.LogoEasyVTC} style={styles.logo} />
             </View>
-            <Text style={styles.title}>Bienvenue sur EazyVTC</Text>
+            <Text style={styles.title}>Bienvenue sur EasyVTC</Text>
             {/* FIX: alignSelf stretch pour occuper toute la largeur du header */}
             <Text style={styles.subtitle}>
               Connectez-vous pour accéder à votre espace
@@ -185,7 +185,7 @@ export default function LoginScreen({ navigation }: Props) {
 
           {/* FIX: footer — suppression de flexDirection row, simple View centrée */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>© 2026 EazyVTC. Tous droits réservés.</Text>
+            <Text style={styles.footerText}>© 2026 EasyVTC. Tous droits réservés.</Text>
           </View>
 
         </ScrollView>

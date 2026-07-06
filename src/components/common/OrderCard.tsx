@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // COMPONENT — OrderCard
-// Sprint 4 — EazyVTC
+// Sprint 4 — EasyVTC
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useState, ComponentType } from 'react';

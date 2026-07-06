@@ -18,6 +18,7 @@ import { Ionicons }              from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';;
 import type { ClientStackParamList } from '../../types/auth.types';
 import { useReservation } from '../../hooks/useReservation';
+import { useAlert } from '../../hooks/useAlert';
 import type { Reservation }          from '../../types/reservations.types';
 import { RESERVATION_STATUS_LABELS } from '../../types/reservations.types';
 
@@ -178,6 +179,7 @@ export default function BookingConfirmationScreen() {
   } = useReservation();
 
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
+  const { showAlert } = useAlert();
 
   useEffect(() => {
     // Charge la réservation si elle n'est pas déjà la bonne dans le store
@@ -188,8 +190,9 @@ export default function BookingConfirmationScreen() {
 
   // ── Navigation vers le bon de commande ───────────────────────────────────
   // Tente de récupérer l'ordre lié à la réservation. L'ordre peut ne pas exister
-  // encore (généré après attribution du chauffeur). Si trouvé → OrderDetails
-  // directement. Sinon → liste MyOrders.
+  // encore (généré uniquement une fois qu'un chauffeur a été attribué). Si trouvé
+  // → OrderDetails directement. Sinon → message explicatif (pas de redirection
+  // silencieuse vers une liste qui semblerait "vide"/cassée).
   const handleViewOrder = async () => {
     if (!reservationId) return;
     setIsLoadingOrder(true);
@@ -198,7 +201,11 @@ export default function BookingConfirmationScreen() {
     if (order) {
       nav.navigate('OrderDetails', { orderId: order.id });
     } else {
-      nav.navigate('MyOrders');
+      showAlert({
+        title: 'Bon de commande pas encore disponible',
+        message: 'Il sera généré automatiquement dès qu\'un chauffeur vous sera attribué. Vous recevrez une notification à ce moment-là.',
+        buttons: [{ text: 'Compris', style: 'default' }],
+      });
     }
   };
 

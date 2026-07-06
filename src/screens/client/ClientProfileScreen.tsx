@@ -244,7 +244,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
     try {
       const data = await exportMyData();
       const jsonString = JSON.stringify(data, null, 2);
-      const fileUri = FileSystem.documentDirectory + `eazyvtc_export_${user!.id}.json`;
+      const fileUri = FileSystem.documentDirectory + `easyvtc_export_${user!.id}.json`;
       
       await FileSystem.writeAsStringAsync(fileUri, jsonString, { encoding: FileSystem.EncodingType.UTF8 });
 

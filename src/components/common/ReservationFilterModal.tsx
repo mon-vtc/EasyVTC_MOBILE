@@ -152,7 +152,7 @@ export default function ReservationFilterModal({ visible, filters, onApply, onCl
                 >
                   <Ionicons name="calendar" size={16} color={Colors.bordeaux} />
                   <Text style={s.dateLabel}>Date</Text>
-                  <Text style={[s.dateValue, draft.dateExact && s.dateValueSet]}>
+                  <Text style={[s.dateValue, !!draft.dateExact && s.dateValueSet]}>
                     {formatDate(draft.dateExact)}
                   </Text>
                   <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
@@ -168,7 +168,7 @@ export default function ReservationFilterModal({ visible, filters, onApply, onCl
                   >
                     <Ionicons name="calendar-outline" size={16} color={Colors.bordeaux} />
                     <Text style={s.dateLabel}>Du</Text>
-                    <Text style={[s.dateValue, draft.dateFrom && s.dateValueSet]}>
+                    <Text style={[s.dateValue, !!draft.dateFrom && s.dateValueSet]}>
                       {formatDate(draft.dateFrom)}
                     </Text>
                     <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
@@ -180,7 +180,7 @@ export default function ReservationFilterModal({ visible, filters, onApply, onCl
                   >
                     <Ionicons name="calendar-outline" size={16} color={Colors.bordeaux} />
                     <Text style={s.dateLabel}>Au</Text>
-                    <Text style={[s.dateValue, draft.dateTo && s.dateValueSet]}>
+                    <Text style={[s.dateValue, !!draft.dateTo && s.dateValueSet]}>
                       {formatDate(draft.dateTo)}
                     </Text>
                     <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />

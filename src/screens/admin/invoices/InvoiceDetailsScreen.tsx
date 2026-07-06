@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // SCREEN — InvoiceDetailsScreen
-// Sprint 4 — EazyVTC
+// Sprint 4 — EasyVTC
 // Affiche le détail d'une facture avec rendu fidèle au document PDF,
 // et permet de télécharger / partager le PDF.
 // ══════════════════════════════════════════════════════════════════════════════
@@ -104,8 +104,8 @@ export default function InvoiceDetailsScreen() {
       await Share.share({
         title:   `Facture ${invoice.invoice_number}`,
         message: pdfUrl
-          ? `Facture EazyVTC — ${invoice.invoice_number}\n${pdfUrl}`
-          : `Facture EazyVTC — ${invoice.invoice_number}`,
+          ? `Facture EasyVTC — ${invoice.invoice_number}\n${pdfUrl}`
+          : `Facture EasyVTC — ${invoice.invoice_number}`,
         url: pdfUrl ?? undefined,
       });
     } catch {
