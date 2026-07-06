@@ -12,6 +12,7 @@ import type {
   SetScheduleDto,
   DriverRevenuesResult,
   RevenueStatus,
+  RevenuesPeriod,
 } from '../types';
 
 // ── Types pour stats mensuelles et historique ──────────────────────────────────
@@ -126,7 +127,7 @@ interface DriversState {
   changeDriverStatus:(token: string, driverId: string, payload: ChangeDriverStatusPayload) => Promise<AuthUser | null>;
   fetchWeeklySchedule: (token: string) => Promise<void>;
   setWeeklySchedule: (token: string, dto: SetScheduleDto) => Promise<boolean>;
-  fetchRevenues: (token: string, period: 'week' | 'month' | 'all', status?: RevenueStatus, page?: number) => Promise<void>;
+  fetchRevenues: (token: string, period: RevenuesPeriod, status?: RevenueStatus, page?: number) => Promise<void>;
   
   // Nouvelles actions
   fetchMonthlyStats: (token: string, driverId: string, date?: string) => Promise<void>;

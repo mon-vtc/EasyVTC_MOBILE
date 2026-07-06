@@ -8,6 +8,7 @@ import { mapApiUser }     from '../store/auth.store';
 import { driverApi }      from '../services/api/drivers.api';
 import { vehicleApi }     from '../services/api/vehicle.api';
 import { authApi }        from '../services/api/auth.api';
+import { ratingsApi }     from '../services/api/ratings.api';
 import type { DriverPlanningResult, PlanningPeriod, WeeklyScheduleResult, SetScheduleDto } from '../types/drivers.types';
 import type { DriverUser, Vehicle, DriverRevenuesResult, RevenuesPeriod } from '../types';
 import type { UpdateUserMePayload, UpdateDriverMePayload }             from '../types/payload.types';
@@ -188,6 +189,13 @@ export function useDriver() {
     return res.data;
   }, [accessToken]);
 
+  // Note moyenne réelle du chauffeur (toutes évaluations confondues)
+  const getMyAverageRating = useCallback(async (): Promise<number | null> => {
+    const res = await ratingsApi.getMyRatings(token(), 1, 1);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur récupération des évaluations');
+    return res.data.avg_note;
+  }, [accessToken]);
+
   const fetchWeeklySchedule = useCallback(async () => {
     if (!accessTokenRef.current) return;
     await _fetchWeeklySchedule(accessTokenRef.current);
@@ -242,6 +250,7 @@ export function useDriver() {
 
     //Revenues
     getMyRevenues,
+    getMyAverageRating,
     revenues,
     isFetchingRevenues,
     revenuesError,

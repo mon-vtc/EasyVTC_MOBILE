@@ -20,8 +20,10 @@ import { useReservation } from '../../hooks/useReservation';
 interface DayStats {
   rides:    number;
   revenue:  number;
-  rating:   number;
+  rating:   number | null;
 }
+
+const EMPTY_STATS: DayStats = { rides: 0, revenue: 0, rating: null };
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SOUS-COMPOSANTS
@@ -125,7 +127,7 @@ function StatsCard({ stats }: { stats: DayStats }) {
         </View>
         <View style={st.divider} />
         <View style={st.stat}>
-          <Text style={st.value}>{stats.rating.toFixed(1)}</Text>
+          <Text style={st.value}>{stats.rating != null ? stats.rating.toFixed(1) : '—'}</Text>
           <Text style={st.label}>Note</Text>
         </View>
       </View>
@@ -229,13 +231,12 @@ const STATUS_LABELS: Record<string, string> = {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export default function DriverHomeScreen({ navigation }: any) {
-  const { isOnline, status, setOnlineStatus, isLoading: isDriverLoading } = useDriver();
+  const { isOnline, status, setOnlineStatus, isLoading: isDriverLoading, getMyRevenues, getMyAverageRating } = useDriver();
   const { driverHomeReservations, fetchDriverHomeReservations, isLoading: isReservationsLoading } = useReservation();
   const { showAlert } = useAlert();
 
   const [isToggling, setIsToggling]   = useState(false);
-  // Stats mockées — à remplacer par un hook dédié quand l'API stats sera disponible
-  const [stats] = useState<DayStats>({ rides: 3, revenue: 185, rating: 4.8 });
+  const [stats, setStats] = useState<DayStats>(EMPTY_STATS);
 
   useEffect(() => {
     const loadData = async () => {
@@ -247,6 +248,25 @@ export default function DriverHomeScreen({ navigation }: any) {
     };
     void loadData();
   }, [fetchDriverHomeReservations]);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const [revenues, rating] = await Promise.all([
+          getMyRevenues('day'),
+          getMyAverageRating(),
+        ]);
+        setStats({
+          rides:   revenues?.total_trips ?? 0,
+          revenue: revenues?.total_revenue ?? 0,
+          rating,
+        });
+      } catch (err) {
+        console.error("Failed to fetch driver stats:", err);
+      }
+    };
+    void loadStats();
+  }, [getMyRevenues, getMyAverageRating]);
 
   const assignedRides = useMemo(() => {
     return driverHomeReservations
