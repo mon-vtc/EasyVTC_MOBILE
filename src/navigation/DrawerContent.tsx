@@ -221,6 +221,12 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
                   style={styles.subItem}
                   labelStyle={styles.subItemLabel}
                 />
+                <DrawerItem
+                  label="Récap commissions"
+                  onPress={() => props.navigation.navigate('AdminCommissionsReport')}
+                  style={styles.subItem}
+                  labelStyle={styles.subItemLabel}
+                />
               </DrawerAccordion>
             )}
 

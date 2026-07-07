@@ -26,6 +26,7 @@ import AdminClientDetailScreen from '../screens/admin/clients/AdminClientDetailS
 import AdminVehicleTypesScreen from '../screens/admin/AdminVehicleTypesScreen';
 import AdminReviewsScreen      from '../screens/admin/AdminReviewsScreen';
 import AdminCommissionSettingsScreen from '../screens/admin/commissions/AdminCommissionSettingsScreen';
+import AdminCommissionsReportScreen  from '../screens/admin/commissions/AdminCommissionsReportScreen';
 import AdminStatisticsScreen from '../screens/admin/AdminStatisticsScreen';
 
 import ManagersListScreen from '../screens/admin/managers/ManagersListScreen';
@@ -413,6 +414,15 @@ function AdminDrawerNavigator() {
       <Drawer.Screen
         name="AdminCommissionSettings"
         component={AdminCommissionSettingsScreen}
+        options={{
+          drawerItemStyle: { display: 'none' },
+          headerShown: false,
+        }} // Pas de label dans le drawer, accès uniquement via la section Tarification
+      />
+
+      <Drawer.Screen
+        name="AdminCommissionsReport"
+        component={AdminCommissionsReportScreen}
         options={{
           drawerItemStyle: { display: 'none' },
           headerShown: false,

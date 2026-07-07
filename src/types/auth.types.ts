@@ -274,6 +274,7 @@ export type AdminDrawerParamList = {
   BaseGrid:          undefined;
   FlatRates:         undefined;
   AdminCommissionSettings: undefined;
+  AdminCommissionsReport:  undefined;
   AdminVehicleTypes: undefined;
   Notifications:     NavigatorScreenParams<AdminNotificationsStackParamList>;
   AdminDiscussions:  NavigatorScreenParams<DiscussionStackParamList>;
