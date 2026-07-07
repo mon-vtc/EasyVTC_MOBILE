@@ -30,7 +30,7 @@ export default {
       monochromeImage: "./assets/android-icon-monochrome.png",
     },
     predictiveBackGestureEnabled: false,
-    package: "com.EasyVTC",
+    package: "com.easyvtc.app",
     usesCleartextTraffic: true,
   },
   web: {
