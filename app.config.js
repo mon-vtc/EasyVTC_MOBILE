@@ -32,6 +32,8 @@ export default {
     predictiveBackGestureEnabled: false,
     package: "com.easyvtc.app",
     usesCleartextTraffic: true,
+    compileSdkVersion: 35,
+    targetSdkVersion: 35, 
   },
   web: {
     favicon: "./assets/favicon.png",
