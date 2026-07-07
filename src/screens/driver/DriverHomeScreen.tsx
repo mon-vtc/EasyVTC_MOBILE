@@ -2,11 +2,12 @@
 // SCREEN — DriverHomeScreen
 // Sprint 3 — EasyVTC
 // ══════════════════════════════════════════════════════════════════════════════
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, Switch, StyleSheet,
   ActivityIndicator, TouchableOpacity,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useDriver }   from '../../hooks/useDriver';
 import { AppIcon }     from '../../components/common/AppIcon';
 import { useAlert } from '../../hooks/useAlert';
@@ -238,35 +239,40 @@ export default function DriverHomeScreen({ navigation }: any) {
   const [isToggling, setIsToggling]   = useState(false);
   const [stats, setStats] = useState<DayStats>(EMPTY_STATS);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        await fetchDriverHomeReservations();
-      } catch (err) {
-        console.error("Failed to fetch driver reservations:", err);
-      }
-    };
-    void loadData();
-  }, [fetchDriverHomeReservations]);
+  // Le Drawer garde cet écran monté en arrière-plan : sans useFocusEffect,
+  // les stats et la liste des courses restent figées après une clôture de
+  // course effectuée depuis un autre écran, tant qu'on ne revient pas ici.
+  useFocusEffect(
+    useCallback(() => {
+      void (async () => {
+        try {
+          await fetchDriverHomeReservations();
+        } catch (err) {
+          console.error("Failed to fetch driver reservations:", err);
+        }
+      })();
+    }, [fetchDriverHomeReservations])
+  );
 
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const [revenues, rating] = await Promise.all([
-          getMyRevenues('day'),
-          getMyAverageRating(),
-        ]);
-        setStats({
-          rides:   revenues?.total_trips ?? 0,
-          revenue: revenues?.total_revenue ?? 0,
-          rating,
-        });
-      } catch (err) {
-        console.error("Failed to fetch driver stats:", err);
-      }
-    };
-    void loadStats();
-  }, [getMyRevenues, getMyAverageRating]);
+  useFocusEffect(
+    useCallback(() => {
+      void (async () => {
+        try {
+          const [revenues, rating] = await Promise.all([
+            getMyRevenues('day'),
+            getMyAverageRating(),
+          ]);
+          setStats({
+            rides:   revenues?.total_trips ?? 0,
+            revenue: revenues?.total_revenue ?? 0,
+            rating,
+          });
+        } catch (err) {
+          console.error("Failed to fetch driver stats:", err);
+        }
+      })();
+    }, [getMyRevenues, getMyAverageRating])
+  );
 
   const assignedRides = useMemo(() => {
     return driverHomeReservations
