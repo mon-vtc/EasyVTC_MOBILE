@@ -14,6 +14,9 @@
     },
     "preview": {
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.easyvtcmassy.fr",
         "EXPO_PUBLIC_SUPABASE_URL": "https://gmeaptypqcgxytshadez.supabase.co",
