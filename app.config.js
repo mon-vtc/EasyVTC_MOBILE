@@ -1,6 +1,6 @@
 /** @type {import('expo/config').ExpoConfig} */
 export default {
-  name: "EasyVTC_Mobile_App",
+  name: "EasyVTC",
   slug: "easyvtc",
   owner: "easyvtc",
   version: "1.0.0",
@@ -14,7 +14,7 @@ export default {
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.EasyVTC",
+    bundleIdentifier: "com.easyvtc.app",
     infoPlist: {
       NSCameraUsageDescription: "Pour photographier vos documents chauffeur et votre photo de profil.",
       NSPhotoLibraryUsageDescription: "Pour sélectionner votre photo de profil ou vos documents depuis la galerie.",
@@ -30,7 +30,7 @@ export default {
       monochromeImage: "./assets/android-icon-monochrome.png",
     },
     predictiveBackGestureEnabled: false,
-    package: "com.EasyVTC",
+    package: "com.easyvtc.app",
     usesCleartextTraffic: true,
   },
   web: {
