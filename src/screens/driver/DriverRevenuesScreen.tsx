@@ -16,6 +16,7 @@ import type { DriverRevenuesResult, RevenueTrip, RevenuesPeriod, RevenueStatus }
 import { AppIcon } from '../../components/common/AppIcon';
 
 const REVENUE_PERIODS: { label: string; value: RevenuesPeriod }[] = [
+  { label: 'Jour', value: 'day' },
   { label: 'Semaine', value: 'week' },
   { label: 'Mois', value: 'month' },
   { label: 'Tout', value: 'all' },
@@ -48,6 +49,7 @@ function formatTime(iso: string | null): string {
 }
 
 const PERIOD_LABELS: Record<string, string> = {
+  day:   'du jour',
   month: 'du mois',
   week:  'de la semaine',
   all: 'totaux',
