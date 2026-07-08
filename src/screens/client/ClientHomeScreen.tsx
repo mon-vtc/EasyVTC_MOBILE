@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView,
+  View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, StatusBar, Platform,
 } from 'react-native';
 import { Ionicons }  from '@expo/vector-icons';
@@ -192,7 +192,11 @@ export default function ClientHomeScreen({ navigation }: Props) {
                 </TouchableOpacity>
                 {/* Profil */}
                 <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('ClientProfile')}>
-                  <Ionicons name="person-circle-outline" size={26} color={Colors.white} />
+                  {user?.profile_photo_url ? (
+                    <Image source={{ uri: user.profile_photo_url }} style={styles.avatarIcon} />
+                  ) : (
+                    <Ionicons name="person-circle-outline" size={26} color={Colors.white} />
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -311,6 +315,7 @@ const styles = StyleSheet.create({
   subGreeting:  { fontSize: Fonts.size.sm, color: 'rgba(255,255,255,0.8)', lineHeight: 20 },
   headerIcons:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm},
   iconBtn:      { position: 'relative', padding: 6,borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)' },
+  avatarIcon:   { width: 26, height: 26, borderRadius: 13 },
   notifBadge: {
     position:        'absolute',
     top:             2, right: 2,

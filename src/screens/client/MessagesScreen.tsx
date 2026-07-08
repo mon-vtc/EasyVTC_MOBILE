@@ -63,17 +63,18 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       {/* Avatar */}
       <View style={styles.avatar}>
-        {other_party?.profile_photo_url  && (
+        {other_party?.profile_photo_url ? (
           <Image
             source={{ uri: other_party.profile_photo_url }}
             style={styles.avatarImage}
           />
+        ) : (
+          <AppIcon
+            name={other_party?.role === 'driver' ? 'car-sport-outline' : 'person-outline'}
+            size={24}
+            color={Colors.textSecondary}
+          />
         )}
-        <AppIcon
-          name={other_party?.role === 'driver' ? 'car-sport-outline' : 'person-outline'}
-          size={24}
-          color={Colors.textSecondary}
-        />
       </View>
 
       <View style={styles.content}>

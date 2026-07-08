@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
@@ -96,7 +96,11 @@ const BookingCard = ({
 const DriverItem = ({ driver }: { driver: Driver }) => (
   <View style={styles.driverItem}>
     <View style={styles.driverAvatar}>
-      <Ionicons name="person-outline" size={24} color={Colors.textSecondary} />
+      {driver.avatarUrl ? (
+        <Image source={{ uri: driver.avatarUrl }} style={styles.driverAvatarImage} />
+      ) : (
+        <Ionicons name="person-outline" size={24} color={Colors.textSecondary} />
+      )}
     </View>
     <View style={styles.driverInfo}>
       <Text style={styles.driverName}>{driver.name}</Text>
@@ -327,6 +331,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     marginBottom: 10,
+  },
+  driverAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   driverAvatar: {
     width: 44,

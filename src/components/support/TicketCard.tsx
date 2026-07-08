@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { AppIcon } from '../common/AppIcon';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { SupportTicketRow } from '../../types/chats.type';
@@ -41,10 +41,13 @@ export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketR
       <View style={cardStyles.headerRow}>
         <View style={cardStyles.leftRow}>
           <View style={cardStyles.avatarWrap}>
-            {/* La liste des tickets ne renvoie pas profile_photo_url — icône générique */}
-            <View style={[cardStyles.avatar, {backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center'}]}>
-              <AppIcon name="person-outline" size={20} color={Colors.textSecondary} />
-            </View>
+            {ticket.user?.profile_photo_url ? (
+              <Image source={{ uri: ticket.user.profile_photo_url }} style={cardStyles.avatar} />
+            ) : (
+              <View style={[cardStyles.avatar, {backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center'}]}>
+                <AppIcon name="person-outline" size={20} color={Colors.textSecondary} />
+              </View>
+            )}
             {isPending && <View style={cardStyles.badge} />}
           </View>
           <View style={cardStyles.nameCol}>
