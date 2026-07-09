@@ -31,6 +31,14 @@ export const notificationsApi = {
   },
 
   /**
+   * Fetches a single notification by id (used to resolve a push notification tap,
+   * whose payload only carries `notification_id`, into the full entity).
+   */
+  getById: (token: string, id: string): Promise<ApiResponse<Notification>> => {
+    return api.get<Notification>(`/notifications/${id}`, token);
+  },
+
+  /**
    * Marks a specific notification as read.
    */
   markAsRead: (token: string, id: string): Promise<ApiResponse<void>> => {

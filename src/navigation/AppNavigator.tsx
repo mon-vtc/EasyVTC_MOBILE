@@ -11,6 +11,7 @@ import AdminNavigator          from './AdminNavigator';
 import { AlertProvider } from '../components/common/AlertProvider';
 import ManagerNavigator        from './ManagerNavigator';
 import { Colors }              from '../theme/colors';
+import { navigationRef }       from './navigationRef';
 
 export default function AppNavigator() {
   const { user, isHydrated }  = useAuth();
@@ -50,8 +51,7 @@ export default function AppNavigator() {
   // onStateChange={(state) => console.log('Nouvel État de Navigation:', JSON.stringify(state, null, 2))}
   return (
     <AlertProvider>
-      <NavigationContainer
-      >
+      <NavigationContainer ref={navigationRef}>
         {renderNavigator()}
       </NavigationContainer>
     </AlertProvider>
