@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md, paddingHorizontal: Spacing.md,
   },
   headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
 
   searchContainer: {
     paddingHorizontal: Spacing.md,
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   filterSummaryText: {
     fontSize: Fonts.size.xs,
     color: Colors.bordeaux,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   searchInput: {
     flex: 1, fontSize: Fonts.size.sm, color: Colors.textPrimary, padding: 0,
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: Fonts.size.sm,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   dateTime: {
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   userText: {
     fontSize: Fonts.size.sm,
     color: Colors.textSecondary,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
   entityText: {
     fontSize: Fonts.size.sm,

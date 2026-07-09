@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.md,
   },
-  headerTitle:  { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white },
+  headerTitle:  { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white },
   headerCount:  { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2 },
   list:         { padding: Spacing.md, gap: Spacing.md },
   card: {
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
     marginBottom: Spacing.sm,
   },
-  invoiceNumber: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeaux },
+  invoiceNumber: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
   issuedDate:    { fontSize: Fonts.size.xs, color: Colors.textMuted, marginTop: 2 },
   adjustedBadge: {
     backgroundColor: Colors.warningLight,
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: Radius.sm,
   },
-  adjustedBadgeText: { fontSize: Fonts.size.xs, color: Colors.warning, fontWeight: '600' },
+  adjustedBadgeText: { fontSize: Fonts.size.xs, color: Colors.warning, fontFamily: Fonts.semibold, fontWeight: '600' },
   tripRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
   tripText: { flex: 1, fontSize: Fonts.size.sm, color: Colors.textPrimary },
   metaRow: {
@@ -314,8 +314,8 @@ const styles = StyleSheet.create({
   amountLabel:   { fontSize: Fonts.size.sm, color: Colors.textSecondary },
   amountValue:   { fontSize: Fonts.size.sm, color: Colors.textPrimary },
   amountTtcRow:  { borderTopWidth: 1, borderTopColor: Colors.border, marginTop: 4, paddingTop: 4 },
-  amountTtcLabel:{ fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary },
-  amountTtc:     { fontSize: Fonts.size.md, fontWeight: '800', color: Colors.bordeaux },
+  amountTtcLabel:{ fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
+  amountTtc:     { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux },
   paymentMention:{ fontSize: Fonts.size.xs, color: Colors.textMuted, marginTop: Spacing.xs, fontStyle: 'italic' },
   actionsRow: {
     flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.md,
@@ -325,16 +325,16 @@ const styles = StyleSheet.create({
     gap: Spacing.xs, borderWidth: 1, borderColor: Colors.bordeaux,
     paddingVertical: 10, borderRadius: Radius.sm, backgroundColor: Colors.white,
   },
-  detailBtnText: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.bordeaux },
+  detailBtnText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.bordeaux },
   pdfBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: Spacing.xs, backgroundColor: Colors.bordeaux,
     paddingVertical: 10, borderRadius: Radius.sm,
   },
   pdfBtnDisabled: { backgroundColor: Colors.textMuted },
-  pdfBtnText: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.white },
+  pdfBtnText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
   empty: { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
-  emptyTitle:    { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },
+  emptyTitle:    { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   emptySubtitle: { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: Spacing.lg },
   searchContainer: {
     flexDirection: 'row',

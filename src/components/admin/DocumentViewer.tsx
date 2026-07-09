@@ -158,14 +158,14 @@ const pvStyles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: Colors.background },
   center:       { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md, padding: Spacing.xl },
   label:        { fontSize: Fonts.size.md, color: Colors.textSecondary, textAlign: 'center' },
-  labelError:   { fontSize: Fonts.size.md, fontWeight: '700', color: '#E53935', textAlign: 'center' },
+  labelError:   { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: '#E53935', textAlign: 'center' },
   sublabel:     { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center' },
   barTrack:     { width: '80%', height: 6, borderRadius: 3, backgroundColor: Colors.border, overflow: 'hidden' },
   barFill:      { height: '100%', borderRadius: 3, backgroundColor: Colors.bordeaux },
   btnOutline:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.bordeaux, marginTop: Spacing.xs },
-  btnOutlineText: { color: Colors.bordeaux, fontWeight: '600', fontSize: Fonts.size.sm },
+  btnOutlineText: { color: Colors.bordeaux, fontFamily: Fonts.semibold, fontWeight: '600', fontSize: Fonts.size.sm },
   btnFilled:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.md, backgroundColor: Colors.bordeaux, marginTop: Spacing.xs },
-  btnFilledText:{ color: Colors.white, fontWeight: '700', fontSize: Fonts.size.sm },
+  btnFilledText:{ color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.sm },
 });
 
 // ── Viewer Image ──────────────────────────────────────────────
@@ -246,9 +246,9 @@ const imgStyles = StyleSheet.create({
   image:      { width: W, height: H * 0.68 },
   center:     { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md, padding: Spacing.xl },
   label:      { fontSize: Fonts.size.md, color: Colors.textSecondary, textAlign: 'center' },
-  labelError: { fontSize: Fonts.size.md, fontWeight: '700', color: '#E53935', textAlign: 'center' },
+  labelError: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: '#E53935', textAlign: 'center' },
   btn:        { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.bordeaux, marginTop: Spacing.xs },
-  btnText:    { color: Colors.bordeaux, fontWeight: '600', fontSize: Fonts.size.sm },
+  btnText:    { color: Colors.bordeaux, fontFamily: Fonts.semibold, fontWeight: '600', fontSize: Fonts.size.sm },
 });
 
 // ── Barre d'actions ───────────────────────────────────────────
@@ -299,9 +299,9 @@ const abStyles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 28 : Spacing.md,
   },
   btn:        { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: 14, borderRadius: Radius.md },
-  btnText:    { color: Colors.white, fontWeight: '700', fontSize: Fonts.size.md },
+  btnText:    { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.md },
   statusBar:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: Spacing.md, borderTopWidth: 1, borderTopColor: Colors.border, paddingBottom: Platform.OS === 'ios' ? 28 : Spacing.md },
-  statusText: { fontWeight: '700', fontSize: Fonts.size.md },
+  statusText: { fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.md },
 });
 
 // ── DocumentViewer ────────────────────────────────────────────
@@ -367,11 +367,11 @@ const styles = StyleSheet.create({
   header:       { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight ?? 0) + Spacing.md, paddingBottom: Spacing.md, paddingHorizontal: Spacing.sm, gap: Spacing.sm },
   iconBtn:      { padding: Spacing.sm, width: 40, alignItems: 'center' },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle:  { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.md },
+  headerTitle:  { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.md },
   headerSub:    { color: 'rgba(255,255,255,0.75)', fontSize: Fonts.size.xs, marginTop: 2 },
   fileBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, backgroundColor: Colors.surface, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.border },
   fileBadgeText:{ flex: 1, fontSize: Fonts.size.xs, color: Colors.textMuted },
   typeBadge:    { borderRadius: Radius.full, paddingVertical: 2, paddingHorizontal: 8 },
-  typeBadgeText:{ fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  typeBadgeText:{ fontSize: 10, fontFamily: Fonts.bold, fontWeight: '800', letterSpacing: 0.5 },
   content:      { flex: 1 },
 });

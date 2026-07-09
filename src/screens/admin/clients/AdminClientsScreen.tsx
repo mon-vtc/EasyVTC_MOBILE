@@ -122,16 +122,16 @@ const modalSt = StyleSheet.create({
     padding:   Spacing.lg,
     paddingBottom: Spacing.xl,
   },
-  title:         { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.bordeaux, marginBottom: 4 },
+  title:         { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux, marginBottom: 4 },
   subtitle:      { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.md },
-  label:         { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.xs },
+  label:         { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.xs },
   option: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
     padding: Spacing.sm, borderRadius: Radius.md, borderWidth: 1,
     borderColor: Colors.border, marginBottom: Spacing.xs,
   },
   optionSelected: { borderColor: Colors.bordeaux, backgroundColor: Colors.overlayLight },
-  optionLabel:    { fontSize: Fonts.size.md, fontWeight: '600' },
+  optionLabel:    { fontSize: Fonts.size.md, fontFamily: Fonts.semibold, fontWeight: '600' },
   input: {
     borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md,
     padding: Spacing.md, fontSize: Fonts.size.sm, color: Colors.textPrimary,
@@ -142,12 +142,12 @@ const modalSt = StyleSheet.create({
     flex: 1, paddingVertical: Spacing.md, borderRadius: Radius.md,
     borderWidth: 1, borderColor: Colors.border, alignItems: 'center',
   },
-  btnCancelText:  { fontSize: Fonts.size.md, color: Colors.textSecondary, fontWeight: '600' },
+  btnCancelText:  { fontSize: Fonts.size.md, color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600' },
   btnConfirm: {
     flex: 2, paddingVertical: Spacing.md, borderRadius: Radius.md,
     backgroundColor: Colors.bordeaux, alignItems: 'center',
   },
-  btnConfirmText: { fontSize: Fonts.size.md, color: Colors.white, fontWeight: '700' },
+  btnConfirmText: { fontSize: Fonts.size.md, color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700' },
   btnDisabled:    { opacity: 0.4 },
 });
 
@@ -256,16 +256,16 @@ const cardSt = StyleSheet.create({
     marginRight: Spacing.md, overflow: 'hidden', flexShrink: 0,
   },
   avatarImg:      { width: '100%', height: '100%' },
-  avatarInitials: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.white },
+  avatarInitials: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
   nameBlock:  { flex: 1 },
   nameRow:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.xs, marginBottom: 2 },
-  name:       { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
+  name:       { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
   badge: {
     paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: Radius.full,
   },
-  badgeText:  { fontSize: Fonts.size.xs, fontWeight: '600' },
+  badgeText:  { fontSize: Fonts.size.xs, fontFamily: Fonts.semibold, fontWeight: '600' },
   ratingRow:  { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 },
-  ratingText: { fontSize: Fonts.size.sm, color: Colors.textPrimary, fontWeight: '600' },
+  ratingText: { fontSize: Fonts.size.sm, color: Colors.textPrimary, fontFamily: Fonts.semibold, fontWeight: '600' },
   infoRow:    { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
   infoText:   { fontSize: Fonts.size.sm, color: Colors.textMuted, flex: 1 },
   footer: {
@@ -279,9 +279,9 @@ const cardSt = StyleSheet.create({
   },
   stat:       { alignItems: 'center', flex: 1 },
   statLabel:  { fontSize: 10, color: Colors.textMuted, marginBottom: 1 },
-  statValue:  { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.bordeauxLight },
+  statValue:  { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxLight },
   actionBtn:  { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  actionText: { fontSize: Fonts.size.sm, color: Colors.bordeaux, fontWeight: '500' },
+  actionText: { fontSize: Fonts.size.sm, color: Colors.bordeaux, fontFamily: Fonts.medium, fontWeight: '500' },
 });
 
 // ── KPI Card ──────────────────────────────────────────────────────────────────
@@ -309,7 +309,7 @@ const kpiSt = StyleSheet.create({
   },
   iconCircle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   label:      { fontSize: 10, color: Colors.textMuted, textAlign: 'center' },
-  value:      { fontSize: Fonts.size.md, fontWeight: '800', color: Colors.textPrimary },
+  value:      { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary },
 });
 
 // ── Écran principal ───────────────────────────────────────────────────────────
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
     paddingHorizontal:  Spacing.md,
   },
   headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white },
+  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
 
   kpiRow: {
     flexDirection:    'row',
@@ -572,8 +572,8 @@ const styles = StyleSheet.create({
   },
   tab:          { flex: 1, paddingVertical: Spacing.xs, borderRadius: Radius.sm - 1, alignItems: 'center' },
   tabActive:    { backgroundColor: Colors.bordeauxLight },
-  tabText:      { fontSize: Fonts.size.sm, color: Colors.textMuted,  fontWeight: '600' },
-  tabTextActive:{ fontSize: Fonts.size.sm, color: Colors.white,      fontWeight: '700' },
+  tabText:      { fontSize: Fonts.size.sm, color: Colors.textMuted,  fontFamily: Fonts.semibold, fontWeight: '600' },
+  tabTextActive:{ fontSize: Fonts.size.sm, color: Colors.white,      fontFamily: Fonts.bold, fontWeight: '700' },
 
   countText: {
     fontSize: Fonts.size.xs, color: Colors.textMuted,

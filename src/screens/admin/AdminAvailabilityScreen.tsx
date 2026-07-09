@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Fonts.size.xl,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color: Colors.bordeaux,
     textAlign: 'center',
   },

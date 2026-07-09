@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.sm, paddingHorizontal: Spacing.md },
   headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   titleZone: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     fontSize: Fonts.size.xl,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
   },
   subtitle: {
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
   },
   cardAddress: {
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: Fonts.size.lg,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     marginTop: Spacing.lg,
   },
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   },
   emptyButtonText: {
     color: Colors.white,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     fontSize: Fonts.size.md,
   },
 });
@@ -478,7 +478,7 @@ const modalStyles = StyleSheet.create({
   },
   title: {
     fontSize: Fonts.size.xl,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color: Colors.textPrimary,
     marginBottom: Spacing.lg,
   },
@@ -502,7 +502,7 @@ const modalStyles = StyleSheet.create({
   },
   btnCancelText: {
     color: Colors.textSecondary,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     fontSize: Fonts.size.md,
   },
   btnConfirm: {
@@ -510,7 +510,7 @@ const modalStyles = StyleSheet.create({
   },
   btnConfirmText: {
     color: Colors.white,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     fontSize: Fonts.size.md,
   },
 });

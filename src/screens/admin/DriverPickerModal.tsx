@@ -104,7 +104,7 @@ const row = StyleSheet.create({
     justifyContent: 'center',
   },
   info: { flex: 1, gap: 3 },
-  name: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary },
+  name: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   metaLine: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   meta: { fontSize: Fonts.size.xs, color: Colors.textMuted },
   check: {
@@ -403,7 +403,7 @@ const M = StyleSheet.create({
   headerText: { flex: 1 },
   title: {
     fontSize: Fonts.size.md,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color: Colors.textPrimary,
   },
   subtitle: {
@@ -460,7 +460,7 @@ const M = StyleSheet.create({
     color: Colors.textSecondary,
   },
   typeBannerBold: {
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
     textTransform: 'capitalize',
   },
@@ -496,7 +496,7 @@ const M = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.surface,
   },
-  cancelText: { color: Colors.textSecondary, fontWeight: '600', fontSize: Fonts.size.sm },
+  cancelText: { color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600', fontSize: Fonts.size.sm },
   confirmBtn: {
     flex: 2,
     paddingVertical: Spacing.md,
@@ -506,5 +506,5 @@ const M = StyleSheet.create({
     justifyContent: 'center',
   },
   confirmBtnDisabled: { backgroundColor: Colors.border },
-  confirmText: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.sm },
+  confirmText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.sm },
 });

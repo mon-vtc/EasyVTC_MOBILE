@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   lg: { paddingVertical: Spacing.md,     paddingHorizontal: Spacing.xl,  minHeight: 56 },
 
   // Labels
-  label:          { fontSize: Fonts.size.md, fontWeight: '700', letterSpacing: 0.3 },
+  label:          { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', letterSpacing: 0.3 },
   label_primary:  { color: Colors.white },
   label_outline:  { color: Colors.bordeauxLight },
   label_ghost:    { color: Colors.bordeauxLight },

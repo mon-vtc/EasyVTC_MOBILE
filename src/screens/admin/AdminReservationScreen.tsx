@@ -671,11 +671,11 @@ const S = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
   },
   headerTextContainer: { flex: 1, marginLeft: Spacing.sm },
-  title: { color: Colors.white, fontSize: Fonts.size.lg, fontWeight: '800' },
+  title: { color: Colors.white, fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800' },
   subtitle: { color: 'rgba(255,255,255,0.75)', fontSize: Fonts.size.xs, marginTop: 2 },
 
   badge: { borderRadius: Radius.full, paddingHorizontal: Spacing.sm, paddingVertical: 4 },
-  badgeText: { fontSize: Fonts.size.xs, fontWeight: '700' },
+  badgeText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
 
   tabs: {
     flexDirection: 'row',
@@ -687,7 +687,7 @@ const S = StyleSheet.create({
   },
   tabBtn: { flex: 1, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
   tabActive: { backgroundColor: Colors.bordeaux },
-  tabText: { color: Colors.textSecondary, fontSize: Fonts.size.sm, fontWeight: '600' },
+  tabText: { color: Colors.textSecondary, fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
   tabTextActive: { color: Colors.white },
 
   content: { flex: 1, paddingHorizontal: Spacing.md },
@@ -708,7 +708,7 @@ const S = StyleSheet.create({
   itineraryAddresses: { flex: 1 },
   itineraryBlock: {},
   itineraryLabel: { fontSize: Fonts.size.xs, color: Colors.textSecondary, marginBottom: 2 },
-  itineraryValue: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
+  itineraryValue: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   itineraryDate: { fontSize: Fonts.size.xs, color: Colors.textSecondary, marginTop: 2 },
   distanceRow: {
     flexDirection: 'row', justifyContent: 'space-between',
@@ -716,18 +716,18 @@ const S = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: Colors.border,
   },
   distanceLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  distanceValue: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary },
+  distanceValue: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
 
   notesCard: { backgroundColor: '#FFFDE7', borderLeftWidth: 3, borderLeftColor: '#F57F17' },
   notesHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.xs, gap: 6 },
-  notesTitle: { fontSize: Fonts.size.sm, fontWeight: '700', color: '#F57F17' },
+  notesTitle: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: '#F57F17' },
   notesText: { fontSize: Fonts.size.sm, color: Colors.textPrimary, lineHeight: 20 },
 
   historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.sm },
-  historyTitle: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textSecondary },
+  historyTitle: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary },
   historyItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: Spacing.sm },
   historyDot: { width: 10, height: 10, borderRadius: 5, marginTop: 4 },
-  historyLabel: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary },
+  historyLabel: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   historyDate: { fontSize: Fonts.size.xs, color: Colors.textSecondary, marginTop: 2 },
 
   noDriverBlock: { alignItems: 'center', paddingVertical: Spacing.lg, gap: Spacing.sm },
@@ -736,21 +736,21 @@ const S = StyleSheet.create({
     backgroundColor: Colors.surface,
     alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.xs,
   },
-  noDriverTitle: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
+  noDriverTitle: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   noDriverSub: { fontSize: Fonts.size.sm, color: Colors.textSecondary, textAlign: 'center' },
 
   profileRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md },
   avatar: { width: 64, height: 64, borderRadius: 32 },
   avatarFallback: { backgroundColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
-  profileName: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
-  profileRole: { fontSize: Fonts.size.sm, fontWeight: '600', marginTop: 2 },
+  profileName: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
+  profileRole: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', marginTop: 2 },
   driverBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   ratingBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
     backgroundColor: '#FFF8E1', borderRadius: Radius.full,
     paddingHorizontal: 6, paddingVertical: 2,
   },
-  ratingText: { fontSize: Fonts.size.xs, fontWeight: '700', color: '#F9A825' },
+  ratingText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700', color: '#F9A825' },
 
   contactRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm, gap: Spacing.sm },
   contactIcon: {
@@ -759,7 +759,7 @@ const S = StyleSheet.create({
   },
   contactInfo: { flex: 1 },
   contactLabel: { fontSize: Fonts.size.xs, color: Colors.textSecondary },
-  contactValue: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary },
+  contactValue: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   contactAction: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: Colors.bordeaux, alignItems: 'center', justifyContent: 'center',
@@ -769,17 +769,17 @@ const S = StyleSheet.create({
     marginTop: Spacing.sm, backgroundColor: Colors.textPrimary,
     borderRadius: Radius.md, paddingVertical: Spacing.sm + 2, alignItems: 'center',
   },
-  profileBtnText: { color: Colors.white, fontWeight: '700', fontSize: Fonts.size.sm },
+  profileBtnText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.sm },
 
   paymentHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.md },
-  paymentTitle: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textSecondary },
+  paymentTitle: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary },
   paymentRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm },
   paymentLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  paymentValue: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary },
+  paymentValue: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   paymentDivider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.sm },
   paymentTotalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  paymentTotalLabel: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
-  paymentTotalValue: { fontSize: 22, fontWeight: '900', color: Colors.bordeaux },
+  paymentTotalLabel: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
+  paymentTotalValue: { fontSize: 22, fontFamily: Fonts.bold, fontWeight: '900', color: Colors.bordeaux },
 
   bottomActions: {
     position: 'absolute', left: 0, right: 0, bottom: 0,
@@ -792,20 +792,20 @@ const S = StyleSheet.create({
     width: '100%', borderRadius: Radius.md, paddingVertical: Spacing.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
   },
-  primaryBtnText: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.md },
+  primaryBtnText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.md },
   cancelBtn: {
     width: '100%', borderRadius: Radius.md, paddingVertical: Spacing.md,
     alignItems: 'center', backgroundColor: '#D32F2F',
   },
-  cancelBtnText: { color: Colors.white, fontWeight: '700', fontSize: Fonts.size.md },
+  cancelBtnText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.md },
 
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.md },
   emptyText: { color: Colors.textMuted, fontStyle: 'italic', textAlign: 'center' },
-  errorText: { color: '#D32F2F', fontWeight: '700' },
+  errorText: { color: '#D32F2F', fontFamily: Fonts.bold, fontWeight: '700' },
   retryBtn: {
     marginTop: Spacing.sm, backgroundColor: Colors.surface,
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: Radius.md,
   },
-  retryText: { color: Colors.bordeaux, fontWeight: '700' },
+  retryText: { color: Colors.bordeaux, fontFamily: Fonts.bold, fontWeight: '700' },
   loadingText: { marginTop: Spacing.sm, color: Colors.textSecondary, fontSize: Fonts.size.sm },
 });

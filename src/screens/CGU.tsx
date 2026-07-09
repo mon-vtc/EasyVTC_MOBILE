@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: Colors.white,
     fontSize: 25,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     lineHeight: 36,
     textAlign: 'center'
   },
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
     marginBottom: Spacing.sm,
   },

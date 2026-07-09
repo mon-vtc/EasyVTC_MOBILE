@@ -388,7 +388,7 @@ const s = StyleSheet.create({
   statusOffline: { backgroundColor: Colors.textMuted },
   driverName: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
   driverStatus: {

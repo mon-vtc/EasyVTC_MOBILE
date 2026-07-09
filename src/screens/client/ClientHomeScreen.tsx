@@ -100,8 +100,8 @@ const cardStyles = StyleSheet.create({
     paddingVertical: 3,
     paddingHorizontal: Spacing.sm,
   },
-  badgeText: { fontSize: Fonts.size.xs, fontWeight: '700' },
-  price:     { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary },
+  badgeText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
+  price:     { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary },
   date:      { fontSize: Fonts.size.xs, color: Colors.textMuted, marginBottom: Spacing.sm },
   routeRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: 4 },
   routeText: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     marginBottom:   Spacing.lg,
   },
   headerGreet:  { flex: 1 },
-  greeting:     { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white, marginBottom: 4 },
+  greeting:     { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white, marginBottom: 4 },
   subGreeting:  { fontSize: Fonts.size.sm, color: 'rgba(255,255,255,0.8)', lineHeight: 20 },
   headerIcons:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm},
   iconBtn:      { position: 'relative', padding: 6,borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)' },
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     justifyContent:  'center',
     paddingHorizontal: 3,
   },
-  notifText: { color: Colors.white, fontSize: 9, fontWeight: '800' },
+  notifText: { color: Colors.white, fontSize: 9, fontFamily: Fonts.bold, fontWeight: '800' },
 
   newRideBtn: {
     flexDirection:  'row',
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   newRideBtnText: {
     color:      Colors.bordeaux,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     fontSize:   Fonts.size.lg,
   },
 
@@ -356,13 +356,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize:   Fonts.size.lg,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color:      Colors.textPrimary,
   },
   seeAll: {
     fontSize: Fonts.size.sm,
     color:    Colors.bordeaux,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
 
   // Quick actions
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   quickActionLabel: {
     fontSize: Fonts.size.xs,
     color:    Colors.textSecondary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
 
   // Loyalty
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     alignItems:     'flex-start',
     marginBottom:   Spacing.md,
   },
-  loyaltyTitle: { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.white },
+  loyaltyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white },
   loyaltySub:   { fontSize: Fonts.size.sm, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
   loyaltyPoints: {
     flexDirection:   'row',
@@ -408,5 +408,5 @@ const styles = StyleSheet.create({
     padding:         Spacing.md,
   },
   loyaltyPointsLabel: { color: 'rgba(255,255,255,0.8)', fontSize: Fonts.size.sm },
-  loyaltyPointsValue: { color: Colors.white, fontSize: Fonts.size.xl, fontWeight: '800' },
+  loyaltyPointsValue: { color: Colors.white, fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800' },
 });

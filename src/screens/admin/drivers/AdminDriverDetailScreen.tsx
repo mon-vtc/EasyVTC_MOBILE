@@ -266,11 +266,11 @@ function TabStatistiques({ monthlyStats, lastMonthStats, isFetching }: { monthly
 const statsStyles = StyleSheet.create({
   row:        { flexDirection: 'row', justifyContent: 'space-around', marginTop: Spacing.sm },
   statItem:   { alignItems: 'center' },
-  statValue:  { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.bordeauxLight },
+  statValue:  { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeauxLight },
   statLabel:  { fontSize: Fonts.size.sm, color: Colors.textMuted, marginTop: 2 },
   evoHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
-  evoTitle:   { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.white },
-  evoValue:   { fontSize: Fonts.size.xxl, fontWeight: '800' },
+  evoTitle:   { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
+  evoValue:   { fontSize: Fonts.size.xxl, fontFamily: Fonts.bold, fontWeight: '800' },
   evoSub:     { fontSize: Fonts.size.sm, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
 });
 
@@ -353,24 +353,24 @@ const histStyles = StyleSheet.create({
     padding: Spacing.md, marginBottom: Spacing.sm,
   },
   top:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  client:    { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
+  client:    { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  rating:    { fontSize: Fonts.size.sm, fontWeight: '700' },
+  rating:    { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700' },
   date:      { fontSize: Fonts.size.xs, color: Colors.textMuted, marginVertical: Spacing.xs },
   routeRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: 3 },
   routeText: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
   priceRow:  { flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border },
   priceLabel:{ fontSize: Fonts.size.sm, color: Colors.textMuted },
-  price:     { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary },
+  price:     { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary },
 });
 
 // ── Styles communs aux tabs ─────────────────────────────────────
 const tabStyles = StyleSheet.create({
   card:       { backgroundColor: Colors.surface, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, padding: Spacing.md, marginBottom: Spacing.sm },
-  cardTitle:  { fontSize: Fonts.size.md, fontWeight: '800', color: Colors.bordeauxLight, marginBottom: Spacing.md },
+  cardTitle:  { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeauxLight, marginBottom: Spacing.md },
   infoRow:    { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.xs, borderBottomWidth: 1, borderBottomColor: Colors.border },
   infoLabel:  { fontSize: Fonts.size.sm, color: Colors.textMuted },
-  infoValue:  { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary },
+  infoValue:  { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   docRow: {
     paddingHorizontal: Spacing.md,
     flexDirection: 'row',
@@ -382,10 +382,10 @@ const tabStyles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   docLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  docLabel:   { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary },
+  docLabel:   { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   docExpiry:  { fontSize: Fonts.size.xs, color: Colors.textMuted },
   docBadge:   { borderRadius: Radius.full, paddingVertical: 3, paddingHorizontal: Spacing.sm },
-  docBadgeText: { fontSize: Fonts.size.xs, fontWeight: '700' },
+  docBadgeText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 // ── Screen principal ────────────────────────────────────────────
@@ -821,7 +821,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md, paddingHorizontal: Spacing.md,
   },
   headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
 
   profileCard: {
     backgroundColor: Colors.surface, borderRadius: Radius.lg,
@@ -837,15 +837,15 @@ const styles = StyleSheet.create({
   },
   profileInfo:   { flex: 1 },
   nameStatusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: Spacing.xs },
-  driverName:    { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary, flex: 1 },
+  driverName:    { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary, flex: 1 },
   statusBadge:   { borderRadius: Radius.full, paddingVertical: 3, paddingHorizontal: Spacing.sm, marginLeft: Spacing.xs },
-  statusText:    { fontSize: Fonts.size.xs, fontWeight: '700' },
+  statusText:    { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
   driverStatusRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.xs },
-  driverStatusLabel: { fontSize: Fonts.size.xs, color: Colors.textSecondary, fontWeight: '600' },
+  driverStatusLabel: { fontSize: Fonts.size.xs, color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600' },
   driverStatusBadge: { borderRadius: Radius.full, paddingVertical: 3, paddingHorizontal: Spacing.sm, marginLeft: Spacing.xs },
-  driverStatusText: { fontSize: Fonts.size.xs, fontWeight: '700' },
+  driverStatusText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
   ratingRow:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
-  rating:        { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
+  rating:        { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   tripsCount:    { fontSize: Fonts.size.sm, color: Colors.textMuted },
 
   actionsContainer: { gap: Spacing.md, marginVertical: Spacing.md },
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }
   },
-  actionGroupTitle: { fontSize: Fonts.size.md, fontWeight: '400', color: Colors.textSecondary },
+  actionGroupTitle: { fontSize: Fonts.size.md, fontFamily: Fonts.regular, fontWeight: '400', color: Colors.textSecondary },
   driverStatusActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs, marginTop: Spacing.xs },
   adminActions: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.xs },
   actionBtn: {
@@ -866,7 +866,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     minWidth: '48%', // Pour s'assurer que les boutons ne deviennent pas trop petits
   },
-  actionBtnText: { fontSize: Fonts.size.sm, fontWeight: '600' },
+  actionBtnText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   tabBar: {
     flexDirection: 'row',
@@ -876,7 +876,7 @@ const styles = StyleSheet.create({
   },
   tab:           { flex: 1, paddingVertical: Spacing.md, borderRadius: Radius.sm, alignItems: 'center' },
   tabActive:     { backgroundColor: Colors.bordeauxLight, padding : Spacing.md, borderRadius: Radius.lg},
-  tabText:       { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textSecondary },
+  tabText:       { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary },
   tabTextActive: { color: Colors.white },
   tabContent:    { flex: 1, },
 });

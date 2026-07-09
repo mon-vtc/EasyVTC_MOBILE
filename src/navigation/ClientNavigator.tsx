@@ -19,7 +19,7 @@ import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator }   from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons }                   from '@expo/vector-icons';
-import { Colors, Radius, Spacing }    from '../theme/colors';
+import { Colors, Radius, Spacing, Fonts } from '../theme/colors';
 
 import ClientHomeScreen           from '../screens/client/ClientHomeScreen';
 import MyReservationsScreen       from '../screens/client/MyReservationsScreen';
@@ -97,7 +97,7 @@ function ClientTabs() {
           paddingBottom:   Platform.OS === 'ios' ? 24 : 8,
           paddingTop:      8,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 11, fontFamily: Fonts.semibold, fontWeight: '600' },
       }}
     >
       <Tab.Screen

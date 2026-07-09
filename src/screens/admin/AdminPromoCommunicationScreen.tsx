@@ -1475,7 +1475,7 @@ const styles = StyleSheet.create({
   kpiLabel: {
     color: Colors.white,
     fontSize: Fonts.size.xs,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
     marginTop: 4,
   },
   searchWrapper: {
@@ -1516,11 +1516,11 @@ const styles = StyleSheet.create({
   filterText: {
     color: Colors.textPrimary,
     fontSize: Fonts.size.xs,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   filterTextActive: {
     color: Colors.white,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   clientCard: {
     backgroundColor: Colors.white,

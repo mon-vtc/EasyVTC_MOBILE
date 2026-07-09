@@ -41,9 +41,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.beigeLight ?? '#F0EAE8',
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarInitials: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.bordeaux },
+  avatarInitials: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux },
   avatarEditBtn:  { marginTop: Spacing.sm },
-  avatarEditText: { color: Colors.bordeaux, fontSize: Fonts.size.sm, fontWeight: '600' },
+  avatarEditText: { color: Colors.bordeaux, fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   formSection:          { paddingHorizontal: Spacing.lg },
   formSectionContainer: {
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   section:    { paddingHorizontal: Spacing.lg, marginTop: Spacing.sm },
   sectionTitle: {
     fontSize:     Fonts.size.md,
-    fontWeight:   '800',
+    fontFamily: Fonts.bold, fontWeight:   '800',
     color:        Colors.bordeaux,
     marginBottom: Spacing.sm,
   },
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
 
   prefRow:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.sm },
   prefText:     { flex: 1, paddingRight: Spacing.md },
-  prefLabel:    { fontSize: Fonts.size.md, color: Colors.textPrimary, fontWeight: '500' },
+  prefLabel:    { fontSize: Fonts.size.md, color: Colors.textPrimary, fontFamily: Fonts.medium, fontWeight: '500' },
   prefSub:      { fontSize: Fonts.size.xs, color: Colors.textCallToAction, marginTop: 2 },
   dividerLight: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.xs },
 
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   actionRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Spacing.md },
   actionLeft:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  actionLabel: { fontSize: Fonts.size.md, color: Colors.textPrimary, fontWeight: '500' },
+  actionLabel: { fontSize: Fonts.size.md, color: Colors.textPrimary, fontFamily: Fonts.medium, fontWeight: '500' },
   divider:     { height: 1, backgroundColor: Colors.border },
 });
 
@@ -107,7 +107,7 @@ const modalStyles = StyleSheet.create({
     shadowRadius:    16,
     elevation:       10,
   },
-  title:       { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary, marginBottom: Spacing.lg },
+  title:       { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary, marginBottom: Spacing.lg },
   errorBanner: {
     backgroundColor: Colors.errorLight, borderRadius: Radius.sm,
     borderLeftWidth: 3, borderLeftColor: Colors.error,
@@ -117,7 +117,7 @@ const modalStyles = StyleSheet.create({
   actions:        { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm },
   btn:            { flex: 1, paddingVertical: Spacing.md, borderRadius: Radius.md, alignItems: 'center' },
   btnCancel:      { backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border },
-  btnCancelText:  { color: Colors.textSecondary, fontWeight: '600' },
+  btnCancelText:  { color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600' },
   btnConfirm:     { backgroundColor: Colors.bordeaux },
-  btnConfirmText: { color: Colors.white, fontWeight: '700' },
+  btnConfirmText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700' },
 });

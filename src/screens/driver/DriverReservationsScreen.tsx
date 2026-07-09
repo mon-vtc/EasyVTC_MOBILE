@@ -352,12 +352,12 @@ const styles = StyleSheet.create({
   headerNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 44 },
   navBtn:      { padding: 4, width: 36, alignItems: 'center' },
   logo:        { width: 40, height: 40 },
-  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white, marginTop: Spacing.md },
+  headerTitle: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white, marginTop: Spacing.md },
 
   tabBar:        { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm, backgroundColor: Colors.surface, borderRadius: Radius.md, padding: 4, marginHorizontal: Spacing.md, marginTop: Spacing.sm },
   tabItem:       { flex: 1, alignItems: 'center', paddingVertical: Spacing.sm, borderRadius: Radius.sm },
   tabItemActive: { backgroundColor: Colors.bordeauxLight },
-  tabLabel:      { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '600' },
+  tabLabel:      { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600' },
   tabLabelActive:{ color: Colors.white },
 
   // Recherche + tri
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
 
   // Résumé filtres
   filterSummary: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginHorizontal: Spacing.md, marginBottom: Spacing.sm, backgroundColor: Colors.bordeaux + '12', borderRadius: Radius.sm, paddingVertical: 6, paddingHorizontal: Spacing.sm, borderLeftWidth: 3, borderLeftColor: Colors.bordeaux },
-  filterSummaryText: { flex: 1, fontSize: Fonts.size.xs, color: Colors.bordeaux, fontWeight: '500' },
+  filterSummaryText: { flex: 1, fontSize: Fonts.size.xs, color: Colors.bordeaux, fontFamily: Fonts.medium, fontWeight: '500' },
 
   list:  { marginHorizontal: Spacing.md, paddingBottom: Spacing.xl },
   loader:{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: Spacing.xxl },
@@ -399,15 +399,15 @@ const styles = StyleSheet.create({
   card: { backgroundColor: Colors.white, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.sm, shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.xs },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: Radius.full, paddingHorizontal: 8, paddingVertical: 2 },
-  badgeText: { fontSize: Fonts.size.xs, fontWeight: '700' },
-  price: { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.bordeaux },
+  badgeText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
+  price: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux },
   ref: { marginBottom: Spacing.xs, color: Colors.textSecondary, fontSize: Fonts.size.xs },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.xs },
   routeText: { fontSize: Fonts.size.sm, color: Colors.textPrimary, flex: 1 },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.sm },
   detailBtn: { backgroundColor: Colors.surface, borderRadius: Radius.sm, paddingVertical: 8, paddingHorizontal: Spacing.md },
-  detailBtnText: { color: Colors.bordeaux, fontWeight: '700' },
+  detailBtnText: { color: Colors.bordeaux, fontFamily: Fonts.bold, fontWeight: '700' },
   actionBtn: { backgroundColor: Colors.bordeaux, borderRadius: Radius.sm, paddingVertical: 8, paddingHorizontal: Spacing.md },
   actionBtnDisabled: { backgroundColor: Colors.border },
-  actionBtnText: { color: Colors.white, fontWeight: '700' },
+  actionBtnText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700' },
 });

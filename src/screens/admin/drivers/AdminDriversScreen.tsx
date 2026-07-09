@@ -122,12 +122,12 @@ function DriverCard({
         </View>
         {driver.driver?.status === 'pending'  && (
           <TouchableOpacity style={{ padding: Spacing.xs, backgroundColor: Colors.warningLight, borderRadius: Radius.sm }} onPress={() => handleChangeStatus('probationary')}>
-            <Text style={{ color: Colors.warning, fontSize: Fonts.size.xs, fontWeight: '500' }}>Probationnaire</Text>
+            <Text style={{ color: Colors.warning, fontSize: Fonts.size.xs, fontFamily: Fonts.medium, fontWeight: '500' }}>Probationnaire</Text>
           </TouchableOpacity>
         )}
         {driver.driver?.status === 'probationary'  && (
           <TouchableOpacity style={{ padding: Spacing.xs, backgroundColor: '#E3F2FD', borderRadius: Radius.sm }} onPress={() => handleChangeStatus('pending')}>
-            <Text style={{ color: '#1976D2', fontSize: Fonts.size.xs, fontWeight: '500' }}>Retour en attente</Text>
+            <Text style={{ color: '#1976D2', fontSize: Fonts.size.xs, fontFamily: Fonts.medium, fontWeight: '500' }}>Retour en attente</Text>
           </TouchableOpacity>
         )}
 
@@ -154,13 +154,13 @@ const cardStyles = StyleSheet.create({
     marginRight: Spacing.md, overflow: 'hidden',
   },
   avatarImg:      { width: '100%', height: '100%' },
-  avatarInitials: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeaux },
+  avatarInitials: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
   info:           { flex: 1 },
   nameRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name:           { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeaux },
+  name:           { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
   phone:          { fontSize: Fonts.size.sm, color: Colors.textMuted, marginTop: 2 },
   ratingRow:      { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  rating:         { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary },
+  rating:         { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   details:        { gap: 4, marginBottom: Spacing.sm },
   detailRow:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
   detailText:     { fontSize: Fonts.size.sm, color: Colors.textSecondary },
@@ -170,7 +170,7 @@ const cardStyles = StyleSheet.create({
   },
   statusRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
   dot:        { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: Fonts.size.sm, fontWeight: '500' },
+  statusText: { fontSize: Fonts.size.sm, fontFamily: Fonts.medium, fontWeight: '500' },
 });
 
 // ── Screen ──────────────────────────────────────────────────────
@@ -374,10 +374,10 @@ const styles = StyleSheet.create({
   },
   tab:           { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.full, alignItems: 'center' },
   tabActive:     { backgroundColor: Colors.bordeaux },
-  tabText:       { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textSecondary },
+  tabText:       { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary },
   tabTextActive: { color: Colors.white },
 
-  count:       { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.md, fontWeight: '500' },
+  count:       { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.md, fontFamily: Fonts.medium, fontWeight: '500' },
   errorBanner: { backgroundColor: Colors.errorLight, borderRadius: Radius.sm, borderLeftWidth: 3, borderLeftColor: Colors.error, padding: Spacing.md, marginBottom: Spacing.md },
   errorText:   { color: Colors.error, fontSize: Fonts.size.sm },
   empty:       { alignItems: 'center', paddingVertical: Spacing.xxl, gap: Spacing.md },

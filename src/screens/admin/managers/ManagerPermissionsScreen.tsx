@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontWeight: '600', color: Colors.white },
+  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
   scroll:        { flex: 1 },
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl },
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.border,
     elevation: 1,
   },
-  globalBtnText: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.bordeaux },
+  globalBtnText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.bordeaux },
 
   countBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md,
     marginBottom: Spacing.md,
   },
-  countText: { fontSize: Fonts.size.sm, color: Colors.bordeauxDark, fontWeight: '500' },
+  countText: { fontSize: Fonts.size.sm, color: Colors.bordeauxDark, fontFamily: Fonts.medium, fontWeight: '500' },
 
   groupCard: {
     backgroundColor: Colors.white, borderRadius: Radius.md,
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
   groupTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  groupTitle:    { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeauxDark },
+  groupTitle:    { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxDark },
 
   permRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -298,5 +298,5 @@ const styles = StyleSheet.create({
     gap: 8, paddingVertical: Spacing.md,
   },
   saveBtnDisabled: { opacity: 0.6 },
-  saveBtnText:     { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.white },
+  saveBtnText:     { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
 });

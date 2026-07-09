@@ -7,7 +7,7 @@ import {
   Modal, View, Text, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../theme/colors';
+import { Colors, Fonts } from '../../theme/colors';
 
 const DAYS_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MONTHS = [
@@ -177,7 +177,7 @@ const s = StyleSheet.create({
   headerTitle: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   nav: {
     flexDirection: 'row',
@@ -193,7 +193,7 @@ const s = StyleSheet.create({
   },
   navTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
   },
   weekRow: {
@@ -207,7 +207,7 @@ const s = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.bordeauxLight,
   },
   grid: {
@@ -236,11 +236,11 @@ const s = StyleSheet.create({
   },
   cellTextToday: {
     color: Colors.bordeaux,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
   cellTextSelected: {
     color: Colors.white,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
   cancelBtn: {
     alignItems: 'center',
@@ -251,6 +251,6 @@ const s = StyleSheet.create({
   cancelText: {
     color: Colors.bordeauxLight,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
 });

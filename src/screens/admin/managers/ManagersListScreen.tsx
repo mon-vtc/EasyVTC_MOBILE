@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white },
+  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
 
   statsCard: {
     flexDirection:   'row',
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     gap:              Spacing.lg,
   },
   statBlock:  { flex: 1 },
-  statNumber: { fontSize: 28, fontWeight: '800', color: Colors.white },
+  statNumber: { fontSize: 28, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white },
   statLabel:  { fontSize: Fonts.size.xs, color: Colors.beigeLight, marginTop: 2 },
   statDivider: { width: 1, height: 50, backgroundColor: 'rgba(255,255,255,0.15)' },
   progressBar: {
@@ -266,8 +266,8 @@ const styles = StyleSheet.create({
     alignItems:   'center',
   },
   tabActive:     { backgroundColor: Colors.bordeaux },
-  tabText:       { fontSize: Fonts.size.xs, color: Colors.textMuted,  fontWeight: '600' },
-  tabTextActive: { fontSize: Fonts.size.xs, color: Colors.white,      fontWeight: '700' },
+  tabText:       { fontSize: Fonts.size.xs, color: Colors.textMuted,  fontFamily: Fonts.semibold, fontWeight: '600' },
+  tabTextActive: { fontSize: Fonts.size.xs, color: Colors.white,      fontFamily: Fonts.bold, fontWeight: '700' },
 
   countText: {
     fontSize:         Fonts.size.xs,

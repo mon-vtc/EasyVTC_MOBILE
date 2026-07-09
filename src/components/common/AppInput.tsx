@@ -47,7 +47,7 @@ export function AppInput({ label, error, showToggle = false, secureTextEntry, st
 
 const styles = StyleSheet.create({
   wrapper:   { marginBottom: Spacing.md },
-  label:     { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.xs, letterSpacing: 0.3 },
+  label:     { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.xs, letterSpacing: 0.3 },
   container: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.surface,

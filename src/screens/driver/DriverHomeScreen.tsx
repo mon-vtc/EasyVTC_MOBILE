@@ -11,7 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useDriver }   from '../../hooks/useDriver';
 import { AppIcon }     from '../../components/common/AppIcon';
 import { useAlert } from '../../hooks/useAlert';
-import { Colors }      from '../../theme/colors';
+import { Colors, Fonts } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 17,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     marginTop: 4,
   },
@@ -411,7 +411,7 @@ const sc = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   subtitle: {
@@ -421,7 +421,7 @@ const sc = StyleSheet.create({
   },
   subtitleOnline: {
     color: Colors.bordeauxLight,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   infoBox: {
     flexDirection: 'row',
@@ -462,7 +462,7 @@ const st = StyleSheet.create({
   title: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
   row: {
     flexDirection: 'row',
@@ -476,12 +476,12 @@ const st = StyleSheet.create({
   value: {
     color: Colors.white,
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
   },
   label: {
     color: 'rgba(255,255,255,0.75)',
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   divider: {
     width: 1,
@@ -510,7 +510,7 @@ const rc = StyleSheet.create({
   },
   ref: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     letterSpacing: 0.3,
   },
@@ -537,7 +537,7 @@ const rc = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textPrimary,
   },
   infoRow: {
@@ -557,7 +557,7 @@ const rc = StyleSheet.create({
   },
   infoMain: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
     color: Colors.textPrimary,
   },
   infoSub: {
@@ -589,7 +589,7 @@ const rc = StyleSheet.create({
   },
   price: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color: Colors.textPrimary,
   },
   detailBtn: {
@@ -601,6 +601,6 @@ const rc = StyleSheet.create({
   detailBtnText: {
     color: Colors.white,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
 } as any);

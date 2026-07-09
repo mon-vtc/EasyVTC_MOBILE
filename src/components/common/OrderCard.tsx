@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   },
   orderNum: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
   },
   dateSmall: {
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
     fontSize: Fonts.size.xs,
     color: Colors.bordeaux,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     overflow: 'hidden',
   },
   priceRow: {
@@ -165,8 +165,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
-  priceLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '600' },
-  priceValue: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.bordeaux },
+  priceLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600' },
+  priceValue: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
   pdfBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -178,5 +178,5 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   pdfBtnOff: { backgroundColor: Colors.textMuted },
-  pdfBtnText: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.white },
+  pdfBtnText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 });

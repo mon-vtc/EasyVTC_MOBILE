@@ -465,39 +465,39 @@ const styles = StyleSheet.create({
 
   avatarSection:  { alignItems: 'center', paddingVertical: Spacing.xl },
   avatarCircle:   { width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.beigeLight ?? '#F0EAE8', alignItems: 'center', justifyContent: 'center' },
-  avatarInitials: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.bordeaux },
+  avatarInitials: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux },
   avatarEditBtn:  { marginTop: Spacing.sm },
-  avatarEditText: { color: Colors.bordeaux, fontSize: Fonts.size.sm, fontWeight: '600' },
+  avatarEditText: { color: Colors.bordeaux, fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   formSection:          { paddingHorizontal: Spacing.lg },
   formSectionContainer: { backgroundColor: Colors.surface, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, padding: Spacing.md },
 
   section:          { paddingHorizontal: Spacing.lg, marginTop: Spacing.sm },
-  sectionTitle:     { fontSize: Fonts.size.md, fontWeight: '800', color: Colors.bordeaux, marginBottom: Spacing.sm },
+  sectionTitle:     { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux, marginBottom: Spacing.sm },
   sectionContainer: { backgroundColor: Colors.surface, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, padding: Spacing.md },
 
   prefRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.sm },
   prefText:  { flex: 1, paddingRight: Spacing.md },
-  prefLabel: { fontSize: Fonts.size.md, color: Colors.textPrimary, fontWeight: '500' },
+  prefLabel: { fontSize: Fonts.size.md, color: Colors.textPrimary, fontFamily: Fonts.medium, fontWeight: '500' },
   prefSub:   { fontSize: Fonts.size.xs, color: Colors.textCallToAction, marginTop: 2 },
 
   actionsSection: { marginTop: Spacing.md, marginHorizontal: Spacing.lg, backgroundColor: Colors.surface, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: Spacing.md },
   actionRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Spacing.md },
   actionLeft:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  actionLabel:    { fontSize: Fonts.size.md, color: Colors.textPrimary, fontWeight: '500' },
+  actionLabel:    { fontSize: Fonts.size.md, color: Colors.textPrimary, fontFamily: Fonts.medium, fontWeight: '500' },
   divider:        { height: 1, backgroundColor: Colors.border },
 });
 
 const modalStyles = StyleSheet.create({
   overlay:        { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', padding: Spacing.lg },
   card:           { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, width: '100%', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 10 },
-  title:          { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary, marginBottom: Spacing.lg },
+  title:          { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary, marginBottom: Spacing.lg },
   errorBanner:    { backgroundColor: Colors.errorLight, borderRadius: Radius.sm, borderLeftWidth: 3, borderLeftColor: Colors.error, padding: Spacing.md, marginBottom: Spacing.md },
   errorText:      { color: Colors.error, fontSize: Fonts.size.sm },
   actions:        { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm },
   btn:            { flex: 1, paddingVertical: Spacing.md, borderRadius: Radius.md, alignItems: 'center' },
   btnCancel:      { backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border },
-  btnCancelText:  { color: Colors.textSecondary, fontWeight: '600' },
+  btnCancelText:  { color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600' },
   btnConfirm:     { backgroundColor: Colors.bordeaux },
-  btnConfirmText: { color: Colors.white, fontWeight: '700' },
+  btnConfirmText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700' },
 });

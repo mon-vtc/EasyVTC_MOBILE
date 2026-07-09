@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
 
   // Header
   header:   { alignItems: 'center', marginBottom: 24 },
-  title:    { fontSize: 24, fontWeight: '800', color: TEXT_P, marginTop: 18, letterSpacing: -0.5 },
+  title:    { fontSize: 24, fontFamily: Fonts.bold, fontWeight: '800', color: TEXT_P, marginTop: 18, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: TEXT_S, marginTop: 8, textAlign: 'center', lineHeight: 20 },
 
   // N° réservation — ligne avec label à gauche, valeur bold à droite
@@ -499,10 +499,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     marginBottom: 10,
   },
-  refLabel: { fontSize: 12, color: TEXT_S, fontWeight: '500' },
+  refLabel: { fontSize: 12, color: TEXT_S, fontFamily: Fonts.medium, fontWeight: '500' },
   refValue: {
     flexShrink: 1, fontSize: 14, color: TEXT_P,
-    fontWeight: '800', letterSpacing: 0.4, textAlign: 'right',
+    fontFamily: Fonts.bold, fontWeight: '800', letterSpacing: 0.4, textAlign: 'right',
   },
 
   // Badge statut
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF3E0', borderRadius: 20,
     paddingHorizontal: 14, paddingVertical: 5,
   },
-  statusText: { fontSize: 13, fontWeight: '600', color: '#E65100' },
+  statusText: { fontSize: 13, fontFamily: Fonts.semibold, fontWeight: '600', color: '#E65100' },
 
   // Carte détails trajet
   card: {
@@ -520,14 +520,14 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.05,
     shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 2,
   },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: TEXT_P, marginBottom: 16 },
+  cardTitle: { fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700', color: TEXT_P, marginBottom: 16 },
 
   routeBlock: { gap: 0 },
   routeRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   routeDot:   { width: 10, height: 10, borderRadius: 5, marginTop: 5, flexShrink: 0 },
   routeLine:  { width: 1, height: 14, backgroundColor: BORDER, marginLeft: 4, marginVertical: 3 },
   routeTag:   { fontSize: 10, color: TEXT_S, textTransform: 'uppercase', letterSpacing: 0.5 },
-  routeAddr:  { fontSize: 14, fontWeight: '500', color: TEXT_P, marginTop: 2, lineHeight: 20 },
+  routeAddr:  { fontSize: 14, fontFamily: Fonts.medium, fontWeight: '500', color: TEXT_P, marginTop: 2, lineHeight: 20 },
   divider:    { height: 1, backgroundColor: '#F3F4F6', marginVertical: 16 },
 
   // Prix estimé — card blanche avec prix en gros à droite
@@ -540,17 +540,17 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.04,
     shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
-  priceLabel: { fontSize: 15, fontWeight: '700', color: TEXT_P },
-  priceFinalLabel: { fontSize: 18, fontWeight: '800', color: TEXT_P, marginBottom: 8 },
-  priceFinalValueLabel: { fontSize: 16, fontWeight: 'bold', color: TEXT_P },
-  priceDiscountLabel: { fontSize: 14, fontWeight: '500', color: Colors.success },
+  priceLabel: { fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700', color: TEXT_P },
+  priceFinalLabel: { fontSize: 18, fontFamily: Fonts.bold, fontWeight: '800', color: TEXT_P, marginBottom: 8 },
+  priceFinalValueLabel: { fontSize: 16, fontFamily: Fonts.bold, fontWeight: 'bold', color: TEXT_P },
+  priceDiscountLabel: { fontSize: 14, fontFamily: Fonts.medium, fontWeight: '500', color: Colors.success },
   priceNote:  { fontSize: 11, color: TEXT_S, marginTop: 4, maxWidth: 190, lineHeight: 16 },
   priceValue: {
-    fontSize: 30, fontWeight: '900', color: TEXT_P,
+    fontSize: 30, fontFamily: Fonts.bold, fontWeight: '900', color: TEXT_P,
     letterSpacing: -1, marginLeft: 12,
   },
-  priceInitialValue: { fontSize: 18, fontWeight: '600', color: TEXT_S, textDecorationLine: 'line-through' },
-  priceDiscountValue: { fontSize: 18, fontWeight: '600', color: Colors.success },
+  priceInitialValue: { fontSize: 18, fontFamily: Fonts.semibold, fontWeight: '600', color: TEXT_S, textDecorationLine: 'line-through' },
+  priceDiscountValue: { fontSize: 18, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.success },
   priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
     padding: 16, marginBottom: 24,
   },
   nextHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
-  nextTitle:  { fontSize: 13, fontWeight: '700', color: BORDEAUX },
+  nextTitle:  { fontSize: 13, fontFamily: Fonts.bold, fontWeight: '700', color: BORDEAUX },
 
   // CTAs
   ctas: { gap: 10 },
@@ -578,16 +578,16 @@ const styles = StyleSheet.create({
     shadowColor: BORDEAUX, shadowOpacity: 0.28,
     shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3,
   },
-  btnPrimaryText:   { color: WHITE, fontSize: 15, fontWeight: '700' },
+  btnPrimaryText:   { color: WHITE, fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700' },
   btnSecondary: {
     alignItems: 'center', justifyContent: 'center',
     height: 52, borderRadius: 12,
     borderWidth: 1.5, borderColor: BORDEAUX,
     backgroundColor: WHITE,
   },
-  btnSecondaryText: { color: BORDEAUX, fontSize: 15, fontWeight: '700' },
+  btnSecondaryText: { color: BORDEAUX, fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700' },
   btnGhost:         { alignItems: 'center', justifyContent: 'center', height: 44, backgroundColor: '#EEF4FB', borderRadius: 10 },
-  btnGhostText:     { color: Colors.black, fontSize: 15, fontWeight: '500' },
+  btnGhostText:     { color: Colors.black, fontSize: 15, fontFamily: Fonts.medium, fontWeight: '500' },
 });
 
 // ── Check ─────────────────────────────────────────────────────────────────────
@@ -620,7 +620,7 @@ const row = StyleSheet.create({
   },
   texts: { flex: 1 },
   label: { fontSize: 10, color: TEXT_S, textTransform: 'uppercase', letterSpacing: 0.4 },
-  value: { fontSize: 14, fontWeight: '600', color: TEXT_P, marginTop: 1 },
+  value: { fontSize: 14, fontFamily: Fonts.semibold, fontWeight: '600', color: TEXT_P, marginTop: 1 },
 });
 
 // ── Next step ─────────────────────────────────────────────────────────────────

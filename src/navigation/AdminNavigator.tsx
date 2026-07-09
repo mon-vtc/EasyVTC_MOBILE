@@ -4,7 +4,7 @@ import { createDrawerNavigator, DrawerNavigationOptions } from '@react-navigatio
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppIcon } from '../components/common/AppIcon';
 import DrawerContent, { DrawerLabel } from './DrawerContent';
-import { Colors, Spacing }      from '../theme/colors';
+import { Colors, Spacing, Fonts } from '../theme/colors';
 import { Logo }        from '../constants/logo';
 
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
@@ -466,6 +466,6 @@ const styles = StyleSheet.create({
       justifyContent:  'center',
       paddingHorizontal: 3,
     },
-    notifText: { color: Colors.white, fontSize: 9, fontWeight: '800' },
+    notifText: { color: Colors.white, fontSize: 9, fontFamily: Fonts.bold, fontWeight: '800' },
   
 });

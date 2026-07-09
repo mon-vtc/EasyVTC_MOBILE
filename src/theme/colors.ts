@@ -1,7 +1,7 @@
 export const Colors = {
-  // Charte EasyVTC
-  bordeaux:      '#3D1515',
-  bordeauxLight: '#602C2D',
+  // Charte EasyVTC — #602C2D est la couleur de marque officielle (charte graphique)
+  bordeaux:      '#602C2D',
+  bordeauxLight: '#3D1515',
   bordeauxDark:  '#1A0505',
   beige:         '#C9956A',
   beigeLight:    '#F0E0D0',
@@ -57,9 +57,10 @@ export const Colors = {
 } as const;
 
 export const Fonts = {
-  regular:  'System',
-  medium:   'System',
-  bold:     'System',
+  regular:  'Montserrat_400Regular',
+  medium:   'Montserrat_500Medium',
+  semibold: 'Montserrat_600SemiBold',
+  bold:     'Montserrat_700Bold',
   size: {
     xs:   11,
     sm:   13,

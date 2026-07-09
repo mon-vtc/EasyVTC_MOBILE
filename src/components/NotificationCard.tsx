@@ -10,7 +10,7 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { Notification } from '../types';
 import { NOTIFICATION_ICONS, NOTIFICATION_ACTION_LABELS , NotificationIconConfig} from '../types';
-import { Colors, Spacing, Radius } from '../theme/colors';
+import { Colors, Spacing, Radius, Fonts } from '../theme/colors';
 interface NotificationCardProps {
   notification: Notification;
   onMarkAsRead: (id: string) => void;
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     marginBottom: 5,
     color: Colors.bordeauxLight,
   },
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     color: Colors.bordeauxLight,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     fontSize: 13,
   },
   metadataContainer: {
@@ -153,12 +153,12 @@ const styles = StyleSheet.create({
   secondaryActionButtonText: {
     fontSize: 12,
     color: Colors.bordeauxLight,
-    fontWeight: '400',
+    fontFamily: Fonts.regular, fontWeight: '400',
   },
   deleteActionButton: {
     fontSize: 12,
     color: 'red',
-    fontWeight: '400',
+    fontFamily: Fonts.regular, fontWeight: '400',
   },
 });
 

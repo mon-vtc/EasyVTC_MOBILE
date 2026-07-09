@@ -186,7 +186,7 @@ const hdr = StyleSheet.create({
 const fld = StyleSheet.create({
   wrap:     { marginBottom: Spacing.md },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  label:    { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '500' },
+  label:    { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontFamily: Fonts.medium, fontWeight: '500' },
   input:    { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm, padding: Spacing.sm, fontSize: Fonts.size.md, color: Colors.textPrimary, backgroundColor: Colors.surface },
   multiline: { height: 72, textAlignVertical: 'top' },
 });
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   flex:        { flex: 1, backgroundColor: Colors.background },
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll:      { padding: Spacing.lg, paddingBottom: Spacing.xxl },
-  title:       { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.bordeaux, marginBottom: 4 },
+  title:       { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux, marginBottom: 4 },
   subtitle:    { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginBottom: Spacing.lg },
   card:        { backgroundColor: Colors.surface, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, padding: Spacing.md },
   saveBtn:     { marginTop: Spacing.lg },

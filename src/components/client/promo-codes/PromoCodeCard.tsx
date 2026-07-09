@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import { useToast } from '../../../hooks/useToast';
 import { AppIcon } from '../../common/AppIcon';
-import { Colors } from '../../../theme/colors';
+import { Colors, Fonts } from '../../../theme/colors';
 import type { UserPromoCodeItem } from '../../../types';
 
 interface PromoCodeCardProps {
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   promoName: {
     color: 'white',
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   badge: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   promoDescription: {
     color: 'white',
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   codeText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     letterSpacing: 1,
   },
   infoZone: {
@@ -190,6 +190,6 @@ const styles = StyleSheet.create({
   statusText: {
     marginLeft: 6,
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
 });

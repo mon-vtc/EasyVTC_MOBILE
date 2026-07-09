@@ -107,10 +107,10 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.sm, paddingHorizontal: Spacing.md },
   headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   pageTitle: {
     fontSize: 25,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.white,
   },
   pageSubtitle: {
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.textPrimary,
     marginBottom: 12,
   },

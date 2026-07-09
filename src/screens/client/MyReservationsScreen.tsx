@@ -41,18 +41,18 @@ const STATUS_CONFIG: Record<ReservationStatus, { label: string; bg: string; colo
   cancelled:      { label: 'Annulé',     bg: '#FFEBEE', color: '#C62828', icon: 'close-circle-outline' },
 };
 
-function ReservationCard({ 
-  reservation, 
-  onPress, 
-  onEvaluate, 
-  onViewInvoice, 
-  onCall, 
-  onMessage, 
-  onCancel 
+function ReservationCard({
+  reservation,
+  onPress,
+  onEvaluate,
+  onViewInvoice,
+  onCall,
+  onMessage,
+  onCancel
 }: {
-  reservation: Reservation; 
-  onPress: () => void; 
-  onEvaluate: () => void; 
+  reservation: Reservation;
+  onPress: () => void;
+  onEvaluate: () => void;
   onViewInvoice: () => void;
   onCall?: () => void;
   onMessage?: () => void;
@@ -547,13 +547,13 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
   headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   tabsWrapper: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
   tabsContent: { paddingHorizontal: Spacing.md, paddingVertical: 12, alignItems: 'center', gap: Spacing.sm },
   tab: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 999, backgroundColor: '#F5F5F5', borderWidth: 1, borderColor: '#E0E0E0', minHeight: 36 },
   tabActive: { backgroundColor: Colors.bordeaux, borderColor: Colors.bordeaux },
-  tabLabel: { fontSize: 14, fontWeight: '600', color: '#333333' },
-  tabLabelActive: { color: '#FFFFFF', fontWeight: 'bold' },
+  tabLabel: { fontSize: 14, fontFamily: Fonts.semibold, fontWeight: '600', color: '#333333' },
+  tabLabelActive: { color: '#FFFFFF', fontFamily: Fonts.bold, fontWeight: 'bold' },
 
   // Barre recherche + tri
   searchContainer: { flexDirection: 'row', alignItems: 'center', marginHorizontal: Spacing.md, marginVertical: Spacing.sm, gap: Spacing.sm },
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   filterSummaryText: {
     fontSize: Fonts.size.xs,
     color: Colors.bordeaux,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
 
   scroll: { padding: Spacing.md, paddingTop: Spacing.sm },

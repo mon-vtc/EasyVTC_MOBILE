@@ -19,7 +19,7 @@ function PlaceholderScreen({ emoji, title, sprint }: { emoji: string; title: str
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background, padding: Spacing.xl },
   emoji:  { fontSize: 56, marginBottom: Spacing.md },
-  title:  { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.bordeaux, textAlign: 'center' },
+  title:  { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux, textAlign: 'center' },
   sprint: { fontSize: Fonts.size.md, color: Colors.textMuted, marginTop: Spacing.sm, textAlign: 'center' },
 });
 

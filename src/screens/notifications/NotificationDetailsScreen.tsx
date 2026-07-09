@@ -38,7 +38,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-import { Colors, Spacing, Radius } from '../../theme/colors';
+import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 import { useAuthStore } from '../../store/auth.store';
 import { useToast } from '../../hooks/useToast';
@@ -165,7 +165,7 @@ const HeroBanner: React.FC<{ title: string; iso: string; style: NotifStyle }> = 
 const heroBannerSt = StyleSheet.create({
   wrapper:    { marginHorizontal: Spacing.md, marginTop: Spacing.md, borderRadius: Radius.lg, padding: Spacing.lg, alignItems: 'flex-start' },
   iconCircle: { width: 52, height: 52, borderRadius: 26, justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.sm },
-  title:      { fontSize: 20, fontWeight: '700', color: Colors.bordeauxDark, marginBottom: Spacing.sm },
+  title:      { fontSize: 20, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxDark, marginBottom: Spacing.sm },
   dateRow:    { flexDirection: 'row', alignItems: 'center' },
   dateText:   { fontSize: 12, color: Colors.textPlaceholder, marginLeft: 4 },
   dot:        { color: Colors.border },
@@ -186,7 +186,7 @@ const AlertBanner: React.FC<{
 );
 const alertSt = StyleSheet.create({
   wrapper: { flexDirection: 'row', alignItems: 'flex-start', marginHorizontal: Spacing.md, marginTop: Spacing.md, borderRadius: Radius.md, borderWidth: 1.5, padding: Spacing.md },
-  title:   { fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  title:   { fontSize: 14, fontFamily: Fonts.bold, fontWeight: '700', marginBottom: 2 },
   body:    { fontSize: 13, lineHeight: 19 },
 });
 
@@ -201,7 +201,7 @@ const Section: React.FC<{ title: string; accentColor?: string; children: React.R
 );
 const sectionSt = StyleSheet.create({
   wrapper: { backgroundColor: Colors.surface, marginHorizontal: Spacing.md, marginTop: Spacing.md, borderRadius: Radius.lg, padding: Spacing.md, elevation: 1, shadowColor: '#000', shadowOpacity: 0.04, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 },
-  title:   { fontSize: 15, fontWeight: '700', color: Colors.bordeauxLight, marginBottom: Spacing.sm },
+  title:   { fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxLight, marginBottom: Spacing.sm },
 });
 
 /** Ligne label / valeur avec séparateur */
@@ -217,7 +217,7 @@ const infoSt = StyleSheet.create({
   row:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.beigeLight },
   label: { fontSize: 14, color: Colors.textMuted },
   value: { fontSize: 14, color: Colors.textPrimary },
-  bold:  { fontWeight: '700' },
+  bold:  { fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 /**
@@ -301,7 +301,7 @@ const DriverCard: React.FC<{
 const driverSt = StyleSheet.create({
   header:    { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm },
   avatar:    { width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.beigeLight, justifyContent: 'center', alignItems: 'center', marginRight: Spacing.sm },
-  name:      { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  name:      { fontSize: 16, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   ratingRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
   rating:    { fontSize: 13, color: Colors.textMuted, marginLeft: 3 },
   trips:     { fontSize: 12, color: Colors.textPlaceholder, marginLeft: 4 },
@@ -365,13 +365,13 @@ const itiSt = StyleSheet.create({
   stop:        { flexDirection: 'row', alignItems: 'flex-start' },
   dot:         { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: Spacing.sm, marginTop: 2 },
   label:       { fontSize: 11, color: Colors.textPlaceholder, marginBottom: 1 },
-  addr:        { fontSize: 14, color: Colors.textPrimary, fontWeight: '500' },
+  addr:        { fontSize: 14, color: Colors.textPrimary, fontFamily: Fonts.medium, fontWeight: '500' },
   dashes:      { marginLeft: 14, marginVertical: 4 },
   dash:        { width: 2, height: 5, backgroundColor: Colors.border, marginVertical: 2, borderRadius: 1 },
   metrics:     { flexDirection: 'row', gap: Spacing.lg, marginTop: Spacing.md, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.beigeLight },
   metric:      { alignItems: 'flex-start' },
   metricLabel: { fontSize: 11, color: Colors.textPlaceholder, marginBottom: 2 },
-  metricValue: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
+  metricValue: { fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
 });
 
 /** Footer prix total bordeaux */
@@ -391,7 +391,7 @@ const PriceFooter: React.FC<{ price: number | null | undefined; bg?: string }> =
 const priceSt = StyleSheet.create({
   wrapper: { marginHorizontal: Spacing.md, marginTop: Spacing.md, backgroundColor: Colors.bordeauxLight, borderRadius: Radius.lg, padding: Spacing.lg, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   label:   { fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 4 },
-  value:   { fontSize: 26, fontWeight: '800', color: Colors.white },
+  value:   { fontSize: 26, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white },
   circle:  { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center' },
 });
 
@@ -400,7 +400,7 @@ const ctaSt = StyleSheet.create({
   btn:       { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginHorizontal: Spacing.md, marginTop: Spacing.md, backgroundColor: Colors.bordeauxLight, borderRadius: Radius.lg, paddingVertical: 15 },
   btnGreen:  { backgroundColor: Colors.success },
   btnWarm:   { backgroundColor: Colors.bordeaux },
-  btnText:   { color: Colors.white, fontWeight: '700', fontSize: 15 },
+  btnText:   { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', fontSize: 15 },
   row:       { flexDirection: 'row', gap: Spacing.sm, marginHorizontal: Spacing.md, marginTop: Spacing.md },
 });
 
@@ -595,12 +595,12 @@ const DriverArrivedDetails: React.FC<{
 const arrivedSt = StyleSheet.create({
   rdvRow:     { flexDirection: 'row', alignItems: 'flex-start' },
   rdvDot:     { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.beige, justifyContent: 'center', alignItems: 'center', marginRight: Spacing.sm },
-  rdvAddr:    { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  rdvAddr:    { fontSize: 16, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   rdvSub:     { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
   // Footer ETA (bloc bordeaux en bas)
   etaFooter:  { marginHorizontal: Spacing.md, marginTop: Spacing.md, backgroundColor: Colors.bordeaux, borderRadius: Radius.lg, padding: Spacing.lg, flexDirection: 'row', alignItems: 'center' },
   etaLabel:   { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 2 },
-  etaValue:   { fontSize: 28, fontWeight: '800', color: Colors.white },
+  etaValue:   { fontSize: 28, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white },
   etaSub:     { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
   etaCircle:  { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)', justifyContent: 'center', alignItems: 'center' },
 });
@@ -994,7 +994,7 @@ const screenSt = StyleSheet.create({
   container:   { flex: 1, backgroundColor: Colors.background },
   navBar:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.md, paddingTop: Platform.OS === 'ios' ? 52 : Spacing.lg, paddingBottom: Spacing.sm, backgroundColor: Colors.background },
   backBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.beigeLight, justifyContent: 'center', alignItems: 'center' },
-  navTitle:    { fontSize: 17, fontWeight: '700', color: Colors.bordeauxDark },
+  navTitle:    { fontSize: 17, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxDark },
   scroll:      { paddingBottom: Spacing.xl },
   centered:    { marginTop: 60, alignItems: 'center', paddingHorizontal: Spacing.lg },
   loadingText: { marginTop: Spacing.sm, fontSize: 14 },

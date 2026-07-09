@@ -416,7 +416,7 @@ const helpModalStyles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: Spacing.md,
   },
-  title: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.textPrimary, textAlign: 'center' },
+  title: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary, textAlign: 'center' },
   subtitle: { fontSize: Fonts.size.md, color: Colors.textMuted, textAlign: 'center', marginBottom: Spacing.lg },
   contactCard: {
     borderRadius: Radius.lg,
@@ -426,29 +426,29 @@ const helpModalStyles = StyleSheet.create({
   contactTop: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   contactIconBg: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
   contactTextContainer: { flex: 1 },
-  contactTitle: { color: Colors.white, fontSize: Fonts.size.md, fontWeight: '700' },
+  contactTitle: { color: Colors.white, fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700' },
   contactPhone: { color: Colors.white, opacity: 0.8, fontSize: Fonts.size.sm, marginTop: 4 },
   contactActions: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.lg },
   contactButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, backgroundColor: 'rgba(255,255,255,0.1)', paddingVertical: Spacing.sm, borderRadius: Radius.md },
-  contactButtonText: { color: Colors.white, fontWeight: '600' },
+  contactButtonText: { color: Colors.white, fontFamily: Fonts.semibold, fontWeight: '600' },
   faqContainer: { gap: Spacing.sm, paddingBottom: Spacing.sm },
-  faqTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.sm },
+  faqTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.sm },
   faqItem: { backgroundColor: Colors.white, borderRadius: Radius.md, padding: Spacing.md, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5, elevation: 2 },
   faqQuestionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  faqQuestion: { flex: 1, fontSize: Fonts.size.md, fontWeight: '600', color: Colors.textPrimary, marginRight: Spacing.sm },
+  faqQuestion: { flex: 1, fontSize: Fonts.size.md, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary, marginRight: Spacing.sm },
   faqAnswer: { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginTop: Spacing.sm, lineHeight: 20, borderTopWidth: 1, borderTopColor: Colors.bordeauxLight, paddingTop: Spacing.sm },
 });
 
 const modalStyles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 20 },
   container: { backgroundColor: Colors.background, borderRadius: 12, padding: 16 },
-  title: { fontSize: Fonts.size.lg, fontWeight: '800', marginBottom: 16, textAlign: 'center' },
+  title: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', marginBottom: 16, textAlign: 'center' },
   input: { backgroundColor: Colors.white, borderRadius: 8, padding: 12, elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 2, marginBottom: 12, justifyContent: 'space-between' },
   categoryBtn: {width: '30%',   alignItems: 'center', justifyContent: 'center',padding: 2, borderRadius: 8, backgroundColor: Colors.beigeLight, margin: 4, minWidth: 80, elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
   categoryActive: { backgroundColor: Colors.bordeaux },
   categoryText: { color: Colors.textSecondary, textTransform: 'capitalize', fontSize: Fonts.size.xs },
-  categoryActiveText: { color: Colors.white, fontWeight: '700', textTransform: 'capitalize' },
+  categoryActiveText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', textTransform: 'capitalize' },
   charCount: {
     fontSize: Fonts.size.xs,
     color: Colors.textMuted,
@@ -458,7 +458,7 @@ const modalStyles = StyleSheet.create({
   },
   actionsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.sm },
   actionBtn: { flex: 1, padding: 12, borderRadius: 8, alignItems: 'center', marginHorizontal: 6 , elevation: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3 },
-  actionText: { color: Colors.white, fontWeight: '700' },
+  actionText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 const styles = StyleSheet.create({
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: Colors.white,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     fontSize: Fonts.size.lg,
   },  
   brandContainer: {
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
   },
   supportPillTitle: {
     fontSize: Fonts.size.sm,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
   supportPillSubtitle: {
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
   },
   activeTabText: {
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   userName: {
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     fontSize: Fonts.size.md,
   },
   userRole: {
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
   },
   priorityText: {
     color: Colors.bordeaux,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     fontSize: Fonts.size.xs,
   },
   ticketSubject: {
@@ -664,6 +664,6 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     color: Colors.white,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
 });

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import {
   Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView,
 } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { Colors, Fonts } from '../../theme/colors';
 import {AppIcon} from './AppIcon';
 
 interface Props {
@@ -147,7 +147,7 @@ const s = StyleSheet.create({
   headerTitle: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   // Preview heure
   preview: {
@@ -158,7 +158,7 @@ const s = StyleSheet.create({
   },
   previewText: {
     fontSize: 42,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
     letterSpacing: 4,
   },
@@ -177,7 +177,7 @@ const s = StyleSheet.create({
   },
   colLabel: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.bordeauxLight,
     marginBottom: 6,
     textTransform: 'uppercase',
@@ -210,11 +210,11 @@ const s = StyleSheet.create({
   itemText: {
     fontSize: 18,
     color: '#2d4150',
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   itemTextSelected: {
     color: Colors.white,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
   // Actions
   actions: {
@@ -232,7 +232,7 @@ const s = StyleSheet.create({
   cancelText: {
     color: Colors.bordeauxLight,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
   confirmBtn: {
     flex: 1,
@@ -243,11 +243,11 @@ const s = StyleSheet.create({
   confirmText: {
     color: Colors.bordeaux,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
   separator: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
     marginHorizontal: 8,
   },

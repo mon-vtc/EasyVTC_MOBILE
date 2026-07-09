@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
 
   /* ── Header ── */
   header: { alignItems: 'center', marginBottom: Spacing.xl, marginTop: Spacing.lg },
-  title: { fontSize: Fonts.size.lg, fontWeight: '800', color: '#FFF', marginBottom: Spacing.xs },
+  title: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: '#FFF', marginBottom: Spacing.xs },
   /* FIX: alignSelf: 'stretch' empêche alignItems:'center' du parent
      de réduire la largeur du Text à son contenu intrinsèque */
   subtitle: {
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.sm,
     flex: 1,
   },
-  forgotLink: { color: Colors.textLight, fontSize: Fonts.size.sm, fontWeight: '600' },
+  forgotLink: { color: Colors.textLight, fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
   
   button: { marginTop: Spacing.sm },
   
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
   },
   googleIcon: { width: 20, height: 20, marginRight: Spacing.md },
-  googleText: { fontWeight: '600', color: '#333' },
+  googleText: { fontFamily: Fonts.semibold, fontWeight: '600', color: '#333' },
 
   /* ── Inscription ── */
   /* FIX: layout vertical pur — pas de flexDirection row, 
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   registrationLabel: { color: Colors.textCallToAction, fontSize: Fonts.size.md },
-  registrationBold:  { color: Colors.bordeauxLight, fontWeight: 'bold', fontSize: Fonts.size.md },
+  registrationBold:  { color: Colors.bordeauxLight, fontFamily: Fonts.bold, fontWeight: 'bold', fontSize: Fonts.size.md },
   
   /* ── Footer ── */
   /* FIX: suppression de flexDirection row — un simple conteneur centré */

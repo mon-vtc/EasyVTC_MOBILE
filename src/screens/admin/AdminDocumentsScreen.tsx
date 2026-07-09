@@ -114,7 +114,7 @@ function StatusChip({ status, count }: { status: DocStatus; count: number }) {
 }
 const chipS = StyleSheet.create({
   wrap: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 20 },
-  text: { fontSize: 10, fontWeight: '700' },
+  text: { fontSize: 10, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 
@@ -243,18 +243,18 @@ function DriverFolderCard({ folder, onPress }: { folder: DriverFolder; onPress: 
 const fStyles = StyleSheet.create({
   wrap:        { marginBottom: 14 },
   tab:         { height: 18, width: 120, borderRadius: 5, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginLeft: 14, justifyContent: 'center', paddingHorizontal: 10 },
-  tabText:     { fontSize: 10, fontWeight: '700' },
+  tabText:     { fontSize: 10, fontFamily: Fonts.bold, fontWeight: '700' },
   body:        { borderRadius: 6, borderTopLeftRadius: 0, borderWidth: 1.5, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatar:      { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(0,0,0,0.12)', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 },
   avatarImg:   { width: '100%', height: '100%' },
-  initials:    { fontSize: Fonts.size.md, fontWeight: '700' },
+  initials:    { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700' },
   info:        { flex: 1 },
-  name:        { fontSize: Fonts.size.sm, fontWeight: '700' },
+  name:        { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700' },
   meta:        { fontSize: Fonts.size.xs, marginTop: 1 },
   track:       { height: 3, backgroundColor: 'rgba(0,0,0,0.15)', borderRadius: 3, overflow: 'hidden', marginTop: 5, marginBottom: 5 },
   fill:        { height: 3, borderRadius: 3 },
   chips:       { flexDirection: 'row', flexWrap: 'wrap', gap: 3 },
-  chip:        { fontSize: 9, fontWeight: '700', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 20 },
+  chip:        { fontSize: 9, fontFamily: Fonts.bold, fontWeight: '700', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 20 },
   chipOk:      { backgroundColor: 'rgba(46,125,50,0.18)',  color: '#1B5E20' },
   chipWait:    { backgroundColor: 'rgba(0,0,0,0.12)',      color: '#5C3D00' },
   chipRej:     { backgroundColor: 'rgba(198,40,40,0.18)',  color: '#7F0000' },
@@ -264,7 +264,7 @@ const fStyles = StyleSheet.create({
   miniDoc:     { width: 14, height: 18, borderRadius: 2, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(0,0,0,0.2)', padding: 2, justifyContent: 'flex-end' },
   miniDocEar:  { position: 'absolute', top: 0, right: 0, width: 5, height: 5, backgroundColor: '#E0C88A', borderBottomLeftRadius: 2, borderLeftWidth: 0.5, borderBottomWidth: 0.5, borderColor: 'rgba(0,0,0,0.15)' },
   miniDocLine: { height: 1.5, borderRadius: 1, backgroundColor: 'transparent' },
-  docCount:    { fontSize: 9, fontWeight: '700' },
+  docCount:    { fontSize: 9, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 // ── Ligne document dans le détail ────────────────────────────
@@ -351,17 +351,17 @@ const dStyles = StyleSheet.create({
   iconWrap: { width: 40, height: 40, borderRadius: Radius.sm, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   info:     { flex: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, flexWrap: 'wrap' },
-  title:    { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary },
+  title:    { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   reqBadge: { backgroundColor: Colors.bordeaux + '18', borderRadius: Radius.full, paddingHorizontal: 5, paddingVertical: 1 },
-  reqText:  { fontSize: 9, fontWeight: '700', color: Colors.bordeaux },
+  reqText:  { fontSize: 9, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
   sub:      { fontSize: Fonts.size.xs, color: Colors.textMuted, marginTop: 2 },
   right:    { alignItems: 'flex-end', gap: 6, flexShrink: 0 },
   badge:    { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: Radius.full, paddingHorizontal: 7, paddingVertical: 3 },
-  badgeText:{ fontSize: 10, fontWeight: '700' },
+  badgeText:{ fontSize: 10, fontFamily: Fonts.bold, fontWeight: '700' },
   eyeBtn:   { padding: 4 },
   actRow:   { flexDirection: 'row', gap: 4 },
   actBtn:   { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 5, borderRadius: Radius.sm },
-  actText:  { color: '#fff', fontWeight: '700', fontSize: 11 },
+  actText:  { color: '#fff', fontFamily: Fonts.bold, fontWeight: '700', fontSize: 11 },
 });
 
 // ── Header dossier chauffeur ──────────────────────────────────
@@ -405,8 +405,8 @@ const hStyles = StyleSheet.create({
   row:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },
   avatar:   { width: 52, height: 52, borderRadius: 26, backgroundColor: Colors.beigeLight ?? '#F0EAE8', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 },
   avatarImg:{ width: '100%', height: '100%' },
-  initials: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.bordeaux },
-  name:     { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
+  initials: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
+  name:     { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   meta:     { fontSize: Fonts.size.xs, color: Colors.textMuted, marginTop: 2 },
   track:    { height: 5, backgroundColor: '#EDE0DF', borderRadius: 4, overflow: 'hidden', marginTop: 6 },
   fill:     { height: 5, borderRadius: 4 },
@@ -456,15 +456,15 @@ function RejectModal({ visible, onClose, onConfirm, isActing }: {
 const mStyles = StyleSheet.create({
   overlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', paddingHorizontal: Spacing.lg },
   card:          { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg },
-  title:         { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary, marginBottom: Spacing.xs },
+  title:         { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary, marginBottom: Spacing.xs },
   subtitle:      { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.md },
   input:         { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, padding: Spacing.md, fontSize: Fonts.size.md, color: Colors.textPrimary, textAlignVertical: 'top', minHeight: 100, backgroundColor: Colors.background },
   counter:       { fontSize: Fonts.size.xs, marginTop: Spacing.xs, marginBottom: Spacing.md },
   actions:       { flexDirection: 'row', gap: Spacing.sm },
   btnCancel:     { flex: 1, paddingVertical: Spacing.md, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, alignItems: 'center' },
-  btnCancelText: { color: Colors.textSecondary, fontWeight: '600', fontSize: Fonts.size.sm },
+  btnCancelText: { color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600', fontSize: Fonts.size.sm },
   btnConfirm:    { flex: 1, paddingVertical: Spacing.md, borderRadius: Radius.md, backgroundColor: '#E53935', alignItems: 'center' },
-  btnConfirmText:{ color: Colors.white, fontWeight: '700', fontSize: Fonts.size.sm },
+  btnConfirmText:{ color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.sm },
 });
 
 // ── SCREEN ────────────────────────────────────────────────────
@@ -761,13 +761,13 @@ const s = StyleSheet.create({
   scroll:        { padding: Spacing.md, paddingTop: Spacing.sm },
   header:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
   headerBtn:     { padding: Spacing.sm, width: 40 },
-  headerTitle:   { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+  headerTitle:   { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   headerSub:     { color: 'rgba(255,255,255,0.75)', fontSize: Fonts.size.xs, marginTop: 2 },
   tabsContainer: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border, flexDirection: 'row', alignItems: 'center', marginHorizontal: Spacing.md, borderRadius: Radius.lg, marginTop: Spacing.sm },
   tabs:          { paddingHorizontal: Spacing.sm, paddingVertical: Spacing.sm, gap: Spacing.xs },
   tab:           { alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.md, minWidth: 72, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border },
   tabActive:     { backgroundColor: Colors.bordeaux, borderColor: Colors.bordeaux },
-  tabCount:      { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary },
+  tabCount:      { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary },
   tabCountActive:{ color: Colors.white },
   tabLabel:      { fontSize: Fonts.size.xs, color: Colors.textMuted, marginTop: 2 },
   tabLabelActive:{ color: 'rgba(255,255,255,0.85)' },

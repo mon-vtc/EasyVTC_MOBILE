@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: Fonts.size.xl,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color: Colors.white,
   },
   headerCount: {
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: Fonts.size.lg,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   emptySubtitle: {

@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   topTitle: {
     fontSize: Fonts.size.lg,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
 
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   avgLeft:   { flex: 1, alignItems: 'center' },
-  avgNumber: { fontSize: 52, fontWeight: '900', color: Colors.bordeaux, lineHeight: 58 },
+  avgNumber: { fontSize: 52, fontFamily: Fonts.bold, fontWeight: '900', color: Colors.bordeaux, lineHeight: 58 },
   avgStars:  { flexDirection: 'row', gap: 3, marginVertical: Spacing.xs },
   avgSub:    { fontSize: Fonts.size.sm, color: Colors.textMuted, marginTop: 2 },
   avgDivider: { width: 1, height: 80, backgroundColor: Colors.border, marginHorizontal: Spacing.lg },
@@ -238,8 +238,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText:  { color: Colors.white, fontSize: Fonts.size.md, fontWeight: '700' },
-  clientName:  { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary },
+  avatarText:  { color: Colors.white, fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700' },
+  clientName:  { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   dateText:    { fontSize: Fonts.size.xs, color: Colors.textMuted, marginTop: 2 },
   noteBadge: {
     flexDirection: 'row',
@@ -250,11 +250,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
     borderRadius: Radius.full,
   },
-  noteText: { fontSize: Fonts.size.xs, fontWeight: '700', color: '#92400E' },
+  noteText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700', color: '#92400E' },
   starRow:  { flexDirection: 'row', gap: 3 },
 
   // ── État vide ─────────────────────────────────────────────────────────────
   emptyState: { alignItems: 'center', paddingTop: Spacing.xxl },
-  emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textSecondary, marginTop: Spacing.md },
+  emptyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary, marginTop: Spacing.md },
   emptyText:  { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', marginTop: Spacing.sm, lineHeight: 20 },
 });

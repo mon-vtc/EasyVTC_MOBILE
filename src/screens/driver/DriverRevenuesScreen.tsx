@@ -355,13 +355,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   summaryTitle: { fontSize: Fonts.size.sm, color: Colors.white, opacity: 0.8 },
-  summaryAmount: { fontSize: 42, fontWeight: '900', color: Colors.white, marginVertical: Spacing.xs },
+  summaryAmount: { fontSize: 42, fontFamily: Fonts.bold, fontWeight: '900', color: Colors.white, marginVertical: Spacing.xs },
   summaryStats: { flexDirection: 'row', justifyContent: 'space-around', marginTop: Spacing.sm },
   statItem: { alignItems: 'center' },
-  statValue: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white },
+  statValue: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
   statLabel: { fontSize: Fonts.size.xs, color: Colors.white, opacity: 0.8, marginTop: 2 },
   statusLabel: { marginTop: Spacing.md, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: Radius.sm },
-  statusLabelText: { color: Colors.white, fontSize: Fonts.size.xs, fontWeight: '600', textAlign: 'center' },
+  statusLabelText: { color: Colors.white, fontSize: Fonts.size.xs, fontFamily: Fonts.semibold, fontWeight: '600', textAlign: 'center' },
 
   filterCard: {
     backgroundColor: Colors.white,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     elevation: 3,
   },
-  filterTitle: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.sm },
+  filterTitle: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.sm },
   filterButtons: { flexDirection: 'row', gap: Spacing.sm },
   filterButton: {
     flex: 1,
@@ -385,8 +385,8 @@ const styles = StyleSheet.create({
   },
   filterButtonActive: { backgroundColor: Colors.bordeaux },
   filterButtonInactive: { backgroundColor: Colors.background },
-  filterTextActive: { color: Colors.white, fontWeight: '700' },
-  filterTextInactive: { color: Colors.textSecondary, fontWeight: '600' },
+  filterTextActive: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700' },
+  filterTextInactive: { color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   ratingContainer: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   ratingText: { fontSize: Fonts.size.sm, color: Colors.textMuted, marginLeft: Spacing.xs },
@@ -397,8 +397,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  historyTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.bordeaux },
-  exportButton: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.bordeaux },
+  historyTitle: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux },
+  exportButton: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.bordeaux },
 
   historyCard: {
     backgroundColor: Colors.white,
@@ -417,12 +417,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.md,
   },
-  historyRef: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeaux },
+  historyRef: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
   statusBadge: { paddingHorizontal: Spacing.sm, paddingVertical: 3, borderRadius: Radius.full },
   statusPaid: { backgroundColor: '#DCFCE7' },
   statusPending: { backgroundColor: '#FEF3C7' },
-  statusTextPaid: { color: '#166534', fontSize: Fonts.size.xs, fontWeight: '700' },
-  statusTextPending: { color: '#92400E', fontSize: Fonts.size.xs, fontWeight: '700' },
+  statusTextPaid: { color: '#166534', fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
+  statusTextPending: { color: '#92400E', fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
 
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.xs },
   historyText: { fontSize: Fonts.size.sm, color: Colors.textPrimary },
@@ -431,11 +431,11 @@ const styles = StyleSheet.create({
   separator: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.sm },
 
   historyFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  historyAmount: { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.bordeaux },
-  invoiceLink: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.bordeaux },
+  historyAmount: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux },
+  invoiceLink: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.bordeaux },
 
   emptyState: { alignItems: 'center', paddingTop: Spacing.xxl },
-  emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textSecondary, marginTop: Spacing.md },
+  emptyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary, marginTop: Spacing.md },
   emptyText: { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', marginTop: Spacing.sm, lineHeight: 20 },
 });
 

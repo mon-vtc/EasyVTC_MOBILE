@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
   },
   headerCenter: { alignItems: 'center' },
-  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white, textAlign: 'center' },
+  headerTitle: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white, textAlign: 'center' },
   headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2,  },
   headerBtn: { width: 40 },
   searchBox: {
@@ -132,5 +132,5 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: Fonts.size.sm, color: Colors.textPrimary },
   list:        { paddingHorizontal: Spacing.md, paddingBottom: Spacing.md, gap: Spacing.sm },
   empty:      { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
-  emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },
+  emptyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
 });

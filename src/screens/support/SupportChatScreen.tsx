@@ -296,7 +296,7 @@ const s = StyleSheet.create({
     textAlign: 'center',
     color: Colors.white,
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
   statusBanner: {
     flexDirection: 'row',
@@ -311,7 +311,7 @@ const s = StyleSheet.create({
   statusBannerText: {
     color: Colors.textPrimary,
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
   closeBtn: {
     paddingHorizontal: 12,
@@ -321,7 +321,7 @@ const s = StyleSheet.create({
   },
   closeBtnText: {
     color: Colors.white,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     fontSize: Fonts.size.xs,
   },
   messagesList: {

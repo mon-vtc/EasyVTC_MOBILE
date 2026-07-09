@@ -166,11 +166,11 @@ const styles = StyleSheet.create({
   bannerAvatarImage: { width: 52, height: 52, borderRadius: 26 },
   bannerText:     { flex: 1 },
   bannerGreeting: { fontSize: Fonts.size.sm, color: 'rgba(255,255,255,0.7)' },
-  bannerName:     { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white },
+  bannerName:     { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
   bannerRole:     { fontSize: Fonts.size.sm, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 
   sectionTitle: {
-    fontSize: Fonts.size.md, fontWeight: '700',
+    fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary, marginBottom: Spacing.sm,
   },
 
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   tileLabel: {
-    fontSize: Fonts.size.sm, fontWeight: '600',
+    fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textPrimary, textAlign: 'center',
   },
 
@@ -203,6 +203,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     gap: Spacing.md, paddingVertical: Spacing.xl * 2,
   },
-  emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textSecondary },
+  emptyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary },
   emptyText:  { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', maxWidth: 260 },
 });

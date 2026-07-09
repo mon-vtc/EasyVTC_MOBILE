@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.sm, paddingHorizontal: Spacing.md },
   headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   
   list: {
     padding: Spacing.md,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   time: {
@@ -267,6 +267,6 @@ const styles = StyleSheet.create({
   unreadText: {
     color: Colors.white,
     fontSize: 11,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
 });
