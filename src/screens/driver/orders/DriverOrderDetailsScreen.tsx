@@ -275,40 +275,45 @@ export default function DriverOrderDetailsScreen() {
               </Text>
             </View>
 
-            {snap.final_price != null && (
-              <View style={styles.tableRow}>
-                <View style={{ flex: 2 }}>
-                  <Text style={styles.tableCell}>Transport de voyageurs</Text>
-                  <Text style={styles.tableCellSub}>De : {snap.pickup_address}</Text>
-                  <Text style={styles.tableCellSub}>À : {snap.dest_address}</Text>
-                </View>
+            {/* Ligne principale — toujours affichée ; le montant ne l'est que pour un forfait (CDC p.26) */}
+            <View style={styles.tableRow}>
+              <View style={{ flex: 2 }}>
+                <Text style={styles.tableCell}>Transport de voyageurs</Text>
+                <Text style={styles.tableCellSub}>De : {snap.pickup_address}</Text>
+                <Text style={styles.tableCellSub}>À : {snap.dest_address}</Text>
+              </View>
 
-                <View style={styles.tableCellCenterCol}>
-                  {isPerKm && (snap as any).distance_km != null ? (
-                    <Text style={styles.tableCell}>{(snap as any).distance_km} km</Text>
-                  ) : isFlatRate ? (
-                    <Text style={styles.tableCell}>1</Text>
-                  ) : (
-                    <Text style={styles.tableCell}>—</Text>
-                  )}
-                </View>
+              <View style={styles.tableCellCenterCol}>
+                {isPerKm && snap.distance_km != null ? (
+                  <Text style={styles.tableCell}>{snap.distance_km} km</Text>
+                ) : isFlatRate ? (
+                  <Text style={styles.tableCell}>1</Text>
+                ) : (
+                  <Text style={styles.tableCell}>—</Text>
+                )}
+              </View>
 
-                <View style={styles.tableCellRightCol}>
+              <View style={styles.tableCellRightCol}>
+                {snap.final_price != null ? (
                   <Text style={styles.tableCellPrice}>
                     {fmtPrice(snap.final_price, snap.currency)}
                   </Text>
-                </View>
+                ) : (
+                  <Text style={styles.tableCellPriceNote}>Selon compteur</Text>
+                )}
               </View>
-            )}
+            </View>
 
-            {snap.final_price != null && (
-              <View style={styles.tableTotal}>
-                <Text style={styles.tableTotalLabel}>Total TTC</Text>
+            <View style={styles.tableTotal}>
+              <Text style={styles.tableTotalLabel}>Total TTC</Text>
+              {snap.final_price != null ? (
                 <Text style={styles.tableTotalValue}>
                   {fmtPrice(snap.final_price, snap.currency)}
                 </Text>
-              </View>
-            )}
+              ) : (
+                <Text style={styles.tableTotalNote}>Calculé après la course</Text>
+              )}
+            </View>
           </View>
 
           {/* ── Note de bas de document ── */}
@@ -346,7 +351,7 @@ const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: Colors.background },
   centered:    { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.lg },
   errorText:   { fontSize: Fonts.size.md, color: Colors.error, textAlign: 'center', marginBottom: Spacing.md },
-  linkText:    { fontSize: Fonts.size.md, color: Colors.bordeaux, fontWeight: '600' },
+  linkText:    { fontSize: Fonts.size.md, color: Colors.bordeaux, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   header: {
     backgroundColor: Colors.bordeaux,
@@ -361,7 +366,7 @@ const styles = StyleSheet.create({
   shareBtn:    { padding: Spacing.xs },
   headerTitle: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
     textAlign: 'center',
     flex: 1,
@@ -393,7 +398,7 @@ const styles = StyleSheet.create({
   docHeaderLeft: { flex: 1 },
   docTitle: {
     fontSize: 24,
-    fontWeight: '900',
+    fontFamily: Fonts.bold, fontWeight: '900',
     color: Colors.white,
     lineHeight: 28,
     letterSpacing: 0.5,
@@ -402,7 +407,7 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.sm,
     color: 'rgba(255,255,255,0.85)',
     marginTop: Spacing.md,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   docDate: {
     fontSize: Fonts.size.sm,
@@ -436,7 +441,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: Fonts.size.xs,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -444,7 +449,7 @@ const styles = StyleSheet.create({
   },
   clientName: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: 2,
   },
@@ -456,7 +461,7 @@ const styles = StyleSheet.create({
 
   objetLabel: {
     fontSize: Fonts.size.sm,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: 4,
   },
@@ -486,7 +491,7 @@ const styles = StyleSheet.create({
   tripAddress: {
     fontSize: Fonts.size.sm,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
     lineHeight: 18,
   },
   tripMeta: {
@@ -503,7 +508,7 @@ const styles = StyleSheet.create({
   tripMetaText: {
     fontSize: Fonts.size.sm,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   driverRow: {
     flexDirection: 'row',
@@ -532,7 +537,7 @@ const styles = StyleSheet.create({
   },
   tableHeaderCell: {
     fontSize: 8,
-    fontWeight: '900',
+    fontFamily: Fonts.bold, fontWeight: '900',
     color: Colors.white,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -551,7 +556,7 @@ const styles = StyleSheet.create({
   tableCell: {
     fontSize: Fonts.size.sm,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   tableCellSub: {
     fontSize: Fonts.size.xs,
@@ -574,7 +579,12 @@ const styles = StyleSheet.create({
   tableCellPrice: {
     fontSize: Fonts.size.sm,
     color: Colors.textPrimary,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
+  },
+  tableCellPriceNote: {
+    fontSize: Fonts.size.xs,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
   },
   tableTotal: {
     flexDirection: 'row',
@@ -586,13 +596,18 @@ const styles = StyleSheet.create({
   },
   tableTotalLabel: {
     fontSize: Fonts.size.sm,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   tableTotalValue: {
     fontSize: Fonts.size.md,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color: Colors.bordeaux,
+  },
+  tableTotalNote: {
+    fontSize: Fonts.size.xs,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
   },
 
   docFooterNote: {
@@ -627,7 +642,7 @@ const styles = StyleSheet.create({
   },
   pdfBtnText: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
 });
