@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Image, Platform
+  ActivityIndicator, RefreshControl
 } from 'react-native';
 import { useDriver } from '../../hooks/useDriver';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
 import type { PlanningReservation } from '../../types/drivers.types';
-import { Logo } from '../../constants/logo';
-import { DrawerActions } from '@react-navigation/native';
 const DAYS_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
@@ -216,19 +215,14 @@ export default function DriverPlanningScreen({ navigation }: any) {
   return (
     <View style={styles.container}>
       {/* ── Header ── */}
-      <View style={styles.header}>
-        {/* Barre de navigation : hamburger | logo | notif */}
-        <View style={styles.headerNav}>
-          <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={styles.navBtn}>
-            <AppIcon name="menu-outline" size={28} color={Colors.white} />
-          </TouchableOpacity>
-          <Image source={Logo.LogoEasyVTC} style={styles.logo} resizeMode="contain" />
-          <TouchableOpacity style={styles.navBtn} onPress={() => navigation.navigate('DriverNotifications')}>
-            <AppIcon name="notifications-outline" size={24} color={Colors.white} />
-          </TouchableOpacity>
-        </View>
-        {/* Sous-header : titre */}
-      </View>
+      <AppHeader
+        left="menu"
+        title="Planning"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('DriverNotifications' as never),
+        }}
+      />
       <CalendarView 
         onDateSelect={handleDateSelect}
         initialDate={currentDate}
@@ -261,20 +255,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
-      backgroundColor: Colors.bordeaux,
-      paddingHorizontal: Spacing.md,
-      paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xxl,
-      paddingBottom: Spacing.lg,
-    },
-    headerNav: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      height: 44,
-    },
-    navBtn:      { padding: 4, width: 36, alignItems: 'center' },
-    logo:        { width: 40, height: 40 },  
   listHeader: {
     fontSize: Fonts.size.md,
     fontFamily: Fonts.bold, fontWeight: '700',

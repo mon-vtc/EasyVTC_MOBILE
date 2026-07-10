@@ -13,6 +13,8 @@ import { AppIcon }     from '../../components/common/AppIcon';
 import { useAlert } from '../../hooks/useAlert';
 import { Colors, Fonts } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
+import { useNotifications } from '../../hooks/useNotifications';
+import { AppHeader } from '../../components/common/AppHeader';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES LOCAUX
@@ -235,6 +237,7 @@ export default function DriverHomeScreen({ navigation }: any) {
   const { isOnline, status, setOnlineStatus, isLoading: isDriverLoading, getMyRevenues, getMyAverageRating } = useDriver();
   const { driverHomeReservations, fetchDriverHomeReservations, isLoading: isReservationsLoading } = useReservation();
   const { showAlert } = useAlert();
+  const { unreadCount } = useNotifications();
 
   const [isToggling, setIsToggling]   = useState(false);
   const [stats, setStats] = useState<DayStats>(EMPTY_STATS);
@@ -317,7 +320,17 @@ export default function DriverHomeScreen({ navigation }: any) {
 
   // ── Rendu ─────────────────────────────────────────────────────────────────
   return (
-    <ScrollView
+    <View style={{ flex: 1 }}>
+      <AppHeader
+        left="menu"
+        logo
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('DriverNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
+      <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
@@ -357,6 +370,7 @@ export default function DriverHomeScreen({ navigation }: any) {
 
       <View style={{ height: 32 }} />
     </ScrollView>
+    </View>
   );
 }
 

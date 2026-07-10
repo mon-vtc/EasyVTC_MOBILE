@@ -7,13 +7,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Platform,
-  Image,
   TextInput,
 } from 'react-native';
-import { DrawerActions } from '@react-navigation/native';
 import { AppIcon } from '../../components/common/AppIcon';
-import { Logo }    from '../../constants/logo';
+import { AppHeader } from '../../components/common/AppHeader';
 import { useReservation } from '../../hooks/useReservation';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { Reservation, ReservationListFilters, ReservationStatus } from '../../types/reservations.types';
@@ -209,18 +206,14 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
     <View style={styles.flex}>
 
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <View style={styles.headerNav}>
-          <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={styles.navBtn}>
-            <AppIcon name="menu-outline" size={28} color={Colors.white} />
-          </TouchableOpacity>
-          <Image source={Logo.LogoEasyVTC} style={styles.logo} resizeMode="contain" />
-          <TouchableOpacity style={styles.navBtn} onPress={() => navigation.getParent()?.getParent()?.navigate('DriverNotificationList' as any)}>
-            <AppIcon name="notifications-outline" size={24} color={Colors.white} />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.headerTitle}>Mes courses</Text>
-      </View>
+      <AppHeader
+        left="menu"
+        title="Mes courses"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.getParent()?.getParent()?.navigate('DriverNotificationList' as any),
+        }}
+      />
 
       {/* ── Onglets ── */}
       <View style={styles.tabBar}>
@@ -347,12 +340,6 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
 
 const styles = StyleSheet.create({
   flex:   { flex: 1, backgroundColor: Colors.background },
-
-  header: { backgroundColor: Colors.bordeaux, paddingHorizontal: Spacing.md, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl, paddingBottom: Spacing.lg },
-  headerNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 44 },
-  navBtn:      { padding: 4, width: 36, alignItems: 'center' },
-  logo:        { width: 40, height: 40 },
-  headerTitle: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white, marginTop: Spacing.md },
 
   tabBar:        { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm, backgroundColor: Colors.surface, borderRadius: Radius.md, padding: 4, marginHorizontal: Spacing.md, marginTop: Spacing.sm },
   tabItem:       { flex: 1, alignItems: 'center', paddingVertical: Spacing.sm, borderRadius: Radius.sm },

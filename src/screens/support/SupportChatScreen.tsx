@@ -9,6 +9,7 @@ import { useChat } from '../../hooks/useChat';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors, Fonts, Spacing } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
 import type { SupportMessage } from '../../types/chats.type';
 import { useToast } from '../../hooks/useToast';
 
@@ -195,13 +196,7 @@ export default function SupportChatScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       {/* ── Header ── */}
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={s.headerBtn}>
-          <AppIcon name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={s.headerTitle} numberOfLines={1}>{subject || 'Support'}</Text>
-        <View style={s.headerBtn} />
-      </View>
+      <AppHeader left="back" title={subject || 'Support'} />
 
       {activeSupportTicket?.status && (
         <View style={s.statusBanner}>
@@ -276,27 +271,6 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.background,
-  },
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingTop: Platform.OS === 'ios' ? 50 : Spacing.xxl,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.bordeaux,
-  },
-  headerBtn: {
-    padding: 8,
-    width: 40,
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    color: Colors.white,
-    fontSize: Fonts.size.md,
-    fontFamily: Fonts.bold, fontWeight: '700',
   },
   statusBanner: {
     flexDirection: 'row',

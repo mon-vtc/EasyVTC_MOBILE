@@ -1,5 +1,5 @@
 // screens/driver/DriverProfileScreen.tsx
-import React, { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, Switch, Platform, Modal, TextInput, ActivityIndicator,
@@ -17,6 +17,7 @@ import type { VehicleType, ZoneType, Vehicle } from '../../types/user.types';
 import type { DrawerScreenProps }     from '@react-navigation/drawer';
 import type { DriverDrawerParamList } from '../../types';
 import { useToast } from '../../hooks/useToast';
+import { AppHeader } from '../../components/common/AppHeader';
 
 
 type Props = DrawerScreenProps<DriverDrawerParamList, 'DriverProfile'>;
@@ -517,18 +518,6 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const handleEditToggleRef = useRef(handleEditToggle);
   useEffect(() => { handleEditToggleRef.current = handleEditToggle; }, [handleEditToggle]);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity style={{ marginRight: 20 }}
-          onPress={() => handleEditToggleRef.current()} disabled={isLoading}>
-          <Ionicons name={editMode ? 'checkmark-outline' : 'pencil-outline'}
-            size={22} color={Colors.white} />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, editMode, isLoading]);
-
   // ── Handlers véhicule ─────────────────────────────────────────
   const handleCreateVehicle = async (data: any): Promise<string> => {
     const created = await createVehicle(data);
@@ -573,6 +562,14 @@ export default function DriverProfileScreen({ navigation }: Props) {
 
   return (
     <View style={styles.flex}>
+      <AppHeader
+        left="menu"
+        title="Mon compte"
+        rightIcon={{
+          name: editMode ? 'checkmark-outline' : 'pencil-outline',
+          onPress: () => { if (!isLoading) handleEditToggleRef.current(); },
+        }}
+      />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Avatar */}

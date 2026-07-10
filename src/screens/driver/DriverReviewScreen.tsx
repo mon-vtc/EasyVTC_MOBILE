@@ -7,12 +7,15 @@
 import React, { useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
-  TouchableOpacity, RefreshControl, Platform,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuthStore }    from '../../store/auth.store';
 import { useRatingsStore } from '../../store/ratings.store';
+import { useNotifications } from '../../hooks/useNotifications';
+import { AppHeader } from '../../components/common/AppHeader';
 import type { RatingWithClient } from '../../types/ratings.types';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -94,6 +97,8 @@ function AvgHeader({ avg, total }: { avg: number | null; total: number }) {
 // ÉCRAN PRINCIPAL
 // ══════════════════════════════════════════════════════════════════════════════
 export default function DriverReviewScreen() {
+  const navigation = useNavigation();
+  const { unreadCount } = useNotifications();
   const accessToken    = useAuthStore(s => s.accessToken);
   const myRatings      = useRatingsStore(s => s.myRatings);
   const myAvgNote      = useRatingsStore(s => s.myAvgNote);
@@ -138,10 +143,15 @@ export default function DriverReviewScreen() {
 
   return (
     <View style={styles.root}>
-      {/* En-tête bordeaux */}
-      <View style={styles.topBar}>
-        <Text style={styles.topTitle}>Mes évaluations</Text>
-      </View>
+      <AppHeader
+        left="menu"
+        title="Mes évaluations"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('DriverNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       {isLoading && myRatings.length === 0 ? (
         <View style={styles.loader}>
@@ -177,19 +187,6 @@ export default function DriverReviewScreen() {
 // ══════════════════════════════════════════════════════════════════════════════
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
-
-  topBar: {
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 0 : Spacing.md,
-    paddingBottom: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-    alignItems: 'center',
-  },
-  topTitle: {
-    fontSize: Fonts.size.lg,
-    fontFamily: Fonts.bold, fontWeight: '700',
-    color: Colors.white,
-  },
 
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 

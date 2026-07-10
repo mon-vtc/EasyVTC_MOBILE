@@ -6,26 +6,28 @@
 import React, { useCallback, useEffect } from 'react';
 import { useState, useMemo } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, Image,
+  View, Text, FlatList, TouchableOpacity,
   StyleSheet, ActivityIndicator, RefreshControl, Platform, TextInput
 } from 'react-native';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Logo }    from '../../../constants/logo';
 import { useOrdersStore } from '../../../store/orders.store';
 import { useAuthStore } from '../../../store/auth.store';
 import { useToast } from '../../../hooks/useToast';
+import { useNotifications } from '../../../hooks/useNotifications';
 import type { Order } from '../../../types/orders.types';
 import type { DriverOrdersStackParamList } from '../../../types/auth.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { OrderCard } from '../../../components/common/OrderCard';
+import { AppHeader } from '../../../components/common/AppHeader';
 
 export default function DriverOrdersScreen() {
   const navigation = useNavigation<NavigationProp<DriverOrdersStackParamList>>();
   const { orders, total, page, totalPages, isLoading, isFetchingNextPage, error, fetchDriverMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const { showToast } = useToast();
+  const { unreadCount } = useNotifications();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -64,19 +66,16 @@ export default function DriverOrdersScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.headerContainer}>
-        <TouchableOpacity
-          style={styles.headerBtn}
-          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        >
-          <Ionicons name="menu-outline" size={26} color={Colors.white} />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Bons de commande</Text>
-          <Text style={styles.headerCount}>{filteredOrders.length} document{filteredOrders.length > 1 ? 's' : ''}</Text>
-        </View>
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader
+        left="menu"
+        title="Bons de commande"
+        subtitle={`${filteredOrders.length} document${filteredOrders.length > 1 ? 's' : ''}`}
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('DriverNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
@@ -118,19 +117,6 @@ export default function DriverOrdersScreen() {
 const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: Colors.background },
   centered:   { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.bordeaux,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom: Spacing.md,
-  },
-  headerCenter: { alignItems: 'center' },
-  headerTitle: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white, textAlign: 'center' },
-  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2,  },
-  headerBtn: { width: 40 },
   list:        { padding: Spacing.md, gap: Spacing.md },
   empty:      { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
   emptyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },

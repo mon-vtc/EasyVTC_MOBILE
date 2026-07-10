@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { usePermissions } from '../../hooks/usePermissions';
 import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
 import type { ManagerDrawerParamList } from '../../types';
+import { AppHeader } from '../../components/common/AppHeader';
 
 type Nav = DrawerNavigationProp<ManagerDrawerParamList>;
 
@@ -98,7 +99,16 @@ export default function ManagerHomeScreen() {
   ].filter(t => hasPermission(t.perm));
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} testID="manager-home-scroll">
+    <View style={{ flex: 1 }}>
+      <AppHeader
+        left="menu"
+        logo
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.getParent()?.navigate('ManagerNotificationList' as never),
+        }}
+      />
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} testID="manager-home-scroll">
       {/* Bandeau bienvenue */}
       <View style={styles.banner}>
         <View style={styles.bannerAvatar}>
@@ -142,6 +152,7 @@ export default function ManagerHomeScreen() {
         </>
       )}
     </ScrollView>
+    </View>
   );
 }
 

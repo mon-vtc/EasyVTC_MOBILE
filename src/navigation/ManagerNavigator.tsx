@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useAlert } from '../hooks/useAlert';
-import { createDrawerNavigator, DrawerNavigationOptions } from '@react-navigation/drawer';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import {
   DrawerContentScrollView,
   DrawerItem,
@@ -10,7 +10,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { AppIcon } from '../components/common/AppIcon';
 import { Colors, Fonts, Spacing } from '../theme/colors';
-import { Logo } from '../constants/logo';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 
@@ -247,38 +246,13 @@ function DrawerLabel({ icon, label }: { icon: React.ComponentProps<typeof AppIco
   );
 }
 
-// ── Options d'en-tête ────────────────────────────────────────────
-
-const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions => ({
-  headerStyle:      { backgroundColor: Colors.bordeaux, height: 100, elevation: 0, shadowOpacity: 0 },
-  headerTintColor:  Colors.white,
-  headerTitleAlign: 'center',
-  headerTitle: () => (
-    <Image source={Logo.LogoEasyVTC} style={{ width: 40, height: 40, resizeMode: 'contain' }} />
-  ),
-  headerLeft: () => (
-    <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={{ marginLeft: 20 }}>
-      <AppIcon name="menu-outline" size={28} color={Colors.white} />
-    </TouchableOpacity>
-  ),
-    headerRight: () => (
-      <TouchableOpacity onPress={() => navigation.getParent()?.navigate('ManagerNotificationList')} style={{ marginRight: 20 }}>
-        <AppIcon name="notifications-outline" size={24} color={Colors.white} />
-      </TouchableOpacity>
-    ),
-  drawerStyle: { backgroundColor: Colors.surface, width: 280 },
-  drawerActiveTintColor:       Colors.bordeaux,
-  drawerInactiveTintColor:     Colors.textSecondary,
-  drawerActiveBackgroundColor: Colors.overlayLight,
-});
-
 // ── Navigator ────────────────────────────────────────────────────
 
 function ManagerDrawerNavigator() {
   return (
     <Drawer.Navigator
       drawerContent={(props) => <ManagerDrawerContent {...props} />}
-      screenOptions={getDrawerScreenOptions}
+      screenOptions={{ headerShown: false }}
     >
       <Drawer.Screen name="ManagerHome"         component={ManagerHomeScreen}         options={{ drawerItemStyle: { display: 'none' } }} />
       <Drawer.Screen name="ManagerReservations" component={ManagerReservationsStack} options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />

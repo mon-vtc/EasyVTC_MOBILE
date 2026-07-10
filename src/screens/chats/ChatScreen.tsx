@@ -14,6 +14,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useAlert } from '../../hooks/useAlert';
 import { Colors, Fonts, Spacing } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
 import type { ChatMessage } from '../../types/chats.type';
 
 
@@ -198,72 +199,70 @@ export default function ChatScreen({navigation}: any) {
     >
 
       {/* ── Header ── */}
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => {
-          resetMessages();
-          navigation.goBack();
-        }} style={s.headerBtn}>
-          <AppIcon name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-
-        <View style={s.headerCenter}>
-          {user?.role !== 'driver' && driver ?  (
-            <>
-              <View style={s.avatarContainer}>
-                {driver.user.profile_photo_url ? (
-                  <Image source={{ uri: driver.user.profile_photo_url }} style={s.avatar} />
-                ) : (
-                  <View style={s.avatar}><AppIcon name="person-outline" size={20} color={Colors.bordeaux} /></View>
-                )}
-                <View style={[s.statusIndicator, driver.is_online ? s.statusOnline : s.statusOffline]} />
-              </View>
-              <View>
-                <Text style={s.driverName} numberOfLines={1}>
-                  {driver.user.first_name} {driver.user.last_name}
-                </Text>
-                <Text style={s.driverStatus}>
-                  {driver.is_online ? 'En ligne' : 'Hors ligne'}
-                </Text>
-              </View>
-            </>
-          ) : 
-            <>
-              <View style={s.avatarContainer}>
-                <View style={s.avatar}>
-                  {/* You can use an <Image> component here if you have the driver's avatar URL */}
-                  {reservation?.client?.profile_photo_url ? (
-                    <Image source={{ uri: reservation?.client?.profile_photo_url }} style={s.avatar} />
-
+      <AppHeader
+        left="back"
+        onBack={() => { resetMessages(); navigation.goBack(); }}
+        centerElement={
+          <>
+            {user?.role !== 'driver' && driver ?  (
+              <>
+                <View style={s.avatarContainer}>
+                  {driver.user.profile_photo_url ? (
+                    <Image source={{ uri: driver.user.profile_photo_url }} style={s.avatar} />
                   ) : (
-                    <AppIcon name="person-outline" size={20} color={Colors.bordeaux} />
-                  )
-                  }
+                    <View style={s.avatar}><AppIcon name="person-outline" size={20} color={Colors.bordeaux} /></View>
+                  )}
+                  <View style={[s.statusIndicator, driver.is_online ? s.statusOnline : s.statusOffline]} />
                 </View>
-              </View>
-              <View>
-                <Text style={s.driverName} numberOfLines={1}>
-                  {reservation?.client?.first_name} {reservation?.client?.last_name}
-                </Text>
-              </View>
-            </>
+                <View>
+                  <Text style={s.driverName} numberOfLines={1}>
+                    {driver.user.first_name} {driver.user.last_name}
+                  </Text>
+                  <Text style={s.driverStatus}>
+                    {driver.is_online ? 'En ligne' : 'Hors ligne'}
+                  </Text>
+                </View>
+              </>
+            ) :
+              <>
+                <View style={s.avatarContainer}>
+                  <View style={s.avatar}>
+                    {/* You can use an <Image> component here if you have the driver's avatar URL */}
+                    {reservation?.client?.profile_photo_url ? (
+                      <Image source={{ uri: reservation?.client?.profile_photo_url }} style={s.avatar} />
 
-          }
-        </View>
+                    ) : (
+                      <AppIcon name="person-outline" size={20} color={Colors.bordeaux} />
+                    )
+                    }
+                  </View>
+                </View>
+                <View>
+                  <Text style={s.driverName} numberOfLines={1}>
+                    {reservation?.client?.first_name} {reservation?.client?.last_name}
+                  </Text>
+                </View>
+              </>
 
-        <TouchableOpacity 
-          style={[s.headerBtn, s.callBtn]}
-          onPress={() => {
-            const phone = user?.role === 'driver' ? reservation?.client?.phone : driver?.user.phone;
-            if (phone) {
-              showAlert({ title: 'Appeler', message: phone, buttons: [{ text: 'OK' }] });
-            } else {
-              showAlert({ title: 'Indisponible', message: 'Le numéro de téléphone n\'est pas disponible.', buttons: [{ text: 'OK' }] });
             }
-          }}
-        >
-          <AppIcon name="call-outline" size={22} color={Colors.white} />
-        </TouchableOpacity>
-      </View>
+          </>
+        }
+        rightElement={
+          <TouchableOpacity
+            style={s.callBtn}
+            onPress={() => {
+              const phone = user?.role === 'driver' ? reservation?.client?.phone : driver?.user.phone;
+              if (phone) {
+                showAlert({ title: 'Appeler', message: phone, buttons: [{ text: 'OK' }] });
+              } else {
+                showAlert({ title: 'Indisponible', message: 'Le numéro de téléphone n\'est pas disponible.', buttons: [{ text: 'OK' }] });
+              }
+            }}
+          >
+            <AppIcon name="call-outline" size={22} color={Colors.white} />
+          </TouchableOpacity>
+        }
+      />
       {/* Loader pendant que la réservation charge (si elle n'était pas dans le store) */}
       {/* {!reservation && isLoadingMessages && (
         <View style={s.centered}>
@@ -335,31 +334,10 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingTop: Platform.OS === 'ios' ? 50 : Spacing.xxl,
-    paddingBottom: Spacing.sm,
-    backgroundColor: Colors.bordeaux,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  headerBtn: {
-    padding: 8,
-  },
   callBtn: {
     backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 20,
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
+    padding: 8,
   },
   avatarContainer: {
     position: 'relative',

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Modal, Linking, Platform, Image, TextInput,
+  ActivityIndicator, Modal, Linking, Image, TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
@@ -21,6 +21,7 @@ import { invoicesApi }    from '../../services/api/invoices.api';
 import { Logo } from '../../constants/logo';
 import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
+import { AppHeader } from '../../components/common/AppHeader';
 
 type Props = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationDetails'>;
 
@@ -236,13 +237,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
     <View style={styles.flex}>
 
       {/* ── Header ─────────────────────────────────────────── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Course {refNumber}</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader left="back" title={`Course ${refNumber}`} />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
@@ -520,16 +515,6 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   flex:   { flex: 1, backgroundColor: Colors.background },
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
-
-  // Header
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xxl,
-    paddingBottom: Spacing.md, paddingHorizontal: Spacing.md,
-  },
-  headerBtn:    { padding: Spacing.sm, width: 40 },
-  headerTitle:  { color: Colors.white, fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800' },
 
   scroll: { padding: Spacing.md, gap: Spacing.sm },
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Image, Platform, Modal, TextInput, Pressable, Alert, RefreshControl, Linking, ScrollView
+  ActivityIndicator, Modal, TextInput, Pressable, Alert, RefreshControl, Linking, ScrollView
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,8 +9,8 @@ import { useChat } from '../../hooks/useChat';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
 import TicketCard from '../../components/support/TicketCard';
-import { Logo } from '../../constants/logo';
 import { AppIconProps } from '../../types/app-icon-props.types';
 import { useToast } from '../../hooks/useToast';
 
@@ -126,29 +126,23 @@ export default function SupportListScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
+      <AppHeader
+        left="back"
+        title="Support"
+        rightElement={
+          user?.role !== 'admin' && user?.role !== 'manager' ? (
+            <View style={{ flexDirection: 'row' }}>
+              <TouchableOpacity onPress={() => setHelpModalVisible(true)} style={styles.headerBtn}>
+                <AppIcon name="help-circle-outline" size={24} color={Colors.white} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.headerBtn}>
+                <AppIcon name="add" size={24} color={Colors.white} />
+              </TouchableOpacity>
+            </View>
+          ) : undefined
+        }
+      />
       <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-            <AppIcon name="arrow-back" size={24} color={Colors.white} />
-          </TouchableOpacity>
-
-          <View style={styles.brandContainer}>
-            <Image source={Logo.LogoEasyVTC} style={styles.logo} resizeMode="contain" />
-          </View>
-
-          <View style={styles.headerBtn}>
-            {user?.role !== 'admin' && user?.role !== 'manager' && (
-              <>
-                <TouchableOpacity onPress={() => setHelpModalVisible(true)} style={styles.headerBtn}>
-                  <AppIcon name="help-circle-outline" size={24} color={Colors.white} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.headerBtn}>
-                  <AppIcon name="add" size={24} color={Colors.white} />
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
 
         <View style={styles.supportStatusPill}>
           <View style={styles.supportStatusInfo}>
@@ -474,24 +468,9 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
     paddingBottom: Spacing.sm,
     paddingHorizontal: Spacing.md,
   },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerTitle: {
-    color: Colors.white,
-    fontFamily: Fonts.bold, fontWeight: '800',
-    fontSize: Fonts.size.lg,
-  },  
-  brandContainer: {
-    alignItems: 'center',
-  },
-  logo:        { width: 40, height: 40 },
   headerBtn: { padding: Spacing.sm, width: 40 },
   supportStatusPill: {
     marginTop: Spacing.md,

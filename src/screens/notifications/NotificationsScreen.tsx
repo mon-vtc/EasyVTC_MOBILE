@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
-  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -23,7 +22,7 @@ import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
 import { useAuthStore } from '../../store/auth.store';
 import type { NavigationProp } from '@react-navigation/native';
-import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
 
 const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -218,15 +217,7 @@ const NotificationsScreen: React.FC = () => {
     <View style={[styles.container, 
     // ((user as AuthUser)?.role === 'client') ? {marginTop: Spacing.xl} : {}
     ]}>
-      {/* {((user as AuthUser)?.role === 'driver' || (user as AuthUser)?.role === 'admin') && ( */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-              <AppIcon name="arrow-back" size={24} color={Colors.white} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Notifications</Text>
-            <View style={styles.headerBtn} />
-          </View>
-      {/* )} */}
+      <AppHeader left="back" title="Notifications" />
       <View style={styles.headerNotif}>
         <Text style={styles.headerNotifTitle}>Notifications</Text>
         <View style={styles.headerRight}>
@@ -291,10 +282,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.bordeauxLight,
   },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
-    headerBtn: { padding: Spacing.sm, width: 40 },
-    headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
-    
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',

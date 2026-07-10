@@ -18,6 +18,7 @@ import type { ManagerDrawerParamList } from '../../types';
 import { usePermissions } from '../../hooks/usePermissions';
 import { PERMISSION_LABELS } from '../../types';
 import type { ManagerPermission } from '../../types';
+import { AppHeader } from '../../components/common/AppHeader';
 
 type Props = DrawerScreenProps<ManagerDrawerParamList, 'ManagerProfile'>;
 
@@ -136,24 +137,6 @@ export default function ManagerProfileScreen({ navigation }: Props) {
     handleEditToggleRef.current = handleEditToggle;
   }, [handleEditToggle]);
 
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={{ marginRight: 20 }}
-          onPress={() => handleEditToggleRef.current()}
-          disabled={isLoading}
-        >
-          <Ionicons
-            name={editMode ? 'checkmark-outline' : 'pencil-outline'}
-            size={22}
-            color={Colors.white}
-          />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, editMode, isLoading]);
-
   // ── Modal mot de passe ─────────────────────────────────────
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const { control, handleSubmit, reset, formState: { errors } } = useForm<PasswordForm>({
@@ -211,6 +194,14 @@ export default function ManagerProfileScreen({ navigation }: Props) {
 
   return (
     <View style={styles.flex}>
+      <AppHeader
+        left="menu"
+        title="Mon compte"
+        rightIcon={{
+          name: editMode ? 'checkmark-outline' : 'pencil-outline',
+          onPress: () => { if (!isLoading) handleEditToggleRef.current(); },
+        }}
+      />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── Avatar ── */}

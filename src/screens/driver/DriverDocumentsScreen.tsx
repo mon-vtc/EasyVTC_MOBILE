@@ -13,6 +13,9 @@ import { UploadModal }           from '../../components/common/UploadModal';
 import type { UploadPayload }    from '../../components/common/UploadModal';
 import { useDocuments }          from '../../hooks/useDocuments';
 import type { DocumentView }     from '../../types/document.types';
+import { useNotifications }      from '../../hooks/useNotifications';
+import { AppHeader }             from '../../components/common/AppHeader';
+import { useNavigation }         from '@react-navigation/native';
 
 
 const completionPercent = (uploaded: number, total: number) =>
@@ -20,6 +23,7 @@ const completionPercent = (uploaded: number, total: number) =>
 
 export default function DriverDocumentsScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const {
     documentViews, isLoading, isUploading, error,
     fetchDocuments, uploadFromGallery, uploadFromFiles,
@@ -27,6 +31,7 @@ export default function DriverDocumentsScreen() {
     requiredMissing, pendingCount, rejectedCount,
   } = useDocuments();
   const { showToast } = useToast();
+  const { unreadCount } = useNotifications();
 
   const [refreshing,         setRefreshing]         = useState(false);
   const [viewerDoc,          setViewerDoc]          = useState<DocumentView | null>(null);
@@ -79,6 +84,16 @@ export default function DriverDocumentsScreen() {
 
   return (
     <View style={s.root}>
+
+      <AppHeader
+        left="menu"
+        title="Documents"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('DriverNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       {/* ── Header ── */}
       <View style={s.header}>

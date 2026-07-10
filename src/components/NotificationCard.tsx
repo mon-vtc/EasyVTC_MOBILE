@@ -58,7 +58,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
           <Text style={styles.timeAgo}>{timeAgo}</Text>
           {!isRead && (
             <TouchableOpacity onPress={() => onMarkAsRead(notification.id)} style={styles.secondaryActionButton}>
-              <Text style={styles.secondaryActionButtonText}>Marquer comme lu</Text>
+              <Text style={styles.secondaryActionButtonText}>Marquer lu</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity onPress={() => onDelete(notification.id)} style={styles.secondaryActionButton}>
