@@ -11,16 +11,16 @@ import React, { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity, FlatList,
   StyleSheet, ActivityIndicator, KeyboardAvoidingView,
-  Platform, Image, Modal,
+  Platform, Modal,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation }  from '@react-navigation/native';
 import { useReservation } from '../../hooks/useReservation';
 import { useToast }       from '../../hooks/useToast';
 import { AppIcon }        from '../../components/common/AppIcon';
+import { AppHeader }      from '../../components/common/AppHeader';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Colors, Spacing, Fonts } from '../../theme/colors';
-import { Logo }           from '../../constants/logo';
 import type { GeoPoint, VehicleTypeOption } from '../../types/reservations.types';
 import type { PricingFlatRate } from '../../types/pricing.types';
 import CustomCalendarModal from '../../components/common/CustomCalendarModal';
@@ -115,27 +115,6 @@ function ForfaitDetailModal({
         </TouchableOpacity>
       </View>
     </Modal>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// HEADER
-// ══════════════════════════════════════════════════════════════════════════════
-function BookingHeader({ onBack }: { onBack: () => void }) {
-  return (
-    <View style={hdr.container}>
-      <TouchableOpacity
-        onPress={onBack}
-        style={hdr.back}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
-      </TouchableOpacity>
-      <View style={hdr.center}>
-        <Image source={Logo.LogoEasyVTC} style={hdr.logo} resizeMode="contain" />
-      </View>
-      <View style={hdr.placeholder} />
-    </View>
   );
 }
 
@@ -928,7 +907,7 @@ export default function BookingScreen({ navigation }: any) {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}>
-      <BookingHeader onBack={handleBack} />
+      <AppHeader left="back" onBack={handleBack} title="Nouvelle réservation" />
       <StepIndicator current={booking.step as 1 | 2 | 3} />
 
       <KeyboardAvoidingView
@@ -1211,22 +1190,6 @@ const styles = StyleSheet.create({
   nextBtnFull:     { flex: 1 },
   nextBtnDisabled: { opacity: 0.5 },
   nextBtnText:     { color: Colors.white, fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700' },
-});
-
-// ── Header styles ──────────────────────────────────────────────────────────────
-const hdr = StyleSheet.create({
-  container: {
-    height: 100, backgroundColor: Colors.bordeaux,
-    flexDirection: 'row', alignItems: 'flex-end',
-    paddingBottom: 14, paddingHorizontal: 16,
-    elevation: 4, shadowColor: '#000', shadowOpacity: 0.15,
-    shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
-  },
-  back:        { width: 40, alignItems: 'flex-start' },
-  center:      { flex: 1, alignItems: 'center', gap: 2 },
-  logo:        { width: 40, height: 40 },
-  title:       { color: Colors.white, fontSize: 11, fontFamily: Fonts.semibold, fontWeight: '600', letterSpacing: 0.5 },
-  placeholder: { width: 40 },
 });
 
 // ── StepIndicator styles ───────────────────────────────────────────────────────

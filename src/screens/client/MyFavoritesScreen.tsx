@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Modal, TextInput, Platform, Image, ScrollView
+  ActivityIndicator, Modal, TextInput, Platform, ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from '../../hooks/useFavorites';
@@ -13,7 +13,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AppIcon } from '../../components/common/AppIcon';
-import { Logo } from '../../constants/logo'
+import { AppHeader } from '../../components/common/AppHeader';
 import { useDebounce } from '../../hooks/useDebounce';
 
 
@@ -271,13 +271,7 @@ export default function MyFavoritesScreen({ navigation }: any) {
     <View style={styles.container}>
       
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-          <AppIcon name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Image source={Logo.LogoEasyVTC} style={{ width: 32, height: 32 }} />
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader left="back" title="Mes favoris" />
 
       {isLoading ? (
         <ActivityIndicator size="large" color={Colors.bordeaux} style={{ marginTop: 50 }} />
@@ -334,9 +328,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.sm, paddingHorizontal: Spacing.md },
-  headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   titleZone: {
     flexDirection: 'row',
     justifyContent: 'space-between',

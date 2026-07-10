@@ -54,10 +54,10 @@ export type ClientTabParamList = {
   CreateReservationTab: undefined; // FAB tab button, redirige vers le stack racine
   Messages:            undefined;
   ClientProfile:       undefined;
-  MyOrders:             undefined;
   CGU :                 undefined;
-  MyInvoices:           { reservationId?: string } | undefined;
-  ReservationDetails: { reservationId?: string }
+  // MyOrders / MyInvoices / ReservationDetails n'existent QUE dans ClientStackParamList —
+  // les dupliquer ici ferait résoudre navigate() vers un switch interne au Tab.Navigator
+  // au lieu du push plein écran voulu (voir ClientNavigator.tsx).
 };
 /**
  * Stack racine du client — enveloppe les tabs et expose les écrans

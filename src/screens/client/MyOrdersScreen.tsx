@@ -16,6 +16,7 @@ import { useToast } from '../../hooks/useToast';
 import type { Order } from '../../types/orders.types';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { OrderCard } from '../../components/common/OrderCard';
+import { AppHeader } from '../../components/common/AppHeader';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -71,10 +72,11 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mes bons de commande</Text>
-        <Text style={styles.headerCount}>{filteredOrders.length} document{filteredOrders.length > 1 ? 's' : ''}</Text>
-      </View>
+      <AppHeader
+        left="back"
+        title="Mes bons de commande"
+        subtitle={`${filteredOrders.length} document${filteredOrders.length > 1 ? 's' : ''}`}
+      />
 
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
@@ -127,22 +129,6 @@ const styles = StyleSheet.create({
   centered: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
     backgroundColor: Colors.background,
-  },
-  header: {
-    backgroundColor: Colors.bordeaux,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.md,
-  },
-  headerTitle: {
-    fontSize: Fonts.size.xl,
-    fontFamily: Fonts.bold, fontWeight: '800',
-    color: Colors.white,
-  },
-  headerCount: {
-    fontSize: Fonts.size.sm,
-    color: Colors.beigeLight,
-    marginTop: 2,
   },
   list: {
     padding: Spacing.md,

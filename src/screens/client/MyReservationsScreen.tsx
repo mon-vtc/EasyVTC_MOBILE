@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList,
-  TextInput, RefreshControl, Platform, ActivityIndicator, Modal
+  TextInput, RefreshControl, ActivityIndicator, Modal
 } from 'react-native';
 import { useReservation }   from '../../hooks/useReservation';
 import { useAuthStore }     from '../../store/auth.store';
@@ -14,6 +14,7 @@ import CancelReservationModal from '../../components/common/CancelReservationMod
 import RatingModal            from '../../components/common/RatingModal';
 import { useRatingsStore } from '../../store/ratings.store';
 import { AppIcon } from '../../components/common/AppIcon'
+import { AppHeader } from '../../components/common/AppHeader';
 import ReservationFilterModal, {
   DEFAULT_FILTERS,
   type ReservationFilters,
@@ -385,13 +386,7 @@ const loadMore = useCallback(() => {
   return (
     <View style={styles.flex}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <AppIcon name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mes réservations</Text>
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader left="none" title="Mes réservations" />
 
       {/* Tabs */}
       <View style={styles.tabsWrapper}>
@@ -545,9 +540,6 @@ const loadMore = useCallback(() => {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
-  headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   tabsWrapper: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
   tabsContent: { paddingHorizontal: Spacing.md, paddingVertical: 12, alignItems: 'center', gap: Spacing.sm },
   tab: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 999, backgroundColor: '#F5F5F5', borderWidth: 1, borderColor: '#E0E0E0', minHeight: 36 },

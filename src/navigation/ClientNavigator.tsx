@@ -160,28 +160,11 @@ function ClientTabs() {
         }}
       />
 
-      {/* Écrans cachés dans les onglets mais accessibles depuis la navigation */}
-      <Tab.Screen
-        name="ReservationDetails"
-        component={ReservationDetailsScreen}
-        options={{
-          tabBarButton: () => null, // Masqué de la barre d'onglets
-        }}
-      />
-      <Tab.Screen
-        name="MyInvoices"
-        component={MyInvoicesScreen}
-        options={{
-          tabBarButton: () => null, // Masqué de la barre d'onglets
-        }}
-      />
-      <Tab.Screen
-        name="MyOrders"
-        component={MyOrdersScreen}
-        options={{
-          tabBarButton: () => null, // Masqué de la barre d'onglets
-        }}
-      />
+      {/* Écran caché de la barre d'onglets mais accessible depuis la navigation.
+          ReservationDetails/MyOrders/MyInvoices ne sont PAS dupliqués ici : ils
+          n'existent que dans le Stack racine (ClientNavigator) pour forcer leur
+          résolution via navigate() vers le push plein écran (slide_from_right,
+          pas de tab bar) plutôt que vers un switch interne au Tab.Navigator. */}
       <Tab.Screen
         name="CGU"
         component={CGU}

@@ -16,14 +16,19 @@ import { Ionicons }    from '@expo/vector-icons';
 import * as Sharing from 'expo-sharing';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { ClientTabParamList }   from '../../types/auth.types';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { ClientTabParamList, ClientStackParamList } from '../../types/auth.types';
 import { useAuthStore } from '../../store/auth.store';
 import { useMarketingStore } from '../../store/marketing.store';
-import { Logo }        from '../../constants/logo';
+import { AppHeader }   from '../../components/common/AppHeader';
 
 
-type Props = BottomTabScreenProps<ClientTabParamList, 'ClientProfile'>;
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<ClientTabParamList, 'ClientProfile'>,
+  NativeStackScreenProps<ClientStackParamList>
+>;
 
 // ── Règles mot de passe ─────────────────────────────────────────
 const PASSWORD_RULES = [
@@ -177,31 +182,6 @@ export default function ClientProfileScreen({ navigation }: Props) {
     setEditMode(prev => !prev);
   }, [editMode, firstName, lastName, phone, pendingImage, confirmedImage, updateProfile, uploadAvatar]);
 
-  const handleEditToggleRef = React.useRef(handleEditToggle);
-  React.useEffect(() => {
-    handleEditToggleRef.current = handleEditToggle;
-  }, [handleEditToggle]);
-
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={{ marginRight: 20 }}
-          onPress={() => handleEditToggleRef.current()}
-          disabled={isLoading}
-        >
-          <Ionicons
-            name={editMode ? 'checkmark-outline' : 'pencil-outline'}
-            size={22}
-            color={Colors.white}
-          />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, editMode, isLoading]);
-
-
-
   // ── Modal mot de passe ──────────────────────────────────────
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -263,23 +243,14 @@ export default function ClientProfileScreen({ navigation }: Props) {
     <View style={styles.flex}>
 
       {/* ── Header bordeaux ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-
-        <View style={styles.headerCenter}>
-          <Image source={Logo.LogoEasyVTC} style={{ width: 40, height: 40 }} />
-        </View>
-
-        <TouchableOpacity style={styles.headerBtn} onPress={handleEditToggle} disabled={isLoading}>
-          <Ionicons
-            name={editMode ? 'checkmark-outline' : 'pencil-outline'}
-            size={20}
-            color={Colors.white}
-          />
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        left="none"
+        title="Mon compte"
+        rightIcon={{
+          name: editMode ? 'checkmark-outline' : 'pencil-outline',
+          onPress: () => { if (!isLoading) handleEditToggle(); },
+        }}
+      />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
@@ -630,19 +601,6 @@ const fieldStyles = StyleSheet.create({
 // ── Styles globaux ──────────────────────────────────────────────
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
-
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerBtn:    { padding: Spacing.sm },
-  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
-  headerTitle:  { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.md },
 
   scroll: { paddingBottom: Spacing.xxl },
 
