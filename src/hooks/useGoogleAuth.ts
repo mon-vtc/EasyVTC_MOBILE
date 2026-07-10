@@ -3,17 +3,21 @@
  *
  * Flux :
  *  1. supabase.auth.signInWithOAuth() → URL Google
- *  2. WebBrowser.openBrowserAsync() → ouvre Chrome Custom Tab
+ *  2. WebBrowser.openAuthSessionAsync() → ouvre une session d'auth (Custom Tab
+ *     sur Android / ASWebAuthenticationSession sur iOS) et résout directement
+ *     avec l'URL de redirection finale, sans écouteur Linking séparé.
  *  3. Supabase redirige vers easyvtc://auth/callback#access_token=...
- *  4. Linking.addEventListener intercepte le deep link
- *  5. WebBrowser.dismissBrowser() ferme le tab
- *  6. On extrait les tokens et on appelle loginWithGoogle()
+ *  4. On extrait les tokens depuis result.url et on appelle loginWithGoogle()
  *     → POST /auth/google/token → profil + tokens métier
  *
- * Pourquoi openBrowserAsync plutôt que openAuthSessionAsync ?
- * Sur Android, Chrome Custom Tab ne ferme pas automatiquement sur
- * un custom scheme (easyvtc://) → page noire. On gère la fermeture
- * manuellement via Linking + dismissBrowser.
+ * Pourquoi openAuthSessionAsync plutôt que openBrowserAsync + Linking ?
+ * openBrowserAsync ouvre un Chrome Custom Tab classique : sur Android, Chrome
+ * bloque la navigation automatique vers un scheme externe (easyvtc://) quand
+ * elle arrive après plusieurs redirections serveur enchaînées sans geste
+ * utilisateur direct (ici Google → Supabase → easyvtc://, 2 sauts) — la
+ * session reste bloquée sur une page blanche côté supabase.co et le deep
+ * link n'est jamais émis. openAuthSessionAsync est l'API dédiée à ce pattern
+ * OAuth : elle gère nativement la remontée vers l'app sur Android et iOS.
  *
  * Pourquoi hardcoder easyvtc://auth/callback plutôt que Linking.createURL() ?
  * En Expo Go, Linking.createURL() génère exp+EasyVTC_Mobile_App:// (underscore
@@ -21,9 +25,8 @@
  * Le scheme easyvtc:// est enregistré dans app.config.js et fonctionne sur
  * dev build et prod build.
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -48,52 +51,6 @@ export function useGoogleAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState<string | null>(null);
 
-  // Indique qu'une session OAuth est en cours : seul le listener doit
-  // finaliser le flux (évite les doubles appels si le browser se ferme
-  // manuellement ET que le deep link arrive quasi-simultanément)
-  const pendingRef = useRef(false);
-
-  useEffect(() => {
-    const subscription = Linking.addEventListener('url', async ({ url }) => {
-      if (!pendingRef.current) return;
-      if (!url.startsWith('easyvtc://')) return;
-
-      pendingRef.current = false;
-
-      // Fermer le browser immédiatement
-      WebBrowser.dismissBrowser();
-
-      try {
-        // Extraire access_token + refresh_token depuis le fragment
-        // Supabase retourne : easyvtc://#access_token=eyJ...&refresh_token=...
-        const fragmentIndex = url.indexOf('#');
-        if (fragmentIndex === -1) {
-          throw new Error('Réponse Google invalide : aucun token dans l\'URL');
-        }
-
-        const fragment     = url.substring(fragmentIndex + 1);
-        const params       = new URLSearchParams(fragment);
-        const accessToken  = params.get('access_token');
-        const refreshToken = params.get('refresh_token') ?? undefined;
-
-        if (!accessToken) {
-          throw new Error('Token Google manquant dans la réponse');
-        }
-
-        // Envoyer le token Supabase à l'API → POST /auth/google/token
-        await loginWithGoogle(accessToken, refreshToken);
-
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Erreur de connexion Google';
-        setError(message);
-      } finally {
-        setIsLoading(false);
-      }
-    });
-
-    return () => subscription.remove();
-  }, [loginWithGoogle]);
-
   const signInWithGoogle = async () => {
     if (!isSupabaseConfigured()) {
       setError('Configuration Supabase manquante. Vérifiez EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_ANON_KEY dans .env');
@@ -102,7 +59,6 @@ export function useGoogleAuth() {
 
     setIsLoading(true);
     setError(null);
-    pendingRef.current = true;
 
     try {
       // Obtenir l'URL OAuth Google depuis Supabase
@@ -115,23 +71,42 @@ export function useGoogleAuth() {
       });
 
       if (oauthError || !data.url) {
-        pendingRef.current = false;
         throw new Error(oauthError?.message ?? 'Impossible d\'obtenir l\'URL Google');
       }
 
-      // Ouvrir le browser — résout quand le browser se ferme
-      await WebBrowser.openBrowserAsync(data.url);
+      // Ouvre la session d'auth et attend soit le retour sur REDIRECT_URI,
+      // soit l'annulation/fermeture manuelle par l'utilisateur.
+      const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
 
-      // Si pendingRef est encore true ici, l'utilisateur a fermé le browser
-      // manuellement sans s'authentifier (le Linking listener n'a pas été déclenché)
-      if (pendingRef.current) {
-        pendingRef.current = false;
+      if (result.type !== 'success' || !('url' in result) || !result.url) {
+        // Utilisateur a annulé ou fermé le navigateur manuellement
         setIsLoading(false);
+        return;
       }
 
+      // Extraire access_token + refresh_token depuis le fragment
+      // Supabase retourne : easyvtc://auth/callback#access_token=eyJ...&refresh_token=...
+      const fragmentIndex = result.url.indexOf('#');
+      if (fragmentIndex === -1) {
+        throw new Error('Réponse Google invalide : aucun token dans l\'URL');
+      }
+
+      const fragment     = result.url.substring(fragmentIndex + 1);
+      const params       = new URLSearchParams(fragment);
+      const accessToken  = params.get('access_token');
+      const refreshToken = params.get('refresh_token') ?? undefined;
+
+      if (!accessToken) {
+        throw new Error('Token Google manquant dans la réponse');
+      }
+
+      // Envoyer le token Supabase à l'API → POST /auth/google/token
+      await loginWithGoogle(accessToken, refreshToken);
+
     } catch (err: unknown) {
-      pendingRef.current = false;
-      setError(err instanceof Error ? err.message : 'Erreur de connexion Google');
+      const message = err instanceof Error ? err.message : 'Erreur de connexion Google';
+      setError(message);
+    } finally {
       setIsLoading(false);
     }
   };
