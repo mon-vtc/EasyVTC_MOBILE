@@ -13,7 +13,6 @@ import {
   Platform,
   FlatList as RNFlatList,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,6 +20,7 @@ import { z } from 'zod';
 import { useAdmin } from '../../hooks/useAdmin';
 import CustomCalendarModal from '../../components/common/CustomCalendarModal';
 import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
 import { useAlert } from '../../hooks/useAlert';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { PromoCode, ClientSummary, DiscountType, CampaignType, CreateCampaignDto, MarketingCampaign, ClientWithStats, BulkAssignDto, CreatePromoCodeDto, ClientBaseFilters } from '../../types';
@@ -93,7 +93,6 @@ const campaignFormSchema = z.object({
 }).refine(data => data.type !== 'email' || (data.subject && data.subject.length > 0), { message: 'L\'objet est requis pour un email.', path: ['subject'] });
 
 export default function AdminPromoCommunicationScreen() {
-  const navigation = useNavigation<any>();
   const { showAlert } = useAlert();
   const { showToast } = useToast();
   const {
@@ -629,13 +628,7 @@ export default function AdminPromoCommunicationScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
-          <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Promo & Communication</Text>
-        <View style={styles.headerButton} />
-      </View>
+      <AppHeader left="back" title="Promo & Communication" />
 
       <View style={styles.tabBar}>
         {TAB_ITEMS.map((tab) => {
@@ -1248,27 +1241,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingTop: Platform.OS === 'ios' ? Spacing.lg : Spacing.xl + 8,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.bordeaux,
-  },
-  headerButton: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    color: Colors.white,
-    fontSize: Fonts.size.lg,
-    fontWeight: 'bold',
-    fontFamily: Fonts.bold,
   },
   tabBar: {
     flexDirection: 'row',

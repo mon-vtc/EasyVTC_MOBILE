@@ -19,7 +19,7 @@ import { useChat } from '../../hooks/useChat';
 import { Colors, Spacing, Fonts } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import type { ChatMessage, ActiveConversation } from '../../types';
-import AdminHeader from '../../components/admin/AdminHeader';
+import { AppHeader } from '../../components/common/AppHeader';
 import { useToast } from '../../hooks/useToast';
 const styles = StyleSheet.create({
   container: {
@@ -293,7 +293,8 @@ export default function AdminChatScreen({ route, navigation }: AdminChatScreenPr
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <AdminHeader
+      <AppHeader
+        left="back"
         title={conversation ? `${conversation.client?.first_name} ${conversation.client?.last_name} - ${conversation.driver?.first_name} ${conversation.driver?.last_name}` : 'Conversation'}
         subtitle={conversation ? `${conversation.pickup_address} → ${conversation.dest_address}` : undefined}
         onBack={() => navigation.goBack()}

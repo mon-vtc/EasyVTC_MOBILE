@@ -15,6 +15,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useChat } from '../../hooks/useChat';
+import { useNotifications } from '../../hooks/useNotifications';
+import { AppHeader } from '../../components/common/AppHeader';
 import { Colors, Fonts } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import type { ActiveConversation } from '../../types';
@@ -175,6 +177,7 @@ export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScr
     error,
     clearError,
   } = useChat();
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     loadConversations();
@@ -298,40 +301,61 @@ export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScr
     );
   };
 
+  const header = (
+    <AppHeader
+      left="menu"
+      title="Supervision chats"
+      rightIcon={{
+        name: 'notifications-outline',
+        onPress: () => navigation.navigate('AdminNotificationList' as never),
+        badge: unreadCount,
+      }}
+    />
+  );
+
   if (isLoadingSupervisedConversations && supervisedConversations.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.bordeaux} />
+      <View style={{ flex: 1 }}>
+        {header}
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.bordeaux} />
+        </View>
       </View>
     );
   }
 
   if (!isLoadingSupervisedConversations && supervisedConversations.length === 0) {
     return (
-      <View style={styles.container}>
-        <View style={styles.emptyContainer}>
-          <Ionicons name="chatbubbles-outline" size={48} color={Colors.textSecondary} style={styles.emptyIcon} />
-          <Text style={styles.emptyText}>Aucune conversation active pour le moment</Text>
+      <View style={{ flex: 1 }}>
+        {header}
+        <View style={styles.container}>
+          <View style={styles.emptyContainer}>
+            <Ionicons name="chatbubbles-outline" size={48} color={Colors.textSecondary} style={styles.emptyIcon} />
+            <Text style={styles.emptyText}>Aucune conversation active pour le moment</Text>
+          </View>
         </View>
       </View>
     );
   }
 
   return (
-    <FlatList
-      contentContainerStyle={styles.contentContainer}
-      style={styles.container}
-      data={sortedConversations}
-      keyExtractor={item => item.reservation_id}
-      renderItem={renderConversationCard}
-      refreshControl={<RefreshControl refreshing={isLoadingSupervisedConversations} onRefresh={handleRefresh} />}
-      onEndReached={handleLoadMore}
-      onEndReachedThreshold={0.3}
-      ListFooterComponent={
-        isLoadingSupervisedConversations && supervisedConversations.length > 0 ? (
-          <ActivityIndicator size="small" color={Colors.bordeaux} style={{ marginVertical: 16 }} />
-        ) : null
-      }
-    />
+    <View style={{ flex: 1 }}>
+      {header}
+      <FlatList
+        contentContainerStyle={styles.contentContainer}
+        style={styles.container}
+        data={sortedConversations}
+        keyExtractor={item => item.reservation_id}
+        renderItem={renderConversationCard}
+        refreshControl={<RefreshControl refreshing={isLoadingSupervisedConversations} onRefresh={handleRefresh} />}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={
+          isLoadingSupervisedConversations && supervisedConversations.length > 0 ? (
+            <ActivityIndicator size="small" color={Colors.bordeaux} style={{ marginVertical: 16 }} />
+          ) : null
+        }
+      />
+    </View>
   );
 }

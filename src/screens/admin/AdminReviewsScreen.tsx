@@ -7,13 +7,16 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
-  TouchableOpacity, RefreshControl, Platform,
+  TouchableOpacity, RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuthStore }    from '../../store/auth.store';
 import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
+import { useNotifications } from '../../hooks/useNotifications';
+import { AppHeader } from '../../components/common/AppHeader';
 import { useRatingsStore } from '../../store/ratings.store';
 import type { RatingAdmin } from '../../types/ratings.types';
 
@@ -117,13 +120,14 @@ function RatingCard({
 export default function AdminReviewsScreen() {
   const accessToken  = useAuthStore(s => s.accessToken);
   const allRatings   = useRatingsStore(s => s.allRatings);
-  const allTotal     = useRatingsStore(s => s.allTotal);
   const allPage      = useRatingsStore(s => s.allPage);
   const allTotalPages = useRatingsStore(s => s.allTotalPages);
   const isLoading    = useRatingsStore(s => s.isLoading);
   const listAll      = useRatingsStore(s => s.listAll);
   const deleteRating = useRatingsStore(s => s.deleteRating);
   const { showToast } = useToast();
+  const navigation = useNavigation();
+  const { unreadCount } = useNotifications();
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -178,13 +182,15 @@ export default function AdminReviewsScreen() {
 
   return (
     <View style={styles.root}>
-      {/* Bandeau en-tête */}
-      <View style={styles.topBar}>
-        <Text style={styles.topTitle}>Évaluations</Text>
-        <View style={styles.countBadge}>
-          <Text style={styles.countText}>{allTotal}</Text>
-        </View>
-      </View>
+      <AppHeader
+        left="menu"
+        title="Évaluations"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('AdminNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       {isLoading && allRatings.length === 0 ? (
         <View style={styles.loader}>
@@ -219,24 +225,6 @@ export default function AdminReviewsScreen() {
 // ══════════════════════════════════════════════════════════════════════════════
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
-
-  topBar: {
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 0 : Spacing.md,
-    paddingBottom: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  topTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white, flex: 1 },
-  countBadge: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-  },
-  countText: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
 
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 

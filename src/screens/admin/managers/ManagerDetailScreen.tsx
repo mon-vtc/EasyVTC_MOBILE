@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Linking, Platform, Image, Modal,
+  ActivityIndicator, Linking, Image, Modal,
   TextInput,
 } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { useToast } from '../../../hooks/useToast';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
+import { AppHeader } from '../../../components/common/AppHeader';
 import type { ManagersStackParamList, UserProfile } from '../../../types';
 
 type Nav = NativeStackNavigationProp<ManagersStackParamList, 'ManagerDetail'>;
@@ -210,19 +211,14 @@ export default function ManagerDetailScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profil gestionnaire</Text>
-        <TouchableOpacity
-          style={styles.headerEditBtn}
-          onPress={() => navigation.navigate('EditManager', { managerId: manager.id })}
-        >
-          <Ionicons name="pencil-outline" size={20} color={Colors.white} />
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        left="back"
+        title="Profil gestionnaire"
+        rightIcon={{
+          name: 'pencil-outline',
+          onPress: () => navigation.navigate('EditManager', { managerId: manager.id }),
+        }}
+      />
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Carte identité */}
@@ -384,19 +380,6 @@ const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: Colors.background },
   center:      { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md },
   errorText:   { fontSize: Fonts.size.md, color: Colors.textMuted },
-
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerBtn:     { padding: Spacing.sm, width: 40 },
-  headerTitle:   { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
-  headerEditBtn: { padding: Spacing.sm, width: 40, alignItems: 'flex-end' },
 
   scroll:        { flex: 1 },
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl },

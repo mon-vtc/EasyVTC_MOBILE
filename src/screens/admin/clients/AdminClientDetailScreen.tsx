@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Linking, Platform, Image, Alert, FlatList
+  ActivityIndicator, Linking, Image, Alert, FlatList
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,6 +11,7 @@ import { useClientsStore, useAuthStore } from '../../../store';
 import type { ClientWithStats, ClientTripItem, ClientsStackParamList } from '../../../types';
 import type { FavoriteAddress, FavoriteAddressType } from '../../../types/favorites.types';
 import { favoritesApi } from '../../../services/api/favorites.api';
+import { AppHeader } from '../../../components/common/AppHeader';
 
 type Nav = NativeStackNavigationProp<ClientsStackParamList, 'ClientDetail'>;
 
@@ -249,14 +250,7 @@ export default function AdminClientDetailScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Détails client</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader left="back" title="Détails client" />
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
@@ -437,18 +431,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   center:    { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md, paddingTop: 60 },
   errorText: { fontSize: Fonts.size.md, color: Colors.textMuted },
-
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
   scroll:        { flex: 1 },
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl },

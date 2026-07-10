@@ -5,15 +5,14 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, TextInput, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Image,
+  View, Text, TextInput, ScrollView,
+  StyleSheet, ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useAdmin } from '../../hooks/useAdmin';
 import { useToast } from '../../hooks/useToast';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppButton } from '../../components/common/AppButton';
-import { Logo } from '../../constants/logo';
+import { AppHeader } from '../../components/common/AppHeader';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { SupportConfig, SupportConfigKey } from '../../types';
 
@@ -30,7 +29,6 @@ const EMPTY_FORM: FormValues = {
 const FIELD_KEYS: SupportConfigKey[] = ['support_phone', 'support_email', 'support_address', 'support_hours'];
 
 export default function AdminAppConfigScreen() {
-  const navigation = useNavigation();
   const { fetchSupportConfig, updateSupportConfig } = useAdmin();
   const { showToast } = useToast();
 
@@ -74,16 +72,7 @@ export default function AdminAppConfigScreen() {
 
   return (
     <View style={styles.flex}>
-      {/* ── En-tête ── */}
-      <View style={hdr.container}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={hdr.side} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <View style={hdr.center}>
-          <Image source={Logo.LogoEasyVTC} style={hdr.logo} resizeMode="contain" />
-        </View>
-        <View style={hdr.side} />
-      </View>
+      <AppHeader left="back" title="Configuration" />
 
       {isLoading ? (
         <View style={styles.loadingWrap}>
@@ -175,13 +164,6 @@ function Field({
     </View>
   );
 }
-
-const hdr = StyleSheet.create({
-  container: { height: 100, backgroundColor: Colors.bordeaux, flexDirection: 'row', alignItems: 'flex-end', paddingBottom: 14, paddingHorizontal: Spacing.md, elevation: 4 },
-  side:      { width: 40, alignItems: 'center' },
-  center:    { flex: 1, alignItems: 'center' },
-  logo:      { width: 38, height: 38 },
-});
 
 const fld = StyleSheet.create({
   wrap:     { marginBottom: Spacing.md },

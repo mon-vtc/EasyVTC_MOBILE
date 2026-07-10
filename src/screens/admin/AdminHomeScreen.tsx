@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAdmin } from '../../hooks/useAdmin';
 import { useReservation } from '../../hooks/useReservation';
+import { useNotifications } from '../../hooks/useNotifications';
+import { AppHeader } from '../../components/common/AppHeader';
 import type { AdminStats, AvailableDriverDto, Reservation } from '../../types';
 import DriverPickerModal from './DriverPickerModal';
 
@@ -125,6 +127,7 @@ export default function AdminHomeScreen({ navigation }: any) {
     fetchAdminHomeReservations,
     assign,
   } = useReservation();
+  const { unreadCount } = useNotifications();
 
   const [pickerVisible, setPickerVisible] = useState(false);
 
@@ -194,7 +197,20 @@ export default function AdminHomeScreen({ navigation }: any) {
   }, [loadData]);
 
   if (loading) {
-    return <View style={styles.container}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>;
+    return (
+      <View style={{ flex: 1 }}>
+        <AppHeader
+          left="menu"
+          logo
+          rightIcon={{
+            name: 'notifications-outline',
+            onPress: () => navigation.navigate('AdminNotificationList' as never),
+            badge: unreadCount,
+          }}
+        />
+        <View style={styles.container}><ActivityIndicator size="large" color={Colors.bordeaux} /></View>
+      </View>
+    );
   }
 
   const handleAssignConfirm = async (driver: AvailableDriverDto) => {
@@ -224,7 +240,17 @@ export default function AdminHomeScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView
+    <View style={{ flex: 1 }}>
+      <AppHeader
+        left="menu"
+        logo
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('AdminNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
+      <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadData(true)} />}
@@ -279,6 +305,7 @@ export default function AdminHomeScreen({ navigation }: any) {
         }}
       />
     </ScrollView>
+    </View>
   );
 }
 

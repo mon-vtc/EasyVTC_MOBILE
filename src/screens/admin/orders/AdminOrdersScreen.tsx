@@ -6,7 +6,7 @@
 import React, { useCallback, useEffect, useState } from 'react'; 
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, TextInput, Platform,
+  StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
@@ -14,14 +14,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useOrdersStore }  from '../../../store/orders.store';
 import { useAuthStore } from '../../../store/auth.store';
 import type { Order } from '../../../types/orders.types';
-import { DrawerActions } from '@react-navigation/native';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { OrderCard } from '../../../components/common/OrderCard';
 import { useToast } from '../../../hooks/useToast';
+import { useNotifications } from '../../../hooks/useNotifications';
+import { AppHeader } from '../../../components/common/AppHeader';
 
 export default function AdminOrdersScreen() {
   const navigation = useNavigation<NavigationProp<any>>();
   const { showToast } = useToast();
+  const { unreadCount } = useNotifications();
 
   const { orders, total, page, totalPages, isLoading, isFetchingNextPage, error, fetchAll, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
@@ -56,20 +58,16 @@ export default function AdminOrdersScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.headerContainer}>
-        <TouchableOpacity
-          style={styles.headerBtn}
-          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        >
-          <Ionicons name="menu-outline" size={26} color={Colors.white} />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Bons de commande</Text>
-          <Text style={styles.headerCount}>{total} document{total > 1 ? 's' : ''}</Text>
-        </View>
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader
+        left="menu"
+        title="Bons de commande"
+        subtitle={`${total} document${total > 1 ? 's' : ''}`}
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('AdminNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       {/* Recherche */}
       <View style={styles.searchBox}>
@@ -110,19 +108,6 @@ export default function AdminOrdersScreen() {
 
 const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: Colors.background },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.bordeaux,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom: Spacing.md,
-  },
-  headerCenter: { alignItems: 'center' },
-  headerTitle: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white, textAlign: 'center' },
-  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2,  },
-  headerBtn: { width: 40 },
   searchBox: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
     backgroundColor: Colors.surface, margin: Spacing.md, borderRadius: Radius.md,

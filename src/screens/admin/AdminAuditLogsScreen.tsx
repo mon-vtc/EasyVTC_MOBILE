@@ -5,6 +5,8 @@ import {
 } from 'react-native';
 import { useAdmin } from '../../hooks/useAdmin';
 import { AppIcon } from '../../components/common/AppIcon';
+import { useNotifications } from '../../hooks/useNotifications';
+import { AppHeader } from '../../components/common/AppHeader';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { AuditLog, AuditLogListFilters } from '../../types';
 import AuditLogFilterModal from '../../components/admin/AuditLogFilterModal';
@@ -66,6 +68,7 @@ export default function AdminAuditLogsScreen({ navigation }: any) {
     fetchAuditLogs,
     clearAuditLogsError,
   } = useAdmin();
+  const { unreadCount } = useNotifications();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<AuditLogFilters>(DEFAULT_AUDIT_LOG_FILTERS);
@@ -119,13 +122,15 @@ export default function AdminAuditLogsScreen({ navigation }: any) {
 
   return (
     <View style={styles.flex}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <AppIcon name="menu" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Journaux d'audit</Text>
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader
+        left="menu"
+        title="Journaux d'audit"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('AdminNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       <View style={styles.searchContainer}>
         <View style={styles.searchWrapper}>
@@ -224,14 +229,6 @@ export default function AdminAuditLogsScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom: Spacing.md, paddingHorizontal: Spacing.md,
-  },
-  headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
 
   searchContainer: {
     paddingHorizontal: Spacing.md,

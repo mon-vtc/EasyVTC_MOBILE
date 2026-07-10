@@ -2,14 +2,15 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   TextInput, Image, RefreshControl, Modal, ActivityIndicator,
-  Platform,
 } from 'react-native';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useClientsStore, useAuthStore } from '../../../store';
 import { useToast } from '../../../hooks/useToast';
+import { useNotifications } from '../../../hooks/useNotifications';
+import { AppHeader } from '../../../components/common/AppHeader';
 import type { ClientWithStats, ClientGlobalStats, ClientListFilters, ClientsStackParamList } from '../../../types';
 
 type Nav = NativeStackNavigationProp<ClientsStackParamList, 'ClientsList'>;
@@ -318,6 +319,7 @@ export default function AdminClientsScreen() {
   const accessToken  = useAuthStore(s => s.accessToken);
 
   const { showToast } = useToast();
+  const { unreadCount } = useNotifications();
 
   const clients            = useClientsStore(s => s.clients);
   const total              = useClientsStore(s => s.total);
@@ -399,17 +401,15 @@ export default function AdminClientsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerBtn}
-          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        >
-          <Ionicons name="menu-outline" size={26} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Clients</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader
+        left="menu"
+        title="Clients"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('AdminNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       {/* KPIs */}
       <View style={styles.kpiRow}>
@@ -521,18 +521,6 @@ export default function AdminClientsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-
-  header: {
-    flexDirection:      'row',
-    alignItems:         'center',
-    justifyContent:     'space-between',
-    backgroundColor:    Colors.bordeaux,
-    paddingTop:         Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:      Spacing.md,
-    paddingHorizontal:  Spacing.md,
-  },
-  headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
 
   kpiRow: {
     flexDirection:    'row',

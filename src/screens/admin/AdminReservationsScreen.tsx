@@ -15,6 +15,8 @@ import {
 import { AppIcon } from '../../components/common/AppIcon'
 import { useReservation } from '../../hooks/useReservation';
 import { useToast } from '../../hooks/useToast';
+import { useNotifications } from '../../hooks/useNotifications';
+import { AppHeader } from '../../components/common/AppHeader';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import DriverPickerModal from './DriverPickerModal';
 import type { Reservation, ReservationStatus, AvailableDriverDto, ReservationListFilters } from '../../types/reservations.types';
@@ -164,6 +166,7 @@ export default function AdminReservationsScreen({ navigation }: any) {
   } = useReservation();
   const [isSorting, setIsSorting] = useState(false);
   const { showToast } = useToast();
+  const { unreadCount } = useNotifications();
 
   const [activeTab,          setActiveTab]          = useState<FilterTab>('all');
   const [searchQuery,        setSearchQuery]        = useState('');
@@ -292,14 +295,15 @@ export default function AdminReservationsScreen({ navigation }: any) {
   return (
     <View style={styles.flex}>
 
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.openDrawer()}>
-          <AppIcon name="menu" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Réservations</Text>
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader
+        left="menu"
+        title="Réservations"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('AdminNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       {/* ── Filtres par statut ── */}
       <View style={styles.tabsWrapper}>
@@ -449,10 +453,6 @@ export default function AdminReservationsScreen({ navigation }: any) {
 // ── STYLES ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
-
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
-  headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
 
   tabsWrapper: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
   tabsContent: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, flexDirection: 'row', gap: Spacing.sm, alignItems: 'center' },

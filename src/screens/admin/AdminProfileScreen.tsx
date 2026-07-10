@@ -13,6 +13,7 @@ import * as ImagePicker      from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { FormField }         from '../../components/forms/FormField';
 import { useAuth }           from '../../hooks/useAuth';
+import { AppHeader }         from '../../components/common/AppHeader';
 import type { DrawerScreenProps } from '@react-navigation/drawer';
 import type { AdminDrawerParamList } from '../../types/auth.types';
 
@@ -128,29 +129,6 @@ export default function AdminProfileScreen({ navigation }: Props) {
     setEditMode(prev => !prev);
   }, [editMode, firstName, lastName, phone, pendingImage, confirmedImage, updateProfile, uploadAvatar]);
 
-  const handleEditToggleRef = React.useRef(handleEditToggle);
-  React.useEffect(() => {
-    handleEditToggleRef.current = handleEditToggle;
-  }, [handleEditToggle]);
-
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={{ marginRight: 20 }}
-          onPress={() => handleEditToggleRef.current()}
-          disabled={isLoading}
-        >
-          <Ionicons
-            name={editMode ? 'checkmark-outline' : 'pencil-outline'}
-            size={22}
-            color={Colors.white}
-          />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, editMode, isLoading]);
-
   // ── Modal mot de passe ─────────────────────────────────────
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const { control, handleSubmit, reset, formState: { errors } } = useForm<PasswordForm>({
@@ -208,6 +186,14 @@ export default function AdminProfileScreen({ navigation }: Props) {
 
   return (
     <View style={styles.flex}>
+      <AppHeader
+        left="menu"
+        title="Mon compte"
+        rightIcon={{
+          name: editMode ? 'checkmark-outline' : 'pencil-outline',
+          onPress: handleEditToggle,
+        }}
+      />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── Avatar ── */}

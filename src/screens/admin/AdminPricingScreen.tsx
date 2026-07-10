@@ -6,15 +6,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Image,
+  StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { useNavigation }       from '@react-navigation/native';
 import { usePricing }          from '../../hooks/usePricing';
 import type { PricingCountry, PricingFormValues, PricingExample } from '../../types/pricing.types';
-import { Logo }                from '../../constants/logo';
 import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
 import { AppIcon }             from '../../components/common/AppIcon';
+import { AppHeader }           from '../../components/common/AppHeader';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -30,34 +29,15 @@ function PricingHeader({
   isEditing: boolean;
   onToggleEdit: () => void;
 }) {
-  const navigation = useNavigation();
   return (
-    <View style={hdr.container}>
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={hdr.back}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
-      </TouchableOpacity>
-
-      <View style={hdr.center}>
-        <Image source={Logo.LogoEasyVTC} style={hdr.logo} resizeMode="contain" />
-      </View>
-
-      {/* Crayon ou annulation */}
-      <TouchableOpacity
-        onPress={onToggleEdit}
-        style={hdr.action}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <AppIcon
-          name={isEditing ? 'close-outline' : 'create-outline'}
-          size={24}
-          color={Colors.white}
-        />
-      </TouchableOpacity>
-    </View>
+    <AppHeader
+      left="back"
+      title="Grille tarifaire"
+      rightIcon={{
+        name: isEditing ? 'close-outline' : 'create-outline',
+        onPress: onToggleEdit,
+      }}
+    />
   );
 }
 
@@ -752,40 +732,3 @@ const ex = StyleSheet.create({
   },
 });
 
-// ── PricingHeader ─────────────────────────────────────────────────────────────
-const hdr = StyleSheet.create({
-  container: {
-    height: 100,
-    backgroundColor: Colors.bordeaux,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingBottom: 14,
-    paddingHorizontal: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-  },
-  back: {
-    width: 40,
-    alignItems: 'flex-start',
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-  },
-  logo: {
-    width: 32,
-    height: 32,
-  },
-  action: {
-    width: 40,
-    alignItems: 'flex-end',
-  },
-  placeholder: {
-    width: 40,
-  },
-});

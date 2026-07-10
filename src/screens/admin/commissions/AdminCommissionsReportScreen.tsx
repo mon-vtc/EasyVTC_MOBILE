@@ -6,13 +6,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
-  TouchableOpacity, RefreshControl, Platform,
+  TouchableOpacity, RefreshControl,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useCommissionSettings } from '../../../hooks/useCommissionSettings';
 import type { CommissionDetail, CommissionPeriod } from '../../../types/commission.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { AppIcon } from '../../../components/common/AppIcon';
+import { AppHeader } from '../../../components/common/AppHeader';
 
 const REPORT_PERIODS: { label: string; value: CommissionPeriod }[] = [
   { label: 'Semaine', value: 'week' },
@@ -72,7 +72,6 @@ function CommissionCard({ item }: { item: CommissionDetail }) {
 }
 
 export default function AdminCommissionsReportScreen() {
-  const navigation = useNavigation();
   const {
     summary, commissions, commissionsTotal, commissionsPage,
     isLoading, error, fetchSummary, fetchCommissions,
@@ -113,13 +112,7 @@ export default function AdminCommissionsReportScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-          <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Récap Commissions</Text>
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader left="back" title="Récap Commissions" />
 
       <FlatList
         data={commissions}
@@ -192,17 +185,6 @@ export default function AdminCommissionsReportScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#F3F3F3' },
-  header: {
-    backgroundColor: Colors.bordeaux,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'android' ? Spacing.xxl : 56,
-    paddingBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerTitle: { color: Colors.white, fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: 'bold' },
-  headerBtn: { padding: Spacing.xs, width: 40, alignItems: 'center' },
   listContainer: { padding: Spacing.md, paddingBottom: Spacing.xxl },
 
   summaryCard: {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform, Image, ActivityIndicator,
+  Image, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
@@ -16,6 +16,7 @@ import type { DriverDocument, DocumentType } from '../../../hooks/useDriverDocum
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriversStackParamList }  from '../../../types/auth.types';
 import { useToast } from '../../../hooks/useToast';
+import { AppHeader } from '../../../components/common/AppHeader';
 
 type Props = NativeStackScreenProps<DriversStackParamList, 'DriverDetail'>;
 
@@ -578,14 +579,7 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
   return (
     <View style={styles.flex}>
 
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Détails du chauffeur</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader left="back" title="Détails du chauffeur" />
 
       <ScrollView style={styles.flex} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
@@ -813,15 +807,6 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   flex:   { flex: 1, backgroundColor: Colors.background },
   scroll: { padding: Spacing.lg, paddingTop: Spacing.md },
-
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xxl,
-    paddingBottom: Spacing.md, paddingHorizontal: Spacing.md,
-  },
-  headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
 
   profileCard: {
     backgroundColor: Colors.surface, borderRadius: Radius.lg,

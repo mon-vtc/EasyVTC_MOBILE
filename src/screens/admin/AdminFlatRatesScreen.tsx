@@ -7,14 +7,13 @@ import React, { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, ScrollView, FlatList, TouchableOpacity,
   StyleSheet, ActivityIndicator, Modal, KeyboardAvoidingView,
-  Platform, Image,
+  Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { usePricing }    from '../../hooks/usePricing';
 import type { PricingFlatRate, PricingCountry } from '../../types/pricing.types';
-import { Logo }          from '../../constants/logo';
 import { useAlert } from '../../hooks/useAlert';
 import { AppIcon }       from '../../components/common/AppIcon';
+import { AppHeader }     from '../../components/common/AppHeader';
 import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import type {AppIconProps}  from '../../types/app-icon-props.types';
@@ -110,27 +109,12 @@ function Field({
 // ══════════════════════════════════════════════════════════════════════════════
 
 function ListHeader({ onAdd }: { onAdd: () => void }) {
-  const navigation = useNavigation();
   return (
-    <View style={hdr.container}>
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={hdr.side}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
-      </TouchableOpacity>
-      <View style={hdr.center}>
-        <Image source={Logo.LogoEasyVTC} style={hdr.logo} resizeMode="contain" />
-      </View>
-      <TouchableOpacity
-        onPress={onAdd}
-        style={hdr.side}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <AppIcon name="add-outline" size={26} color={Colors.white} />
-      </TouchableOpacity>
-    </View>
+    <AppHeader
+      left="back"
+      title="Forfaits"
+      rightIcon={{ name: 'add-outline', onPress: onAdd }}
+    />
   );
 }
 
@@ -142,35 +126,23 @@ function DetailHeader({
   isEditing,
   onBack,
   onToggleEdit,
+  title,
 }: {
   isEditing: boolean;
   onBack: () => void;
   onToggleEdit: () => void;
+  title?: string;
 }) {
   return (
-    <View style={hdr.container}>
-      <TouchableOpacity
-        onPress={onBack}
-        style={hdr.side}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
-      </TouchableOpacity>
-      <View style={hdr.center}>
-        <Image source={Logo.LogoEasyVTC} style={hdr.logo} resizeMode="contain" />
-      </View>
-      <TouchableOpacity
-        onPress={onToggleEdit}
-        style={hdr.side}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <AppIcon
-          name={isEditing ? 'close-outline' : 'create-outline'}
-          size={24}
-          color={Colors.white}
-        />
-      </TouchableOpacity>
-    </View>
+    <AppHeader
+      left="back"
+      onBack={onBack}
+      title={title ?? 'Détail du forfait'}
+      rightIcon={{
+        name: isEditing ? 'close-outline' : 'create-outline',
+        onPress: onToggleEdit,
+      }}
+    />
   );
 }
 
@@ -497,7 +469,7 @@ function FlatRateDetailScreen({
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}>
-      <DetailHeader isEditing={isEditing} onBack={onBack} onToggleEdit={handleToggleEdit} />
+      <DetailHeader isEditing={isEditing} onBack={onBack} onToggleEdit={handleToggleEdit} title={item.label} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -1072,10 +1044,6 @@ const hdr = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logo: {
-    width: 32,
-    height: 32,
   },
   title: {
     color: Colors.white,
