@@ -16,7 +16,7 @@ import {
   Alert,
 } from 'react-native';
 import { useChat } from '../../hooks/useChat';
-import { Colors, Spacing } from '../../theme/colors';
+import { Colors, Spacing, Fonts } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import type { ChatMessage, ActiveConversation } from '../../types';
 import AdminHeader from '../../components/admin/AdminHeader';
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
     color: Colors.white,
     marginBottom: 0,
     marginHorizontal: Spacing.md,
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   callButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.white,
   },
   readOnlyBanner: {
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   },
   senderLabel: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     marginBottom: 2,
   },
   senderLabelClient: {

@@ -16,7 +16,7 @@ import {
   type RouteProp, type NavigationProp,
 } from '@react-navigation/native';
 import { AppIcon }             from '../../components/common/AppIcon';
-import { Colors }              from '../../theme/colors';
+import { Colors, Fonts } from '../../theme/colors';
 import { useReservationStore } from '../../store/reservation.store';
 import { useReservation }      from '../../hooks/useReservation';
 import { useAuthStore }        from '../../store/auth.store';
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
 ratingDisplayLabel: {
   fontSize: 13,
   color: TEXT_S,
-  fontWeight: '500',
+  fontFamily: Fonts.medium, fontWeight: '500',
 },
 starsRow: {
   flexDirection: 'row',
@@ -533,7 +533,7 @@ starsRow: {
 },
 
   header:   { alignItems: 'center', marginBottom: 20 },
-  title:    { fontSize: 26, fontWeight: '800', color: WHITE, marginTop: 20, letterSpacing: -0.5 },
+  title:    { fontSize: 26, fontFamily: Fonts.bold, fontWeight: '800', color: WHITE, marginTop: 20, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 8, textAlign: 'center', lineHeight: 20 },
 
   refBadge: {
@@ -542,29 +542,29 @@ starsRow: {
     paddingHorizontal: 16, paddingVertical: 10, marginBottom: 16,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
   },
-  refLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
-  refValue: { flexShrink: 1, fontSize: 14, color: WHITE, fontWeight: '700', letterSpacing: 0.5, textAlign: 'right' },
+  refLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: Fonts.medium, fontWeight: '500' },
+  refValue: { flexShrink: 1, fontSize: 14, color: WHITE, fontFamily: Fonts.bold, fontWeight: '700', letterSpacing: 0.5, textAlign: 'right' },
 
   card: {
     backgroundColor: WHITE, borderRadius: 18, padding: 20, marginBottom: 12,
     shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3,
   },
-  cardTitle:  { fontSize: 15, fontWeight: '700', color: TEXT_P, marginBottom: 16 },
+  cardTitle:  { fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700', color: TEXT_P, marginBottom: 16 },
 
   // Status row
   statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  statusLabel: { fontSize: 13, color: TEXT_S, fontWeight: '600' },
+  statusLabel: { fontSize: 13, color: TEXT_S, fontFamily: Fonts.semibold, fontWeight: '600' },
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: '#F3F4F6' },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: 13, fontWeight: '600', color: TEXT_P },
+  statusText: { fontSize: 13, fontFamily: Fonts.semibold, fontWeight: '600', color: TEXT_P },
 
   // Info row (date/time)
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 16 },
   infoIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#FDF4F4', alignItems: 'center', justifyContent: 'center' },
   infoTexts: { flex: 1 },
   infoLabel: { fontSize: 11, color: TEXT_S, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 3 },
-  infoValue: { fontSize: 14, fontWeight: '600', color: TEXT_P },
-  infoTime: { fontSize: 13, color: TEXT_S, fontWeight: '400' },
+  infoValue: { fontSize: 14, fontFamily: Fonts.semibold, fontWeight: '600', color: TEXT_P },
+  infoTime: { fontSize: 13, color: TEXT_S, fontFamily: Fonts.regular, fontWeight: '400' },
 
   // Route
   routeBlock: { gap: 0, marginBottom: 16 },
@@ -572,35 +572,35 @@ starsRow: {
   routeDot:   { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
   routeLine:  { width: 1, height: 14, backgroundColor: BORDER, marginLeft: 4, marginVertical: 3 },
   routeTag:   { fontSize: 10, color: TEXT_S, textTransform: 'uppercase', letterSpacing: 0.5 },
-  routeAddr:  { fontSize: 14, fontWeight: '500', color: TEXT_P, marginTop: 2, lineHeight: 20 },
+  routeAddr:  { fontSize: 14, fontFamily: Fonts.medium, fontWeight: '500', color: TEXT_P, marginTop: 2, lineHeight: 20 },
 
   // Stats row (distance, duration, passengers)
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   statItem: { flex: 1, alignItems: 'center', paddingVertical: 12, backgroundColor: '#F9FAFB', borderRadius: 10 },
   statIcon: { marginBottom: 6 },
-  statLabel: { fontSize: 11, color: TEXT_S, fontWeight: '500', marginBottom: 3 },
-  statValue: { fontSize: 14, fontWeight: '700', color: TEXT_P },
+  statLabel: { fontSize: 11, color: TEXT_S, fontFamily: Fonts.medium, fontWeight: '500', marginBottom: 3 },
+  statValue: { fontSize: 14, fontFamily: Fonts.bold, fontWeight: '700', color: TEXT_P },
 
   // Driver section
   driverRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   driverAvatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  driverAvatarText: { color: WHITE, fontSize: 16, fontWeight: '700', backgroundColor: BORDEAUX, },
+  driverAvatarText: { color: WHITE, fontSize: 16, fontFamily: Fonts.bold, fontWeight: '700', backgroundColor: BORDEAUX, },
   driverAvatarImage: { width: 48, height: 48, borderRadius: 24 },
-  driverName: { fontSize: 14, fontWeight: '700', color: TEXT_P },
+  driverName: { fontSize: 14, fontFamily: Fonts.bold, fontWeight: '700', color: TEXT_P },
   driverRating: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   star: { fontSize: 12, color: '#F59E0B' },
-  ratingVal: { fontSize: 13, fontWeight: '600', color: TEXT_P },
+  ratingVal: { fontSize: 13, fontFamily: Fonts.semibold, fontWeight: '600', color: TEXT_P },
   ratingCount: { fontSize: 12, color: TEXT_S },
   driverActions: { flexDirection: 'row', gap: 8 },
   btnCall: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: BORDEAUX, borderRadius: 10, height: 40 },
-  btnCallText: { color: WHITE, fontSize: 13, fontWeight: '600' },
+  btnCallText: { color: WHITE, fontSize: 13, fontFamily: Fonts.semibold, fontWeight: '600' },
   btnMsg: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#F9FAFB', borderRadius: 10, height: 40, borderWidth: 1, borderColor: BORDER },
-  btnMsgText: { color: BORDEAUX, fontSize: 13, fontWeight: '600' },
+  btnMsgText: { color: BORDEAUX, fontSize: 13, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   // Vehicle section
   vehicleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  vehicleKey: { fontSize: 13, color: TEXT_S, fontWeight: '500' },
-  vehicleVal: { fontSize: 14, fontWeight: '600', color: TEXT_P },
+  vehicleKey: { fontSize: 13, color: TEXT_S, fontFamily: Fonts.medium, fontWeight: '500' },
+  vehicleVal: { fontSize: 14, fontFamily: Fonts.semibold, fontWeight: '600', color: TEXT_P },
   vehicleImageContainer: { alignItems: 'center', marginBottom: 16 },
   vehicleImage: { width: '100%', height: 200, borderRadius: 12, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
   priceCard: {
@@ -608,16 +608,16 @@ starsRow: {
     backgroundColor: BORDEAUX, borderRadius: 16, padding: 20, marginBottom: 12,
     shadowColor: BORDEAUX, shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4,
   },
-  priceLabel: { fontSize: 15, fontWeight: '600', color: WHITE },
+  priceLabel: { fontSize: 15, fontFamily: Fonts.semibold, fontWeight: '600', color: WHITE },
   priceNote:  { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 3, maxWidth: 180 },
-  priceValue: { fontSize: 32, fontWeight: '900', color: WHITE, letterSpacing: -1 },
+  priceValue: { fontSize: 32, fontFamily: Fonts.bold, fontWeight: '900', color: WHITE, letterSpacing: -1 },
 
   nextCard: {
     backgroundColor: '#FDF4F4', borderRadius: 16, padding: 18, marginBottom: 24,
     borderWidth: 1, borderColor: '#F5DDE0',
   },
   nextHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
-  nextTitle:  { fontSize: 13, fontWeight: '700', color: BORDEAUX },
+  nextTitle:  { fontSize: 13, fontFamily: Fonts.bold, fontWeight: '700', color: BORDEAUX },
 
   ctas:           { gap: 10 },
   btnPrimary: {
@@ -625,17 +625,17 @@ starsRow: {
     height: 50, borderRadius: 14, backgroundColor: BORDEAUX,
   },
   btnPrimaryDone: { backgroundColor: '#6B7280' },
-  btnPrimaryText: { color: WHITE, fontSize: 15, fontWeight: '700' },
+  btnPrimaryText: { color: WHITE, fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700' },
   btnSecondary: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     height: 50, borderRadius: 14, borderWidth: 1.5, borderColor: BORDEAUX, backgroundColor: WHITE,
   },
-  btnSecondaryText: { color: BORDEAUX, fontSize: 15, fontWeight: '700' },
+  btnSecondaryText: { color: BORDEAUX, fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700' },
   btnDanger: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     height: 50, borderRadius: 14, backgroundColor: 'transparent',
   },
-  btnDangerText: { color: '#C0392B', fontSize: 15, fontWeight: '700' },
+  btnDangerText: { color: '#C0392B', fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 const check = StyleSheet.create({

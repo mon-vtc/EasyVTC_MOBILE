@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing } from '../../theme/colors';
+import { Colors, Spacing, Fonts } from '../../theme/colors';
 
 interface Props {
   title: string;
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
   backSpacer: { width: 40 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', flexDirection: 'column' },
-  title: { color: Colors.bordeauxLight, fontSize: 18, fontWeight: '600', marginHorizontal: Spacing.md },
+  title: { color: Colors.bordeauxLight, fontSize: 18, fontFamily: Fonts.semibold, fontWeight: '600', marginHorizontal: Spacing.md },
   subtitle: { color: Colors.bordeauxLight, fontSize: 12, marginTop: 2 },
   rightSpacer: { width: 40 },
 });

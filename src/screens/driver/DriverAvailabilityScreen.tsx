@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
   introCardTitle: {
     fontSize: Fonts.size.xl,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
   introCardDescription: {
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   },
   tipTitle: {
     fontSize: Fonts.size.sm,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: "#1E3A8A",
   },
   tipText: {
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: Colors.white,
     fontSize: Fonts.size.lg,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
 });
 
@@ -420,14 +420,14 @@ const dayCardStyles = StyleSheet.create({
   dayName: {
     flex: 1,
     fontSize: Fonts.size.md,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.bordeaux,
     marginLeft: Spacing.md,
   },
   statusText: {
     fontSize: Fonts.size.sm,
     color: Colors.success,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   timeRow: {
     flexDirection: 'row',
@@ -453,6 +453,6 @@ const dayCardStyles = StyleSheet.create({
   timeValue: {
     fontSize: Fonts.size.md,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
 });

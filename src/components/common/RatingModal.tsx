@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   subtitle: {
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   noteLabel: {
     textAlign: 'center',
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
     marginBottom: Spacing.sm,
     minHeight: 20,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   },
   btnCancelText: {
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
   },
   btnConfirm: {
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   },
   btnConfirmText: {
     fontSize: Fonts.size.sm,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
 });

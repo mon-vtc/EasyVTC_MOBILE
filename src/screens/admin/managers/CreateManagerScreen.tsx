@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontWeight: '600', color: Colors.white },
+  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
   scroll:  { flex: 1 },
   content: { padding: Spacing.md, paddingBottom: Spacing.xl, gap: Spacing.md },
@@ -224,11 +224,11 @@ const styles = StyleSheet.create({
     gap:             Spacing.sm,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
-  sectionTitle:  { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeauxDark },
+  sectionTitle:  { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxDark },
 
   fieldLabel: {
     fontSize:    Fonts.size.sm,
-    fontWeight:  '600',
+    fontFamily: Fonts.semibold, fontWeight:  '600',
     color:       Colors.textSecondary,
     marginBottom: 6,
   },
@@ -247,12 +247,12 @@ const styles = StyleSheet.create({
   },
   priorityOptionText: {
     fontSize:   Fonts.size.sm,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
     color:      Colors.textSecondary,
   },
   priorityOptionTextSelected: {
     color:      Colors.bordeaux,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
 
   hint: {

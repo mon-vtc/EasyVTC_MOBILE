@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontWeight: '600', color: Colors.white },
+  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
   identityBanner: {
     flexDirection:     'row',
@@ -321,8 +321,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center', alignItems: 'center',
   },
-  avatarInitials: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white },
-  bannerName:     { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white },
+  avatarInitials: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
+  bannerName:     { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
   bannerRole:     { fontSize: Fonts.size.xs, color: Colors.beigeLight, marginTop: 2 },
 
   scroll:  { flex: 1 },
@@ -335,11 +335,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
-  sectionTitle:  { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeauxDark },
+  sectionTitle:  { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxDark },
 
   fieldLabel: {
     fontSize:    Fonts.size.sm,
-    fontWeight:  '600',
+    fontFamily: Fonts.semibold, fontWeight:  '600',
     color:       Colors.textSecondary,
     marginBottom: 4,
   },
@@ -360,13 +360,13 @@ const styles = StyleSheet.create({
   },
   priorityOptionText: {
     fontSize:   Fonts.size.sm,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
     color:      Colors.textSecondary,
     flex:       1,
   },
   priorityOptionTextSelected: {
     color:      Colors.bordeaux,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
 
   statusRow: {
@@ -381,10 +381,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
   },
   statusDot:  { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: Fonts.size.sm, fontWeight: '600' },
+  statusText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   changeStatusBtn:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  changeStatusText: { fontSize: Fonts.size.sm, color: Colors.bordeaux, fontWeight: '500' },
+  changeStatusText: { fontSize: Fonts.size.sm, color: Colors.bordeaux, fontFamily: Fonts.medium, fontWeight: '500' },
 
   reasonBox: {
     backgroundColor: Colors.beigeLight,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     padding:         Spacing.sm,
     gap:             4,
   },
-  reasonLabel: { fontSize: Fonts.size.xs, fontWeight: '600', color: Colors.textSecondary },
+  reasonLabel: { fontSize: Fonts.size.xs, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary },
   reasonValue: { fontSize: Fonts.size.sm, color: Colors.textPrimary },
 
   button: { marginTop: Spacing.xs },

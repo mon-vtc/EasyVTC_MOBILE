@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { AppIcon } from '../common/AppIcon';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { SupportTicketRow } from '../../types/chats.type';
@@ -41,10 +41,13 @@ export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketR
       <View style={cardStyles.headerRow}>
         <View style={cardStyles.leftRow}>
           <View style={cardStyles.avatarWrap}>
-            {/* La liste des tickets ne renvoie pas profile_photo_url — icône générique */}
-            <View style={[cardStyles.avatar, {backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center'}]}>
-              <AppIcon name="person-outline" size={20} color={Colors.textSecondary} />
-            </View>
+            {ticket.user?.profile_photo_url ? (
+              <Image source={{ uri: ticket.user.profile_photo_url }} style={cardStyles.avatar} />
+            ) : (
+              <View style={[cardStyles.avatar, {backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center'}]}>
+                <AppIcon name="person-outline" size={20} color={Colors.textSecondary} />
+              </View>
+            )}
             {isPending && <View style={cardStyles.badge} />}
           </View>
           <View style={cardStyles.nameCol}>
@@ -108,19 +111,19 @@ const cardStyles = StyleSheet.create({
   avatar: {position: 'relative', width: 40, height: 40, borderRadius: 20, marginRight: Spacing.sm },
   badge: { position: 'absolute', top: 0, right:0, width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.bordeaux, borderWidth: 1, borderColor: Colors.surface },
   nameCol: { justifyContent: 'center' },
-  nameText: { fontWeight: '700', fontSize: Fonts.size.md, color: Colors.textPrimary },
+  nameText: { fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.md, color: Colors.textPrimary },
   badgesRow: { flexDirection: 'row', marginTop: 4 },
   clientBadge: { backgroundColor: '#F3E8FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginRight: 6 },
-  clientBadgeText: { color: '#7C3AED', fontSize: Fonts.size.xs, fontWeight: '600' },
+  clientBadgeText: { color: '#7C3AED', fontSize: Fonts.size.xs, fontFamily: Fonts.semibold, fontWeight: '600' },
   urgentBadge: { backgroundColor: '#FFE5E0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  urgentBadgeText: { color: '#E11D48', fontSize: Fonts.size.xs, fontWeight: '600' },
+  urgentBadgeText: { color: '#E11D48', fontSize: Fonts.size.xs, fontFamily: Fonts.semibold, fontWeight: '600' },
   normalBadge: { backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  normalBadgeText: { color: Colors.textMuted, fontSize: Fonts.size.xs, fontWeight: '600' },
+  normalBadgeText: { color: Colors.textMuted, fontSize: Fonts.size.xs, fontFamily: Fonts.semibold, fontWeight: '600' },
   roleBadge: { backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginRight: 6 },
-  roleBadgeText: { color: '#3730A3', fontSize: Fonts.size.xs, fontWeight: '600', textTransform: 'capitalize' },
+  roleBadgeText: { color: '#3730A3', fontSize: Fonts.size.xs, fontFamily: Fonts.semibold, fontWeight: '600', textTransform: 'capitalize' },
   timeText: { color: Colors.textMuted, fontSize: Fonts.size.xs },
   preview: { color: Colors.textPrimary, fontSize: Fonts.size.sm, marginBottom: 12 },
   cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.bordeaux, paddingVertical: 10, borderRadius: 8 },
   ctaDisabled: { opacity: 0.6, backgroundColor: Colors.successLight },
-  ctaText: { color: Colors.white, fontWeight: '700', marginLeft: 8 },
+  ctaText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', marginLeft: 8 },
 });

@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     marginBottom: Spacing.md,
   },
-  title:    { fontSize: Fonts.size.xl, fontWeight: '800', color: '#FFF', marginBottom: Spacing.xs },
+  title:    { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: '#FFF', marginBottom: Spacing.xs },
   /* FIX: alignSelf stretch pour éviter la troncature par alignItems center du parent */
   subtitle: {
     fontSize: Fonts.size.md,
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   /* ── CGU ── */
   cguRow:  { flexDirection: 'row', alignItems: 'flex-start', marginBottom: Spacing.lg, gap: Spacing.sm },
   cguText: { flex: 1, fontSize: Fonts.size.sm, color: Colors.textSecondary, lineHeight: 20 },
-  cguLink: { color: Colors.bordeaux, fontWeight: '600' },
+  cguLink: { color: Colors.bordeaux, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   button: { marginBottom: Spacing.sm },
 
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg, paddingVertical: Spacing.md, backgroundColor: '#FFF',
   },
   googleIcon: { width: 20, height: 20, marginRight: Spacing.md },
-  googleText: { fontWeight: '600', color: '#333' },
+  googleText: { fontFamily: Fonts.semibold, fontWeight: '600', color: '#333' },
 
   /* ── Inscription / Login link ── */
   /* FIX: layout vertical pur, pas de flexDirection row */
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xl,
   },
   registrationLabel: { color: Colors.textCallToAction, fontSize: Fonts.size.sm,flex: 1 },
-  registrationBold:  { color: Colors.bordeauxLight, fontWeight: 'bold', fontSize: Fonts.size.md },
+  registrationBold:  { color: Colors.bordeauxLight, fontFamily: Fonts.bold, fontWeight: 'bold', fontSize: Fonts.size.md },
 
   /* ── Footer ── */
   /* FIX: layout vertical centré, plus de flexDirection row */

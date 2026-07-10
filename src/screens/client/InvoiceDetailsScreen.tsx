@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   centered:  { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.lg },
   errorText: { fontSize: Fonts.size.md, color: Colors.error, textAlign: 'center', marginBottom: Spacing.md },
-  linkText:  { fontSize: Fonts.size.md, color: Colors.bordeaux, fontWeight: '600' },
+  linkText:  { fontSize: Fonts.size.md, color: Colors.bordeaux, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   // Header navigation
   header: {
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   shareBtn:    { padding: Spacing.xs },
   headerTitle: {
     fontSize:   Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color:      Colors.white,
     textAlign:  'center',
     flex:       1,
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
   docHeaderLeft: { flex: 1 },
   docTitle: {
     fontSize:      26,
-    fontWeight:    '900',
+    fontFamily: Fonts.bold, fontWeight:    '900',
     color:         Colors.white,
     letterSpacing: 1,
   },
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     fontSize:   Fonts.size.sm,
     color:      'rgba(255,255,255,0.85)',
     marginTop:  Spacing.sm,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   docDate: {
     fontSize:  Fonts.size.sm,
@@ -502,13 +502,13 @@ const styles = StyleSheet.create({
   identityDivider: { width: 1, backgroundColor: Colors.border },
   identityLabel: {
     fontSize:     Fonts.size.xs,
-    fontWeight:   '700',
+    fontFamily: Fonts.bold, fontWeight:   '700',
     color:        Colors.bordeaux,
     marginBottom: Spacing.xs,
   },
   identityName: {
     fontSize:     Fonts.size.sm,
-    fontWeight:   '700',
+    fontFamily: Fonts.bold, fontWeight:   '700',
     color:        Colors.textPrimary,
     marginBottom: 3,
   },
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
   },
   objetText: {
     fontSize:   Fonts.size.sm,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color:      Colors.bordeaux,
   },
 
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
   addressText: {
     fontSize:   Fonts.size.sm,
     color:      Colors.textPrimary,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     lineHeight: 18,
   },
   tripMetaRow: {
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
   tripMetaText: {
     fontSize:   Fonts.size.sm,
     color:      Colors.textSecondary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
     flexShrink: 1,
   },
 
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
   },
   tableHeaderCell: {
     fontSize:   Fonts.size.xs,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color:      Colors.white,
     paddingHorizontal: Spacing.sm,
   },
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
   tableCellDiscount: {
     color:      Colors.bordeaux,
     fontStyle:  'italic',
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
   tableCell: {
     fontSize:          Fonts.size.xs,
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
   },
   totalValue: {
     fontSize:   Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color:      Colors.textPrimary,
   },
   totalTtcBox: {
@@ -655,12 +655,12 @@ const styles = StyleSheet.create({
   },
   totalTtcLabel: {
     fontSize:   Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color:      Colors.white,
   },
   totalTtcValue: {
     fontSize:   Fonts.size.lg,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color:      Colors.white,
   },
 
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
   paymentLabel: {
     fontSize:   Fonts.size.sm,
     color:      Colors.textSecondary,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
   paymentValue: {
     fontSize: Fonts.size.sm,
@@ -721,14 +721,14 @@ const styles = StyleSheet.create({
   adjustedBannerText: {
     fontSize:   Fonts.size.xs,
     color:      Colors.warning,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
 
   // Section ajustements
   adjSection: { padding: Spacing.md },
   adjSectionTitle: {
     fontSize:     Fonts.size.sm,
-    fontWeight:   '700',
+    fontFamily: Fonts.bold, fontWeight:   '700',
     color:        Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
   adjDetail: {
     fontSize:   Fonts.size.sm,
     color:      Colors.textPrimary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   adjReason: {
     fontSize:   Fonts.size.xs,
@@ -774,7 +774,7 @@ const styles = StyleSheet.create({
   },
   pdfBtnText: {
     fontSize:   Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color:      Colors.white,
   },
 });

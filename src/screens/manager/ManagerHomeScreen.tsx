@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, StyleSheet,
+  View, Text, Image, ScrollView, StyleSheet,
   TouchableOpacity, Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -102,7 +102,11 @@ export default function ManagerHomeScreen() {
       {/* Bandeau bienvenue */}
       <View style={styles.banner}>
         <View style={styles.bannerAvatar}>
-          <Ionicons name="person-outline" size={28} color={Colors.white} />
+          {user?.profile_photo_url ? (
+            <Image source={{ uri: user.profile_photo_url }} style={styles.bannerAvatarImage} />
+          ) : (
+            <Ionicons name="person-outline" size={28} color={Colors.white} />
+          )}
         </View>
         <View style={styles.bannerText}>
           <Text style={styles.bannerGreeting}>Bonjour,</Text>
@@ -159,13 +163,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center', justifyContent: 'center',
   },
+  bannerAvatarImage: { width: 52, height: 52, borderRadius: 26 },
   bannerText:     { flex: 1 },
   bannerGreeting: { fontSize: Fonts.size.sm, color: 'rgba(255,255,255,0.7)' },
-  bannerName:     { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white },
+  bannerName:     { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
   bannerRole:     { fontSize: Fonts.size.sm, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 
   sectionTitle: {
-    fontSize: Fonts.size.md, fontWeight: '700',
+    fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary, marginBottom: Spacing.sm,
   },
 
@@ -190,7 +195,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   tileLabel: {
-    fontSize: Fonts.size.sm, fontWeight: '600',
+    fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textPrimary, textAlign: 'center',
   },
 
@@ -198,6 +203,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     gap: Spacing.md, paddingVertical: Spacing.xl * 2,
   },
-  emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textSecondary },
+  emptyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary },
   emptyText:  { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', maxWidth: 260 },
 });

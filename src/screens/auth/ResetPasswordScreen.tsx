@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize:     Fonts.size.xxl,
-    fontWeight:   '800',
+    fontFamily: Fonts.bold, fontWeight:   '800',
     color:        Colors.bordeaux,
     lineHeight:   Fonts.size.xxl * 1.2,
     marginBottom: Spacing.md,
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
 
   loginLink: { alignItems: 'center', marginTop: Spacing.xl },
   loginText: { color: Colors.textCallToAction, fontSize: Fonts.size.md },
-  loginBold: { color: Colors.bordeaux, fontWeight: '700' },
+  loginBold: { color: Colors.bordeaux, fontFamily: Fonts.bold, fontWeight: '700' },
 
   successContainer: {
     flex:           1,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     fontSize:     Fonts.size.xxl,
-    fontWeight:   '800',
+    fontFamily: Fonts.bold, fontWeight:   '800',
     color:        Colors.bordeaux,
     marginBottom: Spacing.md,
   },

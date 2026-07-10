@@ -310,7 +310,7 @@ const s = StyleSheet.create({
   },
   headerTitle: {
     fontSize: Fonts.size.lg,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   closeBtn: {
@@ -327,7 +327,7 @@ const s = StyleSheet.create({
   // Sections
   sectionTitle: {
     fontSize: Fonts.size.sm,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -361,7 +361,7 @@ const s = StyleSheet.create({
   },
   modeBtnText: {
     fontSize: Fonts.size.xs,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textMuted,
   },
   modeBtnTextActive: {
@@ -380,7 +380,7 @@ const s = StyleSheet.create({
   dateLabel: {
     fontSize: Fonts.size.sm,
     color: Colors.textSecondary,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     minWidth: 28,
   },
   dateValue: {
@@ -390,7 +390,7 @@ const s = StyleSheet.create({
   },
   dateValueSet: {
     color: Colors.textPrimary,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
   periodBlock: {
     borderRadius: Radius.md,
@@ -430,7 +430,7 @@ const s = StyleSheet.create({
   },
   sortChipText: {
     fontSize: Fonts.size.xs,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
   },
   sortChipTextActive: {
@@ -466,12 +466,12 @@ const s = StyleSheet.create({
   },
   footerBtnResetText: {
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
   },
   footerBtnApplyText: {
     fontSize: Fonts.size.sm,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
 });

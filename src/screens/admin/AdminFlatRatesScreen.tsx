@@ -15,7 +15,7 @@ import type { PricingFlatRate, PricingCountry } from '../../types/pricing.types'
 import { Logo }          from '../../constants/logo';
 import { useAlert } from '../../hooks/useAlert';
 import { AppIcon }       from '../../components/common/AppIcon';
-import { Colors, Spacing, Radius } from '../../theme/colors';
+import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import type {AppIconProps}  from '../../types/app-icon-props.types';
 import { useToast } from '../../hooks/useToast';
@@ -787,7 +787,7 @@ const styles = StyleSheet.create({
   sectionCount: {
     fontSize: 13,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
     marginBottom: 4,
   },
   empty: {
@@ -798,7 +798,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 17,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   emptySubtitle: {
@@ -833,7 +833,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: Colors.white,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     fontSize: 16,
   },
   deleteBtn: {
@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: {
     color: '#E53935',
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     fontSize: 15,
   },
 });
@@ -886,7 +886,7 @@ const card = StyleSheet.create({
   },
   labelText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   routeRow: {
@@ -901,7 +901,7 @@ const card = StyleSheet.create({
   },
   price: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
     marginRight: 4,
   },
@@ -922,7 +922,7 @@ const card = StyleSheet.create({
   // badgeText: {
   //   fontSize: 11,
   //   color: Colors.bordeaux,
-  //   fontWeight: '500',
+  //   fontFamily: Fonts.medium, fontWeight: '500',
   // },
   statusRow: {
     flexDirection: 'row',
@@ -970,7 +970,7 @@ const menu = StyleSheet.create({
   itemText: {
     fontSize: 14,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   divider: {
     height: 1,
@@ -992,7 +992,7 @@ const sec = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: 4,
   },
@@ -1011,7 +1011,7 @@ const fd = StyleSheet.create({
   label: {
     fontSize: 13,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   input: {
     borderWidth: 1,
@@ -1044,7 +1044,7 @@ const meta = StyleSheet.create({
   },
   value: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textPrimary,
   },
 });
@@ -1080,6 +1080,6 @@ const hdr = StyleSheet.create({
   title: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
 });

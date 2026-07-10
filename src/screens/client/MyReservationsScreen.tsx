@@ -41,18 +41,18 @@ const STATUS_CONFIG: Record<ReservationStatus, { label: string; bg: string; colo
   cancelled:      { label: 'Annulé',     bg: '#FFEBEE', color: '#C62828', icon: 'close-circle-outline' },
 };
 
-function ReservationCard({ 
-  reservation, 
-  onPress, 
-  onEvaluate, 
-  onViewInvoice, 
-  onCall, 
-  onMessage, 
-  onCancel 
+function ReservationCard({
+  reservation,
+  onPress,
+  onEvaluate,
+  onViewInvoice,
+  onCall,
+  onMessage,
+  onCancel
 }: {
-  reservation: Reservation; 
-  onPress: () => void; 
-  onEvaluate: () => void; 
+  reservation: Reservation;
+  onPress: () => void;
+  onEvaluate: () => void;
   onViewInvoice: () => void;
   onCall?: () => void;
   onMessage?: () => void;
@@ -168,29 +168,29 @@ function ReservationCard({
 const cardStyles = StyleSheet.create({
   wrapper: { backgroundColor: Colors.white, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.sm, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
-  id: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeaux },
+  id: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: Radius.full, paddingVertical: 4, paddingHorizontal: Spacing.sm },
-  badgeText: { fontSize: Fonts.size.xs, fontWeight: '700' },
+  badgeText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
   body: { marginBottom: Spacing.sm },
   timeline: { marginBottom: Spacing.sm },
   timelineItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginVertical: 2 },
   driverName: { flexDirection: 'row', marginBottom: Spacing.xs },
   timelineLine: { width: 1, height: 20, backgroundColor: Colors.border, marginLeft: 6 },
   address: { fontSize: Fonts.size.sm, color: Colors.textPrimary },
-  dest: { fontWeight: '700' },
+  dest: { fontFamily: Fonts.bold, fontWeight: '700' },
   dateTime: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.xs },
   date: { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.xs, paddingLeft: Spacing.sm },
   time: { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.xs, paddingLeft: Spacing.sm },
   driver: { fontSize: Fonts.size.sm, color: Colors.textSecondary, paddingLeft: Spacing.sm },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  price: { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.bordeaux },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, flexWrap: 'wrap', justifyContent: 'flex-end' },
+  price: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux, flexShrink: 0 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1, minWidth: 0 },
   btnAction:   { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.bordeaux,       borderRadius: Radius.md, paddingVertical: 6, paddingHorizontal: 10 },
   btnEvaluate: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.beige,          borderRadius: Radius.md, paddingVertical: 6, paddingHorizontal: 10 },
   btnInvoice:  { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.textSecondary,  borderRadius: Radius.md, paddingVertical: 6, paddingHorizontal: 10 },
   btnView:     { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.background,     borderRadius: Radius.md, paddingVertical: 6, paddingHorizontal: 10 },
   btnCancel:   { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.error,          borderRadius: Radius.md, paddingVertical: 6, paddingHorizontal: 10 },
-  btnText: { color: Colors.white, fontSize: Fonts.size.xs, fontWeight: '700' },
+  btnText: { color: Colors.white, fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 export default function MyReservationsScreen({ navigation }: { navigation: any }) {
@@ -547,13 +547,13 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
   headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   tabsWrapper: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
   tabsContent: { paddingHorizontal: Spacing.md, paddingVertical: 12, alignItems: 'center', gap: Spacing.sm },
   tab: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 999, backgroundColor: '#F5F5F5', borderWidth: 1, borderColor: '#E0E0E0', minHeight: 36 },
   tabActive: { backgroundColor: Colors.bordeaux, borderColor: Colors.bordeaux },
-  tabLabel: { fontSize: 14, fontWeight: '600', color: '#333333' },
-  tabLabelActive: { color: '#FFFFFF', fontWeight: 'bold' },
+  tabLabel: { fontSize: 14, fontFamily: Fonts.semibold, fontWeight: '600', color: '#333333' },
+  tabLabelActive: { color: '#FFFFFF', fontFamily: Fonts.bold, fontWeight: 'bold' },
 
   // Barre recherche + tri
   searchContainer: { flexDirection: 'row', alignItems: 'center', marginHorizontal: Spacing.md, marginVertical: Spacing.sm, gap: Spacing.sm },
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   filterSummaryText: {
     fontSize: Fonts.size.xs,
     color: Colors.bordeaux,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
 
   scroll: { padding: Spacing.md, paddingTop: Spacing.sm },

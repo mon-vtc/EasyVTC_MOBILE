@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     logo:        { width: 40, height: 40 },  
   listHeader: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     paddingHorizontal: Spacing.md,
     marginTop: Spacing.lg,
@@ -316,7 +316,7 @@ const calStyles = StyleSheet.create({
   },
   navTitle: {
     fontSize: Fonts.size.md,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.bordeaux,
   },
   weekRow: {
@@ -327,7 +327,7 @@ const calStyles = StyleSheet.create({
   weekDay: {
     fontSize: Fonts.size.xs,
     color: Colors.textMuted,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
   grid: {
     flexDirection: 'row',
@@ -349,7 +349,7 @@ const calStyles = StyleSheet.create({
   },
   cellTextSelected: {
     color: Colors.white,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
 });
 
@@ -369,7 +369,7 @@ const rideStyles = StyleSheet.create({
   },
   timeText: {
     fontSize: Fonts.size.md,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.bordeaux,
   },
   detailsCol: {

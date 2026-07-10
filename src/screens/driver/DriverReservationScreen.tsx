@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md, paddingHorizontal: Spacing.md,
   },
   headerBtn:    { padding: Spacing.sm, width: 40 },
-  headerTitle:  { color: Colors.white, fontSize: Fonts.size.lg, fontWeight: '800' },
+  headerTitle:  { color: Colors.white, fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800' },
 
   scroll: { padding: Spacing.md, gap: Spacing.sm },
 
@@ -540,13 +540,13 @@ const styles = StyleSheet.create({
   },
   heroTop:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   heroLabel:      { fontSize: Fonts.size.xs, color: 'rgba(255,255,255,0.75)', marginBottom: 2 },
-  heroValue:      { fontSize: 26, fontWeight: '800', color: Colors.white },
+  heroValue:      { fontSize: 26, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white },
   heroIconCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' },
   heroDivider:    { height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: Spacing.sm },
   heroRow:        { flexDirection: 'row', alignItems: 'center' },
   heroBlock:      { flex: 1, alignItems: 'center' },
   heroSub:        { fontSize: Fonts.size.xs, color: 'rgba(255,255,255,0.7)', marginBottom: 2 },
-  heroSubValue:   { fontSize: Fonts.size.md, fontWeight: '800', color: Colors.white },
+  heroSubValue:   { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white },
   heroSeparator:  { width: 1, height: 32, backgroundColor: 'rgba(255,255,255,0.2)' },
 
   // Card générique
@@ -555,15 +555,15 @@ const styles = StyleSheet.create({
     padding: Spacing.md, marginBottom: Spacing.xs,
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
-  cardTitle: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.sm },
+  cardTitle: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.sm },
 
   // Client
   clientRow:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   clientAvatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: Colors.border },
   clientInfo:   { flex: 1, gap: 3 },
-  clientName:   { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
+  clientName:   { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   ratingRow:    { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  ratingText:   { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '600' },
+  ratingText:   { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600' },
   phoneBtn:     { width: 40, height: 40, borderRadius: 20, backgroundColor: '#22C55E', alignItems: 'center', justifyContent: 'center' },
   messageBtn:   { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center' },
   clientMeta:   { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.sm, marginBottom: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border },
@@ -577,9 +577,9 @@ const styles = StyleSheet.create({
   routeLine:    { flex: 1, width: 2, backgroundColor: Colors.border, marginTop: 4, marginBottom: -4 },
   routeContent: { flex: 1, paddingBottom: Spacing.sm },
   routeTime:    { fontSize: Fonts.size.xs, color: Colors.textSecondary, marginBottom: 2 },
-  routeAddress: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary, marginBottom: 4 },
+  routeAddress: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary, marginBottom: 4 },
   mapsLink:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  mapsLinkText: { fontSize: Fonts.size.xs, color: Colors.bordeaux, fontWeight: '600' },
+  mapsLinkText: { fontSize: Fonts.size.xs, color: Colors.bordeaux, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   // Notes
   notesCard: {
@@ -588,27 +588,27 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3, borderLeftColor: '#1D4ED8',
   },
   notesHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.xs },
-  notesTitle:  { fontSize: Fonts.size.sm, fontWeight: '700', color: '#1D4ED8' },
+  notesTitle:  { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: '#1D4ED8' },
   notesText:   { fontSize: Fonts.size.sm, color: '#1E3A8A', lineHeight: 20 },
 
   // Actions
   actions:          { gap: Spacing.sm, marginTop: Spacing.xs },
   primaryBtn:       { backgroundColor: Colors.bordeaux, borderRadius: Radius.md, paddingVertical: Spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs },
-  primaryBtnText:   { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.md },
+  primaryBtnText:   { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.md },
   secondaryBtn:     { borderRadius: Radius.md, paddingVertical: Spacing.md, alignItems: 'center', borderWidth: 1.5, borderColor: Colors.bordeaux },
-  secondaryBtnText: { color: Colors.bordeaux, fontWeight: '700', fontSize: Fonts.size.md },
+  secondaryBtnText: { color: Colors.bordeaux, fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.md },
   supportBtn:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm },
-  supportBtnText:   { color: Colors.textSecondary, fontSize: Fonts.size.sm, fontWeight: '600' },
+  supportBtnText:   { color: Colors.textSecondary, fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
   btnSecondary:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs, paddingVertical: Spacing.sm, borderWidth: 1, borderColor: Colors.bordeaux, borderRadius: Radius.md, backgroundColor: Colors.bordeaux },
-  btnSecondaryText: { color: Colors.white, fontSize: Fonts.size.sm, fontWeight: '600' },
+  btnSecondaryText: { color: Colors.white, fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   // Modal confirmation
   modalOverlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
   modalBox:        { width: '85%', backgroundColor: Colors.white, borderRadius: Radius.lg, padding: Spacing.lg },
-  modalTitle:      { fontSize: Fonts.size.lg, fontWeight: '800', marginBottom: Spacing.xs, textAlign: 'center' },
+  modalTitle:      { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', marginBottom: Spacing.xs, textAlign: 'center' },
   modalMessage:    { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginBottom: Spacing.md, textAlign: 'center' },
   modalInputBlock: { marginBottom: Spacing.md },
-  modalInputLabel: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary, marginBottom: Spacing.xs },
+  modalInputLabel: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary, marginBottom: Spacing.xs },
   modalInput: {
     borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm,
     paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs,
@@ -619,8 +619,8 @@ const styles = StyleSheet.create({
   modalBtn:        { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.md, alignItems: 'center' },
   modalCancel:     { backgroundColor: Colors.surface },
   modalConfirm:    { backgroundColor: Colors.bordeaux },
-  modalCancelText:   { color: Colors.bordeaux, fontWeight: '700' },
-  modalConfirmText:  { color: Colors.white, fontWeight: '700' },
+  modalCancelText:   { color: Colors.bordeaux, fontFamily: Fonts.bold, fontWeight: '700' },
+  modalConfirmText:  { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700' },
 
   // Bouton ouvrir dans maps
   openMapsButton: {
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.textLight, borderRadius: Radius.md,
     paddingVertical: Spacing.sm, marginTop: Spacing.md, gap: Spacing.xs,
   },
-  openMapsButtonText: { color: Colors.white, fontSize: Fonts.size.md, fontWeight: '500' },
+  openMapsButtonText: { color: Colors.white, fontSize: Fonts.size.md, fontFamily: Fonts.medium, fontWeight: '500' },
 
   // Modal choix de navigation
   mapChoiceOverlay: {
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white, borderRadius: Radius.lg,
     padding: Spacing.lg, width: '85%', alignItems: 'center',
   },
-  mapChoiceTitle:      { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs, textAlign: 'center' },
+  mapChoiceTitle:      { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs, textAlign: 'center' },
   mapChoiceSubtitle:   { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginBottom: Spacing.md, textAlign: 'center' },
   mapChoiceButtonsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginBottom: Spacing.md },
   mapChoiceAppButton:  {
@@ -647,8 +647,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md, backgroundColor: Colors.surface,
     borderWidth: 1, borderColor: Colors.border, minWidth: 120,
   },
-  mapChoiceAppButtonText:    { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary, marginTop: Spacing.xs },
+  mapChoiceAppButtonText:    { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary, marginTop: Spacing.xs },
   mapChoiceCancelButton:     { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md },
-  mapChoiceCancelButtonText: { fontSize: Fonts.size.md, fontWeight: '600', color: Colors.textSecondary },
+  mapChoiceCancelButtonText: { fontSize: Fonts.size.md, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary },
   mapChoiceAppIcon:          { width: 40, height: 40, marginBottom: Spacing.xs },
 });

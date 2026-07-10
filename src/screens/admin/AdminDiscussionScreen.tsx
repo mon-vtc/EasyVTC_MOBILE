@@ -15,7 +15,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useChat } from '../../hooks/useChat';
-import { Colors } from '../../theme/colors';
+import { Colors, Fonts } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import type { ActiveConversation } from '../../types';
 
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   reservationId: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textPrimary,
   },
   unreadBadge: {
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   unreadText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
   participantsRow: {
@@ -105,12 +105,12 @@ const styles = StyleSheet.create({
   participantLabel: {
     fontSize: 12,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   participantName: {
     fontSize: 12,
     color: Colors.textPrimary,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
   addressRow: {
     flexDirection: 'row',
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.white,
   },
 });

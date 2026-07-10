@@ -19,7 +19,7 @@ import { useReservation } from '../../hooks/useReservation';
 import { useToast }       from '../../hooks/useToast';
 import { AppIcon }        from '../../components/common/AppIcon';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { Colors, Spacing }         from '../../theme/colors';
+import { Colors, Spacing, Fonts } from '../../theme/colors';
 import { Logo }           from '../../constants/logo';
 import type { GeoPoint, VehicleTypeOption } from '../../types/reservations.types';
 import type { PricingFlatRate } from '../../types/pricing.types';
@@ -705,7 +705,7 @@ const calendarStyles = StyleSheet.create({
   headerTitle: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   cancelBtn: {
     alignItems: 'center',
@@ -716,7 +716,7 @@ const calendarStyles = StyleSheet.create({
   cancelText: {
     color: Colors.bordeauxLight,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
 });
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1010,11 +1010,11 @@ export default function BookingScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   stepContent: { padding: 20, paddingBottom: 32 },
   fieldLabel: {
-    fontSize: 14, fontWeight: '600',
+    fontSize: 14, fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textPrimary, marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 17, fontWeight: '700',
+    fontSize: 17, fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary, marginBottom: 14,
   },
 
@@ -1040,7 +1040,7 @@ const styles = StyleSheet.create({
   },
   favoritesTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
     marginBottom: Spacing.sm,
     paddingHorizontal: Spacing.xs,
@@ -1051,7 +1051,7 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     borderRadius: 8,
   },
-  favoriteLabel: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
+  favoriteLabel: { fontSize: 14, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   favoriteAddress: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   favoritesEmpty: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', padding: Spacing.md },
   // ── Bannière suggestion forfait (Option 2) ─────────────────────────────────
@@ -1067,14 +1067,14 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: Colors.bordeaux,
   },
   suggestionTexts: { flex: 1 },
-  suggestionTitle: { fontSize: 13, fontWeight: '700', color: Colors.bordeaux },
+  suggestionTitle: { fontSize: 13, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
   suggestionRoute: { fontSize: 11, color: Colors.textSecondary, marginTop: 1 },
-  suggestionPrice: { fontSize: 14, fontWeight: '700', color: Colors.bordeaux },
+  suggestionPrice: { fontSize: 14, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
   suggestionApplyBtn: {
     backgroundColor: Colors.bordeaux, borderRadius: 6,
     paddingHorizontal: 10, paddingVertical: 5,
   },
-  suggestionApplyText: { fontSize: 12, fontWeight: '700', color: Colors.white },
+  suggestionApplyText: { fontSize: 12, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
 
   // ── Date picker ────────────────────────────────────────────────────────────
   datePickerBtn: {
@@ -1098,10 +1098,10 @@ const styles = StyleSheet.create({
     width: 30, height: 30, alignItems: 'center', justifyContent: 'center',
     backgroundColor: Colors.bordeauxLight, borderRadius: 20,
   },
-  counterBtnText: { fontSize: 20, fontWeight: '600', color: Colors.white },
+  counterBtnText: { fontSize: 20, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
   counterValue: {
     flex: 1, textAlign: 'center',
-    fontSize: 16, fontWeight: '700', color: Colors.textPrimary,
+    fontSize: 16, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary,
   },
 
   // ── Véhicules ──────────────────────────────────────────────────────────────
@@ -1118,10 +1118,10 @@ const styles = StyleSheet.create({
   },
   vehicleIconSelected:  { backgroundColor: Colors.bordeaux },
   vehicleInfo:          { flex: 1 },
-  vehicleLabel:         { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
+  vehicleLabel:         { fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   vehicleLabelSelected: { color: Colors.bordeaux },
   vehicleDesc:          { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  vehiclePrice:         { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  vehiclePrice:         { fontSize: 13, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary },
   vehiclePriceSelected: { color: Colors.bordeaux },
   emptyVehicles:        { paddingVertical: 20, alignItems: 'center', gap: 8 },
 
@@ -1135,11 +1135,11 @@ const styles = StyleSheet.create({
   },
   flatRateCardSelected: { borderColor: Colors.bordeaux, backgroundColor: Colors.bordeaux },
   flatRateIconRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  flatRateLabel:         { fontSize: 13, fontWeight: '700', color: Colors.textPrimary },
+  flatRateLabel:         { fontSize: 13, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   flatRateLabelSelected: { color: Colors.white },
   flatRateRoute:         { fontSize: 11, color: Colors.textSecondary },
   flatRateRouteSelected: { color: 'rgba(255,255,255,0.8)' },
-  flatRatePrice:         { fontSize: 15, fontWeight: '800', color: Colors.bordeaux, marginTop: 4 },
+  flatRatePrice:         { fontSize: 15, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux, marginTop: 4 },
   flatRatePriceSelected: { color: Colors.white },
   clearFlatRate: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
@@ -1161,21 +1161,21 @@ const styles = StyleSheet.create({
   summaryDot:       { width: 10, height: 10, borderRadius: 5, marginTop: 4 },
   summaryTexts:     { flex: 1 },
   summaryLabel:     { fontSize: 11, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
-  summaryValue:     { fontSize: 14, fontWeight: '500', color: Colors.textPrimary, marginTop: 2 },
+  summaryValue:     { fontSize: 14, fontFamily: Fonts.medium, fontWeight: '500', color: Colors.textPrimary, marginTop: 2 },
   summaryConnector: { width: 1, height: 16, backgroundColor: Colors.border ?? '#E5E7EB', marginLeft: 4, marginVertical: 4 },
   summarySep:       { height: 1, backgroundColor: Colors.border ?? '#F3F4F6', marginVertical: 14 },
   summaryGrid:      { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   summaryGridItem:  { flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: '45%' },
-  summaryGridValue: { fontSize: 13, fontWeight: '600', color: Colors.textPrimary },
+  summaryGridValue: { fontSize: 13, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   summaryPromo:     { fontSize: 13, color: Colors.textSecondary, marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  summaryPromoText: { fontSize: 13, color: Colors.bordeaux, fontWeight: '600' },
+  summaryPromoText: { fontSize: 13, color: Colors.bordeaux, fontFamily: Fonts.semibold, fontWeight: '600' },
   // ── Prix ───────────────────────────────────────────────────────────────────
   priceCard: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     backgroundColor: Colors.bordeaux, borderRadius: 12, padding: 16, marginTop: 16,
   },
-  priceLabel: { color: Colors.white, fontSize: 15, fontWeight: '600' },
-  priceValue: { color: Colors.white, fontSize: 22, fontWeight: '800' },
+  priceLabel: { color: Colors.white, fontSize: 15, fontFamily: Fonts.semibold, fontWeight: '600' },
+  priceValue: { color: Colors.white, fontSize: 22, fontFamily: Fonts.bold, fontWeight: '800' },
   priceNote:  { fontSize: 11, color: Colors.textSecondary, textAlign: 'center', marginTop: 6 },
 
   // ── Commentaire ────────────────────────────────────────────────────────────
@@ -1203,14 +1203,14 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: Colors.bordeaux,
     alignItems: 'center', justifyContent: 'center',
   },
-  backBtnText:     { color: Colors.bordeaux, fontSize: 15, fontWeight: '700' },
+  backBtnText:     { color: Colors.bordeaux, fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700' },
   nextBtn: {
     flex: 2, height: 50, borderRadius: 10,
     backgroundColor: Colors.bordeaux, alignItems: 'center', justifyContent: 'center',
   },
   nextBtnFull:     { flex: 1 },
   nextBtnDisabled: { opacity: 0.5 },
-  nextBtnText:     { color: Colors.white, fontSize: 15, fontWeight: '700' },
+  nextBtnText:     { color: Colors.white, fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 // ── Header styles ──────────────────────────────────────────────────────────────
@@ -1225,7 +1225,7 @@ const hdr = StyleSheet.create({
   back:        { width: 40, alignItems: 'flex-start' },
   center:      { flex: 1, alignItems: 'center', gap: 2 },
   logo:        { width: 40, height: 40 },
-  title:       { color: Colors.white, fontSize: 11, fontWeight: '600', letterSpacing: 0.5 },
+  title:       { color: Colors.white, fontSize: 11, fontFamily: Fonts.semibold, fontWeight: '600', letterSpacing: 0.5 },
   placeholder: { width: 40 },
 });
 
@@ -1244,7 +1244,7 @@ const si = StyleSheet.create({
     backgroundColor: Colors.white ?? '#fff',
   },
   circleActive:     { borderColor: Colors.bordeaux, backgroundColor: Colors.bordeaux },
-  circleText:       { fontSize: 13, fontWeight: '700', color: Colors.textSecondary },
+  circleText:       { fontSize: 13, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary },
   circleTextActive: { color: Colors.white },
   line:             { flex: 1, height: 2, backgroundColor: Colors.border ?? '#D1D5DB', marginHorizontal: 6 },
   lineActive:       { backgroundColor: Colors.bordeaux },
@@ -1286,7 +1286,7 @@ const fdm = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   label: {
-    fontSize: 17, fontWeight: '700', color: Colors.textPrimary,
+    fontSize: 17, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary,
   },
   subtitle: {
     fontSize: 12, color: Colors.textSecondary, marginTop: 2,
@@ -1309,17 +1309,17 @@ const fdm = StyleSheet.create({
     textTransform: 'uppercase', letterSpacing: 0.5,
   },
   routePlace: {
-    fontSize: 14, fontWeight: '600', color: Colors.textPrimary, marginTop: 1,
+    fontSize: 14, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary, marginTop: 1,
   },
   priceRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 10,
   },
   priceLabel: {
-    fontSize: 14, color: Colors.textSecondary, fontWeight: '500',
+    fontSize: 14, color: Colors.textSecondary, fontFamily: Fonts.medium, fontWeight: '500',
   },
   priceValue: {
-    fontSize: 22, fontWeight: '800', color: Colors.bordeaux,
+    fontSize: 22, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux,
   },
   applyBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -1327,13 +1327,13 @@ const fdm = StyleSheet.create({
     height: 50, marginBottom: 10,
   },
   applyBtnText: {
-    color: Colors.white, fontSize: 15, fontWeight: '700',
+    color: Colors.white, fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700',
   },
   cancelBtn: {
     alignItems: 'center', justifyContent: 'center',
     height: 44,
   },
   cancelBtnText: {
-    color: Colors.textSecondary, fontSize: 14, fontWeight: '500',
+    color: Colors.textSecondary, fontSize: 14, fontFamily: Fonts.medium, fontWeight: '500',
   },
 });

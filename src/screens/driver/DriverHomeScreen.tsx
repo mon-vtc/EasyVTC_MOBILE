@@ -2,15 +2,16 @@
 // SCREEN — DriverHomeScreen
 // Sprint 3 — EasyVTC
 // ══════════════════════════════════════════════════════════════════════════════
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, Switch, StyleSheet,
   ActivityIndicator, TouchableOpacity,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useDriver }   from '../../hooks/useDriver';
 import { AppIcon }     from '../../components/common/AppIcon';
 import { useAlert } from '../../hooks/useAlert';
-import { Colors }      from '../../theme/colors';
+import { Colors, Fonts } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -238,35 +239,40 @@ export default function DriverHomeScreen({ navigation }: any) {
   const [isToggling, setIsToggling]   = useState(false);
   const [stats, setStats] = useState<DayStats>(EMPTY_STATS);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        await fetchDriverHomeReservations();
-      } catch (err) {
-        console.error("Failed to fetch driver reservations:", err);
-      }
-    };
-    void loadData();
-  }, [fetchDriverHomeReservations]);
+  // Le Drawer garde cet écran monté en arrière-plan : sans useFocusEffect,
+  // les stats et la liste des courses restent figées après une clôture de
+  // course effectuée depuis un autre écran, tant qu'on ne revient pas ici.
+  useFocusEffect(
+    useCallback(() => {
+      void (async () => {
+        try {
+          await fetchDriverHomeReservations();
+        } catch (err) {
+          console.error("Failed to fetch driver reservations:", err);
+        }
+      })();
+    }, [fetchDriverHomeReservations])
+  );
 
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const [revenues, rating] = await Promise.all([
-          getMyRevenues('day'),
-          getMyAverageRating(),
-        ]);
-        setStats({
-          rides:   revenues?.total_trips ?? 0,
-          revenue: revenues?.total_revenue ?? 0,
-          rating,
-        });
-      } catch (err) {
-        console.error("Failed to fetch driver stats:", err);
-      }
-    };
-    void loadStats();
-  }, [getMyRevenues, getMyAverageRating]);
+  useFocusEffect(
+    useCallback(() => {
+      void (async () => {
+        try {
+          const [revenues, rating] = await Promise.all([
+            getMyRevenues('day'),
+            getMyAverageRating(),
+          ]);
+          setStats({
+            rides:   revenues?.total_trips ?? 0,
+            revenue: revenues?.total_revenue ?? 0,
+            rating,
+          });
+        } catch (err) {
+          console.error("Failed to fetch driver stats:", err);
+        }
+      })();
+    }, [getMyRevenues, getMyAverageRating])
+  );
 
   const assignedRides = useMemo(() => {
     return driverHomeReservations
@@ -369,7 +375,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 17,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     marginTop: 4,
   },
@@ -405,7 +411,7 @@ const sc = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   subtitle: {
@@ -415,7 +421,7 @@ const sc = StyleSheet.create({
   },
   subtitleOnline: {
     color: Colors.bordeauxLight,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   infoBox: {
     flexDirection: 'row',
@@ -456,7 +462,7 @@ const st = StyleSheet.create({
   title: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
   row: {
     flexDirection: 'row',
@@ -470,12 +476,12 @@ const st = StyleSheet.create({
   value: {
     color: Colors.white,
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
   },
   label: {
     color: 'rgba(255,255,255,0.75)',
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   divider: {
     width: 1,
@@ -504,7 +510,7 @@ const rc = StyleSheet.create({
   },
   ref: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     letterSpacing: 0.3,
   },
@@ -531,7 +537,7 @@ const rc = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textPrimary,
   },
   infoRow: {
@@ -551,7 +557,7 @@ const rc = StyleSheet.create({
   },
   infoMain: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
     color: Colors.textPrimary,
   },
   infoSub: {
@@ -583,7 +589,7 @@ const rc = StyleSheet.create({
   },
   price: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color: Colors.textPrimary,
   },
   detailBtn: {
@@ -595,6 +601,6 @@ const rc = StyleSheet.create({
   detailBtnText: {
     color: Colors.white,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
 } as any);

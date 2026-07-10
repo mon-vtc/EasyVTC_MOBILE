@@ -64,8 +64,8 @@ export default function ChangeStatusModal({
           <Text style={styles.title}>Changer le statut</Text>
           <Text style={styles.subtitle}>
             Vous êtes sur le point de passer le statut de{' '}
-            <Text style={{ fontWeight: 'bold' }}>{userName}</Text> à{' '}
-            <Text style={{ fontWeight: 'bold' }}>"{newStatusLabel}"</Text>.
+            <Text style={{ fontFamily: Fonts.bold, fontWeight: 'bold' }}>{userName}</Text> à{' '}
+            <Text style={{ fontFamily: Fonts.bold, fontWeight: 'bold' }}>"{newStatusLabel}"</Text>.
           </Text>
 
           <View style={styles.inputContainer}>
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Fonts.size.lg,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
     marginBottom: Spacing.xs,
   },
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     color: Colors.white,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     fontSize: Fonts.size.md,
   },
 });

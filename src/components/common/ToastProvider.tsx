@@ -9,7 +9,7 @@ import {
   
 } from 'react-native';
 import { AppText } from './AppText';
-import { Colors, Radius, Spacing } from '../../theme/colors';
+import { Colors, Radius, Spacing, Fonts } from '../../theme/colors';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: Spacing.xs,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
   message: {

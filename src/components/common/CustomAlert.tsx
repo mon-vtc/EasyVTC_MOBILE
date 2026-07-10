@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Fonts.size.lg,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
     textAlign: 'center',
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     alignItems: 'center',
   },
-  btnText: { fontSize: Fonts.size.md, fontWeight: '700' },
+  btnText: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700' },
   btnCancel: { backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border },
   btnCancelText: { color: Colors.textSecondary },
   btnConfirm: { backgroundColor: Colors.bordeaux },

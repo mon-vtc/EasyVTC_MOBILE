@@ -137,11 +137,11 @@ const cardStyles = StyleSheet.create({
   wrapper: { backgroundColor: Colors.white, borderRadius: Radius.md, padding: Spacing.md, marginVertical: Spacing.xs, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 5, elevation: 2 },
   row1: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: Radius.full, paddingVertical: 3, paddingHorizontal: Spacing.sm },
-  badgeText: { fontSize: Fonts.size.xs, fontWeight: '700' },
-  price: { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.bordeaux },
+  badgeText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
+  price: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux },
   row2: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: Spacing.sm },
-  clientName: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary, flex: 1, marginRight: Spacing.sm },
-  ref: { fontSize: Fonts.size.xs, fontWeight: '600', color: Colors.textMuted, letterSpacing: 0.4 },
+  clientName: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary, flex: 1, marginRight: Spacing.sm },
+  ref: { fontSize: Fonts.size.xs, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textMuted, letterSpacing: 0.4 },
   sep: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.sm },
   routeBlock: { gap: 2, marginBottom: 2 },
   routeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
@@ -153,7 +153,7 @@ const cardStyles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   meta: { fontSize: Fonts.size.xs, color: Colors.textMuted },
   detailsBtn: { backgroundColor: Colors.bordeaux, borderRadius: Radius.sm, paddingVertical: 6, paddingHorizontal: 14, marginLeft: Spacing.sm },
-  detailsBtnText: { color: Colors.white, fontSize: Fonts.size.xs, fontWeight: '700' },
+  detailsBtnText: { color: Colors.white, fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 // ── ÉCRAN PRINCIPAL ───────────────────────────────────────────────────────────
@@ -452,13 +452,13 @@ const styles = StyleSheet.create({
 
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
   headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
 
   tabsWrapper: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
   tabsContent: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, flexDirection: 'row', gap: Spacing.sm, alignItems: 'center' },
   tab:            { paddingHorizontal: Spacing.md, paddingVertical: 7, borderRadius: Radius.full, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border },
   tabActive:      { backgroundColor: Colors.bordeaux, borderColor: Colors.bordeaux },
-  tabLabel:       { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textMuted },
+  tabLabel:       { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textMuted },
   tabLabelActive: { color: Colors.white },
 
   // Recherche + tri
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
 
   // Résumé filtres
   filterSummary: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginHorizontal: Spacing.md, marginBottom: Spacing.xs, backgroundColor: Colors.bordeaux + '12', borderRadius: Radius.sm, paddingVertical: 6, paddingHorizontal: Spacing.sm, borderLeftWidth: 3, borderLeftColor: Colors.bordeaux },
-  filterSummaryText: { fontSize: Fonts.size.xs, color: Colors.bordeaux, fontWeight: '500' },
+  filterSummaryText: { fontSize: Fonts.size.xs, color: Colors.bordeaux, fontFamily: Fonts.medium, fontWeight: '500' },
 
   scroll: { padding: Spacing.md, paddingTop: Spacing.sm },
   empty:     { alignItems: 'center', paddingVertical: 60, gap: Spacing.md },

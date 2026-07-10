@@ -312,7 +312,7 @@ const s = StyleSheet.create({
   },
   headerTitle: {
     fontSize: Fonts.size.xl,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     color: Colors.white,
   },
   headerSub: {
@@ -336,7 +336,7 @@ const s = StyleSheet.create({
   },
   progressBar: { height: 8, borderRadius: 4 },
   progressPct: {
-    fontSize: Fonts.size.sm ?? 13, fontWeight: '700',
+    fontSize: Fonts.size.sm ?? 13, fontFamily: Fonts.bold, fontWeight: '700',
     width: 36, textAlign: 'right',
   },
 
@@ -370,7 +370,7 @@ const s = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, elevation: 8,
   },
   uploadText: {
-    fontSize: Fonts.size.md ?? 15, fontWeight: '600', color: Colors.bordeauxDark,
+    fontSize: Fonts.size.md ?? 15, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.bordeauxDark,
   },
 });
 
@@ -379,7 +379,7 @@ const chip = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 8, paddingVertical: 4, borderRadius: 20,
   },
-  text: { fontSize: 10, fontWeight: '700' },
+  text: { fontSize: 10, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 const m = StyleSheet.create({
@@ -391,7 +391,7 @@ const m = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  title: { fontSize: Fonts.size.md ?? 15, fontWeight: '700', color: Colors.bordeauxDark },
+  title: { fontSize: Fonts.size.md ?? 15, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxDark },
   sub:   { fontSize: Fonts.size.xs ?? 11, color: Colors.textMuted, marginTop: 2 },
   closeBtn: {
     width: 36, height: 36, borderRadius: 18,
@@ -404,7 +404,7 @@ const m = StyleSheet.create({
   },
   image: { width: '100%', height: '100%' },
   pdfPlaceholder: { alignItems: 'center', gap: 12, padding: Spacing.md },
-  pdfText: { fontSize: Fonts.size.md ?? 15, fontWeight: '600', color: Colors.bordeauxDark },
+  pdfText: { fontSize: Fonts.size.md ?? 15, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.bordeauxDark },
   pdfSub:  { fontSize: Fonts.size.sm ?? 13, color: Colors.textMuted, textAlign: 'center' },
 
   statusRow: {
@@ -415,7 +415,7 @@ const m = StyleSheet.create({
   },
   statusText: {
     flex: 1, fontSize: Fonts.size.sm ?? 13,
-    color: Colors.bordeauxDark, fontWeight: '500',
+    color: Colors.bordeauxDark, fontFamily: Fonts.medium, fontWeight: '500',
   },
 
   actions: {
@@ -428,6 +428,6 @@ const m = StyleSheet.create({
     paddingVertical: 14, borderRadius: Radius.md ?? 12, gap: 8,
   },
   btnReplaceText: {
-    color: '#fff', fontSize: Fonts.size.md ?? 15, fontWeight: '700',
+    color: '#fff', fontSize: Fonts.size.md ?? 15, fontFamily: Fonts.bold, fontWeight: '700',
   },
 });

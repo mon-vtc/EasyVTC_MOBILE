@@ -102,7 +102,7 @@ const tripSt = StyleSheet.create({
   header:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   dateBlock: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   dateText:  { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  price:     { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
+  price:     { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   addrRow:   { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
   dot:       { width: 8, height: 8, borderRadius: 4 },
   addrText:  { flex: 1, fontSize: Fonts.size.sm, color: Colors.textPrimary },
@@ -136,7 +136,7 @@ const statSt = StyleSheet.create({
   },
   iconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   label:      { fontSize: Fonts.size.xs, color: Colors.textSecondary, textAlign: 'center' },
-  value:      { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary },
+  value:      { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary },
 });
 
 // ── Écran principal ───────────────────────────────────────────────────────────
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontWeight: '600', color: Colors.white },
+  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
   scroll:        { flex: 1 },
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl },
@@ -466,20 +466,20 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.beigeLight,
     justifyContent: 'center', alignItems: 'center',
   },
-  avatarInitials: { fontSize: Fonts.size.xl, fontWeight: '700', color: Colors.bordeauxLight },
+  avatarInitials: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxLight },
   nameRow: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', marginBottom: 6,
   },
-  userName:    { fontSize: Fonts.size.xl, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
+  userName:    { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
   statusBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.full,
   },
   statusDot:  { width: 7, height: 7, borderRadius: 4 },
-  statusText: { fontSize: Fonts.size.sm, fontWeight: '600' },
+  statusText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
   ratingRow:  { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.sm },
-  ratingValue:{ fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary },
+  ratingValue:{ fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   infoRow:    { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   infoText:   { fontSize: Fonts.size.sm, color: Colors.textPrimary },
 
@@ -497,8 +497,8 @@ const styles = StyleSheet.create({
   },
   tabItem:       { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.sm - 1, alignItems: 'center' },
   tabItemActive: { backgroundColor: Colors.bordeaux },
-  tabLabel:      { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textMuted },
-  tabLabelActive:{ fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.white },
+  tabLabel:      { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textMuted },
+  tabLabelActive:{ fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
 
   sectionCard: {
     backgroundColor: Colors.white, borderRadius: Radius.md,
@@ -507,10 +507,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.md },
-  sectionTitle:  { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeauxDark },
+  sectionTitle:  { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxDark },
 
   emptyFavorites: { alignItems: 'center', paddingVertical: Spacing.lg, gap: Spacing.xs },
-  emptyFavoritesText: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textSecondary },
+  emptyFavoritesText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary },
   emptyFavoritesHint: { fontSize: Fonts.size.xs, color: Colors.textMuted },
 
   detailRow: {
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
   detailLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  detailValue: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary, textAlign: 'right', maxWidth: '60%' },
+  detailValue: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary, textAlign: 'right', maxWidth: '60%' },
 
   emptyTrips: { alignItems: 'center', paddingTop: 40, gap: Spacing.md },
   emptyText:  { fontSize: Fonts.size.md, color: Colors.textMuted },
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.bordeaux,
   },
   cardAddress: {

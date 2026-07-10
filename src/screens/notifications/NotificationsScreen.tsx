@@ -288,12 +288,12 @@ const styles = StyleSheet.create({
   },
   headerNotifTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.bordeauxLight,
   },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
     headerBtn: { padding: Spacing.sm, width: 40 },
-    headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+    headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
     
   headerRight: {
     flexDirection: 'row',
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   markAllReadButtonText: {
     color: Colors.white,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
 
   },
   centered: {
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: '#fff',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   loader: {
     marginVertical: 20,

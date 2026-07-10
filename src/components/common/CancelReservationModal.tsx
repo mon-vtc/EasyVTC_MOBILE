@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   ref: {
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
     marginBottom: Spacing.sm,
   },
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   reasonTextActive: {
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.bordeaux,
   },
   input: {
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   btnCancelText: {
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
   },
   btnConfirm: {
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   },
   btnConfirmText: {
     fontSize: Fonts.size.sm,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
 });

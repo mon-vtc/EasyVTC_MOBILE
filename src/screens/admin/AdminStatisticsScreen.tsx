@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
     headerBtn:   { padding: Spacing.sm, width: 40 },
-    headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+    headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
 
   periodSelector: {
     flexDirection: 'row',
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   periodText: {
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
   },
   periodTextActive: {
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   revenueValue: {
     color: Colors.white,
     fontSize: 36,
-    fontWeight: '800',
+    fontFamily: Fonts.bold, fontWeight: '800',
     marginVertical: Spacing.xs,
   },
   trendRow: {
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   trendText: {
     color: '#A7F3D0',
     fontSize: Fonts.size.md,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   chartContainer: {
     marginTop: Spacing.md,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   },
   kpiValue: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.textPrimary,
   },
   kpiLabel: {
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   },
   kpiTrend: {
     fontSize: Fonts.size.xs,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   card: {
     backgroundColor: Colors.white,
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Fonts.size.lg,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   legendDotGreen: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.success },
   legendDotRed: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.error },
   completionLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  completionValue: { fontSize: Fonts.size.md, fontWeight: 'bold', color: Colors.textPrimary },
+  completionValue: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: 'bold', color: Colors.textPrimary },
   progressBarTrack: {
     height: 12,
     backgroundColor: Colors.background,
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: Spacing.sm,
     fontSize: Fonts.size.md,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.textPrimary,
   },
   driverRow: {
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   },
   driverName: {
     fontSize: Fonts.size.md,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textPrimary,
   },
   driverStats: {
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   },
   driverRevenue: {
     fontSize: Fonts.size.md,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.bordeaux,
   },
   routeRow: {
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   },
   routeCount: {
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
   },
   peakHourRow: {
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     width: 40,
     textAlign: 'right',
     fontSize: Fonts.size.xs,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textPrimary,
   },
   errorText: {

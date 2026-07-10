@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
@@ -96,7 +96,11 @@ const BookingCard = ({
 const DriverItem = ({ driver }: { driver: Driver }) => (
   <View style={styles.driverItem}>
     <View style={styles.driverAvatar}>
-      <Ionicons name="person-outline" size={24} color={Colors.textSecondary} />
+      {driver.avatarUrl ? (
+        <Image source={{ uri: driver.avatarUrl }} style={styles.driverAvatarImage} />
+      ) : (
+        <Ionicons name="person-outline" size={24} color={Colors.textSecondary} />
+      )}
     </View>
     <View style={styles.driverInfo}>
       <Text style={styles.driverName}>{driver.name}</Text>
@@ -285,14 +289,14 @@ const styles = StyleSheet.create({
   // KPI Grid
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: Spacing.md },
   statCard: { width: '48%', height: 110, borderRadius: Radius.lg, padding: Spacing.md, justifyContent: 'space-between' },
-  statValue: { color: Colors.white, fontSize: Fonts.size.xxl, fontWeight: '800' },
-  statLabel: { color: Colors.white, fontSize: Fonts.size.sm, fontWeight: '600', opacity: 0.9 },
+  statValue: { color: Colors.white, fontSize: Fonts.size.xxl, fontFamily: Fonts.bold, fontWeight: '800' },
+  statLabel: { color: Colors.white, fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', opacity: 0.9 },
 
   // Section
   section: {},
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
-  sectionTitle: { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary },
-  sectionAction: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.bordeaux },
+  sectionTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary },
+  sectionAction: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.bordeaux },
 
   // Booking Card
   bookingCard: {
@@ -309,15 +313,15 @@ const styles = StyleSheet.create({
   bookingRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: 8 },
   bookingRow1: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   bookingRowLast: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, marginBottom: 16 },
-  bookingCode: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
+  bookingCode: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   bookingBadge: { backgroundColor: '#FFF3E0', paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.full },
-  bookingBadgeText: { color: '#E65100', fontSize: Fonts.size.xs, fontWeight: '700' },
+  bookingBadgeText: { color: '#E65100', fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
   bookingClient: { fontSize: Fonts.size.md, color: Colors.textPrimary },
   bookingRoute: { fontSize: Fonts.size.sm, color: Colors.textSecondary, flex: 1 },
   bookingDateTime: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  bookingPrice: { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary },
+  bookingPrice: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary },
   assignButton: { backgroundColor: Colors.bordeaux, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  assignButtonText: { color: Colors.white, fontSize: Fonts.size.md, fontWeight: '700' },
+  assignButtonText: { color: Colors.white, fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700' },
 
   // Driver Item
   driverItem: {
@@ -327,6 +331,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     marginBottom: 10,
+  },
+  driverAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   driverAvatar: {
     width: 44,
@@ -338,10 +347,10 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   driverInfo: { flex: 1 },
-  driverName: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary },
+  driverName: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
   driverVehicle: { fontSize: Fonts.size.sm, color: Colors.textMuted, marginTop: 2 },
   driverStatus: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  driverRating: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textSecondary },
+  driverRating: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary },
   onlineIndicator: {
     width: 8,
     height: 8,

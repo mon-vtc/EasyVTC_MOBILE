@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize:     Fonts.size.xxl,
-    fontWeight:   '800',
+    fontFamily: Fonts.bold, fontWeight:   '800',
     color:        Colors.bordeaux,
     lineHeight:   Fonts.size.xxl * 1.2,
     marginBottom: Spacing.md,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
 
   loginLink: { alignItems: 'center', marginTop: Spacing.xl },
   loginText: { color: Colors.textCallToAction, fontSize: Fonts.size.md },
-  loginBold: { color: Colors.bordeaux, fontWeight: '700' },
+  loginBold: { color: Colors.bordeaux, fontFamily: Fonts.bold, fontWeight: '700' },
 
   // ── Confirmation ──────────────────────────────────────────────
   successContainer: {
@@ -217,8 +217,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding:        Spacing.xl,
   },
-  successTitle:   { fontSize: Fonts.size.xxl, fontWeight: '800', color: Colors.bordeaux, marginBottom: Spacing.md },
+  successTitle:   { fontSize: Fonts.size.xxl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux, marginBottom: Spacing.md },
   successText:    { color: Colors.textCallToAction, fontSize: Fonts.size.md, lineHeight: 22, textAlign: 'center', marginBottom: Spacing.sm },
-  emailHighlight: { color: Colors.bordeaux, fontWeight: '700' },
+  emailHighlight: { color: Colors.bordeaux, fontFamily: Fonts.bold, fontWeight: '700' },
   successHint:    { color: Colors.textMuted, fontSize: Fonts.size.sm, marginTop: Spacing.xs },
 });

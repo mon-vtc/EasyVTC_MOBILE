@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
   },
   headerCenter: { alignItems: 'center' },
-  headerTitle: { fontSize: Fonts.size.xl, fontWeight: '800', color: Colors.white, textAlign: 'center' },
+  headerTitle: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white, textAlign: 'center' },
   headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2,  },
   searchBox: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
@@ -360,16 +360,16 @@ const styles = StyleSheet.create({
   },
   rowBetween:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rowGap:      { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  invNum:      { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeaux },
+  invNum:      { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
   dateSmall:   { fontSize: Fonts.size.xs, color: Colors.textMuted },
   badge: {
     backgroundColor: Colors.warningLight, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4,
   },
-  badgeText:   { fontSize: Fonts.size.xs, color: Colors.warning, fontWeight: '600' },
+  badgeText:   { fontSize: Fonts.size.xs, color: Colors.warning, fontFamily: Fonts.semibold, fontWeight: '600' },
   infoRow:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
   infoText:    { fontSize: Fonts.size.xs, color: Colors.textPrimary, flex: 1 },
-  amtLabel:    { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontWeight: '600' },
-  amtTtc:      { fontSize: Fonts.size.md, fontWeight: '800', color: Colors.bordeaux },
+  amtLabel:    { fontSize: Fonts.size.sm, color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600' },
+  amtTtc:      { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux },
   actions:     { flexDirection: 'row', gap: Spacing.sm, marginTop: 4 },
   actionBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
@@ -377,10 +377,10 @@ const styles = StyleSheet.create({
   },
   actionBtnOff:    { backgroundColor: Colors.textMuted },
   actionBtnAdjust: { backgroundColor: Colors.beigeDark },
-  actionBtnText:   { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.white },
+  actionBtnText:   { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
   headerBtn: { width: 40 },
   empty:      { alignItems: 'center', paddingTop: Spacing.xxl, gap: Spacing.sm },
-  emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textPrimary },
+  emptyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },
 
   // ── Modal ──────────────────────────────────────────────────────────────────
   modalOverlay: {
@@ -394,15 +394,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 4,
   },
-  modalTitle:    { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.textPrimary },
+  modalTitle:    { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary },
   modalSubtitle: { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.sm },
   currentPrice: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     backgroundColor: Colors.beigeLight, padding: Spacing.sm, borderRadius: Radius.sm,
   },
   currentPriceLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  currentPriceValue: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeaux },
-  fieldLabel:    { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textSecondary, marginTop: Spacing.xs },
+  currentPriceValue: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeaux },
+  fieldLabel:    { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary, marginTop: Spacing.xs },
   input: {
     borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.sm,
     paddingHorizontal: Spacing.sm, paddingVertical: 10,
@@ -413,12 +413,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background, borderRadius: Radius.sm,
     padding: Spacing.sm, gap: 4,
   },
-  historyTitle:  { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.textSecondary, marginBottom: 4 },
+  historyTitle:  { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary, marginBottom: 4 },
   historyItem:   { fontSize: Fonts.size.xs, color: Colors.textMuted, lineHeight: 18 },
   submitBtn: {
     backgroundColor: Colors.bordeaux, borderRadius: Radius.md,
     paddingVertical: 14, alignItems: 'center', marginTop: Spacing.sm,
   },
   submitBtnDisabled: { backgroundColor: Colors.textMuted },
-  submitBtnText: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.white },
+  submitBtnText: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
 });

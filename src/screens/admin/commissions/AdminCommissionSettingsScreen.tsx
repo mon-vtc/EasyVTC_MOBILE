@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
     paddingHorizontal: Spacing.md,
   },
-  headerTitle: { color: Colors.white, fontSize: Fonts.size.lg, fontWeight: 'bold' },
+  headerTitle: { color: Colors.white, fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: 'bold' },
   headerBtn: { padding: Spacing.xs, width: 40, alignItems: 'center' },
   zoneSelector: {
     flexDirection: 'row',
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   },
   zoneTab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: Radius.md },
   zoneTabActive: { backgroundColor: Colors.bordeauxLight },
-  zoneText: { fontSize: Fonts.size.md, fontWeight: '600', color: Colors.textSecondary },
+  zoneText: { fontSize: Fonts.size.md, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary },
   zoneTextActive: { color: Colors.white },
   card: {
     backgroundColor: Colors.white,
@@ -405,10 +405,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  cardTitle: { fontSize: Fonts.size.md, fontWeight: 'bold', color: Colors.textPrimary },
+  cardTitle: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: 'bold', color: Colors.textPrimary },
   cardSubtitle: { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginTop: 2 },
   cardRate: { alignItems: 'flex-end' },
-  rateValue: { fontSize: Fonts.size.xl, fontWeight: 'bold', color: Colors.bordeaux },
+  rateValue: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: 'bold', color: Colors.bordeaux },
   rateType: { fontSize: Fonts.size.xs, color: Colors.textSecondary },
   cardFooter: {
     flexDirection: 'row',
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: Fonts.size.sm, fontWeight: '600' },
+  statusText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
   emptyText: { textAlign: 'center', color: Colors.textSecondary, marginTop: 40, fontSize: Fonts.size.md },
   modalBackdrop: {
     flex: 1,
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: Fonts.size.lg,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
     color: Colors.textPrimary,
     marginBottom: Spacing.lg,
     textAlign: 'center',
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Fonts.size.sm,
     color: Colors.textSecondary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
     marginBottom: 6,
   },
   input: {

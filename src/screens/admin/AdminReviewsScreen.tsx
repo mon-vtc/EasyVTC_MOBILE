@@ -229,14 +229,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  topTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.white, flex: 1 },
+  topTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white, flex: 1 },
   countBadge: {
     backgroundColor: 'rgba(255,255,255,0.25)',
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
   },
-  countText: { fontSize: Fonts.size.sm, fontWeight: '700', color: Colors.white },
+  countText: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
 
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: Radius.full,
   },
-  noteText: { fontSize: Fonts.size.xs, fontWeight: '700', color: '#92400E' },
+  noteText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700', color: '#92400E' },
   dateText: { flex: 1, fontSize: Fonts.size.xs, color: Colors.textMuted },
   deleteBtn: { padding: Spacing.xs },
 
@@ -282,10 +282,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   label: { fontSize: Fonts.size.xs, color: Colors.textMuted, width: 72 },
-  value: { flex: 1, fontSize: Fonts.size.sm, fontWeight: '500', color: Colors.textPrimary },
+  value: { flex: 1, fontSize: Fonts.size.sm, fontFamily: Fonts.medium, fontWeight: '500', color: Colors.textPrimary },
 
   // ── État vide ─────────────────────────────────────────────────────────────
   emptyState: { alignItems: 'center', paddingTop: Spacing.xxl },
-  emptyTitle: { fontSize: Fonts.size.lg, fontWeight: '700', color: Colors.textSecondary, marginTop: Spacing.md },
+  emptyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary, marginTop: Spacing.md },
   emptyText:  { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', marginTop: Spacing.sm, lineHeight: 20 },
 });

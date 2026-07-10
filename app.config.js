@@ -43,6 +43,7 @@ export default {
 
   plugins: [
     "expo-secure-store",
+    "expo-font",
     [
       "expo-notifications",
       {

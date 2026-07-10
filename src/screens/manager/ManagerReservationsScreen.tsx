@@ -178,7 +178,7 @@
 //     paddingHorizontal: Spacing.md,
 //   },
 //   headerBtn:   { padding: Spacing.sm, width: 40 },
-//   headerTitle: { fontSize: Fonts.size.lg, fontWeight: '600', color: Colors.white },
+//   headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
 //   list:      { padding: Spacing.md, paddingBottom: Spacing.xl },
 
@@ -190,7 +190,7 @@
 //   },
 //   cardHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
 //   statusBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: Radius.full },
-//   statusText:  { fontSize: Fonts.size.xs, fontWeight: '700' },
+//   statusText:  { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
 //   date:        { fontSize: Fonts.size.xs, color: Colors.textMuted },
 
 //   routeRow:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
@@ -206,10 +206,10 @@
 //     backgroundColor: Colors.bordeaux, borderRadius: Radius.md,
 //     paddingVertical: Spacing.sm,
 //   },
-//   assignText: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.white },
+//   assignText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
 //   retryBtn:  { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: Radius.md, backgroundColor: Colors.bordeaux },
-//   retryText: { color: Colors.white, fontWeight: '600' },
+//   retryText: { color: Colors.white, fontFamily: Fonts.semibold, fontWeight: '600' },
 // });
 
 
@@ -363,11 +363,11 @@ const cardStyles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 4,
     borderRadius: Radius.full, paddingVertical: 3, paddingHorizontal: Spacing.sm,
   },
-  badgeText: { fontSize: Fonts.size.xs, fontWeight: '700' },
-  price: { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.bordeaux },
+  badgeText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
+  price: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux },
   row2: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: Spacing.sm },
-  clientName: { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.textPrimary, flex: 1, marginRight: Spacing.sm },
-  ref: { fontSize: Fonts.size.xs, fontWeight: '600', color: Colors.textMuted, letterSpacing: 0.4 },
+  clientName: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary, flex: 1, marginRight: Spacing.sm },
+  ref: { fontSize: Fonts.size.xs, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textMuted, letterSpacing: 0.4 },
   sep: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.sm },
   routeBlock: { gap: 2, marginBottom: 2 },
   routeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
@@ -385,7 +385,7 @@ const cardStyles = StyleSheet.create({
     paddingHorizontal: 14,
     marginLeft: Spacing.sm,
   },
-  detailsBtnText: { color: Colors.white, fontSize: Fonts.size.xs, fontWeight: '700' },
+  detailsBtnText: { color: Colors.white, fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 // ── ÉCRAN PRINCIPAL ───────────────────────────────────────────────────────────
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontWeight: '800', fontSize: Fonts.size.lg },
+  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
 
   tabsWrapper: {
     backgroundColor: Colors.surface,
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     borderColor:       Colors.border,
   },
   tabActive:      { backgroundColor: Colors.bordeaux, borderColor: Colors.bordeaux },
-  tabLabel:       { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textMuted },
+  tabLabel:       { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textMuted },
   tabLabelActive: { color: Colors.white },
 
   searchContainer: {

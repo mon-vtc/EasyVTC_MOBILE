@@ -118,16 +118,16 @@ const modalSt = StyleSheet.create({
     borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg,
     padding: Spacing.lg, paddingBottom: Spacing.xl,
   },
-  title:          { fontSize: Fonts.size.lg, fontWeight: '800', color: Colors.bordeaux, marginBottom: 4 },
+  title:          { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux, marginBottom: 4 },
   subtitle:       { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.md },
-  label:          { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.xs },
+  label:          { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.xs },
   option: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
     padding: Spacing.sm, borderRadius: Radius.md,
     borderWidth: 1, borderColor: Colors.border, marginBottom: Spacing.xs,
   },
   optionSelected: { borderColor: Colors.bordeaux, backgroundColor: Colors.overlayLight },
-  optionLabel:    { fontSize: Fonts.size.md, fontWeight: '600' },
+  optionLabel:    { fontSize: Fonts.size.md, fontFamily: Fonts.semibold, fontWeight: '600' },
   input: {
     borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md,
     padding: Spacing.md, fontSize: Fonts.size.sm, color: Colors.textPrimary,
@@ -138,12 +138,12 @@ const modalSt = StyleSheet.create({
     flex: 1, paddingVertical: Spacing.md, borderRadius: Radius.md,
     borderWidth: 1, borderColor: Colors.border, alignItems: 'center',
   },
-  btnCancelText:  { fontSize: Fonts.size.md, color: Colors.textSecondary, fontWeight: '600' },
+  btnCancelText:  { fontSize: Fonts.size.md, color: Colors.textSecondary, fontFamily: Fonts.semibold, fontWeight: '600' },
   btnConfirm: {
     flex: 2, paddingVertical: Spacing.md, borderRadius: Radius.md,
     backgroundColor: Colors.bordeaux, alignItems: 'center',
   },
-  btnConfirmText: { fontSize: Fonts.size.md, color: Colors.white, fontWeight: '700' },
+  btnConfirmText: { fontSize: Fonts.size.md, color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700' },
   btnDisabled:    { opacity: 0.4 },
 });
 
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   headerBtn:     { padding: Spacing.sm, width: 40 },
-  headerTitle:   { fontSize: Fonts.size.lg, fontWeight: '600', color: Colors.white },
+  headerTitle:   { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
   headerEditBtn: { padding: Spacing.sm, width: 40, alignItems: 'flex-end' },
 
   scroll:        { flex: 1 },
@@ -414,25 +414,25 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.beigeLight,
     justifyContent: 'center', alignItems: 'center',
   },
-  avatarInitials: { fontSize: Fonts.size.xl, fontWeight: '700', color: Colors.bordeauxLight },
+  avatarInitials: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxLight },
   nameRow: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', marginBottom: Spacing.sm,
   },
-  managerName: { fontSize: Fonts.size.xl, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
+  managerName: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
   statusBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.full,
   },
   statusDot:  { width: 7, height: 7, borderRadius: 4 },
-  statusText: { fontSize: Fonts.size.sm, fontWeight: '600' },
+  statusText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600' },
   rolePill: {
     alignSelf: 'flex-start',
     backgroundColor: Colors.overlayLight,
     paddingHorizontal: Spacing.md, paddingVertical: 4,
     borderRadius: Radius.full,
   },
-  roleText: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.bordeaux },
+  roleText: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.bordeaux },
 
   actionsRow:   { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
   actionCard: {
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     width: 44, height: 44, borderRadius: 22,
     justifyContent: 'center', alignItems: 'center',
   },
-  actionLabel: { fontSize: Fonts.size.xs, color: Colors.textSecondary, fontWeight: '500' },
+  actionLabel: { fontSize: Fonts.size.xs, color: Colors.textSecondary, fontFamily: Fonts.medium, fontWeight: '500' },
 
   sectionCard: {
     backgroundColor: Colors.white, borderRadius: Radius.md,
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.md },
-  sectionTitle:  { fontSize: Fonts.size.md, fontWeight: '700', color: Colors.bordeauxDark },
+  sectionTitle:  { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.bordeauxDark },
 
   infoRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },
   infoIcon: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
@@ -465,5 +465,5 @@ const styles = StyleSheet.create({
     paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
   detailLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  detailValue: { fontSize: Fonts.size.sm, fontWeight: '600', color: Colors.textPrimary, textAlign: 'right', maxWidth: '55%' },
+  detailValue: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary, textAlign: 'right', maxWidth: '55%' },
 });

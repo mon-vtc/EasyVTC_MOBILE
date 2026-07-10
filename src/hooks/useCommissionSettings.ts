@@ -12,6 +12,8 @@ import type {
   CommissionZone,
   CreateCommissionSettingDto,
   UpdateCommissionSettingDto,
+  CommissionPeriod,
+  CommissionListFilters,
 } from '../types/commission.types';
 
 export function useCommissionSettings() {
@@ -27,10 +29,16 @@ export function useCommissionSettings() {
     isLoading,
     isSaving,
     error,
+    commissions,
+    summary,
+    commissionsTotal,
+    commissionsPage,
     fetchSettings: _fetch,
     createSetting: _create,
     updateSetting: _update,
     deleteSetting: _delete,
+    fetchSummary: _fetchSummary,
+    fetchCommissions: _fetchCommissions,
     clearError,
   } = useCommissionSettingsStore();
 
@@ -50,15 +58,29 @@ export function useCommissionSettings() {
     return _delete(accessToken!, id);
   }, [accessToken, _delete]);
 
+  const fetchSummary = useCallback((period: CommissionPeriod, date?: string) => {
+    return _fetchSummary(accessToken!, period, date);
+  }, [accessToken, _fetchSummary]);
+
+  const fetchCommissions = useCallback((filters: CommissionListFilters) => {
+    return _fetchCommissions(accessToken!, filters);
+  }, [accessToken, _fetchCommissions]);
+
   return {
     settings,
     isLoading,
     isSaving,
     error,
+    commissions,
+    summary,
+    commissionsTotal,
+    commissionsPage,
     fetchSettings,
     createSetting,
     updateSetting,
     deleteSetting,
+    fetchSummary,
+    fetchCommissions,
     clearError,
   };
 }

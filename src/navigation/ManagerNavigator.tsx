@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   avatarImage: { width: 56, height: 56, borderRadius: 28 },
-  name:        { color: Colors.white, fontSize: Fonts.size.md, fontWeight: '700' },
+  name:        { color: Colors.white, fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700' },
   role:        { color: 'rgba(255,255,255,0.7)', fontSize: Fonts.size.sm, marginTop: 2 },
   menu:        { paddingTop: Spacing.sm },
   item:        { marginVertical: -2 },
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   footer:      { padding: Spacing.lg, paddingBottom: Spacing.lg },
   divider:     { height: 1, backgroundColor: Colors.border, marginBottom: Spacing.md },
   logoutBtn:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.sm },
-  logoutText:  { color: Colors.error, fontSize: Fonts.size.md, fontWeight: '600' },
+  logoutText:  { color: Colors.error, fontSize: Fonts.size.md, fontFamily: Fonts.semibold, fontWeight: '600' },
   labelRow:    { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  labelText:   { fontSize: 16, color: Colors.textPrimary, fontWeight: '500', flex: 1 },
+  labelText:   { fontSize: 16, color: Colors.textPrimary, fontFamily: Fonts.medium, fontWeight: '500', flex: 1 },
 });

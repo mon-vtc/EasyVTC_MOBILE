@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: Fonts.size.lg,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
   },
   scroll: {
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: Fonts.size.md,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
     marginTop: Spacing.md,
     marginBottom: Spacing.sm,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     fontSize: Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textPrimary,
   },
   toggleTextActive: {
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   resetText: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textSecondary,
   },
   applyBtn: {
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   applyText: {
     fontSize: Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.white,
   },
 });

@@ -359,7 +359,7 @@ const s = StyleSheet.create({
   },
   title: {
     flex: 1, fontSize: Fonts.size.md ?? 15,
-    fontWeight: '700', color: BRAND.dark,
+    fontFamily: Fonts.bold, fontWeight: '700', color: BRAND.dark,
   },
   closeBtn: {
     width: 34, height: 34, borderRadius: 17,
@@ -370,7 +370,7 @@ const s = StyleSheet.create({
   body: { padding: Spacing.md, gap: 6 },
 
   sectionLabel: {
-    fontSize: Fonts.size.sm ?? 13, fontWeight: '700',
+    fontSize: Fonts.size.sm ?? 13, fontFamily: Fonts.bold, fontWeight: '700',
     color: BRAND.dark, marginBottom: 8,
   },
   required: { color: BRAND.primary },
@@ -388,7 +388,7 @@ const s = StyleSheet.create({
     marginBottom: 12,
   },
   dropText: {
-    fontWeight: '600', color: BRAND.dark,
+    fontFamily: Fonts.semibold, fontWeight: '600', color: BRAND.dark,
     textAlign: 'center', fontSize: Fonts.size.sm ?? 13,
   },
   dropSub:  { fontSize: 11, color: BRAND.muted, marginTop: 4 },
@@ -398,7 +398,7 @@ const s = StyleSheet.create({
     borderWidth: 1.5, borderColor: BRAND.primary, borderRadius: 20,
     paddingHorizontal: 16, paddingVertical: 8,
   },
-  pickBtnTxt: { fontSize: 13, fontWeight: '600', color: BRAND.primary },
+  pickBtnTxt: { fontSize: 13, fontFamily: Fonts.semibold, fontWeight: '600', color: BRAND.primary },
 
   // File preview
   filePreview: {
@@ -418,7 +418,7 @@ const s = StyleSheet.create({
     padding: 10,
     borderTopWidth: 1, borderTopColor: BRAND.border,
   },
-  changeBtnTxt: { fontSize: 13, fontWeight: '600', color: BRAND.primary },
+  changeBtnTxt: { fontSize: 13, fontFamily: Fonts.semibold, fontWeight: '600', color: BRAND.primary },
 
   // Date field
   dateField: {
@@ -434,7 +434,7 @@ const s = StyleSheet.create({
   dateFieldTxt: {
     flex: 1, fontSize: Fonts.size.md ?? 15, color: BRAND.muted,
   },
-  dateFieldTxtFilled: { color: BRAND.dark, fontWeight: '600' },
+  dateFieldTxtFilled: { color: BRAND.dark, fontFamily: Fonts.semibold, fontWeight: '600' },
 
   // iOS spinner inline
   iosPickerWrap: {
@@ -449,7 +449,7 @@ const s = StyleSheet.create({
   dateConfirmed: {
     flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6,
   },
-  dateConfirmedTxt: { fontSize: 12, color: '#2E7D32', fontWeight: '500' },
+  dateConfirmedTxt: { fontSize: 12, color: '#2E7D32', fontFamily: Fonts.medium, fontWeight: '500' },
   dateHint: { fontSize: 11, color: BRAND.muted, marginTop: 5 },
 
   // Actions
@@ -466,10 +466,10 @@ const s = StyleSheet.create({
     borderRadius: Radius.md ?? 12, gap: 8,
   },
   btnDisabled: { backgroundColor: '#C4A9A8' },
-  btnConfirmTxt: { color: '#fff', fontSize: Fonts.size.md ?? 15, fontWeight: '700' },
+  btnConfirmTxt: { color: '#fff', fontSize: Fonts.size.md ?? 15, fontFamily: Fonts.bold, fontWeight: '700' },
   btnCancel: {
     paddingVertical: 13, borderRadius: Radius.md ?? 12,
     alignItems: 'center', backgroundColor: '#F5F0F0',
   },
-  btnCancelTxt: { color: BRAND.dark, fontSize: Fonts.size.md ?? 15, fontWeight: '600' },
+  btnCancelTxt: { color: BRAND.dark, fontSize: Fonts.size.md ?? 15, fontFamily: Fonts.semibold, fontWeight: '600' },
 });

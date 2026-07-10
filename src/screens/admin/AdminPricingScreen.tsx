@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
   },
   exampleTitle: {
     color: Colors.white,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     fontSize: 15,
     marginBottom: 8,
   },
@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: Colors.white,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     fontSize: 16,
   },
 });
@@ -632,7 +632,7 @@ const cs = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
     color: Colors.textSecondary,
   },
   tabTextActive: {
@@ -649,7 +649,7 @@ const pf = StyleSheet.create({
   label: {
     fontSize: 13,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    fontFamily: Fonts.medium, fontWeight: '500',
   },
   inputRow: {
     flexDirection: 'row',
@@ -683,7 +683,7 @@ const pf = StyleSheet.create({
   unit: {
     fontSize: 14,
     color: Colors.textSecondary,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
   hint: {
     fontSize: 11,
@@ -707,7 +707,7 @@ const sec = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: 4,
   },
@@ -741,7 +741,7 @@ const ex = StyleSheet.create({
     textAlign: 'right',
   },
   bold: {
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     fontSize: 13,
     color: Colors.white,
   },

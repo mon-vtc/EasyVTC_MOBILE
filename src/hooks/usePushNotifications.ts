@@ -1,10 +1,12 @@
 // hooks/usePushNotifications.ts
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { notificationsApi } from '../services/api/notifications.api';
 import { useAuthStore } from '../store/auth.store';
+import { useNotificationsStore } from '../store/notifications.store';
+import { navigateFromNotification } from '../utils/notificationNavigation';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -78,17 +80,48 @@ export function usePushNotifications() {
   }, [accessToken]); // Re-run effect when accessToken changes
 
   // Handle incoming notifications (foreground/background)
+  const lastHandledRequestId = useRef<string | null>(null);
+
   useEffect(() => {
-    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-      console.log('Notification received:', notification);
-      // You might want to dispatch this to your notifications store
-      // useNotificationsStore.getState().addNotificationLocally(notification.request.content);
+    // Résout une notification (payload ne contient que `notification_id` + data
+    // contextuelle) en l'entité complète, puis navigue vers l'écran cible.
+    const handleNotificationTap = async (response: Notifications.NotificationResponse) => {
+      const requestId = response.notification.request.identifier;
+      if (lastHandledRequestId.current === requestId) return; // évite le double traitement (cold start + listener)
+      lastHandledRequestId.current = requestId;
+
+      const data = response.notification.request.content.data as Record<string, unknown> | undefined;
+      const notificationId = data?.notification_id as string | undefined;
+      const { accessToken, user } = useAuthStore.getState();
+      if (!notificationId || !accessToken) return;
+
+      try {
+        const res = await notificationsApi.getById(accessToken, notificationId);
+        if (!res.ok || !res.data) return;
+
+        if (!res.data.read_at) {
+          useNotificationsStore.getState().markAsRead(accessToken, notificationId).catch(() => {});
+        }
+        navigateFromNotification(res.data, user?.role);
+      } catch (err) {
+        console.error('Erreur résolution notification push:', err);
+      }
+    };
+
+    const notificationListener = Notifications.addNotificationReceivedListener(() => {
+      // Reçue en foreground : rafraîchir la liste/badge depuis la source de vérité
+      // (le payload push ne porte pas assez d'infos pour insérer localement).
+      const { accessToken } = useAuthStore.getState();
+      if (accessToken) {
+        useNotificationsStore.getState().fetchNotifications(accessToken).catch(() => {});
+      }
     });
 
-    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Notification response received:', response);
-      // Handle user interaction with the notification
-      // e.g., navigate to a specific screen based on notification data
+    const responseListener = Notifications.addNotificationResponseReceivedListener(handleNotificationTap);
+
+    // App lancée depuis un état "killed" via tap sur la notification
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) handleNotificationTap(response);
     });
 
     return () => {

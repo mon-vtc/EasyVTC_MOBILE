@@ -132,7 +132,7 @@ const cardStyles = StyleSheet.create({
   info:  { flex: 1 },
   title: {
     fontSize:   Fonts.size.md,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
     color:      '#4A2C2A',
   },
   expiry: {
@@ -147,7 +147,7 @@ const cardStyles = StyleSheet.create({
   },
   badgeText: {
     fontSize:   10,
-    fontWeight: '700',
+    fontFamily: Fonts.bold, fontWeight: '700',
   },
   rejectBox: {
     flexDirection:   'row',
@@ -183,7 +183,7 @@ const cardStyles = StyleSheet.create({
   btnUpdateText: {
     color:      Colors.white,
     fontSize:   Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
   btnView: {
     flex:            1,
@@ -198,6 +198,6 @@ const cardStyles = StyleSheet.create({
   btnViewText: {
     color:      Colors.textPrimary,
     fontSize:   Fonts.size.sm,
-    fontWeight: '600',
+    fontFamily: Fonts.semibold, fontWeight: '600',
   },
 });

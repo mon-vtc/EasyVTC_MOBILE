@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppIcon } from '../../common/AppIcon';
-import { Colors } from '../../../theme/colors';
+import { Colors, Fonts } from '../../../theme/colors';
 
 interface SavingsSummaryCardProps {
   totalSavings: number;
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   amount: {
     color: 'white',
     fontSize: 36,
-    fontWeight: 'bold',
+    fontFamily: Fonts.bold, fontWeight: 'bold',
   },
   subtitle: {
     color: 'white',

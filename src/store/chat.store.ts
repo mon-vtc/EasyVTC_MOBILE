@@ -133,7 +133,7 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
               id: c.client?.id ?? c.driver!.id,
               first_name: c.client?.first_name ?? c.driver!.first_name,
               last_name: c.client?.last_name ?? c.driver!.last_name,
-              profile_photo_url: null,
+              profile_photo_url: c.client?.profile_photo_url ?? c.driver?.profile_photo_url ?? null,
               role: c.client ? 'client' : 'driver',
             } : null,
             last_message: c.last_message ? {
