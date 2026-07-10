@@ -9,12 +9,15 @@ export default {
   userInterfaceStyle: "light",
   splash: {
     image: "./assets/logo.png",
-    resizeMode: "native",
+    // resizeMode: "native",
     backgroundColor: "#ffffff",
   },
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.easyvtc.app",
+    splash: {
+      resizeMode: "contain", // "contain" ou "cover" sont supportés sur iOS
+    },
     infoPlist: {
       NSCameraUsageDescription: "Pour photographier vos documents chauffeur et votre photo de profil.",
       NSPhotoLibraryUsageDescription: "Pour sélectionner votre photo de profil ou vos documents depuis la galerie.",
@@ -23,6 +26,9 @@ export default {
     },
   },
   android: {
+    splash: {
+      resizeMode: "native",
+    },
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/android-icon-foreground.png",
