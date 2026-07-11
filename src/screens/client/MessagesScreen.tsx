@@ -14,6 +14,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { Colors, Fonts, Spacing } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppHeader } from '../../components/common/AppHeader';
+import { formatRelativeTime } from '../../utils/formatDate';
 import type { ConversationSummary } from '../../types/chats.type';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,32 +32,8 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
   const recipientName = other_party
     ? `${other_party.first_name} ${other_party.last_name}`
     : 'Interlocuteur inconnu';
-    const timeSince = (date: string | Date) => {
-      const seconds = Math.floor(
-        (new Date().getTime() - new Date(date).getTime()) / 1000
-      );
-    
-      const intervals = [
-        { label: 'an', seconds: 31536000 },
-        { label: 'mois', seconds: 2592000 },
-        { label: 'jour', seconds: 86400 },
-        { label: 'h', seconds: 3600 },
-        { label: 'min', seconds: 60 },
-      ];
-    
-      for (const interval of intervals) {
-        const count = Math.floor(seconds / interval.seconds);
-      
-        if (count >= 1) {
-          return `il y a ${count} ${interval.label}${count > 1 && interval.label !== 'mois' ? 's' : ''}`;
-        }
-      }
-    
-      return "à l'instant";
-    };
-
   const timeAgo = last_message?.created_at
-  ? timeSince(last_message.created_at)
+  ? formatRelativeTime(last_message.created_at)
   : '';
 
   return (

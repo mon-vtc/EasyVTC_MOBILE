@@ -17,6 +17,7 @@ import {
 import { useChat } from '../../hooks/useChat';
 import { useNotifications } from '../../hooks/useNotifications';
 import { AppHeader } from '../../components/common/AppHeader';
+import { formatRelativeTime } from '../../utils/formatDate';
 import { Colors, Fonts } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import type { ActiveConversation } from '../../types';
@@ -210,17 +211,7 @@ export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScr
 
   const formatTimeAgo = (dateStr: string | null): string => {
     if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'À l\'instant';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `Il y a ${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `Il y a ${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `Il y a ${days}j`;
+    return formatRelativeTime(dateStr);
   };
 
   const sortedConversations = useMemo(() => {
