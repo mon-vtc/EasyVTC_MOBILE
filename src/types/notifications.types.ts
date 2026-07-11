@@ -93,8 +93,32 @@ export const NOTIFICATION_ICONS: NotificationIconMap = {
     icon : 'mail-sharp',
     color: Colors.bordeauxLight,
     background: '#EFEAEA'
-  }
-
+  },
+  driver_reminder_24h: {
+    icon:       'calendar-outline',
+    color:      '#F97316',   // orange rappel (même famille que trip_reminder)
+    background: '#FEF3C7',
+  },
+  driver_reminder_2h: {
+    icon:       'time',
+    color:      '#F97316',
+    background: '#FEF3C7',
+  },
+  driver_reminder_30min: {
+    icon:       'navigate',
+    color:      '#F97316',
+    background: '#FEF3C7',
+  },
+  new_document_admin: {
+    icon:       'folder-open',
+    color:      Colors.bordeauxLight,
+    background: '#EFEAEA',
+  },
+  weekly_digest_admin: {
+    icon:       'stats-chart',
+    color:      Colors.bordeauxLight,
+    background: '#EFEAEA',
+  },
 };
 
 // Define action labels for buttons
@@ -109,6 +133,11 @@ export const NOTIFICATION_ACTION_LABELS: NotificationActionLabelMap = {
   new_reservation_admin: 'Traiter la réservation',
   support_reply: 'Voir la réponse',
   new_message: 'Voir le message',
+  driver_reminder_24h:   'Voir la course',
+  driver_reminder_2h:    'Voir la course',
+  driver_reminder_30min: 'Voir la course',
+  new_document_admin:    'Voir les documents',
+  weekly_digest_admin:   'Voir le bilan',
 };
 
 // Frontend-specific payload for real-time notifications

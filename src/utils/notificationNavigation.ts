@@ -75,7 +75,10 @@ export function navigateFromNotification(notification: Notification, role: UserR
     notification.type === 'trip_assigned' ||
     notification.type === 'trip_reminder' ||
     notification.type === 'driver_arrived' ||
-    notification.type === 'reservation_cancelled'
+    notification.type === 'reservation_cancelled' ||
+    notification.type === 'driver_reminder_24h' ||
+    notification.type === 'driver_reminder_2h' ||
+    notification.type === 'driver_reminder_30min'
   ) {
     if (!reservationId) {
       navigate('NotificationDetails', { notification });
