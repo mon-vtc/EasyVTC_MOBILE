@@ -6,11 +6,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { formatDistanceToNow, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { formatRelativeTime } from '../utils/formatDate';
 import type { Notification } from '../types';
 import { NOTIFICATION_ICONS, NOTIFICATION_ACTION_LABELS , NotificationIconConfig} from '../types';
 import { Colors, Spacing, Radius, Fonts } from '../theme/colors';
+
+// Utilisé quand notification.type n'a pas d'entrée dans NOTIFICATION_ICONS (type inconnu/futur) —
+// doit rester un objet NotificationIconConfig complet, jamais une simple chaîne, pour que
+// iconConfig.icon/.color/.background restent valides plus bas.
+const FALLBACK_ICON_CONFIG: NotificationIconConfig = {
+  icon:       'notifications-outline',
+  color:      Colors.textMuted,
+  background: Colors.iconBg,
+};
 interface NotificationCardProps {
   notification: Notification;
   onMarkAsRead: (id: string) => void;
@@ -27,13 +35,10 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   onPress,
 }) => {
   const isRead = !!notification.read_at;
-  const iconConfig = NOTIFICATION_ICONS[notification.type] || 'notifications-outline';
+  const iconConfig = NOTIFICATION_ICONS[notification.type] || FALLBACK_ICON_CONFIG;
   const actionLabel = NOTIFICATION_ACTION_LABELS[notification.type] || 'Voir les détails';
 
-  const timeAgo = formatDistanceToNow(parseISO(notification.created_at), {
-    addSuffix: true,
-    locale: fr,
-  });
+  const timeAgo = formatRelativeTime(notification.created_at);
   return (
     // Nouvelle TouchableOpacity pour rendre toute la carte cliquable
     // Elle redirige vers l'écran de détails de la notification.
