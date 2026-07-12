@@ -51,7 +51,7 @@ export type AuthStackParamList = {
 export type ClientTabParamList = {
   ClientHome:          undefined;
   MyReservations:      undefined;
-  CreateReservationTab: undefined; // FAB tab button, redirige vers le stack racine
+  CreateReservation: undefined; // FAB tab button, redirige vers le stack racine
   Messages:            undefined;
   ClientProfile:       undefined;
   CGU :                 undefined;
