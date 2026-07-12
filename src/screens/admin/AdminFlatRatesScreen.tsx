@@ -915,7 +915,7 @@ const card = StyleSheet.create({
 // ── ThreeDotMenu ──────────────────────────────────────────────────────────────
 const menu = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'transparent',
   },
   popover: {

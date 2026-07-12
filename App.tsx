@@ -40,7 +40,7 @@ export default function App() {
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
         <ToastProvider>
-          <StatusBar style="light" backgroundColor={Colors.bordeaux} />
+          <StatusBar style="light" />
           <AppNavigator />
         </ToastProvider>
       </SafeAreaProvider>

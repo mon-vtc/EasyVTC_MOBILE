@@ -13,7 +13,8 @@ import {
   ScrollView, Image, ActivityIndicator,
   Platform, Dimensions, StatusBar,
 } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
+import { Paths } from 'expo-file-system';
 import * as Sharing   from 'expo-sharing';
 import * as Browser   from 'expo-web-browser';
 import { Ionicons }   from '@expo/vector-icons';
@@ -53,7 +54,7 @@ function getCachePath(filename: string, isPdfFile: boolean): string {
   const name = isPdfFile
     ? (safeName.endsWith('.pdf') ? safeName : `${safeName}.pdf`)
     : safeName;
-  return `${FileSystem.cacheDirectory}evtc_${name}`;
+  return `${Paths.cache.uri}/evtc_${name}`;
 }
 
 // ── Viewer PDF ────────────────────────────────────────────────
