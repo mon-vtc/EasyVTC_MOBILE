@@ -38,8 +38,8 @@ export default {
     predictiveBackGestureEnabled: false,
     package: "com.easyvtc.app",
     usesCleartextTraffic: true,
-    compileSdkVersion: 35,
-    targetSdkVersion: 35, 
+    // compileSdkVersion: 35,
+    // targetSdkVersion: 35, 
   },
   web: {
     favicon: "./assets/favicon.png",
@@ -50,6 +50,20 @@ export default {
   plugins: [
     "expo-secure-store",
     "expo-font",
+    "@react-native-community/datetimepicker",
+    "expo-sharing",
+    "expo-splash-screen",
+    "expo-status-bar",
+    "expo-web-browser",
+    [
+      "expo-build-properties",
+      {
+        android: {
+          compileSdkVersion: 35,
+          targetSdkVersion: 35,
+        },
+      },
+    ],
     [
       "expo-notifications",
       {
@@ -59,7 +73,6 @@ export default {
       },
     ],
   ],
-
   // ── EAS Build config ─────────────────────────────────────────────────────
   // Décommenter pour les builds EAS (production/preview)
   extra: {

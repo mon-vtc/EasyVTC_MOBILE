@@ -11,14 +11,14 @@ interface PromoCodeCardProps {
   promo: UserPromoCodeItem;
 }
 
-const PROMO_COLORS: Record<string, string[]> = {
-  bienvenue: ['#3B82F6', '#60A5FA'], // Bleu
-  'week-end' : ['#8B5CF6', '#A78BFA'], // Violet
-  fidélité: ['#10B981', '#34D399'], // Vert
+const PROMO_COLORS: Record<string, readonly [string, string, ...string[]]> = {
+  bienvenue: ['#3B82F6', '#60A5FA'],
+  'week-end': ['#8B5CF6', '#A78BFA'],
+  fidélité: ['#10B981', '#34D399'],
   default: [Colors.bordeaux, Colors.bordeauxLight],
 };
 
-function getPromoColors(name: string | null): string[] {
+function getPromoColors(name: string | null): readonly [string, string, ...string[]] {
   const lowerName = name?.toLowerCase() ?? '';
   if (lowerName.includes('bienvenue')) return PROMO_COLORS.bienvenue;
   if (lowerName.includes('week-end') || lowerName.includes('weekend')) return PROMO_COLORS['week-end'];
@@ -28,7 +28,7 @@ function getPromoColors(name: string | null): string[] {
 
 export function PromoCodeCard({ promo }: PromoCodeCardProps) {
   const isExpired = promo.is_expired;
-  const gradientColors = isExpired ? ['#B0B0B0', '#9E9E9E'] : getPromoColors(promo.name);
+  const gradientColors = isExpired ? ['#B0B0B0', '#9E9E9E'] as const : getPromoColors(promo.name);
   const { showToast  } =  useToast();
 
   const copyToClipboard = async () => {

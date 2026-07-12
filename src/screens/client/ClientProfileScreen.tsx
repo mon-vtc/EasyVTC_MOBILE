@@ -4,7 +4,8 @@ import {
   TouchableOpacity, Switch, Platform, Modal, TextInput,
 } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
+import { Paths } from 'expo-file-system';
 import { z }           from 'zod';
 import { FormField }   from '../../components/forms/FormField';
 import { useFocusEffect } from '@react-navigation/native';
@@ -224,8 +225,8 @@ export default function ClientProfileScreen({ navigation }: Props) {
     try {
       const data = await exportMyData();
       const jsonString = JSON.stringify(data, null, 2);
-      const fileUri = FileSystem.documentDirectory + `easyvtc_export_${user!.id}.json`;
-      
+      const fileUri = `${Paths.document.uri}/easyvtc_export_${user!.id}.json`;
+
       await FileSystem.writeAsStringAsync(fileUri, jsonString, { encoding: FileSystem.EncodingType.UTF8 });
 
       if (await Sharing.isAvailableAsync()) {

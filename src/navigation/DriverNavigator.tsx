@@ -161,7 +161,7 @@ function DriverDrawerNavigator() {
         component={DriverReservationsStackScreen}
         options={{
           drawerLabel: () => <DrawerLabel icon="car-outline" label="Mes courses" />,
-          unmountOnBlur: true,
+          // unmountOnBlur: true, // Not supported in DrawerNavigationOptions
           headerShown: false,
         }}
       />

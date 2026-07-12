@@ -375,7 +375,7 @@ const s = StyleSheet.create({
   loaderText: { color: Colors.textMuted, fontSize: Fonts.size.sm ?? 13 },
 
   uploadOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.45)',
     alignItems: 'center', justifyContent: 'center',
   },
