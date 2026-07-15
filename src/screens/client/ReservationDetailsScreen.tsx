@@ -253,7 +253,7 @@ export default function ReservationDetailsScreen() {
         <Animated.View style={[styles.card, slideUp(cardAnim)]}>
           {/* Statut */}
           <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Statut</Text>
+            <Text style={styles.statusLabel}>{'Statut' + '  '}</Text>
             <View style={styles.statusBadge}>
               <View style={[styles.statusDot, { backgroundColor: getStatusColor(r?.status) }]} />
               <Text style={styles.statusText}>{getStatusLabel(r?.status)}</Text>
@@ -266,7 +266,7 @@ export default function ReservationDetailsScreen() {
               <AppIcon name="calendar-outline" size={16} color={BORDEAUX} />
             </View>
             <View style={styles.infoTexts}>
-              <Text style={styles.infoLabel}>Date et heure</Text>
+              <Text style={styles.infoLabel}>{'Date et heure' + '  '}</Text>
               <Text style={styles.infoValue}>
                 {r?.scheduled_at ? formatDate(r.scheduled_at) : '—'}
                 {r?.scheduled_at && <Text style={styles.infoTime}> à {formatTime(r.scheduled_at)}</Text>}
@@ -279,7 +279,7 @@ export default function ReservationDetailsScreen() {
             <View style={styles.routeRow}>
               <View style={[styles.routeDot, { backgroundColor: '#10B981' }]} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.routeTag}>Partir</Text>
+                <Text style={styles.routeTag}>{'Partir' + '  '}</Text>
                 <Text style={styles.routeAddr}>{r?.pickup_address ?? '—'}</Text>
               </View>
             </View>
@@ -287,7 +287,7 @@ export default function ReservationDetailsScreen() {
             <View style={styles.routeRow}>
               <View style={[styles.routeDot, { backgroundColor: BORDEAUX }]} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.routeTag}>Destination</Text>
+                <Text style={styles.routeTag}>{'Destination' + '  '}</Text>
                 <Text style={styles.routeAddr}>{r?.dest_address ?? '—'}</Text>
               </View>
             </View>
@@ -299,21 +299,21 @@ export default function ReservationDetailsScreen() {
               <View style={styles.statIcon}>
                 <AppIcon name="map-outline" size={15} color={BORDEAUX} />
               </View>
-              <Text style={styles.statLabel}>Distance</Text>
+              <Text style={styles.statLabel}>{'Distance' + '  '}</Text>
               <Text style={styles.statValue}>{r?.distance_km ? `${r.distance_km} km` : '—'}</Text>
             </View>
             <View style={styles.statItem}>
               <View style={styles.statIcon}>
                 <AppIcon name="time-outline" size={15} color={BORDEAUX} />
               </View>
-              <Text style={styles.statLabel}>Durée</Text>
+              <Text style={styles.statLabel}>{'Durée' + '  '}</Text>
               <Text style={styles.statValue}>{r?.duration_min ? `${r.duration_min} min` : '—'}</Text>
             </View>
             <View style={styles.statItem}>
               <View style={styles.statIcon}>
                 <AppIcon name="person-outline" size={15} color={BORDEAUX} />
               </View>
-              <Text style={styles.statLabel}>Passagers</Text>
+              <Text style={styles.statLabel}>{'Passagers' + '  '}</Text>
               <Text style={styles.statValue}>{r?.nb_passengers ?? '—'}</Text>
             </View>
           </View>
@@ -335,11 +335,13 @@ export default function ReservationDetailsScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.driverName}>{r.driver.user?.first_name} {r.driver.user?.last_name}</Text>
-                <View style={styles.driverRating}>
-                  <Text style={styles.star}>★</Text>
-                  <Text style={styles.ratingVal}>4.9</Text>
-                  <Text style={styles.ratingCount}>(234 avis)</Text>
-                </View>
+                {r.driver.average_rating != null && (
+                  <View style={styles.driverRating}>
+                    <Text style={styles.star}>★</Text>
+                    <Text style={styles.ratingVal}>{r.driver.average_rating.toFixed(1)}</Text>
+                    <Text style={styles.ratingCount}>({r.driver.ratings_count} avis)</Text>
+                  </View>
+                )}
               </View>
             </View>
             <View style={styles.driverActions}>
@@ -395,6 +397,16 @@ export default function ReservationDetailsScreen() {
         <Animated.View style={[styles.priceCard, slideUp(priceAnim)]}>
           <View>
             <Text style={styles.priceLabel}>Total</Text>
+            {r?.price_breakdown?.is_airport && (r?.price_breakdown?.airport_supplement_amount ?? 0) > 0 && (
+              <Text style={styles.priceNote}>
+                {`Inclut le supplément aéroport (+${r!.price_breakdown!.airport_supplement_amount!.toFixed(2)} €)` + '  '}
+              </Text>
+            )}
+            {r?.price_breakdown?.is_night && (r?.price_breakdown?.night_supplement_amount ?? 0) > 0 && (
+              <Text style={styles.priceNote}>
+                {`Inclut le supplément nocturne (+${r!.price_breakdown!.night_supplement_amount!.toFixed(2)} €)` + '  '}
+              </Text>
+            )}
           </View>
           <Text style={styles.priceValue}>{formatPrice(r?.price_final ?? r?.price_estimated)}</Text>
         </Animated.View>

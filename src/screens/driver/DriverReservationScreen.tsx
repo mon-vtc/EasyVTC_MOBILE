@@ -271,6 +271,31 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
           </View>
         </View>
 
+        {/* ── Suppléments appliqués (aéroport / nocturne) ───── */}
+        {/* Lecture seule : la configuration (taux, plage horaire) reste réservée à l'admin. */}
+        {((reservation.price_breakdown?.is_airport && (reservation.price_breakdown?.airport_supplement_amount ?? 0) > 0) ||
+          (reservation.price_breakdown?.is_night && (reservation.price_breakdown?.night_supplement_amount ?? 0) > 0)) && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{'Suppléments appliqués' + '  '}</Text>
+            {reservation.price_breakdown?.is_airport && (reservation.price_breakdown?.airport_supplement_amount ?? 0) > 0 && (
+              <View style={[styles.metaItem, { marginTop: Spacing.xs }]}>
+                <Ionicons name="airplane-outline" size={15} color={Colors.textSecondary} />
+                <Text style={styles.metaText}>
+                  {`Supplément aéroport : +${reservation.price_breakdown!.airport_supplement_amount!.toFixed(2)} €` + '  '}
+                </Text>
+              </View>
+            )}
+            {reservation.price_breakdown?.is_night && (reservation.price_breakdown?.night_supplement_amount ?? 0) > 0 && (
+              <View style={[styles.metaItem, { marginTop: Spacing.xs }]}>
+                <Ionicons name="moon-outline" size={15} color={Colors.textSecondary} />
+                <Text style={styles.metaText}>
+                  {`Supplément nocturne : +${reservation.price_breakdown!.night_supplement_amount!.toFixed(2)} €` + '  '}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* ── Informations client ──────────────────────────── */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Informations client</Text>
