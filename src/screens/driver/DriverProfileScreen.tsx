@@ -3,6 +3,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, Switch, Platform, Modal, TextInput, ActivityIndicator,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { zodResolver }       from '@hookform/resolvers/zod';
 import { z }                 from 'zod';
@@ -39,7 +40,7 @@ function PasswordStrength({ value }: { value: string }) {
           <View key={rule.label} style={strengthStyles.row}>
             <Ionicons name={ok ? 'checkmark-circle' : 'ellipse-outline'} size={16}
               color={ok ? Colors.bordeauxLight : Colors.textMuted} />
-            <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>{rule.label}</Text>
+            <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>{rule.label}{'  '}</Text>
           </View>
         );
       })}
@@ -729,33 +730,38 @@ export default function DriverProfileScreen({ navigation }: Props) {
       {/* ── Modal mot de passe ── */}
       <Modal visible={showPasswordModal} transparent animationType="fade"
         onRequestClose={() => { reset(); clearError(); setShowPasswordModal(false); }}>
-        <View style={modalStyles.overlay}>
+        <KeyboardAvoidingView
+          style={modalStyles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View style={modalStyles.card}>
-            <Text style={modalStyles.title}>Changer le mot de passe</Text>
-            {error && (
-              <View style={modalStyles.errorBanner}>
-                <Text style={modalStyles.errorText}>⚠️ {error}</Text>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <Text style={modalStyles.title}>Changer le mot de passe</Text>
+              {error && (
+                <View style={modalStyles.errorBanner}>
+                  <Text style={modalStyles.errorText}>⚠️ {error}</Text>
+                </View>
+              )}
+              <FormField<PasswordForm> name="current_password" control={control} label="Mot de passe actuel *"
+                secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.current_password?.message} />
+              <FormField<PasswordForm> name="new_password"     control={control} label="Nouveau mot de passe *"
+                secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.new_password?.message} />
+              <PasswordStrength value={newPasswordValue} />
+              <FormField<PasswordForm> name="confirm_password" control={control} label="Confirmer le mot de passe *"
+                secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.confirm_password?.message} />
+              <View style={modalStyles.actions}>
+                <TouchableOpacity style={[modalStyles.btn, modalStyles.btnCancel]}
+                  onPress={() => { reset(); clearError(); setShowPasswordModal(false); }} disabled={isLoading}>
+                  <Text style={modalStyles.btnCancelText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[modalStyles.btn, modalStyles.btnConfirm]}
+                  onPress={handleSubmit(onChangePassword)} disabled={isLoading}>
+                  <Text style={modalStyles.btnConfirmText}>{isLoading ? 'Envoi...' : 'Confirmer'}</Text>
+                </TouchableOpacity>
               </View>
-            )}
-            <FormField<PasswordForm> name="current_password" control={control} label="Mot de passe actuel *"
-              secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.current_password?.message} />
-            <FormField<PasswordForm> name="new_password"     control={control} label="Nouveau mot de passe *"
-              secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.new_password?.message} />
-            <PasswordStrength value={newPasswordValue} />
-            <FormField<PasswordForm> name="confirm_password" control={control} label="Confirmer le mot de passe *"
-              secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.confirm_password?.message} />
-            <View style={modalStyles.actions}>
-              <TouchableOpacity style={[modalStyles.btn, modalStyles.btnCancel]}
-                onPress={() => { reset(); clearError(); setShowPasswordModal(false); }} disabled={isLoading}>
-                <Text style={modalStyles.btnCancelText}>Annuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[modalStyles.btn, modalStyles.btnConfirm]}
-                onPress={handleSubmit(onChangePassword)} disabled={isLoading}>
-                <Text style={modalStyles.btnConfirmText}>{isLoading ? 'Envoi...' : 'Confirmer'}</Text>
-              </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
     </View>
