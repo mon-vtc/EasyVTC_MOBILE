@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
-import { View }              from 'react-native';
+import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar }        from 'expo-status-bar';
 import * as SplashScreen    from 'expo-splash-screen';
@@ -13,6 +14,7 @@ import {
 import AppNavigator         from './src/navigation/AppNavigator';
 import { Colors }           from './src/theme/colors';
 import { usePushNotifications } from './src/hooks/usePushNotifications';
+import { useInactivityLogout } from './src/hooks/useInactivityLogout';
 import { ToastProvider }    from './src/components/common/ToastProvider';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -25,6 +27,7 @@ export default function App() {
     Montserrat_700Bold,
   });
   usePushNotifications();
+  const { recordActivity } = useInactivityLogout();
 
   const onLayoutRootView = useCallback(() => {
     if (fontsLoaded) SplashScreen.hideAsync();
@@ -37,13 +40,21 @@ export default function App() {
   if (!fontsLoaded) return null;
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
         <ToastProvider>
           <StatusBar style="light" backgroundColor={Colors.bordeaux} />
-          <AppNavigator />
+          {/* onStartShouldSetResponderCapture observe chaque toucher sans intercepter
+              le geste (retourne false) — sert uniquement à réinitialiser le minuteur
+              d'inactivité (déconnexion de sécurité après 5 min sans interaction). */}
+          <View
+            style={{ flex: 1 }}
+            onStartShouldSetResponderCapture={() => { recordActivity(); return false; }}
+          >
+            <AppNavigator />
+          </View>
         </ToastProvider>
       </SafeAreaProvider>
-    </View>
+    </GestureHandlerRootView>
   );
 }
