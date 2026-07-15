@@ -130,7 +130,7 @@ function ClientTabs() {
        * Le composant CreateReservationScreen peut rester vide / redirect.
        */}
       <Tab.Screen
-        name="CreateReservationTab"
+        name="CreateReservation"
         component={CreateReservationTabScreen}
         options={({ navigation }) => ({
           tabBarLabel: '',
@@ -160,18 +160,35 @@ function ClientTabs() {
         }}
       />
 
-      {/* Écran caché de la barre d'onglets mais accessible depuis la navigation.
-          ReservationDetails/MyOrders/MyInvoices ne sont PAS dupliqués ici : ils
-          n'existent que dans le Stack racine (ClientNavigator) pour forcer leur
-          résolution via navigate() vers le push plein écran (slide_from_right,
-          pas de tab bar) plutôt que vers un switch interne au Tab.Navigator. */}
+      {/* Écrans cachés dans les onglets mais accessibles depuis la navigation
+      <Tab.Screen
+        name="ReservationDetails"
+        component={ReservationDetailsScreen}
+        options={{
+          tabBarButton: () => null, // Masqué de la barre d'onglets
+        }}
+      />
+      <Tab.Screen
+        name="MyInvoices"
+        component={MyInvoicesScreen}
+        options={{
+          tabBarButton: () => null, // Masqué de la barre d'onglets
+        }}
+      />
+      <Tab.Screen
+        name="MyOrders"
+        component={MyOrdersScreen}
+        options={{
+          tabBarButton: () => null, // Masqué de la barre d'onglets
+        }}
+      />
       <Tab.Screen
         name="CGU"
         component={CGU}
         options={{
           tabBarButton: () => null, // Masqué de la barre d'onglets
         }}
-      />
+      /> */}
 
     </Tab.Navigator>
   );

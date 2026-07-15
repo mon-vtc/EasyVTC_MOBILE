@@ -1276,7 +1276,7 @@ const si = StyleSheet.create({
 // ── ForfaitDetailModal styles ──────────────────────────────────────────────────
 const fdm = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.45)',
   },
   sheet: {

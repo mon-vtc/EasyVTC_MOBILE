@@ -50,7 +50,7 @@ const SectionHeader = ({ title, actionText, actionOnPress }: { title: string; ac
   </View>
 );
 
-const StatCard = ({ icon, value, label, colors }: { icon: keyof typeof Ionicons.glyphMap; value: string; label: string; colors: string[] }) => (
+const StatCard = ({ icon, value, label, colors }: { icon: keyof typeof Ionicons.glyphMap; value: string; label: string; colors: readonly [string, string, ...string[]] }) => (
   <LinearGradient colors={colors} style={styles.statCard}>
     <Ionicons name={icon} size={24} color={Colors.white} style={{ opacity: 0.8 }} />
     <Text style={styles.statValue}>{value}</Text>

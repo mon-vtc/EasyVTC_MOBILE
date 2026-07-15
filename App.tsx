@@ -43,7 +43,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
         <ToastProvider>
-          <StatusBar style="light" backgroundColor={Colors.bordeaux} />
+          <StatusBar style="light" />
           {/* onStartShouldSetResponderCapture observe chaque toucher sans intercepter
               le geste (retourne false) — sert uniquement à réinitialiser le minuteur
               d'inactivité (déconnexion de sécurité après 5 min sans interaction). */}
