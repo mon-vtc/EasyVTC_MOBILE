@@ -24,15 +24,13 @@ import { useToast } from '../../hooks/useToast';
 // ══════════════════════════════════════════════════════════════════════════════
 
 // Champs éditables selon PricingFlatRate :
-//   label | origin_label | destination_label | price
-// Les champs suivants sont en commentaire pour future feature :
-//   pickup_surcharge (non présent dans l'interface actuelle)
+//   label | origin_label | destination_label | price | pickup_surcharge
 type FlatRateFormValues = {
   label:             string;
   origin_label:      string;
   destination_label: string;
   price:             string;
-  // pickup_surcharge: string; // future feature
+  pickup_surcharge:  string;
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -50,7 +48,7 @@ function flatRateToForm(fr: PricingFlatRate): FlatRateFormValues {
     origin_label:      fr.origin_label,
     destination_label: fr.destination_label,
     price:             String(fr.price),
-    // pickup_surcharge: String(fr.pickup_surcharge ?? 0), // future feature
+    pickup_surcharge:  String(fr.pickup_surcharge ?? 0),
   };
 }
 
@@ -60,7 +58,7 @@ function emptyForm(): FlatRateFormValues {
     origin_label:      '',
     destination_label: '',
     price:             '',
-    // pickup_surcharge: '0', // future feature
+    pickup_surcharge:  '0',
   };
 }
 
@@ -238,15 +236,14 @@ function FlatRateCard({
         </TouchableOpacity>
       </View>
 
-      {/* future feature — badge surcharge passager */}
-      {/* {item.pickup_surcharge > 0 && (
+      {item.pickup_surcharge > 0 && (
         <View style={card.badge}>
           <AppIcon name="person-add-outline" size={11} color={Colors.bordeaux} />
           <Text style={card.badgeText}>
-            +{fmt(item.pickup_surcharge, currencySymbol)} / passager supplémentaire
+            {`+${fmt(item.pickup_surcharge, currencySymbol)} / passager supplémentaire` + '  '}
           </Text>
         </View>
-      )} */}
+      )}
 
       {/* Statut */}
       <View style={card.statusRow}>
@@ -355,15 +352,14 @@ function CreateModal({
                 keyboardType="decimal-pad"
                 placeholder="0.00"
               />
-              {/* future feature — surcharge passager */}
-              {/* <Field
+              <Field
                 label={`Surcharge / passager suppl. (${currencySymbol})`}
                 value={form.pickup_surcharge}
                 onChange={set('pickup_surcharge')}
                 editable
                 keyboardType="decimal-pad"
                 placeholder="0.00"
-              /> */}
+              />
             </View>
           </View>
 
@@ -519,14 +515,13 @@ function FlatRateDetailScreen({
                 editable={isEditing}
                 keyboardType="decimal-pad"
               />
-              {/* future feature — surcharge passager */}
-              {/* <Field
+              <Field
                 label={`Surcharge / passager suppl. (${currencySymbol})`}
                 value={form.pickup_surcharge}
                 onChange={set('pickup_surcharge')}
                 editable={isEditing}
                 keyboardType="decimal-pad"
-              /> */}
+              />
             </View>
           </View>
 
@@ -587,7 +582,7 @@ function FlatRateDetailScreen({
 function MetaRow({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <View style={meta.row}>
-      <Text style={meta.label}>{label}</Text>
+      <Text style={meta.label}>{label}{'  '}</Text>
       <Text style={[meta.value, color ? { color } : undefined]}>{value}</Text>
     </View>
   );
@@ -648,7 +643,7 @@ export default function AdminFlatRatesScreen() {
             origin_label:      form.origin_label,
             destination_label: form.destination_label,
             price:             toFloat(form.price),
-            // pickup_surcharge: toFloat(form.pickup_surcharge), // future feature
+            pickup_surcharge:  toFloat(form.pickup_surcharge),
           });
           showToast({ type: 'success', title: 'Enregistré', message: 'Le forfait a été mis à jour.' });
         }}
@@ -731,7 +726,7 @@ export default function AdminFlatRatesScreen() {
             origin_label:      form.origin_label,
             destination_label: form.destination_label,
             price:             toFloat(form.price),
-            pickup_surcharge:  0, // pas encore réglable depuis ce formulaire
+            pickup_surcharge:  toFloat(form.pickup_surcharge),
           });
           setCreateVisible(false);
           showToast({ type: 'success', title: 'Créé', message: 'Le forfait a été créé avec succès.' });
@@ -880,22 +875,21 @@ const card = StyleSheet.create({
   dotsBtn: {
     paddingHorizontal: 4,
   },
-  // future feature — badge surcharge passager
-  // badge: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   gap: 4,
-  //   backgroundColor: `${Colors.bordeaux}10`,
-  //   paddingHorizontal: 8,
-  //   paddingVertical: 4,
-  //   borderRadius: 6,
-  //   alignSelf: 'flex-start',
-  // },
-  // badgeText: {
-  //   fontSize: 11,
-  //   color: Colors.bordeaux,
-  //   fontFamily: Fonts.medium, fontWeight: '500',
-  // },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: `${Colors.bordeaux}10`,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  badgeText: {
+    fontSize: 11,
+    color: Colors.bordeaux,
+    fontFamily: Fonts.medium, fontWeight: '500',
+  },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',

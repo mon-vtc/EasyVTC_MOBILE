@@ -173,7 +173,7 @@ export default function AdminCommissionSettingsScreen() {
               onPress={() => setActiveZone(zone)}
             >
               <Text style={[styles.zoneText, activeZone === zone && styles.zoneTextActive]}>
-                {zone === 'france' ? 'France' : 'Sénégal'}
+                {(zone === 'france' ? 'France' : 'Sénégal') + '  '}
               </Text>
             </TouchableOpacity>
           ))}
@@ -189,15 +189,15 @@ export default function AdminCommissionSettingsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitle}>{setting.label}</Text>
                   <Text style={styles.cardSubtitle}>
-                    {setting.vehicle_type
+                    {(setting.vehicle_type
                       ? vehicleTypes.find(vt => vt.code === setting.vehicle_type)?.label ?? setting.vehicle_type
-                      : 'Toutes catégories'}
+                      : 'Toutes catégories') + '  '}
                   </Text>
                 </View>
                 <View style={styles.cardRate}>
                   <Text style={styles.rateValue}>{setting.rate_value}</Text>
                   <Text style={styles.rateType}>
-                    {setting.rate_type === 'percentage' ? '%' : 'fixe'}
+                    {' ' + (setting.rate_type === 'percentage' ? '%' : 'fixe')}{'  '}
                   </Text>
                 </View>
               </View>
@@ -205,7 +205,7 @@ export default function AdminCommissionSettingsScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <View style={[styles.statusDot, { backgroundColor: setting.is_active ? Colors.success : Colors.error }]} />
                   <Text style={[styles.statusText, { color: setting.is_active ? Colors.success : Colors.error }]}>
-                    {setting.is_active ? 'Actif' : 'Inactif'}
+                    {(setting.is_active ? 'Actif' : 'Inactif') + '  '}
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 16 }}>
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: 'bold', color: Colors.textPrimary },
   cardSubtitle: { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginTop: 2 },
-  cardRate: { alignItems: 'flex-end' },
+  cardRate: { flexDirection: 'row', alignItems: 'baseline' },
   rateValue: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: 'bold', color: Colors.bordeaux },
   rateType: { fontSize: Fonts.size.xs, color: Colors.textSecondary },
   cardFooter: {
