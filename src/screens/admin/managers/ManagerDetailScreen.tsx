@@ -280,7 +280,7 @@ export default function ManagerDetailScreen() {
             <View style={[styles.actionIconCircle, { backgroundColor: '#F5E2E2' }]}>
               <Ionicons name="shield-outline" size={22} color={Colors.bordeaux} />
             </View>
-            <Text style={styles.actionLabel}>Statut</Text>
+            <Text style={styles.actionLabel}>{'Statut' + '  '}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -291,7 +291,7 @@ export default function ManagerDetailScreen() {
             <View style={[styles.actionIconCircle, { backgroundColor: '#EDE7F6' }]}>
               <Ionicons name="key-outline" size={22} color="#7B1FA2" />
             </View>
-            <Text style={styles.actionLabel}>Accès</Text>
+            <Text style={styles.actionLabel}>{'Accès' + '  '}</Text>
           </TouchableOpacity>
         </View>
 
@@ -329,25 +329,25 @@ export default function ManagerDetailScreen() {
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Statut</Text>
+            <Text style={styles.detailLabel}>{'Statut' + '  '}</Text>
             <Text style={[styles.detailValue, { color: statusCfg.color }]}>{statusCfg.label}</Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Membre depuis</Text>
+            <Text style={styles.detailLabel}>{'Membre depuis' + '  '}</Text>
             <Text style={styles.detailValue}>{memberSince}</Text>
           </View>
 
           {manager.coverage_zone ? (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Zone de couverture</Text>
+              <Text style={styles.detailLabel}>{'Zone de couverture' + '  '}</Text>
               <Text style={styles.detailValue}>{manager.coverage_zone}</Text>
             </View>
           ) : null}
 
           {manager.priority_level ? (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Niveau de priorité</Text>
+              <Text style={styles.detailLabel}>{'Niveau de priorité' + '  '}</Text>
               <Text style={styles.detailValue}>
                 {manager.priority_level === 1 ? 'Standard'
                   : manager.priority_level === 2 ? 'Prioritaire'
@@ -358,7 +358,7 @@ export default function ManagerDetailScreen() {
 
           {manager.status_reason && (
             <View style={[styles.detailRow, { flexDirection: 'column', gap: 4 }]}>
-              <Text style={styles.detailLabel}>Motif du statut</Text>
+              <Text style={styles.detailLabel}>{'Motif du statut' + '  '}</Text>
               <Text style={[styles.detailValue, { textAlign: 'left' }]}>{manager.status_reason}</Text>
             </View>
           )}

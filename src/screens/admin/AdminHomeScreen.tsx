@@ -54,7 +54,7 @@ const StatCard = ({ icon, value, label, colors }: { icon: keyof typeof Ionicons.
   <LinearGradient colors={colors} style={styles.statCard}>
     <Ionicons name={icon} size={24} color={Colors.white} style={{ opacity: 0.8 }} />
     <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
+    <Text style={styles.statLabel}>{label}{'  '}</Text>
   </LinearGradient>
 );
 

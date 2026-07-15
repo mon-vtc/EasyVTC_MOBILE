@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.sm,
   },
-  side: { width: SIDE_WIDTH, alignItems: 'flex-start', justifyContent: 'center' },
+  side: { minWidth: SIDE_WIDTH, flexShrink: 0, alignItems: 'flex-start', justifyContent: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   logo: { width: 40, height: 40 },
   title: { color: Colors.white, fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600' },

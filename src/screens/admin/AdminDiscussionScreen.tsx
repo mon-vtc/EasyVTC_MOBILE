@@ -277,7 +277,7 @@ export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScr
             <Text numberOfLines={1} style={styles.lastMessage}>
               {item.last_message}
             </Text>
-            <Text style={styles.timeText}>{formatTimeAgo(item.last_message_at)}</Text>
+            <Text style={styles.timeText}>{formatTimeAgo(item.last_message_at)}{'  '}</Text>
           </View>
         )}
 

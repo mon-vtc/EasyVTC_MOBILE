@@ -257,7 +257,7 @@ export default function MyFavoritesScreen({ navigation }: any) {
           <Ionicons name={iconInfo.name} size={24} color={iconInfo.color} />
         </View>
         <View style={styles.cardContent}>
-          <Text style={styles.cardLabel}>{item.label}</Text>
+          <Text style={styles.cardLabel}>{item.label}{'  '}</Text>
           <Text style={styles.cardAddress}>{item.address}</Text>
         </View>
         <TouchableOpacity onPress={() => handleDelete(item.id, item.label)} style={styles.deleteButton}>

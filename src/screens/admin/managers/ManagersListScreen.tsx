@@ -103,12 +103,12 @@ export default function ManagersListScreen() {
       <View style={styles.statsCard}>
         <View style={styles.statBlock}>
           <Text style={styles.statNumber}>{managers.length}</Text>
-          <Text style={styles.statLabel}>Total</Text>
+          <Text style={styles.statLabel}>{'Total' + '  '}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statBlock}>
           <Text style={[styles.statNumber, { color: Colors.beige }]}>{onDutyCount}</Text>
-          <Text style={styles.statLabel}>En service</Text>
+          <Text style={styles.statLabel}>{'En service' + '  '}</Text>
           <View style={styles.progressBar}>
             <View
               style={[

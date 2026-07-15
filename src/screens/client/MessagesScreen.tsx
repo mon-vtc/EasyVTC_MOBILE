@@ -59,7 +59,7 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
           <Text style={styles.name} numberOfLines={1}>
             {recipientName}
           </Text>
-          <Text style={styles.time}>{timeAgo}</Text>
+          <Text style={styles.time}>{timeAgo}{'  '}</Text>
         </View>
 
         <View style={styles.messageRow}>

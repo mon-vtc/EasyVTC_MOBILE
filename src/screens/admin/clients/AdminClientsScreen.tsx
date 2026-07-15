@@ -215,15 +215,15 @@ function ClientCard({
       {/* Stats footer */}
       <View style={cardSt.footer}>
         <View style={cardSt.stat}>
-          <Text style={cardSt.statLabel}>Courses</Text>
+          <Text style={cardSt.statLabel}>{'Courses' + '  '}</Text>
           <Text style={cardSt.statValue}>{client.total_trips}</Text>
         </View>
         <View style={cardSt.stat}>
-          <Text style={cardSt.statLabel}>Dépensé</Text>
+          <Text style={cardSt.statLabel}>{'Dépensé' + '  '}</Text>
           <Text style={cardSt.statValue}>{client.total_spent.toFixed(0)} €</Text>
         </View>
         <View style={cardSt.stat}>
-          <Text style={cardSt.statLabel}>Dernière</Text>
+          <Text style={cardSt.statLabel}>{'Dernière' + '  '}</Text>
           <Text style={cardSt.statValue}>{lastDate}</Text>
         </View>
         <TouchableOpacity
@@ -233,7 +233,7 @@ function ClientCard({
           activeOpacity={0.75}
         >
           <Ionicons name="shield-outline" size={14} color={Colors.bordeaux} />
-          <Text style={cardSt.actionText}>Statut</Text>
+          <Text style={cardSt.actionText}>{'Statut' + '  '}</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

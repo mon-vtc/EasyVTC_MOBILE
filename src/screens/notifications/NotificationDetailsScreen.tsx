@@ -209,7 +209,7 @@ const InfoRow: React.FC<{
   label: string; value: string; bold?: boolean; accent?: string;
 }> = ({ label, value, bold, accent }) => (
   <View style={infoSt.row}>
-    <Text style={infoSt.label}>{label}</Text>
+    <Text style={infoSt.label}>{label}{'  '}</Text>
     <Text style={[infoSt.value, bold && infoSt.bold, accent ? { color: accent } : {}]}>{value}</Text>
   </View>
 );

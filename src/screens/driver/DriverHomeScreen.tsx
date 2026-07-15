@@ -52,7 +52,7 @@ function StatusCard({
     <View style={sc.card}>
       <View style={sc.row}>
         <View>
-          <Text style={sc.title}>Statut</Text>
+          <Text style={sc.title}>{'Statut' + '  '}</Text>
           <Text style={[sc.subtitle, isOnline && sc.subtitleOnline]}>
             {isOnline ? 'Vous êtes disponible' : 'Vous êtes hors ligne'}
           </Text>
@@ -180,7 +180,7 @@ function RideCard({
       <View style={rc.infoRow}>
         <AppIcon name="location-outline" size={16} color={Colors.bordeaux} />
         <View style={rc.infoTexts}>
-          <Text style={rc.infoLabel}>Départ</Text>
+          <Text style={rc.infoLabel}>{'Départ' + '  '}</Text>
           <Text style={rc.infoMain}>{origin}</Text>
         </View>
       </View>
@@ -189,7 +189,7 @@ function RideCard({
       <View style={rc.infoRow}>
         <AppIcon name="location" size={16} color={Colors.bordeauxLight}/>
         <View style={rc.infoTexts}>
-          <Text style={rc.infoLabel}>Destination</Text>
+          <Text style={rc.infoLabel}>{'Destination' + '  '}</Text>
           <Text style={rc.infoMain}>{destination}</Text>
         </View>
       </View>

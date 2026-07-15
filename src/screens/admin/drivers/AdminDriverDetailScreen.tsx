@@ -111,7 +111,7 @@ function TabInformations({ driver, documents, isFetchingDocuments }: { driver: A
         <Text style={tabStyles.cardTitle}>Véhicule</Text>
         {vehicleRows.map(row => (
           <View key={row.label} style={tabStyles.infoRow}>
-            <Text style={tabStyles.infoLabel}>{row.label}</Text>
+            <Text style={tabStyles.infoLabel}>{row.label}{'  '}</Text>
             <Text style={tabStyles.infoValue}>{row.value}</Text>
           </View>
         ))}
@@ -226,7 +226,7 @@ function TabStatistiques({ monthlyStats, lastMonthStats, isFetching }: { monthly
           ].map(stat => (
             <View key={stat.label} style={statsStyles.statItem}>
               <Text style={statsStyles.statValue}>{stat.value}</Text>
-              <Text style={statsStyles.statLabel}>{stat.label}</Text>
+              <Text style={statsStyles.statLabel}>{stat.label}{'  '}</Text>
             </View>
           ))}
         </View>
@@ -243,7 +243,7 @@ function TabStatistiques({ monthlyStats, lastMonthStats, isFetching }: { monthly
           ].map(stat => (
             <View key={stat.label} style={statsStyles.statItem}>
               <Text style={statsStyles.statValue}>{stat.value}</Text>
-              <Text style={statsStyles.statLabel}>{stat.label}</Text>
+              <Text style={statsStyles.statLabel}>{stat.label}{'  '}</Text>
             </View>
           ))}
         </View>

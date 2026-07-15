@@ -31,15 +31,29 @@ export function formatRelativeTime(date: string | Date): string {
   const target = typeof date === 'string' ? new Date(date) : date;
   const diffSeconds = Math.floor((Date.now() - target.getTime()) / 1000);
 
-  if (diffSeconds < 5) return "à l'instant";
+  if (diffSeconds < 5) {
+    return "à l'instant";
+  }
 
-  for (const unit of UNITS) {
+  for (let i = 0; i < UNITS.length; i++) {
+    const unit = UNITS[i];
     if (diffSeconds < unit.limit) {
       const count = Math.max(1, Math.floor(diffSeconds / unit.secondsPerUnit));
-      return `il y a ${count} ${count === 1 ? unit.singular : unit.plural}`;
+      let unitWord = unit.plural;
+      if (count === 1) {
+        unitWord = unit.singular;
+      }
+      const countText = count.toString();
+      const parts = ['il y a', countText, unitWord];
+      return parts.join(' ');
     }
   }
 
   const years = Math.floor(diffSeconds / (365 * 24 * 60 * 60));
-  return `il y a ${years} an${years > 1 ? 's' : ''}`;
+  let yearSuffix = '';
+  if (years > 1) {
+    yearSuffix = 's';
+  }
+  const yearsText = years.toString();
+  return ['il y a', yearsText, 'an' + yearSuffix].join(' ');
 }

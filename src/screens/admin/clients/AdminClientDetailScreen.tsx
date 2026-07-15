@@ -241,7 +241,7 @@ export default function AdminClientDetailScreen() {
             <Ionicons name={iconInfo.name} size={24} color={iconInfo.color} />
           </View>
           <View style={styles.cardContent}>
-            <Text style={styles.cardLabel}>{item.label}</Text>
+            <Text style={styles.cardLabel}>{item.label}{'  '}</Text>
             <Text style={styles.cardAddress}>{item.address}</Text>
           </View>
         </View>
@@ -379,16 +379,16 @@ export default function AdminClientDetailScreen() {
                 <Text style={styles.sectionTitle}>Informations</Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Statut</Text>
+                <Text style={styles.detailLabel}>{'Statut' + '  '}</Text>
                 <Text style={[styles.detailValue, { color: statusCfg.color }]}>{statusCfg.label}</Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Consentement RGPD</Text>
+                <Text style={styles.detailLabel}>{'Consentement RGPD' + '  '}</Text>
                 <Text style={styles.detailValue}>{client.rgpd_consent ? 'Oui' : 'Non'}</Text>
               </View>
               {client.status_reason && (
                 <View style={[styles.detailRow, { flexDirection: 'column', gap: 4 }]}>
-                  <Text style={styles.detailLabel}>Motif du statut</Text>
+                  <Text style={styles.detailLabel}>{'Motif du statut' + '  '}</Text>
                   <Text style={[styles.detailValue, { textAlign: 'left' }]}>{client.status_reason}</Text>
                 </View>
               )}

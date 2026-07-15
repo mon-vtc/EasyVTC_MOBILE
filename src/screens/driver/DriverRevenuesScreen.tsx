@@ -86,11 +86,11 @@ function SummaryCard({ revenues, status }: { revenues: DriverRevenuesResult | nu
       <View style={styles.summaryStats}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{totalTrips}</Text>
-          <Text style={styles.statLabel}>Courses</Text>
+          <Text style={styles.statLabel}>{'Courses' + '  '}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{formatCurrency(avgRevenue, currency)}</Text>
-          <Text style={styles.statLabel}>Revenu moyen</Text>
+          <Text style={styles.statLabel}>{'Revenu moyen' + '  '}</Text>
         </View>
       </View>
       <View style={styles.statusLabel}>

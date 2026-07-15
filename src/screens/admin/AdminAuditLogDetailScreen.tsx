@@ -13,7 +13,7 @@ function DetailRow({ label, value, color }: { label: string; value: string | nul
   if (!value) return null;
   return (
     <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailLabel}>{label}{'  '}</Text>
       <Text style={[styles.detailValue, color ? { color } : {}]}>{value}</Text>
     </View>
   );
