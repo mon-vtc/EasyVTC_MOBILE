@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppIcon } from '../common/AppIcon';
 import CustomCalendarModal from '../common/CustomCalendarModal';
 import { Colors, Fonts, Radius, Spacing } from '../../theme/colors';
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function AuditLogFilterModal({ visible, filters, onApply, onClose }: Props) {
+  const insets = useSafeAreaInsets();
   const [localFilters, setLocalFilters] = useState<AuditLogFilters>(filters);
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [calendarTarget, setCalendarTarget] = useState<'exact' | 'from' | 'to' | null>(null);
@@ -47,7 +49,7 @@ export default function AuditLogFilterModal({ visible, filters, onApply, onClose
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingBottom: styles.container.padding + insets.bottom }]}>
           <View style={styles.header}>
             <Text style={styles.title}>Filtres & Tri</Text>
             <TouchableOpacity onPress={onClose}>

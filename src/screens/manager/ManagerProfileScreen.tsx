@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, Switch, Platform, Modal, TextInput,
-  KeyboardAvoidingView,
+  KeyboardAvoidingView, Linking,
 } from 'react-native';
 import { zodResolver }       from '@hookform/resolvers/zod';
 import { z }                 from 'zod';
@@ -20,6 +20,7 @@ import { usePermissions } from '../../hooks/usePermissions';
 import { PERMISSION_LABELS } from '../../types';
 import type { ManagerPermission } from '../../types';
 import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 
 type Props = DrawerScreenProps<ManagerDrawerParamList, 'ManagerProfile'>;
 
@@ -80,6 +81,7 @@ export default function ManagerProfileScreen({ navigation }: Props) {
   const { permissions } = usePermissions();
   const { showAlert } = useAlert();
   const { showToast } = useToast();
+  const scrollBottomInset = useBottomInset(styles.scroll.paddingBottom);
 
   const [pendingImage,   setPendingImage]   = useState<string | null>(null); // sélectionnée, pas encore uploadée
   const [confirmedImage, setConfirmedImage] = useState<string | null>(null); // uploadée avec succès
@@ -203,7 +205,7 @@ export default function ManagerProfileScreen({ navigation }: Props) {
           onPress: () => { if (!isLoading) handleEditToggleRef.current(); },
         }}
       />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: scrollBottomInset }]} showsVerticalScrollIndicator={false}>
 
         {/* ── Avatar ── */}
         <View style={styles.avatarSection}>
@@ -297,6 +299,16 @@ export default function ManagerProfileScreen({ navigation }: Props) {
 
         {/* ── Actions ── */}
         <View style={styles.actionsSection}>
+
+          <TouchableOpacity style={styles.actionRow} onPress={() => Linking.openSettings()}>
+            <View style={styles.actionLeft}>
+              <Ionicons name="notifications-outline" size={20} color={Colors.textPrimary} />
+              <Text style={styles.actionLabel}>Notifications système</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
 
           <TouchableOpacity style={styles.actionRow} onPress={() => { reset(); clearError(); setShowPasswordModal(true); }}>
             <View style={styles.actionLeft}>

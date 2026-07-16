@@ -238,6 +238,7 @@ interface ViewerProps {
 }
 
 const DocumentViewer = ({ visible, view, onClose, onReplace }: ViewerProps) => {
+  const insets = useSafeAreaInsets();
   if (!view?.document) return null;
 
   const doc       = view.document;
@@ -302,7 +303,7 @@ const DocumentViewer = ({ visible, view, onClose, onReplace }: ViewerProps) => {
           <Text style={m.statusText}>{statusLabel}</Text>
         </View>
 
-        <View style={m.actions}>
+        <View style={[m.actions, { paddingBottom: m.actions.paddingBottom + insets.bottom }]}>
           <TouchableOpacity style={m.btnReplace} onPress={onReplace}>
             <Ionicons name="arrow-up-circle-outline" size={18} color="#fff" />
             <Text style={m.btnReplaceText}>Remplacer le document</Text>

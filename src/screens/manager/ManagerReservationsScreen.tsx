@@ -12,6 +12,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import type { Reservation, ReservationStatus, AvailableDriverDto } from '../../types/reservations.types';
 import { usePermissions } from '../../hooks/usePermissions';
 import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 
 type FilterTab = 'all' | 'pending' | 'assigned' | 'completed' | 'cancelled';
 
@@ -184,6 +185,7 @@ export default function ManagerReservationsScreen({ navigation }: any) {
   const [activeTab,   setActiveTab]   = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing,  setRefreshing]  = useState(false);
+  const listBottomInset = useBottomInset(styles.scroll.padding);
 
   // Driver picker
   const [pickerVisible, setPickerVisible]                   = useState(false);
@@ -349,7 +351,7 @@ export default function ManagerReservationsScreen({ navigation }: any) {
               <Text style={styles.emptyText}>Aucune réservation trouvée</Text>
             </View>
           }
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, { paddingBottom: listBottomInset }]}
         />
       )}
 

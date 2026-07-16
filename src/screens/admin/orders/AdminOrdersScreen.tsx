@@ -11,6 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOrdersStore }  from '../../../store/orders.store';
 import { useAuthStore } from '../../../store/auth.store';
 import type { Order } from '../../../types/orders.types';
@@ -22,6 +23,7 @@ import { AppHeader } from '../../../components/common/AppHeader';
 
 export default function AdminOrdersScreen() {
   const navigation = useNavigation<NavigationProp<any>>();
+  const insets = useSafeAreaInsets();
   const { showToast } = useToast();
   const { unreadCount } = useNotifications();
 
@@ -90,7 +92,7 @@ export default function AdminOrdersScreen() {
         data={filtered}
         keyExtractor={(o) => o.id}
         renderItem={({ item }) => <OrderCard order={item} token={token} role="admin" onPress={handleViewOrder} />}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: styles.list.paddingBottom + insets.bottom }]}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}

@@ -34,6 +34,7 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO, differenceInMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -793,6 +794,7 @@ const NotificationDetailsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route      = useRoute<RouteProp<NotifDetailsParams, 'NotificationDetails'>>();
   const { notification } = route.params;
+  const insets = useSafeAreaInsets();
 
   const { user }                                  = useAuthStore();
   const { fetchById, selected, isLoading, error } = useReservation();
@@ -822,25 +824,29 @@ const NotificationDetailsScreen: React.FC = () => {
   }, [navigation, user?.role]);
 
   // ── Navigation selon le rôle ──────────────────────────────────────────────
+  // Driver/admin/manager sont chacun un Stack racine ('XxxMain') qui enveloppe
+  // un Drawer — les écrans du Drawer ('DriverReservations', 'AdminReservations'...)
+  // ne sont pas visibles depuis la racine sans repasser explicitement par
+  // 'XxxMain' (même bug que navigateFromNotification, voir ce fichier).
   const navigateToReservation = useCallback(() => {
     if (!reservationId) return;
     switch (user?.role) {
       case 'driver':
-        navigation.navigate('DriverReservations' as any, {
-          screen: 'DriverReservationDetails',
-          params: { reservationId },
+        navigation.navigate('DriverMain' as any, {
+          screen: 'DriverReservations',
+          params: { screen: 'DriverReservationDetails', params: { reservationId } },
         });
         break;
       case 'admin':
-        navigation.navigate('AdminReservations' as any, {
-          screen: 'AdminReservationDetail',
-          params: { reservationId },
+        navigation.navigate('AdminMain' as any, {
+          screen: 'AdminReservations',
+          params: { screen: 'AdminReservationDetail', params: { reservationId } },
         });
         break;
       case 'manager':
-        navigation.navigate('ManagerReservations' as any, {
-          screen: 'ManagerReservationDetail',
-          params: { reservationId },
+        navigation.navigate('ManagerMain' as any, {
+          screen: 'ManagerReservations',
+          params: { screen: 'ManagerReservationDetail', params: { reservationId } },
         });
         break;
       case 'client':
@@ -849,16 +855,37 @@ const NotificationDetailsScreen: React.FC = () => {
     }
   }, [reservationId, user?.role, navigation]);
 
+  // Même règle de nesting que ci-dessus, pour l'écran Documents de chaque rôle.
+  const navigateToDocuments = useCallback(() => {
+    switch (user?.role) {
+      case 'driver':
+        navigation.navigate('DriverMain' as any, { screen: 'DriverDocuments' });
+        break;
+      case 'admin':
+        navigation.navigate('AdminMain' as any, { screen: 'AdminDocuments' });
+        break;
+      case 'manager':
+        navigation.navigate('ManagerMain' as any, { screen: 'ManagerDocuments' });
+        break;
+      default:
+        break;
+    }
+  }, [user?.role, navigation]);
+
   // Appel téléphonique du chauffeur
   const callDriver = useCallback(() => {
     const phone = selected?.driver?.user.phone;
     if (phone) Linking.openURL(`tel:${phone}`);
   }, [selected?.driver?.user.phone]);
 
-  // Messagerie in-app vers le chauffeur (driver_arrived)
+  // Messagerie in-app vers le chauffeur (driver_arrived — toujours reçu côté client).
+  // 'Messages' est un onglet du Bottom Tab 'ClientTabs', pas un écran racine.
   const openMessage = useCallback(() => {
     const driverId = selected?.driver?.id;
-    navigation.navigate('Messages', driverId ? { driverId } : undefined);
+    navigation.navigate('ClientTabs' as any, {
+      screen: 'Messages',
+      params: driverId ? { driverId } : undefined,
+    });
   }, [selected?.driver?.id, navigation]);
 
   // ── Corps dynamique ───────────────────────────────────────────────────────
@@ -935,7 +962,7 @@ const NotificationDetailsScreen: React.FC = () => {
         return (
           <DocumentExpiryDetails
             notification={notification}
-            onNavigate={() => navigation.navigate('DriverDocuments')}
+            onNavigate={navigateToDocuments}
           />
         );
       case 'new_reservation_admin':
@@ -971,7 +998,7 @@ const NotificationDetailsScreen: React.FC = () => {
       </View>
 
       <ScrollView
-        contentContainerStyle={screenSt.scroll}
+        contentContainerStyle={[screenSt.scroll, { paddingBottom: screenSt.scroll.paddingBottom + insets.bottom }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero dynamique toujours visible */}

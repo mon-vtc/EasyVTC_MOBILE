@@ -76,7 +76,7 @@ export function AppHeader({
       navigation.dispatch(DrawerActions.openDrawer());
     } else if (left === 'back') {
       if (onBack) onBack();
-      else navigation.goBack();
+      else if (navigation.canGoBack()) navigation.goBack();
     }
   };
 

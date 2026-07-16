@@ -6,6 +6,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
 import { useClientsStore, useAuthStore } from '../../../store';
 import type { ClientWithStats, ClientTripItem, ClientsStackParamList } from '../../../types';
@@ -146,6 +147,7 @@ export default function AdminClientDetailScreen() {
   const route       = useRoute<any>();
   const { clientId } = route.params as { clientId: string };
   const accessToken  = useAuthStore(s => s.accessToken);
+  const insets = useSafeAreaInsets();
   const [favorites, setFavorites] = useState<FavoriteAddress[]>([]);
 
   const { fetchClientById, fetchClientTrips } = useClientsStore();
@@ -252,7 +254,7 @@ export default function AdminClientDetailScreen() {
     <View style={styles.container}>
       <AppHeader left="back" title="Détails client" />
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]} showsVerticalScrollIndicator={false}>
 
         {/* Carte identité */}
         <View style={styles.identityCard}>

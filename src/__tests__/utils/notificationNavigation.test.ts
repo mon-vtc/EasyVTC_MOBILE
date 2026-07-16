@@ -89,33 +89,37 @@ describe('navigateFromNotification — types réservation', () => {
     'driver_reminder_30min',
   ];
 
-  it.each(DRIVER_REMINDER_TYPES)('%s avec reservation_id, rôle driver → DriverReservationDetails imbriqué', (type) => {
+  // Driver/admin/manager sont un Stack racine ('XxxMain') qui enveloppe un
+  // Drawer — les écrans du Drawer ('DriverNotifications', 'AdminReservations'...)
+  // ne sont pas visibles depuis la racine sans repasser explicitement par
+  // 'XxxMain' (voir notificationNavigation.ts, ROOT_SCREEN).
+  it.each(DRIVER_REMINDER_TYPES)('%s avec reservation_id, rôle driver → DriverReservationDetails imbriqué sous DriverMain', (type) => {
     const notification = makeNotification(type, { reservation_id: 'resa-42' });
     navigateFromNotification(notification, 'driver');
 
-    expect(mockNavigate).toHaveBeenCalledWith('DriverNotifications', {
-      screen: 'DriverReservationDetails',
-      params: { reservationId: 'resa-42' },
+    expect(mockNavigate).toHaveBeenCalledWith('DriverMain', {
+      screen: 'DriverNotifications',
+      params: { screen: 'DriverReservationDetails', params: { reservationId: 'resa-42' } },
     });
   });
 
-  it('trip_reminder avec reservation_id, rôle admin → AdminReservationDetail imbriqué', () => {
+  it('trip_reminder avec reservation_id, rôle admin → AdminReservationDetail imbriqué sous AdminMain', () => {
     const notification = makeNotification('trip_reminder', { reservation_id: 'resa-42' });
     navigateFromNotification(notification, 'admin');
 
-    expect(mockNavigate).toHaveBeenCalledWith('AdminReservations', {
-      screen: 'AdminReservationDetail',
-      params: { reservationId: 'resa-42' },
+    expect(mockNavigate).toHaveBeenCalledWith('AdminMain', {
+      screen: 'AdminReservations',
+      params: { screen: 'AdminReservationDetail', params: { reservationId: 'resa-42' } },
     });
   });
 
-  it('trip_reminder avec reservation_id, rôle manager → ManagerReservationDetail imbriqué', () => {
+  it('trip_reminder avec reservation_id, rôle manager → ManagerReservationDetail imbriqué sous ManagerMain', () => {
     const notification = makeNotification('trip_reminder', { reservation_id: 'resa-42' });
     navigateFromNotification(notification, 'manager');
 
-    expect(mockNavigate).toHaveBeenCalledWith('ManagerReservations', {
-      screen: 'ManagerReservationDetail',
-      params: { reservationId: 'resa-42' },
+    expect(mockNavigate).toHaveBeenCalledWith('ManagerMain', {
+      screen: 'ManagerReservations',
+      params: { screen: 'ManagerReservationDetail', params: { reservationId: 'resa-42' } },
     });
   });
 });
@@ -136,33 +140,33 @@ describe('navigateFromNotification — invoice_available', () => {
     expect(mockNavigate).toHaveBeenCalledWith('InvoiceDetails', { invoiceId: 'inv-7' });
   });
 
-  it('avec invoice_id, rôle driver → DriverInvoiceDetails imbriqué', () => {
+  it('avec invoice_id, rôle driver → DriverInvoiceDetails imbriqué sous DriverMain', () => {
     const notification = makeNotification('invoice_available', { invoice_id: 'inv-7' });
     navigateFromNotification(notification, 'driver');
 
-    expect(mockNavigate).toHaveBeenCalledWith('DriverInvoices', {
-      screen: 'DriverInvoiceDetails',
-      params: { invoiceId: 'inv-7' },
+    expect(mockNavigate).toHaveBeenCalledWith('DriverMain', {
+      screen: 'DriverInvoices',
+      params: { screen: 'DriverInvoiceDetails', params: { invoiceId: 'inv-7' } },
     });
   });
 
-  it('avec invoice_id, rôle admin → InvoiceDetails imbriqué sous AdminInvoices', () => {
+  it('avec invoice_id, rôle admin → InvoiceDetails imbriqué sous AdminMain > AdminInvoices', () => {
     const notification = makeNotification('invoice_available', { invoice_id: 'inv-7' });
     navigateFromNotification(notification, 'admin');
 
-    expect(mockNavigate).toHaveBeenCalledWith('AdminInvoices', {
-      screen: 'InvoiceDetails',
-      params: { invoiceId: 'inv-7' },
+    expect(mockNavigate).toHaveBeenCalledWith('AdminMain', {
+      screen: 'AdminInvoices',
+      params: { screen: 'InvoiceDetails', params: { invoiceId: 'inv-7' } },
     });
   });
 
-  it('avec invoice_id, rôle manager → InvoiceDetails imbriqué sous ManagerInvoices', () => {
+  it('avec invoice_id, rôle manager → InvoiceDetails imbriqué sous ManagerMain > ManagerInvoices', () => {
     const notification = makeNotification('invoice_available', { invoice_id: 'inv-7' });
     navigateFromNotification(notification, 'manager');
 
-    expect(mockNavigate).toHaveBeenCalledWith('ManagerInvoices', {
-      screen: 'InvoiceDetails',
-      params: { invoiceId: 'inv-7' },
+    expect(mockNavigate).toHaveBeenCalledWith('ManagerMain', {
+      screen: 'ManagerInvoices',
+      params: { screen: 'InvoiceDetails', params: { invoiceId: 'inv-7' } },
     });
   });
 });
@@ -171,25 +175,25 @@ describe('navigateFromNotification — invoice_available', () => {
 describe('navigateFromNotification — document_expiry', () => {
   // Ce type ne porte ni reservation_id ni invoice_id (seulement document_id) :
   // shipToRole() tombe donc toujours sur la route "liste documents" du rôle.
-  it('rôle driver → DriverDocuments', () => {
+  it('rôle driver → DriverDocuments imbriqué sous DriverMain', () => {
     const notification = makeNotification('document_expiry', { document_id: 'doc-1' });
     navigateFromNotification(notification, 'driver');
 
-    expect(mockNavigate).toHaveBeenCalledWith('DriverDocuments');
+    expect(mockNavigate).toHaveBeenCalledWith('DriverMain', { screen: 'DriverDocuments', params: undefined });
   });
 
-  it('rôle admin → AdminDocuments', () => {
+  it('rôle admin → AdminDocuments imbriqué sous AdminMain', () => {
     const notification = makeNotification('document_expiry', { document_id: 'doc-1' });
     navigateFromNotification(notification, 'admin');
 
-    expect(mockNavigate).toHaveBeenCalledWith('AdminDocuments');
+    expect(mockNavigate).toHaveBeenCalledWith('AdminMain', { screen: 'AdminDocuments', params: undefined });
   });
 
-  it('rôle manager → ManagerDocuments', () => {
+  it('rôle manager → ManagerDocuments imbriqué sous ManagerMain', () => {
     const notification = makeNotification('document_expiry', { document_id: 'doc-1' });
     navigateFromNotification(notification, 'manager');
 
-    expect(mockNavigate).toHaveBeenCalledWith('ManagerDocuments');
+    expect(mockNavigate).toHaveBeenCalledWith('ManagerMain', { screen: 'ManagerDocuments', params: undefined });
   });
 
   // Cas limite documenté : un document_expiry ne devrait jamais être envoyé à un
@@ -217,6 +221,26 @@ describe('navigateFromNotification — new_message', () => {
     navigateFromNotification(notification, 'client');
 
     expect(mockNavigate).toHaveBeenCalledWith('NotificationDetails', { notification });
+  });
+
+  it('avec reservation_id, rôle driver → ChatScreen imbriqué sous DriverMain > DriverMessages', () => {
+    const notification = makeNotification('new_message', { reservation_id: 'resa-9' });
+    navigateFromNotification(notification, 'driver');
+
+    expect(mockNavigate).toHaveBeenCalledWith('DriverMain', {
+      screen: 'DriverMessages',
+      params: { screen: 'ChatScreen', params: { reservationId: 'resa-9' } },
+    });
+  });
+
+  it('avec reservation_id, rôle admin → AdminChatScreen imbriqué sous AdminMain > AdminDiscussions', () => {
+    const notification = makeNotification('new_message', { reservation_id: 'resa-9' });
+    navigateFromNotification(notification, 'admin');
+
+    expect(mockNavigate).toHaveBeenCalledWith('AdminMain', {
+      screen: 'AdminDiscussions',
+      params: { screen: 'AdminChatScreen', params: { reservationId: 'resa-9' } },
+    });
   });
 });
 
@@ -250,6 +274,26 @@ describe('navigateFromNotification — support_reply', () => {
     navigateFromNotification(notification, 'client');
 
     expect(mockNavigate).toHaveBeenCalledWith('NotificationDetails', { notification });
+  });
+
+  it('avec ticket_id, rôle driver → SupportChat imbriqué sous DriverMain > DriverSupport', () => {
+    const notification = makeNotification('support_reply', { ticket_id: 'ticket-3' });
+    navigateFromNotification(notification, 'driver');
+
+    expect(mockNavigate).toHaveBeenCalledWith('DriverMain', {
+      screen: 'DriverSupport',
+      params: { screen: 'SupportChat', params: { ticketId: 'ticket-3', subject: 'Ticket de support' } },
+    });
+  });
+
+  it('avec ticket_id, rôle admin → SupportChat imbriqué sous AdminMain > AdminSupport', () => {
+    const notification = makeNotification('support_reply', { ticket_id: 'ticket-3' });
+    navigateFromNotification(notification, 'admin');
+
+    expect(mockNavigate).toHaveBeenCalledWith('AdminMain', {
+      screen: 'AdminSupport',
+      params: { screen: 'SupportChat', params: { ticketId: 'ticket-3', subject: 'Ticket de support' } },
+    });
   });
 });
 

@@ -13,7 +13,6 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useNotifications } from '../../hooks/useNotifications';
 import NotificationCard from '../../components/NotificationCard';
 import type { AuthUser, Notification } from '../../types';
@@ -21,11 +20,12 @@ import { Colors, Spacing, Fonts } from '../../theme/colors';
 import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
 import { useAuthStore } from '../../store/auth.store';
-import type { NavigationProp } from '@react-navigation/native';
 import { AppHeader } from '../../components/common/AppHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { navigateFromNotification } from '../../utils/notificationNavigation';
 
 const NotificationsScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp<any>>();
+  const insets = useSafeAreaInsets();
   const {
     notifications,
     unreadCount,
@@ -84,119 +84,15 @@ const NotificationsScreen: React.FC = () => {
     });
   }, [removeNotificationLocally]);
 
+  // Délègue à navigateFromNotification (utils/notificationNavigation.ts) — logique
+  // partagée avec le tap sur une notification push, pour éviter que les deux
+  // copies divergent (voir la correction du bug "action NAVIGATE non gérée").
   const handleViewAction = useCallback((notification: Notification) => {
-    const reservationId = notification.data?.reservation_id;
-    const invoiceId = notification.data?.invoice_id;
-    const ticketId = notification.data?.ticket_id;
-    const subject = notification.data?.subject;
-
-
-    const navigateToNested = (route: string, nested: { screen: string; params: Record<string, unknown> }) => {
-      navigation.navigate(route as any, nested as any);
-    };
-
-    const shipToRole = () => {
-      switch (user?.role) {
-        case 'driver':
-          if (reservationId) {
-            navigateToNested('DriverNotifications', { screen: 'DriverReservationDetails', params: { reservationId } });
-            return true;
-          }
-          if (invoiceId) {
-            navigateToNested('DriverInvoices', { screen: 'DriverInvoiceDetails', params: { invoiceId } });
-            return true;
-          }
-          navigation.navigate('DriverDocuments');
-          return true;
-
-        case 'admin':
-          if (reservationId) {
-            navigateToNested('AdminReservations', { screen: 'AdminReservationDetail', params: { reservationId } });
-            return true;
-          }
-          if (invoiceId) {
-            navigateToNested('AdminInvoices', { screen: 'InvoiceDetails', params: { invoiceId } });
-            return true;
-          }
-          navigation.navigate('AdminDocuments');
-          return true;
-
-        case 'manager':
-          if (reservationId) {
-            navigateToNested('ManagerReservations', { screen: 'ManagerReservationDetail', params: { reservationId } });
-            return true;
-          }
-          if (invoiceId) {
-            navigateToNested('ManagerInvoices', { screen: 'InvoiceDetails', params: { invoiceId } });
-            return true;
-          }
-          navigation.navigate('ManagerDocuments');
-          return true;
-
-        case 'client':
-        default:
-          if (reservationId) {
-            navigation.navigate('ReservationDetails', { reservationId });
-            return true;
-          }
-          if (invoiceId) {
-            navigation.navigate('InvoiceDetails', { invoiceId });
-            return true;
-          }
-          return false;
-      }
-    };
-
-    if (
-      notification.type === 'reservation_confirmed' ||
-      notification.type === 'trip_assigned' ||
-      notification.type === 'trip_reminder' ||
-      notification.type === 'driver_arrived' ||
-      notification.type === 'reservation_cancelled' ||
-      notification.type === 'driver_reminder_24h' ||
-      notification.type === 'driver_reminder_2h' ||
-      notification.type === 'driver_reminder_30min'
-    ) {
-      if (!reservationId) {
-        navigation.navigate('NotificationDetails', { notification });
-      } else {
-        shipToRole();
-      }
-    } else if (notification.type === 'invoice_available') {
-      if (!invoiceId) {
-        navigation.navigate('NotificationDetails', { notification });
-      } else {
-        shipToRole();
-      }
-        } else if (notification.type === 'document_expiry') {
-      shipToRole();
-    } else {
-      switch (notification.type) {
-        case 'new_message':
-          if (reservationId) {
-            navigation.navigate('ChatScreen', { reservationId });
-          } else {
-            navigation.navigate('NotificationDetails', { notification });
-          }
-          break;
-
-        case 'support_reply':
-          if (ticketId) {
-            navigation.navigate('SupportChat', { ticketId, subject: subject ?? 'Ticket de support' });
-          } else {
-            navigation.navigate('NotificationDetails', { notification });
-          }
-          break;
-
-        default:
-          navigation.navigate('NotificationDetails', { notification });
-          break;
-      }
-    }
+    navigateFromNotification(notification, user?.role);
     if (!notification.read_at) {
       handleMarkAsRead(notification.id);
     }
-  }, [navigation, handleMarkAsRead, user]);
+  }, [handleMarkAsRead, user]);
 
   const handleViewDetails = useCallback((notification: Notification) => {
     handleViewAction(notification);
@@ -257,6 +153,7 @@ const NotificationsScreen: React.FC = () => {
               onPress={handleViewDetails}
             />
           )}
+          contentContainerStyle={{ paddingBottom: Spacing.md + insets.bottom }}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={styles.loader} /> : null}

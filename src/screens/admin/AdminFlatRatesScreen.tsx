@@ -18,6 +18,7 @@ import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import type {AppIconProps}  from '../../types/app-icon-props.types';
 import { useToast } from '../../hooks/useToast';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES LOCAUX
@@ -278,6 +279,7 @@ function CreateModal({
   onSave: (form: FlatRateFormValues) => void;
 }) {
   const { showToast } = useToast();
+  const insets = useSafeAreaInsets();
   const [form, setForm] = useState<FlatRateFormValues>(emptyForm());
   const set = (k: keyof FlatRateFormValues) => (v: string) =>
     setForm(prev => ({ ...prev, [k]: v }));
@@ -302,7 +304,7 @@ function CreateModal({
         style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={hdr.container}>
+        <View style={[hdr.container, { height: hdr.container.height + insets.top, paddingTop: insets.top }]}>
           <TouchableOpacity
             onPress={onClose}
             style={hdr.side}
@@ -317,7 +319,7 @@ function CreateModal({
         </View>
 
         <ScrollView
-          contentContainerStyle={{ padding: 16, gap: 16 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 16 + insets.bottom, gap: 16 }}
           keyboardShouldPersistTaps="handled"
         >
           <View style={sec.container}>
@@ -409,6 +411,7 @@ function FlatRateDetailScreen({
   onDelete: (id: string) => Promise<void>;
 }) {
   const { showAlert } = useAlert();
+  const insets = useSafeAreaInsets();
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm]           = useState<FlatRateFormValues>(flatRateToForm(item));
   const [savedForm, setSavedForm] = useState<FlatRateFormValues>(flatRateToForm(item));
@@ -472,7 +475,7 @@ function FlatRateDetailScreen({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={{ padding: 16, gap: 16 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 16 + insets.bottom, gap: 16 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -606,6 +609,7 @@ export default function AdminFlatRatesScreen() {
     deactivateFlatRate,
   } = usePricing();
 
+  const insets = useSafeAreaInsets();
   const [selectedItem,  setSelectedItem]  = useState<PricingFlatRate | null>(null);
   const [createVisible, setCreateVisible] = useState(false);
   const { showToast } = useToast();
@@ -687,7 +691,7 @@ export default function AdminFlatRatesScreen() {
       <FlatList
         data={flatRates}
         keyExtractor={item => item.id}
-        contentContainerStyle={{ padding: 16, gap: 12 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 16 + insets.bottom, gap: 12 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <Text style={styles.sectionCount}>

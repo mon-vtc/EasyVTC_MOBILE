@@ -7,6 +7,7 @@ import { useDriver } from '../../hooks/useDriver';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import type { PlanningReservation } from '../../types/drivers.types';
 const DAYS_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -162,6 +163,7 @@ export default function DriverPlanningScreen({ navigation }: any) {
   const [refreshing, setRefreshing] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date()); // Date de référence pour le calendrier et le refresh
   const [isLoading, setIsLoading] = useState(false);
+  const listBottomInset = useBottomInset();
   const fetchAllReservationsForMonth = useCallback(async (date: string) => {
     setIsLoading(true);
     setDisplayDate(null); // Affiche toutes les courses du mois par défaut
@@ -242,7 +244,7 @@ export default function DriverPlanningScreen({ navigation }: any) {
             <RideInfoCard item={item} onPress={() => navigation.navigate('DriverReservationDetails', { reservationId: item.id })} />
           )}
           ListEmptyComponent={<Text style={styles.emptyText}>Aucune course prévue pour cette date.</Text>}
-          contentContainerStyle={styles.listContainer}
+          contentContainerStyle={[styles.listContainer, { paddingBottom: listBottomInset }]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         />
       )}

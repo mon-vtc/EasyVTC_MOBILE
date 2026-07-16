@@ -60,7 +60,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
             <Text style={styles.emailHighlight}>{sentEmail}</Text>{' '}
             est associée à un compte, vous recevrez un lien de réinitialisation dans quelques minutes.
           </Text>
-          <Text style={styles.successHint}>Vérifiez aussi vos spams.</Text>
+          <Text style={styles.successHint}>{'Vérifiez aussi vos spams.' + '  '}</Text>
 
           <AppButton
             label="Saisir mon nouveau mot de passe"
@@ -73,7 +73,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
             style={{ marginTop: Spacing.lg, alignItems: 'center' }}
           >
             <Text style={styles.loginText}>
-              Retour à la <Text style={styles.loginBold}>connexion</Text>
+              Retour à la <Text style={styles.loginBold}>{'connexion' + '  '}</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -142,7 +142,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           >
             <Text style={styles.loginText}>
               Vous souvenez-vous du mot de passe ?{' \t\t'}
-              <Text style={styles.loginBold}>Se connecter</Text>
+              <Text style={styles.loginBold}>{'Se connecter' + '  '}</Text>
             </Text>
           </TouchableOpacity>
 

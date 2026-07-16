@@ -15,6 +15,7 @@ import {
   SafeAreaView,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat } from '../../hooks/useChat';
 import { Colors, Spacing, Fonts } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -183,6 +184,7 @@ export default function AdminChatScreen({ route, navigation }: AdminChatScreenPr
     reservationId: string;
     conversation?: ActiveConversation;
   };
+  const insets = useSafeAreaInsets();
 
   const { showToast } = useToast();
 
@@ -297,7 +299,7 @@ export default function AdminChatScreen({ route, navigation }: AdminChatScreenPr
         left="back"
         title={conversation ? `${conversation.client?.first_name} ${conversation.client?.last_name} - ${conversation.driver?.first_name} ${conversation.driver?.last_name}` : 'Conversation'}
         subtitle={conversation ? `${conversation.pickup_address} → ${conversation.dest_address}` : undefined}
-        onBack={() => navigation.goBack()}
+        onBack={() => { if (navigation.canGoBack()) navigation.goBack(); }}
       />
 
       {/* Read-only banner */}
@@ -327,7 +329,7 @@ export default function AdminChatScreen({ route, navigation }: AdminChatScreenPr
       )}
 
       {/* Footer with call buttons */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: styles.footer.paddingVertical + insets.bottom }]}>
         <View style={styles.callButtonContainer}>
           <TouchableOpacity style={styles.callButton} onPress={handleCallDriver}>
             <Ionicons name="call" size={18} color={Colors.white} />

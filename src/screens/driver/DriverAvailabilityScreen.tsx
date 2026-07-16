@@ -11,6 +11,7 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useDriver } from '../../hooks/useDriver';
 import type { DayOfWeek, WeeklyScheduleDay, SetScheduleDto } from '../../types';
 import { useToast } from '../../hooks/useToast';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import CustomTimePickerModal  from '../../components/common/CustomTimePickerModal'
 
 
@@ -118,6 +119,7 @@ export default function DriverAvailabilityScreen() {
   const { weeklySchedule, isFetchingSchedule, fetchWeeklySchedule, updateWeeklySchedule, error} = useDriver();
   const [localSchedule, setLocalSchedule] = useState<WeeklyScheduleDay[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const footerBottomInset = useBottomInset(styles.footer.paddingBottom);
 
   const { showToast } = useToast();
 
@@ -235,7 +237,7 @@ export default function DriverAvailabilityScreen() {
       </ScrollView>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: footerBottomInset }]}>
         <TouchableOpacity
           style={styles.saveButton}
           onPress={handleSaveSchedule}

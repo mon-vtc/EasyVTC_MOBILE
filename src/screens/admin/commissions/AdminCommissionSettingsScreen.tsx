@@ -16,6 +16,7 @@ import { useCommissionSettings } from '../../../hooks/useCommissionSettings';
 import { useVehicleTypes } from '../../../hooks/useVehicleTypes';
 import { useAlert } from '../../../hooks/useAlert';
 import { useToast } from '../../../hooks/useToast';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 import type { CommissionSetting, CommissionZone, CommissionRateType } from '../../../types';
 import { AppIcon } from '../../../components/common/AppIcon';
 import { AppButton } from '../../../components/common/AppButton';
@@ -59,6 +60,8 @@ export default function AdminCommissionSettingsScreen() {
   const [activeZone, setActiveZone] = useState<CommissionZone>('france');
   const [isModalVisible, setModalVisible] = useState(false);
   const [editingSetting, setEditingSetting] = useState<CommissionSetting | null>(null);
+  const scrollBottomInset = useBottomInset(Spacing.xl);
+  const modalBottomInset = useBottomInset(styles.modalContent.paddingBottom);
 
   // ── Formulaire (react-hook-form) ────────────────────────────────────────────
   const { control, handleSubmit, reset, formState: { errors } } = useForm<CommissionFormValues>({
@@ -163,7 +166,7 @@ export default function AdminCommissionSettingsScreen() {
         rightIcon={{ name: 'add', onPress: openModalForCreate }}
       />
 
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: scrollBottomInset }}>
         {/* Sélecteur de zone */}
         <View style={styles.zoneSelector}>
           {(['france', 'senegal'] as CommissionZone[]).map((zone) => (
@@ -233,7 +236,7 @@ export default function AdminCommissionSettingsScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { paddingBottom: modalBottomInset }]}>
             <Text style={styles.modalTitle}>
               {editingSetting ? 'Modifier la règle' : 'Nouvelle règle'}
             </Text>

@@ -17,6 +17,7 @@ import { AppIcon }             from '../../components/common/AppIcon';
 import { AppHeader }           from '../../components/common/AppHeader';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SOUS-COMPOSANTS
@@ -192,6 +193,7 @@ export default function AdminPricingScreen() {
     computeExample,
   } = usePricing();
 
+  const insets = useSafeAreaInsets();
   const { showToast } = useToast();
   const { showAlert } = useAlert();
   // ── Mode édition ─────────────────────────────────────────────────────────
@@ -317,7 +319,7 @@ export default function AdminPricingScreen() {
       >
         <ScrollView
           style={styles.container}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: styles.content.padding + insets.bottom }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >

@@ -12,6 +12,7 @@ import {
   Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp, NavigationProp } from '@react-navigation/native';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
@@ -422,6 +423,7 @@ function PaymentTab({ reservation }: { reservation: Reservation }) {
 export default function AdminReservationScreen({ navigation }: any) {
   const route      = useRoute<ScreenRoute>();
   // const navigation = useNavigation<ScreenNav>();
+  const insets = useSafeAreaInsets();
   const { reservations, selected, fetchById, assign, isLoading, cancel } = useReservation();
   const { showToast } = useToast();
 
@@ -589,7 +591,7 @@ const handleViewInvoice = async () => {
       {/* ── CONTENT ── */}
       <ScrollView
         style={S.content}
-        contentContainerStyle={{ paddingBottom: hasBottomActions ? 140 : 24 }}
+        contentContainerStyle={{ paddingBottom: (hasBottomActions ? 140 : 24) + insets.bottom }}
         showsVerticalScrollIndicator={false}
       >
         <TabContent />
@@ -597,7 +599,7 @@ const handleViewInvoice = async () => {
 
       {/* ── BOTTOM ACTIONS ── */}
       {hasBottomActions && (
-        <View style={S.bottomActions}>
+        <View style={[S.bottomActions, { paddingBottom: S.bottomActions.paddingBottom + insets.bottom }]}>
           {primaryAction && (
             <TouchableOpacity
               style={[S.primaryBtn, { backgroundColor: Colors.bordeaux, marginBottom: Spacing.sm }]}

@@ -33,6 +33,7 @@ import type { DriverInvoicesStackParamList, RevenuStackParamList } from '../../.
 import type { InvoiceAdjustment } from '../../../types/invoices.types';
 import { Logo }                   from '../../../constants/logo';
 import { AppHeader }              from '../../../components/common/AppHeader';
+import { useBottomInset }         from '../../../hooks/useSafeAreaPadding';
 
 // ── Types navigation ───────────────────────────────────────────────────────────
 type NavRoute = RouteProp<DriverInvoicesStackParamList | RevenuStackParamList, 'DriverInvoiceDetails'>;
@@ -76,6 +77,7 @@ export default function InvoiceDetailsScreen() {
 
   const [openingPdf, setOpeningPdf] = useState(false);
   const [isLoadingFromReservation, setIsLoadingFromReservation] = useState(false);
+  const scrollBottomInset = useBottomInset(styles.scrollContent.paddingBottom);
 
   useEffect(() => {
     const loadInvoice = async () => {
@@ -189,7 +191,7 @@ export default function InvoiceDetailsScreen() {
         rightIcon={{ name: 'share-social-outline', onPress: handleShare }}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomInset }]}>
 
         {/* ════════════════════════════════════════════════════════════════════
             DOCUMENT — FACTURE

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LineChart } from 'react-native-chart-kit';
 import { useAdmin } from '../../hooks/useAdmin';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import { AppHeader } from '../../components/common/AppHeader';
 import type { AdminDashboard, AdminDashboardPeriod, TopDriver, PopularRoute, PeakHourSlot } from '../../types';
 import { Colors, Fonts, Radius, Spacing } from '../../theme/colors';
@@ -219,6 +220,7 @@ export default function AdminStatisticsScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<AdminDashboardPeriod>('week');
+  const scrollBottomInset = useBottomInset();
 
   useEffect(() => {
     const loadData = async () => {
@@ -249,7 +251,7 @@ export default function AdminStatisticsScreen({ navigation }: any) {
         }}
       />
 
-      <ScrollView style={styles.scrollContainer}>
+      <ScrollView style={styles.scrollContainer} contentContainerStyle={{ paddingBottom: scrollBottomInset }}>
         <PeriodSelector period={period} onSelect={setPeriod} />
 
         {loading ? (

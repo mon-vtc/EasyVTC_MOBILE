@@ -10,6 +10,7 @@ import {
   StyleSheet, ActivityIndicator, Linking, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOrdersStore } from '../../store/orders.store';
 import { useAuthStore } from '../../store/auth.store';
 import { useToast } from '../../hooks/useToast';
@@ -24,6 +25,7 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
   const { orders, total, page, totalPages, isLoading, isFetchingNextPage, error, fetchMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const { showToast } = useToast();
+  const insets = useSafeAreaInsets();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -98,7 +100,7 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
         renderItem={({ item }) => (
           <OrderCard order={item} token={token} role="client" onPress={handleCardPress} />
         )}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: styles.list.padding + insets.bottom }]}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />
         }

@@ -19,6 +19,7 @@ import { useNotifications } from '../../../hooks/useNotifications';
 import type { Invoice }     from '../../../types/invoices.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { AppHeader } from '../../../components/common/AppHeader';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -102,6 +103,7 @@ export default function DriverInvoicesScreen() {
   const { unreadCount } = useNotifications();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const listBottomInset = useBottomInset(styles.list.padding);
 
   const load = useCallback(async () => {
     try { await fetch(token); } catch { /* handled */ }
@@ -166,7 +168,7 @@ export default function DriverInvoicesScreen() {
         data={filteredInvoices}
         keyExtractor={(i) => i.id}
         renderItem={({ item }) => <InvoiceCard invoice={item} token={token} onPress={handleViewInvoice} />}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: listBottomInset }]}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}

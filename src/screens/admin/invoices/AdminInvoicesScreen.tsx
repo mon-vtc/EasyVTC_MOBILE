@@ -11,6 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import { Ionicons }         from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInvoicesStore } from '../../../store/invoices.store';
 import { useAuthStore }     from '../../../store/auth.store';
 import { invoicesApi }      from '../../../services/api/invoices.api';
@@ -39,6 +40,7 @@ function AdjustPriceModal({ invoice, token, onClose }: {
 }) {
   const { adjustPrice, isAdjusting } = useInvoicesStore();
   const { showToast } = useToast();
+  const insets = useSafeAreaInsets();
   const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
   const [newAmount, setNewAmount] = useState(String(invoice.amount_ttc));
   const [reason,    setReason]    = useState('');
@@ -68,7 +70,7 @@ function AdjustPriceModal({ invoice, token, onClose }: {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.modalOverlay}
       >
-        <View style={styles.modalSheet}>
+        <View style={[styles.modalSheet, { paddingBottom: styles.modalSheet.padding + insets.bottom }]}>
           {/* En-tête modal */}
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Ajuster le prix</Text>
@@ -236,6 +238,7 @@ function InvoiceRow({ invoice, token, onAdjust, onPress }: {
 
 export default function AdminInvoicesScreen() {
   const navigation = useNavigation<NavigationProp<any>>();
+  const insets = useSafeAreaInsets();
   const { invoices, total, page, totalPages, isLoading, isFetchingNextPage, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const [adjustTarget, setAdjustTarget] = useState<Invoice | null>(null);
@@ -302,7 +305,7 @@ export default function AdminInvoicesScreen() {
         renderItem={({ item }) => (
           <InvoiceRow invoice={item} token={token} onAdjust={setAdjustTarget} onPress={handleViewInvoice} />
         )}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: styles.list.paddingBottom + insets.bottom }]}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}

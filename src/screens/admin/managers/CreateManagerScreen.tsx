@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { useToast } from '../../../hooks/useToast';
 import { AppInput } from '../../../components/common/AppInput';
@@ -21,6 +22,7 @@ const PRIORITY_OPTIONS = [
 
 export default function CreateManagerScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { createManager } = useAdmin();
   const { showToast } = useToast();
 
@@ -92,7 +94,7 @@ export default function CreateManagerScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: styles.content.paddingBottom + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >

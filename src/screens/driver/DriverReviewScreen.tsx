@@ -16,6 +16,7 @@ import { useAuthStore }    from '../../store/auth.store';
 import { useRatingsStore } from '../../store/ratings.store';
 import { useNotifications } from '../../hooks/useNotifications';
 import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import type { RatingWithClient } from '../../types/ratings.types';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -107,6 +108,7 @@ export default function DriverReviewScreen() {
   const myTotalPages   = useRatingsStore(s => s.myTotalPages);
   const isLoading      = useRatingsStore(s => s.isLoading);
   const fetchMyRatings = useRatingsStore(s => s.fetchMyRatings);
+  const listBottomInset = useBottomInset(styles.list.paddingBottom);
 
   const load = useCallback(async (page = 1) => {
     if (!accessToken) return;
@@ -174,7 +176,7 @@ export default function DriverReviewScreen() {
               tintColor={Colors.bordeaux}
             />
           }
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: listBottomInset }]}
           showsVerticalScrollIndicator={false}
         />
       )}

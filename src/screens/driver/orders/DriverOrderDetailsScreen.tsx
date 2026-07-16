@@ -32,6 +32,7 @@ import { useToast } from '../../../hooks/useToast';
 import type { DriverOrdersStackParamList } from '../../../types/auth.types';
 import { Logo } from '../../../constants/logo';
 import { AppHeader } from '../../../components/common/AppHeader';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 
 type DetailsNavRoute = RouteProp<DriverOrdersStackParamList, 'DriverOrderDetails'>;
 type DetailsNavProp  = NavigationProp<DriverOrdersStackParamList, 'DriverOrderDetails'>;
@@ -80,6 +81,7 @@ export default function DriverOrderDetailsScreen() {
 
   const { showToast } = useToast();
   const [openingPdf, setOpeningPdf] = useState(false);
+  const scrollBottomInset = useBottomInset(styles.scrollContent.paddingBottom);
 
   useEffect(() => {
     if (!order) fetchDriverMine(token);
@@ -149,7 +151,7 @@ export default function DriverOrderDetailsScreen() {
         rightIcon={{ name: 'share-social-outline', onPress: handleShare }}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomInset }]}>
 
         {/* ══════════════════════════════════════════════════════════════════════
             DOCUMENT — BON DE COMMANDE

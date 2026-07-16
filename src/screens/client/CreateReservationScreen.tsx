@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation }  from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReservation } from '../../hooks/useReservation';
 import { useToast }       from '../../hooks/useToast';
 import { AppIcon }        from '../../components/common/AppIcon';
@@ -899,6 +900,7 @@ function Step3({ booking, vehicleTypes, flatRates, setComment, isFetchingPrice }
 // ÉCRAN PRINCIPAL
 // ══════════════════════════════════════════════════════════════════════════════
 export default function BookingScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const {
     booking, vehicleTypes, isSubmitting, isFetchingPrice, error,
     isStep1Valid, isStep2Valid, isStep3Valid,
@@ -918,7 +920,7 @@ export default function BookingScreen({ navigation }: any) {
 
   const handleBack = () => {
     if (booking.step > 1) prevStep();
-    else { resetBooking(); nav.goBack(); }
+    else { resetBooking(); if (nav.canGoBack()) nav.goBack(); }
   };
 
   const handleNext = () => {
@@ -1014,7 +1016,7 @@ export default function BookingScreen({ navigation }: any) {
       </KeyboardAvoidingView>
 
       {/* Barre de navigation bas */}
-      <View style={styles.navBar}>
+      <View style={[styles.navBar, { paddingBottom: styles.navBar.paddingBottom + insets.bottom }]}>
         {booking.step > 1 && (
           <TouchableOpacity style={styles.backBtn} onPress={prevStep}>
             <Text style={styles.backBtnText}>Retour</Text>

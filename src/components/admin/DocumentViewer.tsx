@@ -18,6 +18,7 @@ import { Paths } from 'expo-file-system';
 import * as Sharing   from 'expo-sharing';
 import * as Browser   from 'expo-web-browser';
 import { Ionicons }   from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 
 const { width: W, height: H } = Dimensions.get('window');
@@ -257,6 +258,7 @@ function ActionBar({ status, onValidate, onReject, isActing }: {
   status: DocViewerStatus; onValidate?: () => void;
   onReject?: () => void; isActing?: boolean;
 }) {
+  const insets = useSafeAreaInsets();
   if (status !== 'pending') {
     const cfg = {
       validated: { icon: 'checkmark-circle' as const, text: 'Document validé', bg: '#E8F5E9', color: '#2E7D32' },
@@ -265,14 +267,14 @@ function ActionBar({ status, onValidate, onReject, isActing }: {
     }[status];
     if (!cfg) return null;
     return (
-      <View style={[abStyles.statusBar, { backgroundColor: cfg.bg }]}>
+      <View style={[abStyles.statusBar, { backgroundColor: cfg.bg, paddingBottom: abStyles.statusBar.paddingBottom + insets.bottom }]}>
         <Ionicons name={cfg.icon} size={20} color={cfg.color} />
         <Text style={[abStyles.statusText, { color: cfg.color }]}>{cfg.text}</Text>
       </View>
     );
   }
   return (
-    <View style={abStyles.bar}>
+    <View style={[abStyles.bar, { paddingBottom: abStyles.bar.paddingBottom + insets.bottom }]}>
       {onValidate && (
         <TouchableOpacity style={[abStyles.btn, { backgroundColor: '#43A047' }]} onPress={onValidate} disabled={isActing} activeOpacity={0.85}>
           {isActing

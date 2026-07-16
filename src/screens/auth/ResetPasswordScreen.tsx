@@ -211,7 +211,7 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
           >
             <Text style={styles.loginText}>
               Retour à la{' '}
-              <Text style={styles.loginBold}>connexion</Text>
+              <Text style={styles.loginBold}>{'connexion' + '  '}</Text>
             </Text>
           </TouchableOpacity>
         </View>

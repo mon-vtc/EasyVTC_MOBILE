@@ -8,6 +8,7 @@ import {
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { useToast } from '../../../hooks/useToast';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
@@ -36,6 +37,7 @@ function ChangeStatusModal({
   onConfirm: (status: NextStatus, reason: string) => void;
   isLoading: boolean;
 }) {
+  const insets = useSafeAreaInsets();
   const [chosen, setChosen] = useState<NextStatus | null>(null);
   const [reason, setReason] = useState('');
 
@@ -56,7 +58,7 @@ function ChangeStatusModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={modalSt.overlay}>
-        <View style={modalSt.card}>
+        <View style={[modalSt.card, { paddingBottom: modalSt.card.paddingBottom + insets.bottom }]}>
           <Text style={modalSt.title}>Modifier le statut</Text>
           <Text style={modalSt.subtitle}>{manager.first_name} {manager.last_name} · Gestionnaire</Text>
 
@@ -151,6 +153,7 @@ const modalSt = StyleSheet.create({
 // ── Screen principal ─────────────────────────────────────────────
 export default function ManagerDetailScreen() {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const route = useRoute<any>();
   const { managerId } = route.params as { managerId: string };
 
@@ -220,7 +223,7 @@ export default function ManagerDetailScreen() {
         }}
       />
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]} showsVerticalScrollIndicator={false}>
         {/* Carte identité */}
         <View style={styles.identityCard}>
           <View style={styles.avatarWrapper}>

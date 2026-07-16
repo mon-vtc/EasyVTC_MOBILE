@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, Switch, Platform, Modal, TextInput,
-  KeyboardAvoidingView,
+  KeyboardAvoidingView, Linking,
 } from 'react-native';
 import { zodResolver }       from '@hookform/resolvers/zod';
 import { z }                 from 'zod';
@@ -15,6 +15,7 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { FormField }         from '../../components/forms/FormField';
 import { useAuth }           from '../../hooks/useAuth';
 import { AppHeader }         from '../../components/common/AppHeader';
+import { useBottomInset }    from '../../hooks/useSafeAreaPadding';
 import type { DrawerScreenProps } from '@react-navigation/drawer';
 import type { AdminDrawerParamList } from '../../types/auth.types';
 
@@ -89,6 +90,7 @@ export default function AdminProfileScreen({ navigation }: Props) {
   const [notifPromo,    setNotifPromo]    = useState(false);
 
   const [avatarKey, setAvatarKey] = useState(Date.now());
+  const scrollBottomInset = useBottomInset(styles.scroll.paddingBottom);
 
   const initials = `${user?.first_name?.[0] ?? ''}${user?.last_name?.[0] ?? ''}`.toUpperCase();
 
@@ -195,7 +197,7 @@ export default function AdminProfileScreen({ navigation }: Props) {
           onPress: handleEditToggle,
         }}
       />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: scrollBottomInset }]} showsVerticalScrollIndicator={false}>
 
         {/* ── Avatar ── */}
         <View style={styles.avatarSection}>
@@ -269,6 +271,16 @@ export default function AdminProfileScreen({ navigation }: Props) {
 
         {/* ── Actions ── */}
         <View style={styles.actionsSection}>
+
+          <TouchableOpacity style={styles.actionRow} onPress={() => Linking.openSettings()}>
+            <View style={styles.actionLeft}>
+              <Ionicons name="notifications-outline" size={20} color={Colors.textPrimary} />
+              <Text style={styles.actionLabel}>Notifications système</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
 
           <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('AdminDocuments')}>
             <View style={styles.actionLeft}>

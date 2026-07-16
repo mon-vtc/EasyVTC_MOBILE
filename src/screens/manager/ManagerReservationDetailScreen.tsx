@@ -21,6 +21,7 @@ import { useToast } from '../../hooks/useToast';
 import { useAlert } from '../../hooks/useAlert';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 
 type ScreenRoute = RouteProp<{ ManagerReservationDetail: { reservationId: string } }, 'ManagerReservationDetail'>;
 type ScreenNav = NavigationProp<any>;
@@ -396,6 +397,7 @@ export default function ManagerReservationDetailScreen() {
   const [selectedTab, setSelectedTab]     = useState<TabKeys>('details');
   const [pickerVisible, setPickerVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
+  const bottomActionsInset = useBottomInset(S.bottomActions.paddingBottom);
 
 
   const reservationId = route.params?.reservationId;
@@ -528,7 +530,7 @@ export default function ManagerReservationDetailScreen() {
       {/* ── CONTENT ── */}
       <ScrollView
         style={S.content}
-        contentContainerStyle={{ paddingBottom: hasBottomActions ? 140 : 24 }}
+        contentContainerStyle={{ paddingBottom: (hasBottomActions ? 140 : 24) + (hasBottomActions ? bottomActionsInset : 0) }}
         showsVerticalScrollIndicator={false}
       >
         <TabContent />
@@ -536,7 +538,7 @@ export default function ManagerReservationDetailScreen() {
 
       {/* ── BOTTOM ACTIONS ── */}
       {hasBottomActions && (
-        <View style={S.bottomActions}>
+        <View style={[S.bottomActions, { paddingBottom: bottomActionsInset }]}>
           {primaryAction && (
             <TouchableOpacity
               style={[S.primaryBtn, { backgroundColor: Colors.bordeaux, marginBottom: Spacing.sm }]}

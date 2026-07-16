@@ -21,6 +21,7 @@ import ReservationFilterModal, {
   type ReservationFilters,
 } from '../../components/common/ReservationFilterModal';
 import { filtersToApiParams, useSortedReservations, isFiltersActive, requiresGlobalSort } from '../../hooks/useReservationFilters';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 
 type DriverReservationsProps = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationsList'>;
 
@@ -107,6 +108,7 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
   const [searchQuery,        setSearchQuery]        = useState('');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [filters,            setFilters]            = useState<ReservationFilters>(DEFAULT_FILTERS);
+  const listBottomInset = useBottomInset(styles.list.paddingBottom);
 
   const loadingRef    = useRef(false);
   const activeFilter  = TABS.find(t => t.key === activeTab)?.statusFilter;
@@ -303,7 +305,7 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
           keyExtractor={(item) => item.id}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
-          contentContainerStyle={searchedReservations.length > 0 ? styles.list : styles.flex}
+          contentContainerStyle={searchedReservations.length > 0 ? [styles.list, { paddingBottom: listBottomInset }] : styles.flex}
           refreshControl={<RefreshControl refreshing={refreshing && !isFetchingNextPage} onRefresh={load} colors={[Colors.bordeaux]} />}
           ListFooterComponent={isFetchingNextPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
           ListEmptyComponent={() => (

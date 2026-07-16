@@ -3,7 +3,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, Switch, Platform, Modal, TextInput, ActivityIndicator,
-  KeyboardAvoidingView,
+  KeyboardAvoidingView, Linking,
 } from 'react-native';
 import { zodResolver }       from '@hookform/resolvers/zod';
 import { z }                 from 'zod';
@@ -18,6 +18,7 @@ import type { VehicleType, ZoneType, Vehicle } from '../../types/user.types';
 import type { DrawerScreenProps }     from '@react-navigation/drawer';
 import type { DriverDrawerParamList } from '../../types';
 import { useToast } from '../../hooks/useToast';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import { AppHeader } from '../../components/common/AppHeader';
 
 
@@ -449,6 +450,7 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const { showToast } = useToast();
 
   const { showAlert } = useAlert();
+  const scrollBottomInset = useBottomInset(styles.scroll.paddingBottom);
   console.log('Petite verifiction de siret',siret,'et de zone', zone );
 
   // ── Modals ──────────────────────────────────────────────────
@@ -571,7 +573,7 @@ export default function DriverProfileScreen({ navigation }: Props) {
           onPress: () => { if (!isLoading) handleEditToggleRef.current(); },
         }}
       />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: scrollBottomInset }]} showsVerticalScrollIndicator={false}>
 
         {/* Avatar */}
         <View style={styles.avatarSection}>
@@ -675,6 +677,8 @@ export default function DriverProfileScreen({ navigation }: Props) {
 
         {/* Actions */}
         <View style={styles.actionsSection}>
+          <ActionRow icon="notifications-outline" label="Notifications système" color={Colors.textPrimary} onPress={() => Linking.openSettings()} />
+          <View style={styles.divider} />
           <ActionRow icon="document-outline"    label="Mes documents"          color={Colors.bordeaux}     onPress={() => navigation.navigate('DriverDocuments')} />
           <View style={styles.divider} />
           <ActionRow icon="lock-closed-outline" label="Changer le mot de passe" color={Colors.textPrimary} onPress={() => { reset(); clearError(); setShowPasswordModal(true); }} />

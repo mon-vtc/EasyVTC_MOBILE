@@ -13,6 +13,7 @@ import type { CommissionDetail, CommissionPeriod } from '../../../types/commissi
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { AppIcon } from '../../../components/common/AppIcon';
 import { AppHeader } from '../../../components/common/AppHeader';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 
 const REPORT_PERIODS: { label: string; value: CommissionPeriod }[] = [
   { label: 'Semaine', value: 'week' },
@@ -81,6 +82,7 @@ export default function AdminCommissionsReportScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const limit = 20;
+  const listBottomInset = useBottomInset(styles.listContainer.paddingBottom);
 
   const load = useCallback(async (period: CommissionPeriod, page: number = 1) => {
     await Promise.all([
@@ -121,7 +123,7 @@ export default function AdminCommissionsReportScreen() {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.bordeaux} />}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[styles.listContainer, { paddingBottom: listBottomInset }]}
         ListHeaderComponent={
           <>
             <View style={styles.summaryCard}>

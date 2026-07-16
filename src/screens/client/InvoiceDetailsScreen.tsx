@@ -23,6 +23,7 @@ import {
   type RouteProp,
   type NavigationProp,
 } from '@react-navigation/native';
+import { useSafeAreaInsets }      from 'react-native-safe-area-context';
 import { Ionicons }               from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useInvoicesStore }       from '../../store/invoices.store';
@@ -64,6 +65,7 @@ export default function InvoiceDetailsScreen() {
   const navigation = useNavigation<NavProp>();
   const route      = useRoute<NavRoute>();
   const { invoiceId } = route.params;
+  const insets      = useSafeAreaInsets();
 
   const token                             = useAuthStore(s => s.accessToken) ?? '';
   const { invoices, fetchById, isLoading } = useInvoicesStore();
@@ -160,7 +162,7 @@ export default function InvoiceDetailsScreen() {
         rightIcon={{ name: 'share-social-outline', onPress: handleShare }}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]}>
 
         {/* ════════════════════════════════════════════════════════════════════
             DOCUMENT — FACTURE

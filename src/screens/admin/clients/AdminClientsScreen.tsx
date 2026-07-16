@@ -6,6 +6,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useClientsStore, useAuthStore } from '../../../store';
 import { useToast } from '../../../hooks/useToast';
@@ -43,6 +44,7 @@ function StatusModal({
 }) {
   const [chosen, setChosen] = useState<NextStatus | null>(null);
   const [reason, setReason] = useState('');
+  const modalInsets = useSafeAreaInsets();
 
   const reset = () => { setChosen(null); setReason(''); };
   const handleClose = () => { reset(); onClose(); };
@@ -58,7 +60,7 @@ function StatusModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={modalSt.overlay}>
-        <View style={modalSt.card}>
+        <View style={[modalSt.card, { paddingBottom: modalSt.card.paddingBottom + modalInsets.bottom }]}>
           <Text style={modalSt.title}>Statut du compte</Text>
           <Text style={modalSt.subtitle}>{client.first_name} {client.last_name}</Text>
 
@@ -317,6 +319,7 @@ const kpiSt = StyleSheet.create({
 export default function AdminClientsScreen() {
   const navigation   = useNavigation<Nav>();
   const accessToken  = useAuthStore(s => s.accessToken);
+  const insets        = useSafeAreaInsets();
 
   const { showToast } = useToast();
   const { unreadCount } = useNotifications();
@@ -486,7 +489,7 @@ export default function AdminClientsScreen() {
               onAction={client => { setActionClient(client); setModalVisible(true); }}
             />
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: styles.list.paddingBottom + insets.bottom }]}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

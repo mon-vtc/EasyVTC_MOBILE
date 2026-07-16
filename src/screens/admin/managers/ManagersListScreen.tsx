@@ -7,6 +7,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { useNotifications } from '../../../hooks/useNotifications';
 import { AppHeader } from '../../../components/common/AppHeader';
@@ -25,6 +26,7 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
 
 export default function ManagersListScreen() {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const {
     managers, isManagersLoading, isFetchingNextManagersPage,
     managersPage, managersPageTotal,
@@ -189,7 +191,7 @@ export default function ManagersListScreen() {
 
       {/* FAB */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { bottom: styles.fab.bottom + insets.bottom }]}
         onPress={() => navigation.navigate('CreateManager')}
         activeOpacity={0.8}
       >

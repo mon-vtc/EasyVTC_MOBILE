@@ -21,6 +21,7 @@ import { invoicesApi }    from '../../services/api/invoices.api';
 import { Logo } from '../../constants/logo';
 import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import { AppHeader } from '../../components/common/AppHeader';
 
 type Props = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationDetails'>;
@@ -69,6 +70,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
   const [mapDestinationLng, setMapDestinationLng]             = useState<number | null | undefined>(null);
   const { showToast } = useToast();
   const { showAlert } = useAlert();
+  const scrollBottomInset = useBottomInset(styles.scroll.padding);
 
   type ConfirmationNav = NavigationProp<any>;
 
@@ -239,7 +241,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
       {/* ── Header ─────────────────────────────────────────── */}
       <AppHeader left="back" title={`Course ${refNumber}`} />
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: scrollBottomInset }]} showsVerticalScrollIndicator={false}>
 
         {/* ── Hero card ───────────────────────────────────── */}
         <View style={[styles.heroCard, { backgroundColor: statusCfg?.bg ?? Colors.bordeaux }]}>

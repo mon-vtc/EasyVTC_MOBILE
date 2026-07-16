@@ -4,6 +4,7 @@ import {
   Image, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useAdmin }  from '../../../hooks/useAdmin';
 import { useVehicleTypesStore } from '../../../store/vehicleTypes.store';
@@ -391,6 +392,7 @@ const tabStyles = StyleSheet.create({
 
 // ── Screen principal ────────────────────────────────────────────
 export default function AdminDriverDetailScreen({ navigation, route }: Props) {
+  const insets = useSafeAreaInsets();
   const { driverId } = route.params as { driverId: string };
   const { 
     fetchDriverById, activateUser, deactivateUser, lockUser, changeDriverStatus, isLoading,
@@ -581,7 +583,7 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
 
       <AppHeader left="back" title="Détails du chauffeur" />
 
-      <ScrollView style={styles.flex} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.flex} contentContainerStyle={[styles.scroll, { paddingBottom: styles.scroll.padding + insets.bottom }]} showsVerticalScrollIndicator={false}>
 
         {/* ── Profil card ── */}
         <View style={styles.profileCard}>

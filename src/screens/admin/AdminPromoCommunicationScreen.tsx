@@ -16,6 +16,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAdmin } from '../../hooks/useAdmin';
 import CustomCalendarModal from '../../components/common/CustomCalendarModal';
@@ -93,6 +94,7 @@ const campaignFormSchema = z.object({
 }).refine(data => data.type !== 'email' || (data.subject && data.subject.length > 0), { message: 'L\'objet est requis pour un email.', path: ['subject'] });
 
 export default function AdminPromoCommunicationScreen() {
+  const insets = useSafeAreaInsets();
   const { showAlert } = useAlert();
   const { showToast } = useToast();
   const {
@@ -656,7 +658,7 @@ export default function AdminPromoCommunicationScreen() {
           data={promoCodes}
           renderItem={renderPromoCard}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: styles.listContent.paddingBottom + insets.bottom }]}
           ListHeaderComponent={<PromoListHeader />}
           ListEmptyComponent={
             isPromoCodesLoading
@@ -672,7 +674,7 @@ export default function AdminPromoCommunicationScreen() {
         <FlatList
           data={marketingClients}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: styles.listContent.paddingBottom + insets.bottom }]}
           onEndReached={loadMoreClients}
           onEndReachedThreshold={0.5}
           ListHeaderComponent={<ClientListHeader />}
@@ -752,7 +754,7 @@ export default function AdminPromoCommunicationScreen() {
           data={campaigns}
           renderItem={renderCampaignCard}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: styles.listContent.paddingBottom + insets.bottom }]}
           onEndReached={loadMoreCampaigns}
           onEndReachedThreshold={0.5}
           ListHeaderComponent={<CampaignListHeader />}

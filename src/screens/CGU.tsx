@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing } from '../theme/colors';
 import { AppHeader } from '../components/common/AppHeader';
 
@@ -56,6 +57,7 @@ const sections = [
 ];
 
 export default function TermsAndConditionsScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   return (
     <View style={styles.container}>
 
@@ -63,7 +65,7 @@ export default function TermsAndConditionsScreen({ navigation }: Props) {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: styles.content.paddingBottom + insets.bottom }]}
       >
         {sections.map((section) => (
           <View key={section.title} style={styles.section}>

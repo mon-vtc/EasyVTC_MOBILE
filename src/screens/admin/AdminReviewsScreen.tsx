@@ -17,6 +17,7 @@ import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
 import { useNotifications } from '../../hooks/useNotifications';
 import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import { useRatingsStore } from '../../store/ratings.store';
 import type { RatingAdmin } from '../../types/ratings.types';
 
@@ -128,6 +129,7 @@ export default function AdminReviewsScreen() {
   const { showToast } = useToast();
   const navigation = useNavigation();
   const { unreadCount } = useNotifications();
+  const listBottomInset = useBottomInset(styles.list.paddingBottom);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -212,7 +214,7 @@ export default function AdminReviewsScreen() {
               tintColor={Colors.bordeaux}
             />
           }
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: listBottomInset }]}
           showsVerticalScrollIndicator={false}
         />
       )}

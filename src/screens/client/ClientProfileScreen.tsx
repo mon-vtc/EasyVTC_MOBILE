@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, Switch, Platform, Modal, TextInput,
-  KeyboardAvoidingView,
+  KeyboardAvoidingView, Linking,
 } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -378,6 +378,16 @@ export default function ClientProfileScreen({ navigation }: Props) {
 
         {/* ── Actions ── */}
         <View style={styles.actionsSection}>
+          <TouchableOpacity style={styles.actionRow} onPress={() => Linking.openSettings()}>
+            <View style={styles.actionLeft}>
+              <Ionicons name="notifications-outline" size={20} color={Colors.textPrimary} />
+              <Text style={styles.actionLabel}>Notifications système</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
           <TouchableOpacity
             style={styles.actionRow}
             onPress={() => { reset(); clearError(); setShowPasswordModal(true); }}

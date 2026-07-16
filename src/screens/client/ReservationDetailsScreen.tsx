@@ -15,6 +15,7 @@ import {
   useNavigation, useRoute,
   type RouteProp, type NavigationProp,
 } from '@react-navigation/native';
+import { useSafeAreaInsets }   from 'react-native-safe-area-context';
 import { AppIcon }             from '../../components/common/AppIcon';
 import { Colors, Fonts } from '../../theme/colors';
 import { useReservationStore } from '../../store/reservation.store';
@@ -79,6 +80,7 @@ function getStatusColor(status: string | undefined): string {
 export default function ReservationDetailsScreen() {
   const nav   = useNavigation<ConfirmationNav>();
   const route = useRoute<ConfirmationRoute>();
+  const insets = useSafeAreaInsets();
   const { showToast } = useToast();
   const { showAlert } = useAlert();
 
@@ -232,7 +234,7 @@ export default function ReservationDetailsScreen() {
         <AppIcon name="arrow-back" size={24} color={Colors.white} />
       </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} bounces={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: styles.scroll.paddingBottom + insets.bottom }]} showsVerticalScrollIndicator={false} bounces={false}>
 
         {/* ── Header ── */}
         <Animated.View style={[styles.header, slideUp(headerAnim, 30)]}>

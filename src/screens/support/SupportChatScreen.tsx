@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat } from '../../hooks/useChat';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors, Fonts, Spacing } from '../../theme/colors';
@@ -78,6 +79,7 @@ export default function SupportChatScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const {
     activeSupportTicket,
     isLoadingSupportTicketDetail,
@@ -232,7 +234,7 @@ export default function SupportChatScreen() {
       />
 
       {/* ── Input ── */}
-      <View style={s.inputRow}>
+      <View style={[s.inputRow, { paddingBottom: s.inputRow.paddingVertical + insets.bottom }]}>
         <TextInput
           style={[s.input, isResolved && s.inputDisabled]}
           value={text}

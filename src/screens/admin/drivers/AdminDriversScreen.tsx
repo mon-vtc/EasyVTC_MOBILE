@@ -5,6 +5,7 @@ import {
 } from 'react-native'; 
 
 import { Ionicons }  from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { Logo } from '../../../constants/logo';
 import { useAdmin }  from '../../../hooks/useAdmin';
@@ -175,6 +176,7 @@ const cardStyles = StyleSheet.create({
 
 // ── Screen ──────────────────────────────────────────────────────
 export default function AdminDriversScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const { fetchDrivers, drivers, isDriversLoading, driversError, changeDriverStatus, fetchNextDriversPage, isFetchingNextPage, driversPageTotal, driversPage } = useAdmin();
 
   const [search,     setSearch]     = useState('');
@@ -275,7 +277,7 @@ export default function AdminDriversScreen({ navigation }: Props) {
 
       <ScrollView
         style={styles.flex}
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: styles.scroll.padding + insets.bottom }]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.bordeaux]} />}
         onMomentumScrollEnd={(e) => {

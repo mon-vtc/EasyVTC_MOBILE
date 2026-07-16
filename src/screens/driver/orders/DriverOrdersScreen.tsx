@@ -21,6 +21,7 @@ import type { DriverOrdersStackParamList } from '../../../types/auth.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { OrderCard } from '../../../components/common/OrderCard';
 import { AppHeader } from '../../../components/common/AppHeader';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 
 export default function DriverOrdersScreen() {
   const navigation = useNavigation<NavigationProp<DriverOrdersStackParamList>>();
@@ -30,6 +31,7 @@ export default function DriverOrdersScreen() {
   const { unreadCount } = useNotifications();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const listBottomInset = useBottomInset(styles.list.padding);
 
   const load = useCallback(async () => {
     try { await fetchDriverMine(token); } catch { /* handled */ }
@@ -97,7 +99,7 @@ export default function DriverOrdersScreen() {
         renderItem={({ item }) => (
           <OrderCard order={item} token={token} role="driver" onPress={handleViewOrder} />
         )}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: listBottomInset }]}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
