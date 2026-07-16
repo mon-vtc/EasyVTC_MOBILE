@@ -12,6 +12,7 @@ import {
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import type { NavigationProp }      from '@react-navigation/native';
 import { Ionicons }           from '@expo/vector-icons';
+import { useSafeAreaInsets }  from 'react-native-safe-area-context';
 import { useInvoicesStore }   from '../../store/invoices.store';
 import { useAuthStore }       from '../../store/auth.store';
 import { invoicesApi }        from '../../services/api/invoices.api';
@@ -169,6 +170,7 @@ export default function MyInvoicesScreen({
   const { invoices, page, totalPages, isLoading, isFetchingNextPage, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const { showToast } = useToast();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
 
   const load = useCallback(async () => {
@@ -238,7 +240,7 @@ export default function MyInvoicesScreen({
             onPress={() => navigation.navigate('InvoiceDetails', { invoiceId: item.id })}
           />
         )}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: styles.list.padding + insets.bottom }]}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />
         }

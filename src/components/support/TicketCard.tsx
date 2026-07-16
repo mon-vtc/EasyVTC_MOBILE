@@ -65,7 +65,7 @@ export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketR
           </View>
         </View>
 
-        <Text style={cardStyles.timeText}>{timeAgo}</Text>
+        <Text style={cardStyles.timeText}>{timeAgo}{'  '}</Text>
       </View>
 
       <Text style={cardStyles.preview} numberOfLines={1} ellipsizeMode="tail">

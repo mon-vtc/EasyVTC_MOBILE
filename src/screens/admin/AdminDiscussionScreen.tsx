@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat } from '../../hooks/useChat';
 import { useNotifications } from '../../hooks/useNotifications';
 import { AppHeader } from '../../components/common/AppHeader';
@@ -169,6 +170,7 @@ interface AdminDiscussionScreenProps {
 }
 
 export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScreenProps) {
+  const insets = useSafeAreaInsets();
   const {
     supervisedConversations,
     supervisedConversationsTotal,
@@ -277,7 +279,7 @@ export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScr
             <Text numberOfLines={1} style={styles.lastMessage}>
               {item.last_message}
             </Text>
-            <Text style={styles.timeText}>{formatTimeAgo(item.last_message_at)}</Text>
+            <Text style={styles.timeText}>{formatTimeAgo(item.last_message_at)}{'  '}</Text>
           </View>
         )}
 
@@ -333,7 +335,7 @@ export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScr
     <View style={{ flex: 1 }}>
       {header}
       <FlatList
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: styles.contentContainer.paddingVertical + insets.bottom }]}
         style={styles.container}
         data={sortedConversations}
         keyExtractor={item => item.reservation_id}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, Switch, Platform, Modal, TextInput,
+  KeyboardAvoidingView, Linking,
 } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -51,7 +52,7 @@ function PasswordStrength({ value }: { value: string }) {
               color={ok ? Colors.bordeauxLight : Colors.textMuted}
             />
             <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>
-              {rule.label}
+              {rule.label}{'  '}
             </Text>
           </View>
         );
@@ -377,6 +378,16 @@ export default function ClientProfileScreen({ navigation }: Props) {
 
         {/* ── Actions ── */}
         <View style={styles.actionsSection}>
+          <TouchableOpacity style={styles.actionRow} onPress={() => Linking.openSettings()}>
+            <View style={styles.actionLeft}>
+              <Ionicons name="notifications-outline" size={20} color={Colors.textPrimary} />
+              <Text style={styles.actionLabel}>Notifications système</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
           <TouchableOpacity
             style={styles.actionRow}
             onPress={() => { reset(); clearError(); setShowPasswordModal(true); }}
@@ -401,7 +412,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
           <View style={styles.divider} />
 
           <TouchableOpacity
-            style={styles.actionRow}
+            style={[styles.actionRow, styles.logoutRow]}
             testID="profile-logout-btn"
             onPress={() => {
               showAlert({title: 'Déconnexion', message: 'Voulez-vous vraiment vous déconnecter ?', buttons: [
@@ -412,7 +423,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
           >
             <View style={styles.actionLeft}>
               <Ionicons name="log-out-outline" size={20} color={Colors.bordeaux} />
-              <Text style={[styles.actionLabel, { color: Colors.bordeaux }]}>Se déconnecter</Text>
+              <Text style={[styles.actionLabel, styles.logoutLabel]}>Se déconnecter</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={Colors.bordeaux} />
           </TouchableOpacity>
@@ -443,55 +454,60 @@ export default function ClientProfileScreen({ navigation }: Props) {
         animationType="fade"
         onRequestClose={() => { reset(); clearError(); setShowPasswordModal(false); }}
       >
-        <View style={modalStyles.overlay}>
+        <KeyboardAvoidingView
+          style={modalStyles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View style={modalStyles.card}>
-            <Text style={modalStyles.title}>Changer le mot de passe</Text>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <Text style={modalStyles.title}>Changer le mot de passe</Text>
 
-            <FormField<PasswordForm>
-              name="current_password"
-              control={control}
-              label="Mot de passe actuel *"
-              secureTextEntry
-              showToggle
-              editable={!isLoading}
-              error={errors.current_password?.message}
-            />
-            <FormField<PasswordForm>
-              name="new_password"
-              control={control}
-              label="Nouveau mot de passe *"
-              secureTextEntry
-              showToggle
-              editable={!isLoading}
-              error={errors.new_password?.message}
-            />
-            <PasswordStrength value={newPasswordValue} />
-            <FormField<PasswordForm>
-              name="confirm_password"
-              control={control}
-              label="Confirmer le mot de passe *"
-              secureTextEntry
-              showToggle
-              error={errors.confirm_password?.message}
-            />
+              <FormField<PasswordForm>
+                name="current_password"
+                control={control}
+                label="Mot de passe actuel *"
+                secureTextEntry
+                showToggle
+                editable={!isLoading}
+                error={errors.current_password?.message}
+              />
+              <FormField<PasswordForm>
+                name="new_password"
+                control={control}
+                label="Nouveau mot de passe *"
+                secureTextEntry
+                showToggle
+                editable={!isLoading}
+                error={errors.new_password?.message}
+              />
+              <PasswordStrength value={newPasswordValue} />
+              <FormField<PasswordForm>
+                name="confirm_password"
+                control={control}
+                label="Confirmer le mot de passe *"
+                secureTextEntry
+                showToggle
+                error={errors.confirm_password?.message}
+              />
 
-            <View style={modalStyles.actions}>
-              <TouchableOpacity
-                style={[modalStyles.btn, modalStyles.btnCancel]}
-                onPress={() => { reset(); setShowPasswordModal(false); }}
-              >
-                <Text style={modalStyles.btnCancelText}>Annuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[modalStyles.btn, modalStyles.btnConfirm]}
-                onPress={handleSubmit(onChangePassword)}
-                disabled={isLoading}
-              >
-                <Text style={modalStyles.btnConfirmText}>Confirmer</Text>
-              </TouchableOpacity>
-            </View>
+              <View style={modalStyles.actions}>
+                <TouchableOpacity
+                  style={[modalStyles.btn, modalStyles.btnCancel]}
+                  onPress={() => { reset(); setShowPasswordModal(false); }}
+                >
+                  <Text style={modalStyles.btnCancelText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[modalStyles.btn, modalStyles.btnConfirm]}
+                  onPress={handleSubmit(onChangePassword)}
+                  disabled={isLoading}
+                >
+                  <Text style={modalStyles.btnConfirmText}>Confirmer</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Modal Suppression Compte ── */}
@@ -659,6 +675,8 @@ const styles = StyleSheet.create({
   actionLeft:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   actionLabel: { fontSize: Fonts.size.md, color: Colors.textPrimary, fontFamily: Fonts.medium, fontWeight: '500' },
   divider:     { height: 1, backgroundColor: Colors.border },
+  logoutRow:   { backgroundColor: Colors.overlayLight, borderRadius: Radius.md, marginVertical: Spacing.xs, paddingHorizontal: Spacing.sm },
+  logoutLabel: { color: Colors.bordeaux, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 const modalStyles = StyleSheet.create({
@@ -674,6 +692,7 @@ const modalStyles = StyleSheet.create({
     borderRadius:    Radius.lg,
     padding:         Spacing.lg,
     width:           '100%',
+    maxHeight:       '90%',
     shadowColor:     '#000',
     shadowOffset:    { width: 0, height: 8 },
     shadowOpacity:   0.15,

@@ -4,6 +4,7 @@ import {
   Image, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useAdmin }  from '../../../hooks/useAdmin';
 import { useVehicleTypesStore } from '../../../store/vehicleTypes.store';
@@ -111,7 +112,7 @@ function TabInformations({ driver, documents, isFetchingDocuments }: { driver: A
         <Text style={tabStyles.cardTitle}>Véhicule</Text>
         {vehicleRows.map(row => (
           <View key={row.label} style={tabStyles.infoRow}>
-            <Text style={tabStyles.infoLabel}>{row.label}</Text>
+            <Text style={tabStyles.infoLabel}>{row.label}{'  '}</Text>
             <Text style={tabStyles.infoValue}>{row.value}</Text>
           </View>
         ))}
@@ -226,7 +227,7 @@ function TabStatistiques({ monthlyStats, lastMonthStats, isFetching }: { monthly
           ].map(stat => (
             <View key={stat.label} style={statsStyles.statItem}>
               <Text style={statsStyles.statValue}>{stat.value}</Text>
-              <Text style={statsStyles.statLabel}>{stat.label}</Text>
+              <Text style={statsStyles.statLabel}>{stat.label}{'  '}</Text>
             </View>
           ))}
         </View>
@@ -243,7 +244,7 @@ function TabStatistiques({ monthlyStats, lastMonthStats, isFetching }: { monthly
           ].map(stat => (
             <View key={stat.label} style={statsStyles.statItem}>
               <Text style={statsStyles.statValue}>{stat.value}</Text>
-              <Text style={statsStyles.statLabel}>{stat.label}</Text>
+              <Text style={statsStyles.statLabel}>{stat.label}{'  '}</Text>
             </View>
           ))}
         </View>
@@ -391,6 +392,7 @@ const tabStyles = StyleSheet.create({
 
 // ── Screen principal ────────────────────────────────────────────
 export default function AdminDriverDetailScreen({ navigation, route }: Props) {
+  const insets = useSafeAreaInsets();
   const { driverId } = route.params as { driverId: string };
   const { 
     fetchDriverById, activateUser, deactivateUser, lockUser, changeDriverStatus, isLoading,
@@ -581,7 +583,7 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
 
       <AppHeader left="back" title="Détails du chauffeur" />
 
-      <ScrollView style={styles.flex} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.flex} contentContainerStyle={[styles.scroll, { paddingBottom: styles.scroll.padding + insets.bottom }]} showsVerticalScrollIndicator={false}>
 
         {/* ── Profil card ── */}
         <View style={styles.profileCard}>

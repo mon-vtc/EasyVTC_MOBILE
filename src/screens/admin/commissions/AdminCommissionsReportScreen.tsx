@@ -13,6 +13,7 @@ import type { CommissionDetail, CommissionPeriod } from '../../../types/commissi
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { AppIcon } from '../../../components/common/AppIcon';
 import { AppHeader } from '../../../components/common/AppHeader';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 
 const REPORT_PERIODS: { label: string; value: CommissionPeriod }[] = [
   { label: 'Semaine', value: 'week' },
@@ -44,7 +45,7 @@ function CommissionCard({ item }: { item: CommissionDetail }) {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.driverName}>{driverName}</Text>
-        <Text style={styles.rateBadge}>{rateLabel}</Text>
+        <Text style={styles.rateBadge}>{rateLabel}{'  '}</Text>
       </View>
       {item.reservation && (
         <Text style={styles.route} numberOfLines={1}>
@@ -55,15 +56,15 @@ function CommissionCard({ item }: { item: CommissionDetail }) {
       <View style={styles.separator} />
       <View style={styles.amountsRow}>
         <View style={styles.amountItem}>
-          <Text style={styles.amountLabel}>Brut</Text>
+          <Text style={styles.amountLabel}>{'Brut' + '  '}</Text>
           <Text style={styles.amountValue}>{formatCurrency(item.gross_amount)}</Text>
         </View>
         <View style={styles.amountItem}>
-          <Text style={styles.amountLabel}>Commission</Text>
+          <Text style={styles.amountLabel}>{'Commission' + '  '}</Text>
           <Text style={[styles.amountValue, styles.commissionValue]}>{formatCurrency(item.commission_amount)}</Text>
         </View>
         <View style={styles.amountItem}>
-          <Text style={styles.amountLabel}>Net chauffeur</Text>
+          <Text style={styles.amountLabel}>{'Net chauffeur' + '  '}</Text>
           <Text style={[styles.amountValue, styles.netValue]}>{formatCurrency(item.driver_net_amount)}</Text>
         </View>
       </View>
@@ -81,6 +82,7 @@ export default function AdminCommissionsReportScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const limit = 20;
+  const listBottomInset = useBottomInset(styles.listContainer.paddingBottom);
 
   const load = useCallback(async (period: CommissionPeriod, page: number = 1) => {
     await Promise.all([
@@ -121,24 +123,24 @@ export default function AdminCommissionsReportScreen() {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.bordeaux} />}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[styles.listContainer, { paddingBottom: listBottomInset }]}
         ListHeaderComponent={
           <>
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>Chiffre d'affaires</Text>
+              <Text style={styles.summaryTitle}>{'Chiffre d\'affaires' + '  '}</Text>
               <Text style={styles.summaryAmount}>{formatCurrency(summary?.total_gross_eur ?? 0)}</Text>
               <View style={styles.summaryStats}>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{summary?.total_rides ?? 0}</Text>
-                  <Text style={styles.statLabel}>Courses</Text>
+                  <Text style={styles.statLabel}>{'Courses' + '  '}</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{formatCurrency(summary?.total_commission_eur ?? 0)}</Text>
-                  <Text style={styles.statLabel}>Part plateforme</Text>
+                  <Text style={styles.statLabel}>{'Part plateforme' + '  '}</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{formatCurrency(summary?.total_net_eur ?? 0)}</Text>
-                  <Text style={styles.statLabel}>Part chauffeurs</Text>
+                  <Text style={styles.statLabel}>{'Part chauffeurs' + '  '}</Text>
                 </View>
               </View>
             </View>
@@ -153,7 +155,7 @@ export default function AdminCommissionsReportScreen() {
             )}
 
             <View style={styles.filterCard}>
-              <Text style={styles.filterTitle}>Période</Text>
+              <Text style={styles.filterTitle}>{'Période' + '  '}</Text>
               <View style={styles.filterButtons}>
                 {REPORT_PERIODS.map(period => (
                   <TouchableOpacity
@@ -162,14 +164,14 @@ export default function AdminCommissionsReportScreen() {
                     onPress={() => setActivePeriod(period.value)}
                   >
                     <Text style={activePeriod === period.value ? styles.filterTextActive : styles.filterTextInactive}>
-                      {period.label}
+                      {period.label}{'  '}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
 
-            <Text style={styles.historyTitle}>Détail par course</Text>
+            <Text style={styles.historyTitle}>{'Détail par course' + '  '}</Text>
           </>
         }
         ListEmptyComponent={

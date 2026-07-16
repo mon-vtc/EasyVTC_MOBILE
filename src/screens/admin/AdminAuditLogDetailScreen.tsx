@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo} from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../hooks/useAdmin';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppHeader } from '../../components/common/AppHeader';
@@ -13,7 +14,7 @@ function DetailRow({ label, value, color }: { label: string; value: string | nul
   if (!value) return null;
   return (
     <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailLabel}>{label}{'  '}</Text>
       <Text style={[styles.detailValue, color ? { color } : {}]}>{value}</Text>
     </View>
   );
@@ -50,6 +51,7 @@ function ValueChange({ field, oldValue, newValue }: { field: string; oldValue: a
 
 export default function AdminAuditLogDetailScreen({ navigation }: any) {
   const route = useRoute<ScreenRouteProp>();
+  const insets = useSafeAreaInsets();
   const { logId } = route.params;
   const {
     selectedAuditLog: log,
@@ -92,7 +94,7 @@ export default function AdminAuditLogDetailScreen({ navigation }: any) {
     <View style={styles.screen}>
       <AppHeader left="back" title="Détail du log" />
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: styles.scroll.padding + insets.bottom }]}>
         <View style={styles.card}>
           <DetailRow label="Action" value={log.action} />
           <DetailRow label="Date" value={new Date(log.created_at).toLocaleString('fr-FR')} />

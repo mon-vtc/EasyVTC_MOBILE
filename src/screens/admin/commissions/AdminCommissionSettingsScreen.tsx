@@ -16,6 +16,7 @@ import { useCommissionSettings } from '../../../hooks/useCommissionSettings';
 import { useVehicleTypes } from '../../../hooks/useVehicleTypes';
 import { useAlert } from '../../../hooks/useAlert';
 import { useToast } from '../../../hooks/useToast';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 import type { CommissionSetting, CommissionZone, CommissionRateType } from '../../../types';
 import { AppIcon } from '../../../components/common/AppIcon';
 import { AppButton } from '../../../components/common/AppButton';
@@ -59,6 +60,8 @@ export default function AdminCommissionSettingsScreen() {
   const [activeZone, setActiveZone] = useState<CommissionZone>('france');
   const [isModalVisible, setModalVisible] = useState(false);
   const [editingSetting, setEditingSetting] = useState<CommissionSetting | null>(null);
+  const scrollBottomInset = useBottomInset(Spacing.xl);
+  const modalBottomInset = useBottomInset(styles.modalContent.paddingBottom);
 
   // ── Formulaire (react-hook-form) ────────────────────────────────────────────
   const { control, handleSubmit, reset, formState: { errors } } = useForm<CommissionFormValues>({
@@ -163,7 +166,7 @@ export default function AdminCommissionSettingsScreen() {
         rightIcon={{ name: 'add', onPress: openModalForCreate }}
       />
 
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: scrollBottomInset }}>
         {/* Sélecteur de zone */}
         <View style={styles.zoneSelector}>
           {(['france', 'senegal'] as CommissionZone[]).map((zone) => (
@@ -173,7 +176,7 @@ export default function AdminCommissionSettingsScreen() {
               onPress={() => setActiveZone(zone)}
             >
               <Text style={[styles.zoneText, activeZone === zone && styles.zoneTextActive]}>
-                {zone === 'france' ? 'France' : 'Sénégal'}
+                {(zone === 'france' ? 'France' : 'Sénégal') + '  '}
               </Text>
             </TouchableOpacity>
           ))}
@@ -189,15 +192,15 @@ export default function AdminCommissionSettingsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitle}>{setting.label}</Text>
                   <Text style={styles.cardSubtitle}>
-                    {setting.vehicle_type
+                    {(setting.vehicle_type
                       ? vehicleTypes.find(vt => vt.code === setting.vehicle_type)?.label ?? setting.vehicle_type
-                      : 'Toutes catégories'}
+                      : 'Toutes catégories') + '  '}
                   </Text>
                 </View>
                 <View style={styles.cardRate}>
                   <Text style={styles.rateValue}>{setting.rate_value}</Text>
                   <Text style={styles.rateType}>
-                    {setting.rate_type === 'percentage' ? '%' : 'fixe'}
+                    {' ' + (setting.rate_type === 'percentage' ? '%' : 'fixe')}{'  '}
                   </Text>
                 </View>
               </View>
@@ -205,7 +208,7 @@ export default function AdminCommissionSettingsScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <View style={[styles.statusDot, { backgroundColor: setting.is_active ? Colors.success : Colors.error }]} />
                   <Text style={[styles.statusText, { color: setting.is_active ? Colors.success : Colors.error }]}>
-                    {setting.is_active ? 'Actif' : 'Inactif'}
+                    {(setting.is_active ? 'Actif' : 'Inactif') + '  '}
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 16 }}>
@@ -233,7 +236,7 @@ export default function AdminCommissionSettingsScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { paddingBottom: modalBottomInset }]}>
             <Text style={styles.modalTitle}>
               {editingSetting ? 'Modifier la règle' : 'Nouvelle règle'}
             </Text>
@@ -390,7 +393,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: 'bold', color: Colors.textPrimary },
   cardSubtitle: { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginTop: 2 },
-  cardRate: { alignItems: 'flex-end' },
+  cardRate: { flexDirection: 'row', alignItems: 'baseline' },
   rateValue: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: 'bold', color: Colors.bordeaux },
   rateType: { fontSize: Fonts.size.xs, color: Colors.textSecondary },
   cardFooter: {

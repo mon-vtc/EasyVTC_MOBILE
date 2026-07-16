@@ -6,6 +6,7 @@ import {
   Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import FilterCalendarModal from './FilterCalendarModal';
 
@@ -61,6 +62,7 @@ function hasActiveFilters(f: ReservationFilters): boolean {
 export default function ReservationFilterModal({ visible, filters, onApply, onClose }: Props) {
   const [draft, setDraft] = useState<ReservationFilters>({ ...filters });
   const [calendarTarget, setCalendarTarget] = useState<'exact' | 'from' | 'to' | null>(null);
+  const insets = useSafeAreaInsets();
 
   // Sync le draft à l'ouverture
   useEffect(() => {
@@ -244,7 +246,7 @@ export default function ReservationFilterModal({ visible, filters, onApply, onCl
             </ScrollView>
 
             {/* ── Footer ── */}
-            <View style={s.footer}>
+            <View style={[s.footer, { paddingBottom: s.footer.paddingBottom + insets.bottom }]}>
               <TouchableOpacity
                 style={[s.footerBtn, s.footerBtnReset]}
                 onPress={handleReset}

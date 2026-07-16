@@ -14,6 +14,7 @@ import { useAlert } from '../../hooks/useAlert';
 import { Colors, Fonts } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import { AppHeader } from '../../components/common/AppHeader';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -52,7 +53,7 @@ function StatusCard({
     <View style={sc.card}>
       <View style={sc.row}>
         <View>
-          <Text style={sc.title}>Statut</Text>
+          <Text style={sc.title}>{'Statut' + '  '}</Text>
           <Text style={[sc.subtitle, isOnline && sc.subtitleOnline]}>
             {isOnline ? 'Vous êtes disponible' : 'Vous êtes hors ligne'}
           </Text>
@@ -180,7 +181,7 @@ function RideCard({
       <View style={rc.infoRow}>
         <AppIcon name="location-outline" size={16} color={Colors.bordeaux} />
         <View style={rc.infoTexts}>
-          <Text style={rc.infoLabel}>Départ</Text>
+          <Text style={rc.infoLabel}>{'Départ' + '  '}</Text>
           <Text style={rc.infoMain}>{origin}</Text>
         </View>
       </View>
@@ -189,7 +190,7 @@ function RideCard({
       <View style={rc.infoRow}>
         <AppIcon name="location" size={16} color={Colors.bordeauxLight}/>
         <View style={rc.infoTexts}>
-          <Text style={rc.infoLabel}>Destination</Text>
+          <Text style={rc.infoLabel}>{'Destination' + '  '}</Text>
           <Text style={rc.infoMain}>{destination}</Text>
         </View>
       </View>
@@ -241,6 +242,7 @@ export default function DriverHomeScreen({ navigation }: any) {
 
   const [isToggling, setIsToggling]   = useState(false);
   const [stats, setStats] = useState<DayStats>(EMPTY_STATS);
+  const scrollBottomInset = useBottomInset(styles.content.padding);
 
   // Le Drawer garde cet écran monté en arrière-plan : sans useFocusEffect,
   // les stats et la liste des courses restent figées après une clôture de
@@ -332,7 +334,7 @@ export default function DriverHomeScreen({ navigation }: any) {
       />
       <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: scrollBottomInset }]}
       showsVerticalScrollIndicator={false}
     >
       {/* ── Statut ─────────────────────────────────────────── */}

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useClient } from '../../hooks/useClient';
 import { SavingsSummaryCard } from '../../components/client/promo-codes/SavingsSummaryCard';
 import { PromoCodeCard } from '../../components/client/promo-codes/PromoCodeCard';
@@ -10,6 +11,7 @@ import { AppHeader } from '../../components/common/AppHeader';
 
 export function PromoCodesScreen({}) {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const {
     myActivePromoCodes,
     myExpiredPromoCodes,
@@ -67,7 +69,7 @@ export function PromoCodesScreen({}) {
             </View>
           );
         }}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]}
         refreshControl={<RefreshControl refreshing={isFetchingMyPromoCodes} onRefresh={onRefresh} />}
         ListEmptyComponent={
           !isFetchingMyPromoCodes ? (

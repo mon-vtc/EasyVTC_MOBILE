@@ -21,6 +21,7 @@ import { useToast } from '../../hooks/useToast';
 import { useAlert } from '../../hooks/useAlert';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 
 type ScreenRoute = RouteProp<{ ManagerReservationDetail: { reservationId: string } }, 'ManagerReservationDetail'>;
 type ScreenNav = NavigationProp<any>;
@@ -52,7 +53,7 @@ function Badge({ status }: { status: Reservation['status'] }) {
   const cfg = STATUS_MAP[status];
   return (
     <View style={[S.badge, { backgroundColor: cfg.bg }]}>
-      <Text style={[S.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
+      <Text style={[S.badgeText, { color: cfg.color }]} numberOfLines={1}>{cfg.label}</Text>
     </View>
   );
 }
@@ -261,11 +262,14 @@ function DriverTab({
           <Text style={S.profileName}>{driver.user.first_name} {driver.user.last_name}</Text>
           <View style={S.driverBadgeRow}>
             <Text style={[S.profileRole, { color: Colors.bordeaux }]}>Chauffeur</Text>
-            {driver.rating != null && (
-              <View style={S.ratingBadge}>
-                <Ionicons name="star" size={12} color="#F9A825" />
-                <Text style={S.ratingText}>{driver.rating.toFixed(1)}</Text>
-              </View>
+            {driver.average_rating != null && (
+              <>
+                <View style={S.ratingBadge}>
+                  <Ionicons name="star" size={12} color="#F9A825" />
+                  <Text style={S.ratingText}>{driver.average_rating.toFixed(1)}</Text>
+                </View>
+                <Text style={S.ratingCountText}>({driver.ratings_count} avis)</Text>
+              </>
             )}
           </View>
         </View>
@@ -393,6 +397,7 @@ export default function ManagerReservationDetailScreen() {
   const [selectedTab, setSelectedTab]     = useState<TabKeys>('details');
   const [pickerVisible, setPickerVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
+  const bottomActionsInset = useBottomInset(S.bottomActions.paddingBottom);
 
 
   const reservationId = route.params?.reservationId;
@@ -525,7 +530,7 @@ export default function ManagerReservationDetailScreen() {
       {/* ── CONTENT ── */}
       <ScrollView
         style={S.content}
-        contentContainerStyle={{ paddingBottom: hasBottomActions ? 140 : 24 }}
+        contentContainerStyle={{ paddingBottom: (hasBottomActions ? 140 : 24) + (hasBottomActions ? bottomActionsInset : 0) }}
         showsVerticalScrollIndicator={false}
       >
         <TabContent />
@@ -533,7 +538,7 @@ export default function ManagerReservationDetailScreen() {
 
       {/* ── BOTTOM ACTIONS ── */}
       {hasBottomActions && (
-        <View style={S.bottomActions}>
+        <View style={[S.bottomActions, { paddingBottom: bottomActionsInset }]}>
           {primaryAction && (
             <TouchableOpacity
               style={[S.primaryBtn, { backgroundColor: Colors.bordeaux, marginBottom: Spacing.sm }]}
@@ -666,6 +671,7 @@ const S = StyleSheet.create({
     paddingHorizontal: 6, paddingVertical: 2,
   },
   ratingText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700', color: '#F9A825' },
+  ratingCountText: { fontSize: Fonts.size.xs, color: Colors.textSecondary },
 
   contactRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm, gap: Spacing.sm },
   contactIcon: {
@@ -689,8 +695,8 @@ const S = StyleSheet.create({
   paymentHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.md },
   paymentTitle: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary },
   paymentRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm },
-  paymentLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  paymentValue: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
+  paymentLabel: { flex: 1, flexShrink: 1, marginRight: Spacing.sm, fontSize: Fonts.size.sm, color: Colors.textSecondary },
+  paymentValue: { flexShrink: 0, fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   paymentDivider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.sm },
   paymentTotalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   paymentTotalLabel: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },

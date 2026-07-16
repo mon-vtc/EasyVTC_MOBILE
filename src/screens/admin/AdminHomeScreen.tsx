@@ -6,6 +6,7 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAdmin } from '../../hooks/useAdmin';
 import { useReservation } from '../../hooks/useReservation';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import { AppHeader } from '../../components/common/AppHeader';
 import type { AdminStats, AvailableDriverDto, Reservation } from '../../types';
 import DriverPickerModal from './DriverPickerModal';
@@ -54,7 +55,7 @@ const StatCard = ({ icon, value, label, colors }: { icon: keyof typeof Ionicons.
   <LinearGradient colors={colors} style={styles.statCard}>
     <Ionicons name={icon} size={24} color={Colors.white} style={{ opacity: 0.8 }} />
     <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
+    <Text style={styles.statLabel}>{label}{'  '}</Text>
   </LinearGradient>
 );
 
@@ -128,6 +129,7 @@ export default function AdminHomeScreen({ navigation }: any) {
     assign,
   } = useReservation();
   const { unreadCount } = useNotifications();
+  const scrollBottomInset = useBottomInset(styles.contentContainer.paddingBottom);
 
   const [pickerVisible, setPickerVisible] = useState(false);
 
@@ -252,7 +254,7 @@ export default function AdminHomeScreen({ navigation }: any) {
       />
       <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[styles.contentContainer, { paddingBottom: scrollBottomInset }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadData(true)} />}
     >
       {/* Section KPI */}

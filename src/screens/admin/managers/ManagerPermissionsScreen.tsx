@@ -7,6 +7,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useToast } from '../../../hooks/useToast';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { AppHeader } from '../../../components/common/AppHeader';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
@@ -55,6 +56,7 @@ const PERMISSION_GROUPS: { title: string; icon: string; permissions: ManagerPerm
 
 export default function ManagerPermissionsScreen() {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const route = useRoute<any>();
   const { managerId } = route.params as { managerId: string };
 
@@ -133,7 +135,7 @@ export default function ManagerPermissionsScreen() {
     <View style={styles.container}>
       <AppHeader left="back" title="Permissions" />
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]} showsVerticalScrollIndicator={false}>
 
         {/* Actions globales */}
         <View style={styles.globalRow}>
@@ -198,7 +200,7 @@ export default function ManagerPermissionsScreen() {
 
       {/* Bouton sauvegarder */}
       {isDirty && (
-        <View style={styles.footer}>
+        <View style={[styles.footer, { paddingBottom: styles.footer.paddingBottom + insets.bottom }]}>
           <TouchableOpacity
             style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
             onPress={handleSave}

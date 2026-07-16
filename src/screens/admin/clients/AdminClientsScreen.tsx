@@ -6,6 +6,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useClientsStore, useAuthStore } from '../../../store';
 import { useToast } from '../../../hooks/useToast';
@@ -43,6 +44,7 @@ function StatusModal({
 }) {
   const [chosen, setChosen] = useState<NextStatus | null>(null);
   const [reason, setReason] = useState('');
+  const modalInsets = useSafeAreaInsets();
 
   const reset = () => { setChosen(null); setReason(''); };
   const handleClose = () => { reset(); onClose(); };
@@ -58,7 +60,7 @@ function StatusModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={modalSt.overlay}>
-        <View style={modalSt.card}>
+        <View style={[modalSt.card, { paddingBottom: modalSt.card.paddingBottom + modalInsets.bottom }]}>
           <Text style={modalSt.title}>Statut du compte</Text>
           <Text style={modalSt.subtitle}>{client.first_name} {client.last_name}</Text>
 
@@ -215,15 +217,15 @@ function ClientCard({
       {/* Stats footer */}
       <View style={cardSt.footer}>
         <View style={cardSt.stat}>
-          <Text style={cardSt.statLabel}>Courses</Text>
+          <Text style={cardSt.statLabel}>{'Courses' + '  '}</Text>
           <Text style={cardSt.statValue}>{client.total_trips}</Text>
         </View>
         <View style={cardSt.stat}>
-          <Text style={cardSt.statLabel}>Dépensé</Text>
+          <Text style={cardSt.statLabel}>{'Dépensé' + '  '}</Text>
           <Text style={cardSt.statValue}>{client.total_spent.toFixed(0)} €</Text>
         </View>
         <View style={cardSt.stat}>
-          <Text style={cardSt.statLabel}>Dernière</Text>
+          <Text style={cardSt.statLabel}>{'Dernière' + '  '}</Text>
           <Text style={cardSt.statValue}>{lastDate}</Text>
         </View>
         <TouchableOpacity
@@ -233,7 +235,7 @@ function ClientCard({
           activeOpacity={0.75}
         >
           <Ionicons name="shield-outline" size={14} color={Colors.bordeaux} />
-          <Text style={cardSt.actionText}>Statut</Text>
+          <Text style={cardSt.actionText}>{'Statut' + '  '}</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -317,6 +319,7 @@ const kpiSt = StyleSheet.create({
 export default function AdminClientsScreen() {
   const navigation   = useNavigation<Nav>();
   const accessToken  = useAuthStore(s => s.accessToken);
+  const insets        = useSafeAreaInsets();
 
   const { showToast } = useToast();
   const { unreadCount } = useNotifications();
@@ -486,7 +489,7 @@ export default function AdminClientsScreen() {
               onAction={client => { setActionClient(client); setModalVisible(true); }}
             />
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: styles.list.paddingBottom + insets.bottom }]}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

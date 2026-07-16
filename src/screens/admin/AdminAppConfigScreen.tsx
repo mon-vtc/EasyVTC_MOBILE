@@ -13,6 +13,7 @@ import { useToast } from '../../hooks/useToast';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppButton } from '../../components/common/AppButton';
 import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { SupportConfig, SupportConfigKey } from '../../types';
 
@@ -36,6 +37,7 @@ export default function AdminAppConfigScreen() {
   const [form, setForm]       = useState<FormValues>(EMPTY_FORM);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving]   = useState(false);
+  const scrollBottomInset = useBottomInset(styles.scroll.paddingBottom);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -79,7 +81,7 @@ export default function AdminAppConfigScreen() {
           <ActivityIndicator size="large" color={Colors.bordeaux} />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: scrollBottomInset }]} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Coordonnées support</Text>
           <Text style={styles.subtitle}>
             Ces informations sont affichées aux clients et chauffeurs dans l'application.

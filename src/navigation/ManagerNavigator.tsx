@@ -9,6 +9,7 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { AppIcon } from '../components/common/AppIcon';
+import { useBottomInset } from '../hooks/useSafeAreaPadding';
 import { Colors, Fonts, Spacing } from '../theme/colors';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
@@ -113,6 +114,7 @@ function ManagerDrawerContent(props: DrawerContentComponentProps) {
   const { user, logout, localAvatarUri } = useAuth();
   const { hasPermission, hasAnyPermission } = usePermissions();
   const { showAlert } = useAlert();
+  const footerBottomInset = useBottomInset(styles.footer.paddingBottom);
 
   const handleLogout = () => {
     showAlert({title: 'Déconnexion', message: 'Voulez-vous vraiment vous déconnecter ?', buttons: [
@@ -226,7 +228,7 @@ function ManagerDrawerContent(props: DrawerContentComponentProps) {
       </DrawerContentScrollView>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: footerBottomInset }]}>
         <View style={styles.divider} />
         <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
           <AppIcon name="log-out-outline" color={Colors.error} size={20} />

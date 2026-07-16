@@ -8,6 +8,7 @@ import {
   ActivityIndicator, Image
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat } from '../../hooks/useChat';
 import { useReservation } from '../../hooks/useReservation';
 import { useAuth } from '../../hooks/useAuth';
@@ -98,6 +99,7 @@ export default function ChatScreen({navigation}: any) {
   const route = useRoute<ChatScreenRouteProp>();
   const { reservationId } = route.params!;
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const {
     isLoadingMessages,
     activeConversationMessages,
@@ -201,7 +203,7 @@ export default function ChatScreen({navigation}: any) {
       {/* ── Header ── */}
       <AppHeader
         left="back"
-        onBack={() => { resetMessages(); navigation.goBack(); }}
+        onBack={() => { resetMessages(); if (navigation.canGoBack()) navigation.goBack(); }}
         centerElement={
           <>
             {user?.role !== 'driver' && driver ?  (
@@ -293,7 +295,7 @@ export default function ChatScreen({navigation}: any) {
       )}
 
       {/* ── Input ── */}
-      <View style={s.inputRow}>
+      <View style={[s.inputRow, { paddingBottom: s.inputRow.paddingVertical + insets.bottom }]}>
         <TextInput
           style={s.input}
           value={text}

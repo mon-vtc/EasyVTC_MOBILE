@@ -7,6 +7,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useToast } from '../../../hooks/useToast';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { AppInput } from '../../../components/common/AppInput';
 import { AppButton } from '../../../components/common/AppButton';
@@ -23,6 +24,7 @@ const PRIORITY_OPTIONS = [
 
 export default function EditManagerScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const route = useRoute<any>();
   const { managerId } = route.params as { managerId: string };
 
@@ -158,7 +160,7 @@ export default function EditManagerScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: styles.content.paddingBottom + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >

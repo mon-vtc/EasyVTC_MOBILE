@@ -217,8 +217,10 @@ export const BOOKING_INITIAL_STATE: BookingFormState = {
 };
 
 export interface AvailableDriverDto {
-  id:           string;
-  rating:       number | null;
+  id:              string;
+  rating:          number | null;    // contexte-dépendant : note de LA réservation courante (detail réservation) ou moyenne du chauffeur (liste des chauffeurs disponibles)
+  average_rating:  number | null;    // moyenne globale du chauffeur, toutes courses confondues
+  ratings_count:   number;           // nombre total d'évaluations reçues par le chauffeur
   is_online:    boolean;
   status:       string;
   vehicle_type: string | null;

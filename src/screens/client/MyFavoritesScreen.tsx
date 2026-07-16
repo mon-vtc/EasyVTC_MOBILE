@@ -4,6 +4,7 @@ import {
   ActivityIndicator, Modal, TextInput, Platform, ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useToast } from '../../hooks/useToast';
 import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
@@ -101,6 +102,7 @@ function AddFavoriteModal({
     resolver: zodResolver(addFavoriteSchema),
     defaultValues: { label: '', address: '' },
   });
+  const insets = useSafeAreaInsets();
 
   const addressInput = watch('address');
   const debouncedAddress = useDebounce(addressInput, 300);
@@ -151,7 +153,7 @@ function AddFavoriteModal({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={modalStyles.overlay}>
-        <View style={modalStyles.card}>
+        <View style={[modalStyles.card, { paddingBottom: modalStyles.card.paddingBottom + insets.bottom }]}>
           <Text style={modalStyles.title}>Ajouter un favori</Text>
           <Controller
             control={control}
@@ -257,7 +259,7 @@ export default function MyFavoritesScreen({ navigation }: any) {
           <Ionicons name={iconInfo.name} size={24} color={iconInfo.color} />
         </View>
         <View style={styles.cardContent}>
-          <Text style={styles.cardLabel}>{item.label}</Text>
+          <Text style={styles.cardLabel}>{item.label}{'  '}</Text>
           <Text style={styles.cardAddress}>{item.address}</Text>
         </View>
         <TouchableOpacity onPress={() => handleDelete(item.id, item.label)} style={styles.deleteButton}>

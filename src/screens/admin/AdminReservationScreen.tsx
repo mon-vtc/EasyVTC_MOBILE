@@ -12,6 +12,7 @@ import {
   Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp, NavigationProp } from '@react-navigation/native';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
@@ -54,7 +55,7 @@ function Badge({ status }: { status: Reservation['status'] }) {
   const cfg = STATUS_MAP[status];
   return (
     <View style={[S.badge, { backgroundColor: cfg.bg }]}>
-      <Text style={[S.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
+      <Text style={[S.badgeText, { color: cfg.color }]} numberOfLines={1}>{cfg.label}</Text>
     </View>
   );
 }
@@ -294,11 +295,14 @@ function DriverTab({
           <Text style={S.profileName}>{driver.user.first_name} {driver.user.last_name}</Text>
           <View style={S.driverBadgeRow}>
             <Text style={[S.profileRole, { color: Colors.bordeaux }]}>Chauffeur</Text>
-            {driver.rating != null && (
-              <View style={S.ratingBadge}>
-                <Ionicons name="star" size={12} color="#F9A825" />
-                <Text style={S.ratingText}>{driver.rating.toFixed(1)}</Text>
-              </View>
+            {driver.average_rating != null && (
+              <>
+                <View style={S.ratingBadge}>
+                  <Ionicons name="star" size={12} color="#F9A825" />
+                  <Text style={S.ratingText}>{driver.average_rating.toFixed(1)}</Text>
+                </View>
+                <Text style={S.ratingCountText}>({driver.ratings_count} avis)</Text>
+              </>
             )}
           </View>
         </View>
@@ -419,6 +423,7 @@ function PaymentTab({ reservation }: { reservation: Reservation }) {
 export default function AdminReservationScreen({ navigation }: any) {
   const route      = useRoute<ScreenRoute>();
   // const navigation = useNavigation<ScreenNav>();
+  const insets = useSafeAreaInsets();
   const { reservations, selected, fetchById, assign, isLoading, cancel } = useReservation();
   const { showToast } = useToast();
 
@@ -586,7 +591,7 @@ const handleViewInvoice = async () => {
       {/* ── CONTENT ── */}
       <ScrollView
         style={S.content}
-        contentContainerStyle={{ paddingBottom: hasBottomActions ? 140 : 24 }}
+        contentContainerStyle={{ paddingBottom: (hasBottomActions ? 140 : 24) + insets.bottom }}
         showsVerticalScrollIndicator={false}
       >
         <TabContent />
@@ -594,7 +599,7 @@ const handleViewInvoice = async () => {
 
       {/* ── BOTTOM ACTIONS ── */}
       {hasBottomActions && (
-        <View style={S.bottomActions}>
+        <View style={[S.bottomActions, { paddingBottom: S.bottomActions.paddingBottom + insets.bottom }]}>
           {primaryAction && (
             <TouchableOpacity
               style={[S.primaryBtn, { backgroundColor: Colors.bordeaux, marginBottom: Spacing.sm }]}
@@ -727,6 +732,7 @@ const S = StyleSheet.create({
     paddingHorizontal: 6, paddingVertical: 2,
   },
   ratingText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700', color: '#F9A825' },
+  ratingCountText: { fontSize: Fonts.size.xs, color: Colors.textSecondary },
 
   contactRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm, gap: Spacing.sm },
   contactIcon: {
@@ -750,8 +756,8 @@ const S = StyleSheet.create({
   paymentHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.md },
   paymentTitle: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary },
   paymentRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm },
-  paymentLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  paymentValue: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
+  paymentLabel: { flex: 1, flexShrink: 1, marginRight: Spacing.sm, fontSize: Fonts.size.sm, color: Colors.textSecondary },
+  paymentValue: { flexShrink: 0, fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   paymentDivider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.sm },
   paymentTotalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   paymentTotalLabel: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },

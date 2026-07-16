@@ -15,6 +15,7 @@ import {
   type RouteProp, type NavigationProp,
 } from '@react-navigation/native';
 import { Ionicons }              from '@expo/vector-icons';
+import { useSafeAreaInsets }     from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';;
 import type { ClientStackParamList } from '../../types/auth.types';
 import { useReservation } from '../../hooks/useReservation';
@@ -168,6 +169,7 @@ function NextStep({ text, delay }: { text: string; delay: number }) {
 export default function BookingConfirmationScreen() {
   const nav   = useNavigation<ConfirmationNav>();
   const route = useRoute<ConfirmationRoute>();
+  const insets = useSafeAreaInsets();
 
   const { reservationId } = route.params ?? {};
   const {
@@ -267,7 +269,7 @@ export default function BookingConfirmationScreen() {
   return (
     <View style={styles.root}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: styles.scroll.paddingBottom + insets.bottom }]}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >

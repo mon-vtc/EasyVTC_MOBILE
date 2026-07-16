@@ -15,6 +15,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import type { DriverRevenuesResult, RevenueTrip, RevenuesPeriod, RevenueStatus } from '../../types';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 
 const REVENUE_PERIODS: { label: string; value: RevenuesPeriod }[] = [
   { label: 'Jour', value: 'day' },
@@ -86,11 +87,11 @@ function SummaryCard({ revenues, status }: { revenues: DriverRevenuesResult | nu
       <View style={styles.summaryStats}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{totalTrips}</Text>
-          <Text style={styles.statLabel}>Courses</Text>
+          <Text style={styles.statLabel}>{'Courses' + '  '}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{formatCurrency(avgRevenue, currency)}</Text>
-          <Text style={styles.statLabel}>Revenu moyen</Text>
+          <Text style={styles.statLabel}>{'Revenu moyen' + '  '}</Text>
         </View>
       </View>
       <View style={styles.statusLabel}>
@@ -222,6 +223,7 @@ export default function DriverRevenuesScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localRefreshing, setLocalRefreshing] = useState(false);
+  const listBottomInset = useBottomInset(styles.listContainer.paddingBottom);
 
   const handleFetchRevenues = useCallback(async (period: RevenuesPeriod, status: 'completed' | 'cancelled' | undefined, page: number = 1) => {
     try {
@@ -328,7 +330,7 @@ export default function DriverRevenuesScreen() {
             tintColor={Colors.bordeaux}
           />
         }
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[styles.listContainer, { paddingBottom: listBottomInset }]}
         showsVerticalScrollIndicator={false}
       />
     </View>

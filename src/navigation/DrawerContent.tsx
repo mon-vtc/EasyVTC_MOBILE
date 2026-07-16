@@ -8,6 +8,7 @@ import {
   DrawerItem,
   type DrawerContentComponentProps,
 } from '@react-navigation/drawer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { Colors, Fonts, Spacing } from '../theme/colors';
@@ -98,6 +99,7 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
   const { user, logout, localAvatarUri } = useAuth();
   const { showAlert } = useAlert();
   const { unreadMessagesCount, unreadSupportCount } = useNotifications();
+  const insets = useSafeAreaInsets();
 
   const isAdmin  = user?.role === 'admin' || user?.role === 'manager';
   const isDriver = user?.role === 'driver';
@@ -254,7 +256,7 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
       </DrawerContentScrollView>
 
       {/* ── Footer logout ── */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: styles.footer.paddingBottom + insets.bottom }]}>
         <View style={styles.divider} />
         <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
           <AppIcon name="log-out-outline" color={Colors.error} size={20} />

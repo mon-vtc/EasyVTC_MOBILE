@@ -12,6 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { useChat } from '../../hooks/useChat';
 import { useAuth } from '../../hooks/useAuth';
+import { useBottomInset, useTopInset } from '../../hooks/useSafeAreaPadding';
 import { Colors, Fonts, Spacing } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon'; 
 import type { ConversationSummary } from '../../types/chats.type';
@@ -92,6 +93,8 @@ export default function DriverMessagesScreen({ navigation }: any) {
     conversationsPage, conversationsTotalPages, isFetchingNextConversationsPage,
     markChatAsRead,
   } = useChat();
+  const topInset = useTopInset();
+  const listBottomInset = useBottomInset(styles.list.padding);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -115,7 +118,7 @@ export default function DriverMessagesScreen({ navigation }: any) {
   return (
     <View style={styles.container}>
       {/* ── Header ── */}
-      <View style={styles.header}>
+      <View style={[styles.header, Platform.OS === 'android' && { paddingTop: styles.header.paddingTop + topInset }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
           <AppIcon name="arrow-back" size={24} color={Colors.white} />
         </TouchableOpacity>
@@ -145,7 +148,7 @@ export default function DriverMessagesScreen({ navigation }: any) {
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={isFetchingNextConversationsPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: listBottomInset }]}
       />
     </View>
   );

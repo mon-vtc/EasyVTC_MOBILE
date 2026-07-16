@@ -38,8 +38,6 @@ export default {
     predictiveBackGestureEnabled: false,
     package: "com.easyvtc.app",
     usesCleartextTraffic: true,
-    // compileSdkVersion: 35,
-    // targetSdkVersion: 35, 
   },
   web: {
     favicon: "./assets/favicon.png",
@@ -59,8 +57,8 @@ export default {
       "expo-build-properties",
       {
         android: {
-          compileSdkVersion: 35,
-          targetSdkVersion: 35,
+          compileSdkVersion: 36,
+          targetSdkVersion: 36,
         },
       },
     ],

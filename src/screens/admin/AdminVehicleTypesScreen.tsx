@@ -15,6 +15,7 @@ import { useVehicleTypes }    from '../../hooks/useVehicleTypes';
 import { AppIcon }            from '../../components/common/AppIcon';
 import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
+import { useBottomInset, useTopInset } from '../../hooks/useSafeAreaPadding';
 import { Logo }               from '../../constants/logo';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type {
@@ -83,8 +84,9 @@ function toFloat(v: string): number {
 
 function Header({ onAdd }: { onAdd: () => void }) {
   const navigation = useNavigation();
+  const topInset = useTopInset();
   return (
-    <View style={hdr.container}>
+    <View style={[hdr.container, { height: hdr.container.height + topInset, paddingTop: topInset }]}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={hdr.side} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
         <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
       </TouchableOpacity>
@@ -240,6 +242,7 @@ function VehicleTypeFormModal({
   saving:   boolean;
 }) {
   const { showToast } = useToast();
+  const bottomInset = useBottomInset(modal.sheet.padding);
   const [form, setForm] = useState<FormValues>(emptyForm());
 
   useEffect(() => {
@@ -262,7 +265,7 @@ function VehicleTypeFormModal({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView style={modal.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={modal.sheet}>
+        <View style={[modal.sheet, { paddingBottom: bottomInset }]}>
           <View style={modal.titleRow}>
             <Text style={modal.title}>{isEdit ? 'Modifier le type' : 'Nouveau type de véhicule'}</Text>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -344,6 +347,7 @@ export default function AdminVehicleTypesScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editItem, setEditItem]         = useState<VehicleTypeRecord | null>(null);
   const [saving, setSaving]             = useState(false);
+  const listBottomInset = useBottomInset(s.listContent.paddingBottom);
 
   useEffect(() => { refresh(); }, []);
 
@@ -471,7 +475,7 @@ export default function AdminVehicleTypesScreen() {
           </TouchableOpacity>
         </View>
       ) : (
-        <ScrollView style={s.list} contentContainerStyle={s.listContent} showsVerticalScrollIndicator={false}>
+        <ScrollView style={s.list} contentContainerStyle={[s.listContent, { paddingBottom: listBottomInset }]} showsVerticalScrollIndicator={false}>
           {allTypes.map(item => (
             <TypeCard
               key={item.id}

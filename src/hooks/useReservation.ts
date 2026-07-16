@@ -28,6 +28,14 @@ import type { PricingCountry, PricingFlatRate } from '../types/pricing.types';
 
 const COUNTRY: PricingCountry = 'france';
 
+// Détection auto du supplément aéroport — même règle que côté backend
+// (reservations.service.ts) pour que l'estimation affichée corresponde au
+// prix réellement facturé à la création de la réservation.
+const AIRPORT_KEYWORD_RE = /a[eé]roport|airport/i;
+function isAirportTrip(pickupAddress: string, destAddress: string): boolean {
+  return AIRPORT_KEYWORD_RE.test(pickupAddress) || AIRPORT_KEYWORD_RE.test(destAddress);
+}
+
 export function useReservation() {
   const accessToken = useAuthStore(s => s.accessToken);
   const isHydrated  = useAuthStore(s => s.isHydrated);
@@ -234,12 +242,19 @@ export function useReservation() {
         const distance_km  = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
         const duration_min = Math.round(distance_km * 1.8); // ~1.8 min/km en milieu urbain
 
+        // Lus au moment de l'appel (pas dans les deps du useCallback) pour
+        // refléter la date/heure choisie en étape 2 sans provoquer de stale closure.
+        const { date, time } = useReservationStore.getState().booking;
+        const scheduled_at = date && time ? new Date(`${date}T${time}:00`).toISOString() : undefined;
+
         const res = await pricingApi.estimate(token, {
           country:       COUNTRY,
           distance_km,
           duration_min,
           nb_passengers: _nbPassengers,
           vehicle_type:  _vehicleType,
+          scheduled_at,
+          is_airport:    isAirportTrip(origin.address, destination.address),
         });
 
         if (res.ok && res.data) {

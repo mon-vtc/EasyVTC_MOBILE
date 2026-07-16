@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAdminDocuments }  from '../../hooks/useAdminDocuments';
 import { useAlert } from '../../hooks/useAlert';
+import { useBottomInset, useTopInset } from '../../hooks/useSafeAreaPadding';
 import DocumentViewer         from '../../components/admin/DocumentViewer';
 import type { AdminDocument } from '../../services/api/admin.document.api';
 import { useToast } from '../../hooks/useToast';
@@ -479,6 +480,8 @@ export default function AdminDocumentsScreen({ navigation }: Props) {
 
   const { showToast } = useToast();
   const { showAlert } = useAlert();
+  const topInset = useTopInset();
+  const scrollBottomInset = useBottomInset(s.scroll.padding);
 
   const [activeTab,    setActiveTab]    = useState<FilterTab>('all');
   const [refreshing,   setRefreshing]   = useState(false);
@@ -623,7 +626,7 @@ const folders = useMemo(() => {
     <View style={s.flex}>
 
       {/* ── Header ── */}
-      <View style={s.header}>
+      <View style={[s.header, Platform.OS === 'android' && { paddingTop: s.header.paddingTop + topInset }]}>
         <TouchableOpacity style={s.headerBtn} onPress={currentView === 'detail' ? goBackToList : () => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={Colors.white} />
         </TouchableOpacity>
@@ -671,7 +674,7 @@ const folders = useMemo(() => {
       ) : (
         <ScrollView
           style={s.flex}
-          contentContainerStyle={s.scroll}
+          contentContainerStyle={[s.scroll, { paddingBottom: scrollBottomInset }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl

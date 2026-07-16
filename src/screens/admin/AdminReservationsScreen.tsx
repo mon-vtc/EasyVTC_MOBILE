@@ -13,6 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { AppIcon } from '../../components/common/AppIcon'
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReservation } from '../../hooks/useReservation';
 import { useToast } from '../../hooks/useToast';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -167,6 +168,7 @@ export default function AdminReservationsScreen({ navigation }: any) {
   const [isSorting, setIsSorting] = useState(false);
   const { showToast } = useToast();
   const { unreadCount } = useNotifications();
+  const insets = useSafeAreaInsets();
 
   const [activeTab,          setActiveTab]          = useState<FilterTab>('all');
   const [searchQuery,        setSearchQuery]        = useState('');
@@ -410,7 +412,11 @@ export default function AdminReservationsScreen({ navigation }: any) {
             )
           }
           ListFooterComponent={isFetchingNextPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
-          contentContainerStyle={filteredReservations.length > 0 ? styles.scroll : styles.flex}
+          contentContainerStyle={
+            filteredReservations.length > 0
+              ? [styles.scroll, { paddingBottom: Spacing.md + insets.bottom }]
+              : styles.flex
+          }
         />
       )}
 

@@ -18,6 +18,7 @@ import React                          from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator }   from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useSafeAreaInsets }          from 'react-native-safe-area-context';
 import { Ionicons }                   from '@expo/vector-icons';
 import { Colors, Radius, Spacing, Fonts } from '../theme/colors';
 
@@ -82,6 +83,7 @@ const fabStyles = StyleSheet.create({
 // TAB NAVIGATOR (onglets)
 // ══════════════════════════════════════════════════════════════════════════════
 function ClientTabs() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -93,8 +95,8 @@ function ClientTabs() {
           backgroundColor: Colors.surface,
           borderTopWidth:  1,
           borderTopColor:  Colors.border,
-          height:          Platform.OS === 'ios' ? 84 : 84,
-          paddingBottom:   Platform.OS === 'ios' ? 24 : 8,
+          height:          84 + insets.bottom,
+          paddingBottom:   (Platform.OS === 'ios' ? 24 : 8) + insets.bottom,
           paddingTop:      8,
         },
         tabBarLabelStyle: { fontSize: 11, fontFamily: Fonts.semibold, fontWeight: '600' },
@@ -130,11 +132,11 @@ function ClientTabs() {
        * Le composant CreateReservationScreen peut rester vide / redirect.
        */}
       <Tab.Screen
-        name="CreateReservation"
+        name="CreateReservationTab"
         component={CreateReservationTabScreen}
         options={({ navigation }) => ({
           tabBarLabel: '',
-          tabBarButton: () => <FABButton onPress={() => navigation.navigate('CreateReservation')} />,
+          tabBarButton: () => <FABButton onPress={() => navigation.getParent()?.navigate('CreateReservation')} />,
         })}
       />
 
@@ -159,36 +161,6 @@ function ClientTabs() {
           ),
         }}
       />
-
-      {/* Écrans cachés dans les onglets mais accessibles depuis la navigation
-      <Tab.Screen
-        name="ReservationDetails"
-        component={ReservationDetailsScreen}
-        options={{
-          tabBarButton: () => null, // Masqué de la barre d'onglets
-        }}
-      />
-      <Tab.Screen
-        name="MyInvoices"
-        component={MyInvoicesScreen}
-        options={{
-          tabBarButton: () => null, // Masqué de la barre d'onglets
-        }}
-      />
-      <Tab.Screen
-        name="MyOrders"
-        component={MyOrdersScreen}
-        options={{
-          tabBarButton: () => null, // Masqué de la barre d'onglets
-        }}
-      />
-      <Tab.Screen
-        name="CGU"
-        component={CGU}
-        options={{
-          tabBarButton: () => null, // Masqué de la barre d'onglets
-        }}
-      /> */}
 
     </Tab.Navigator>
   );
@@ -310,6 +282,11 @@ export default function ClientNavigator() {
       <Stack.Screen
         name="NotificationDetails"
         component={NotificationDetailsScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="CGU"
+        component={CGU}
         options={{ animation: 'slide_from_right' }}
       />
 

@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, FlatList,
   TextInput, RefreshControl, Platform, ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../hooks/useAdmin';
 import { AppIcon } from '../../components/common/AppIcon';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -69,6 +70,7 @@ export default function AdminAuditLogsScreen({ navigation }: any) {
     clearAuditLogsError,
   } = useAdmin();
   const { unreadCount } = useNotifications();
+  const insets = useSafeAreaInsets();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<AuditLogFilters>(DEFAULT_AUDIT_LOG_FILTERS);
@@ -204,7 +206,7 @@ export default function AdminAuditLogsScreen({ navigation }: any) {
             ) : null
           }
           ListFooterComponent={isFetchingNextAuditLogPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: styles.listContent.padding + insets.bottom }]}
         />
       )}
 

@@ -16,6 +16,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAdmin } from '../../hooks/useAdmin';
 import CustomCalendarModal from '../../components/common/CustomCalendarModal';
@@ -93,6 +94,7 @@ const campaignFormSchema = z.object({
 }).refine(data => data.type !== 'email' || (data.subject && data.subject.length > 0), { message: 'L\'objet est requis pour un email.', path: ['subject'] });
 
 export default function AdminPromoCommunicationScreen() {
+  const insets = useSafeAreaInsets();
   const { showAlert } = useAlert();
   const { showToast } = useToast();
   const {
@@ -473,18 +475,21 @@ export default function AdminPromoCommunicationScreen() {
           Condition : {promo.min_order_amount ? `Montant min ${promo.min_order_amount} €` : 'Aucune'}
         </Text>
 
+        {/* Le "  " final de chaque label évite un bug d'affichage Android/Hermes où un <Text> ne
+            contenant qu'une seule chaîne enfant peut tronquer visuellement son dernier caractère —
+            un enfant supplémentaire avec une largeur réelle force une mesure correcte du texte. */}
         <View style={styles.statsRow}>
           <View style={styles.statsBox}>
             <Text style={styles.statsValue}>{promo.uses_count}/{promo.max_uses ?? '∞'}</Text>
-            <Text style={styles.statsLabel}>Utilisations</Text>
+            <Text style={styles.statsLabel}>{'Utilisations' + '  '}</Text>
           </View>
           <View style={styles.statsBox}>
             <Text style={styles.statsValue}>{promo.valid_until ? new Date(promo.valid_until).toLocaleDateString('fr-FR') : '—'}</Text>
-            <Text style={styles.statsLabel}>Expiration</Text>
+            <Text style={styles.statsLabel}>{'Expiration' + '  '}</Text>
           </View>
           <View style={styles.statsBox}>
             <Text style={[styles.statsValue, { color: statusColor }]}>{statusLabel}</Text>
-            <Text style={styles.statsLabel}>Statut</Text>
+            <Text style={styles.statsLabel}>{'Statut' + '  '}</Text>
           </View>
         </View>
 
@@ -653,7 +658,7 @@ export default function AdminPromoCommunicationScreen() {
           data={promoCodes}
           renderItem={renderPromoCard}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: styles.listContent.paddingBottom + insets.bottom }]}
           ListHeaderComponent={<PromoListHeader />}
           ListEmptyComponent={
             isPromoCodesLoading
@@ -669,7 +674,7 @@ export default function AdminPromoCommunicationScreen() {
         <FlatList
           data={marketingClients}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: styles.listContent.paddingBottom + insets.bottom }]}
           onEndReached={loadMoreClients}
           onEndReachedThreshold={0.5}
           ListHeaderComponent={<ClientListHeader />}
@@ -749,7 +754,7 @@ export default function AdminPromoCommunicationScreen() {
           data={campaigns}
           renderItem={renderCampaignCard}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: styles.listContent.paddingBottom + insets.bottom }]}
           onEndReached={loadMoreCampaigns}
           onEndReachedThreshold={0.5}
           ListHeaderComponent={<CampaignListHeader />}
@@ -1367,19 +1372,23 @@ const styles = StyleSheet.create({
   },
   statsBox: {
     flex: 1,
+    flexShrink: 1,
     alignItems: 'center',
+    paddingHorizontal: 2,
   },
   statsValue: {
     color: Colors.bordeaux,
     fontWeight: 'bold',
     fontSize: Fonts.size.md,
     fontFamily: Fonts.bold,
+    textAlign: 'center',
   },
   statsLabel: {
     color: Colors.textSecondary,
     fontSize: Fonts.size.xs,
     marginTop: 2,
     textAlign: 'center',
+    flexShrink: 1,
   },
   cardActions: {
     flexDirection: 'row',
