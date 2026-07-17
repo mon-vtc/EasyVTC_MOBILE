@@ -41,11 +41,13 @@ function MessageBubble({ message, isOwn }: BubbleProps) {
   return (
     <View style={[b.row, isOwn ? b.rowRight : b.rowLeft, {elevation: 1, shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2}]}>
       <View style={[b.bubble, isOwn ? b.bubbleOwn : b.bubbleOther]}>
+        {/* Le "  " final évite un bug d'affichage Android/Hermes où un <Text> ne contenant
+            qu'une seule chaîne enfant peut tronquer visuellement son dernier caractère. */}
         <Text style={[b.text, isOwn ? b.textOwn : b.textOther]}>
-          {message.content}
+          {message.content}{'  '}
         </Text>
         <Text style={[b.time, isOwn ? b.timeOwn : b.timeOther]}>
-          {time}
+          {time}{'  '}
           {isOwn && (
             <Text> {message.read_at ? ' ✓✓' : ' ✓'}</Text>
           )}
@@ -78,12 +80,14 @@ const b = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   text: {
+    flexShrink: 1,
     fontSize: 15,
     lineHeight: 20,
   },
   textOwn:   { color: Colors.white },
   textOther: { color: Colors.textPrimary },
   time: {
+    flexShrink: 1,
     fontSize: 11,
     marginTop: 4,
     alignSelf: 'flex-end',
@@ -196,8 +200,7 @@ export default function ChatScreen({navigation}: any) {
   return (
     <KeyboardAvoidingView
       style={s.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
 
       {/* ── Header ── */}
@@ -280,6 +283,7 @@ export default function ChatScreen({navigation}: any) {
       ) : (
       <FlatList
         ref={flatListRef}
+        style={s.messagesListContainer}
         data={activeConversationMessages}
         keyExtractor={item => item.id}
         renderItem={renderItem}
@@ -374,6 +378,9 @@ const s = StyleSheet.create({
   driverStatus: {
     fontSize: Fonts.size.xs,
     color: Colors.textMuted,
+  },
+  messagesListContainer: {
+    flex: 1,
   },
   messagesList: {
     paddingVertical: 12,

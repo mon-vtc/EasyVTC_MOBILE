@@ -494,9 +494,18 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const handleEditToggle = useCallback(async () => {
     if (editMode) {
       try {
+        // Le backend rejette siret/zone/vehicle_type vides (regex/enum) — on n'envoie
+        // que les champs réellement renseignés pour ne pas faire échouer toute la sauvegarde.
+        const driverPayload: Record<string, string> = {};
+        if (ibanVal)       driverPayload.iban         = ibanVal;
+        if (vtcLicenseVal) driverPayload.vtc_license   = vtcLicenseVal;
+        if (siretVal)      driverPayload.siret         = siretVal;
+        if (zoneVal)       driverPayload.zone          = zoneVal;
+        if (vehicleTypeVal) driverPayload.vehicle_type = vehicleTypeVal;
+
         await updateDriverProfile(
           { first_name: firstName, last_name: lastName, phone },
-          { iban: ibanVal, vtc_license: vtcLicenseVal, siret: siretVal, zone: zoneVal, vehicle_type: vehicleTypeVal },
+          driverPayload,
         );
 
         if (pendingImage) {
