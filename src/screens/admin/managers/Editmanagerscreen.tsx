@@ -2,14 +2,16 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Image, Platform,
+  ActivityIndicator, Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useToast } from '../../../hooks/useToast';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { AppInput } from '../../../components/common/AppInput';
 import { AppButton } from '../../../components/common/AppButton';
+import { AppHeader } from '../../../components/common/AppHeader';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
 import type { UserProfile } from '../../../types';
 import ChangeStatusModal from '../../../components/common/ChangeStatusModal';
@@ -22,6 +24,7 @@ const PRIORITY_OPTIONS = [
 
 export default function EditManagerScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const route = useRoute<any>();
   const { managerId } = route.params as { managerId: string };
 
@@ -138,14 +141,7 @@ export default function EditManagerScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Modifier le gestionnaire</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader left="back" title="Modifier le gestionnaire" />
 
       {/* Bandeau identité */}
       <View style={styles.identityBanner}>
@@ -164,7 +160,7 @@ export default function EditManagerScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: styles.content.paddingBottom + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -294,18 +290,6 @@ const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: Colors.background },
   center:      { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md },
   errorText:   { fontSize: Fonts.size.md, color: Colors.textMuted },
-
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
   identityBanner: {
     flexDirection:     'row',

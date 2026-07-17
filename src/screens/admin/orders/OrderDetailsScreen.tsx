@@ -17,7 +17,6 @@ import {
   Linking,
   Share,
   Image,
-  Platform,
 } from 'react-native';
 import {
   useNavigation,
@@ -25,6 +24,7 @@ import {
   type RouteProp,
   type NavigationProp,
 } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useOrdersStore } from '../../../store/orders.store';
@@ -33,6 +33,7 @@ import { ordersApi } from '../../../services/api/orders.api';
 import type { ClientStackParamList } from '../../../types/auth.types';
 import { Logo } from '../../../constants/logo';
 import { useToast } from '../../../hooks/useToast';
+import { AppHeader } from '../../../components/common/AppHeader';
 // ── Types ──────────────────────────────────────────────────────────────────────
 type DetailsNavRoute = RouteProp<ClientStackParamList, 'OrderDetails'>;
 type DetailsNavProp  = NavigationProp<ClientStackParamList, 'OrderDetails'>;
@@ -76,6 +77,7 @@ export default function OrderDetailsScreen() {
   const navigation = useNavigation<DetailsNavProp>();
   const route      = useRoute<DetailsNavRoute>();
   const { orderId } = route.params;
+  const insets = useSafeAreaInsets();
 
   const token                           = useAuthStore(s => s.accessToken) ?? '';
   const { orders, fetchMine, isLoading } = useOrdersStore();
@@ -151,18 +153,13 @@ export default function OrderDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* ── Header barre de navigation ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Bon de commande</Text>
-        <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-          <Ionicons name="share-social-outline" size={22} color={Colors.white} />
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        left="back"
+        title="Bon de commande"
+        rightIcon={{ name: 'share-social-outline', onPress: handleShare }}
+      />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]}>
 
         {/* ══════════════════════════════════════════════════════════════════════
             DOCUMENT — BON DE COMMANDE
@@ -378,26 +375,6 @@ const styles = StyleSheet.create({
   centered:    { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.lg },
   errorText:   { fontSize: Fonts.size.md, color: Colors.error, textAlign: 'center', marginBottom: Spacing.md },
   linkText:    { fontSize: Fonts.size.md, color: Colors.bordeaux, fontFamily: Fonts.semibold, fontWeight: '600' },
-
-  // Header navigation
-  header: {
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 60 : Spacing.xl,
-    paddingBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backBtn:    { padding: Spacing.xs },
-  shareBtn:   { padding: Spacing.xs },
-  headerTitle: {
-    fontSize: Fonts.size.md,
-    fontFamily: Fonts.bold, fontWeight: '700',
-    color: Colors.white,
-    textAlign: 'center',
-    flex: 1,
-  },
 
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl * 2 },
 

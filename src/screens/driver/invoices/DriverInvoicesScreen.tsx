@@ -4,7 +4,7 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import {
   View, Text, FlatList, TouchableOpacity,
@@ -15,8 +15,11 @@ import { useInvoicesStore } from '../../../store/invoices.store';
 import { useAuthStore }     from '../../../store/auth.store';
 import { invoicesApi }      from '../../../services/api/invoices.api';
 import { useToast } from '../../../hooks/useToast';
+import { useNotifications } from '../../../hooks/useNotifications';
 import type { Invoice }     from '../../../types/invoices.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
+import { AppHeader } from '../../../components/common/AppHeader';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -97,8 +100,10 @@ export default function DriverInvoicesScreen() {
   const { invoices, total, page, totalPages, isLoading, isFetchingNextPage, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const { showToast } = useToast();
+  const { unreadCount } = useNotifications();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const listBottomInset = useBottomInset(styles.list.padding);
 
   const load = useCallback(async () => {
     try { await fetch(token); } catch { /* handled */ }
@@ -134,19 +139,16 @@ export default function DriverInvoicesScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.headerContainer}>
-        <TouchableOpacity
-          style={styles.headerBtn}
-          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        >
-          <Ionicons name="menu-outline" size={26} color={Colors.white} />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Mes factures</Text>
-          <Text style={styles.headerCount}>{total} facture{total > 1 ? 's' : ''}</Text>
-        </View>
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader
+        left="menu"
+        title="Mes factures"
+        subtitle={`${total} facture${total > 1 ? 's' : ''}`}
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('DriverNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       {/* Search Bar */}
       <View style={searchAndListStyles.searchContainer}>
@@ -166,7 +168,7 @@ export default function DriverInvoicesScreen() {
         data={filteredInvoices}
         keyExtractor={(i) => i.id}
         renderItem={({ item }) => <InvoiceCard invoice={item} token={token} onPress={handleViewInvoice} />}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: listBottomInset }]}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
@@ -188,19 +190,6 @@ export default function DriverInvoicesScreen() {
 const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: Colors.background },
   centered:   { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.bordeaux,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom: Spacing.md,
-  },
-  headerCenter: { alignItems: 'center' },
-  headerTitle: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white, textAlign: 'center' },
-  headerCount: { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2,  },
-  headerBtn: { width: 40 },
   list:        { padding: Spacing.md, gap: Spacing.md },
   card: {
     backgroundColor: Colors.surface, borderRadius: Radius.md,

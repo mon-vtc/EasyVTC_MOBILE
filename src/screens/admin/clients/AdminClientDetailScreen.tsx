@@ -1,16 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Linking, Platform, Image, Alert, FlatList
+  ActivityIndicator, Linking, Image, Alert, FlatList
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
 import { useClientsStore, useAuthStore } from '../../../store';
 import type { ClientWithStats, ClientTripItem, ClientsStackParamList } from '../../../types';
 import type { FavoriteAddress, FavoriteAddressType } from '../../../types/favorites.types';
 import { favoritesApi } from '../../../services/api/favorites.api';
+import { AppHeader } from '../../../components/common/AppHeader';
 
 type Nav = NativeStackNavigationProp<ClientsStackParamList, 'ClientDetail'>;
 
@@ -145,6 +147,7 @@ export default function AdminClientDetailScreen() {
   const route       = useRoute<any>();
   const { clientId } = route.params as { clientId: string };
   const accessToken  = useAuthStore(s => s.accessToken);
+  const insets = useSafeAreaInsets();
   const [favorites, setFavorites] = useState<FavoriteAddress[]>([]);
 
   const { fetchClientById, fetchClientTrips } = useClientsStore();
@@ -240,7 +243,7 @@ export default function AdminClientDetailScreen() {
             <Ionicons name={iconInfo.name} size={24} color={iconInfo.color} />
           </View>
           <View style={styles.cardContent}>
-            <Text style={styles.cardLabel}>{item.label}</Text>
+            <Text style={styles.cardLabel}>{item.label}{'  '}</Text>
             <Text style={styles.cardAddress}>{item.address}</Text>
           </View>
         </View>
@@ -249,16 +252,9 @@ export default function AdminClientDetailScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Détails client</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader left="back" title="Détails client" />
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]} showsVerticalScrollIndicator={false}>
 
         {/* Carte identité */}
         <View style={styles.identityCard}>
@@ -385,16 +381,16 @@ export default function AdminClientDetailScreen() {
                 <Text style={styles.sectionTitle}>Informations</Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Statut</Text>
+                <Text style={styles.detailLabel}>{'Statut' + '  '}</Text>
                 <Text style={[styles.detailValue, { color: statusCfg.color }]}>{statusCfg.label}</Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Consentement RGPD</Text>
+                <Text style={styles.detailLabel}>{'Consentement RGPD' + '  '}</Text>
                 <Text style={styles.detailValue}>{client.rgpd_consent ? 'Oui' : 'Non'}</Text>
               </View>
               {client.status_reason && (
                 <View style={[styles.detailRow, { flexDirection: 'column', gap: 4 }]}>
-                  <Text style={styles.detailLabel}>Motif du statut</Text>
+                  <Text style={styles.detailLabel}>{'Motif du statut' + '  '}</Text>
                   <Text style={[styles.detailValue, { textAlign: 'left' }]}>{client.status_reason}</Text>
                 </View>
               )}
@@ -437,18 +433,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   center:    { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md, paddingTop: 60 },
   errorText: { fontSize: Fonts.size.md, color: Colors.textMuted },
-
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
   scroll:        { flex: 1 },
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl },

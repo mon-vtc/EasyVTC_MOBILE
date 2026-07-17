@@ -8,6 +8,7 @@ import {
   type ViewStyle,
   
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from './AppText';
 import { Colors, Radius, Spacing, Fonts } from '../../theme/colors';
 
@@ -41,6 +42,7 @@ export function useToastContext() {
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const insets = useSafeAreaInsets();
   const [toast, setToast] = useState<ToastOptions | null>(null);
   const anim = useRef(new Animated.Value(0)).current;
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -92,7 +94,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           pointerEvents="box-none"
           style={[
             styles.container,
-            toast.position === 'top' ? styles.top : styles.bottom,
+            toast.position === 'top'
+              ? { top: insets.top + Spacing.sm }
+              : { bottom: insets.bottom + Spacing.sm },
             { transform: [{ translateY }] },
           ]}
         >
@@ -123,12 +127,6 @@ const styles = StyleSheet.create({
     left: Spacing.sm,
     right: Spacing.sm,
     zIndex: 999,
-  },
-  top: {
-    top: Spacing.sm,
-  },
-  bottom: {
-    bottom: Spacing.sm,
   },
   toast: {
     padding: Spacing.md,

@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Switch, Platform, ActivityIndicator, Alert, Image,
+  Switch, Platform, ActivityIndicator, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useDriver } from '../../hooks/useDriver';
 import type { DayOfWeek, WeeklyScheduleDay, SetScheduleDto } from '../../types';
-import { Logo } from '../../constants/logo';
 import { useToast } from '../../hooks/useToast';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import CustomTimePickerModal  from '../../components/common/CustomTimePickerModal'
 
 
@@ -31,21 +31,6 @@ const DAY_LABELS: Record<DayOfWeek, string> = {
 };
 
 // ── Composants ────────────────────────────────────────────────────────────────
-
-function CustomHeader() {
-  const navigation = useNavigation();
-  return (
-    <View style={headerStyles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={headerStyles.backBtn}>
-        <AppIcon name="arrow-back" size={24} color={Colors.white} />
-      </TouchableOpacity>
-      <View style={headerStyles.center}>
-        <Image source={Logo.LogoEasyVTC} style={headerStyles.logo} resizeMode="contain" />
-      </View>
-      <View style={headerStyles.placeholder} />
-    </View>
-  );
-}
 
 function DayScheduleCard({
   day,
@@ -134,6 +119,7 @@ export default function DriverAvailabilityScreen() {
   const { weeklySchedule, isFetchingSchedule, fetchWeeklySchedule, updateWeeklySchedule, error} = useDriver();
   const [localSchedule, setLocalSchedule] = useState<WeeklyScheduleDay[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const footerBottomInset = useBottomInset(styles.footer.paddingBottom);
 
   const { showToast } = useToast();
 
@@ -207,7 +193,7 @@ export default function DriverAvailabilityScreen() {
 
   return (
     <View style={styles.root}>
-      <CustomHeader />
+      <AppHeader left="menu" title="Disponibilité" />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Introduction Card */}
@@ -251,7 +237,7 @@ export default function DriverAvailabilityScreen() {
       </ScrollView>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: footerBottomInset }]}>
         <TouchableOpacity
           style={styles.saveButton}
           onPress={handleSaveSchedule}
@@ -369,33 +355,6 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: Fonts.size.lg,
     fontFamily: Fonts.bold, fontWeight: '700',
-  },
-});
-
-const headerStyles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xxl,
-    paddingBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backBtn: {
-    padding: Spacing.xs,
-    width: 40,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  logo: {
-    width: 40,
-    height: 40,
-  },
-  placeholder: {
-    width: 40,
   },
 });
 

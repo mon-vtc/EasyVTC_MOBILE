@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart } from 'react-native-chart-kit';
 import { useAdmin } from '../../hooks/useAdmin';
+import { useNotifications } from '../../hooks/useNotifications';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
+import { AppHeader } from '../../components/common/AppHeader';
 import type { AdminDashboard, AdminDashboardPeriod, TopDriver, PopularRoute, PeakHourSlot } from '../../types';
 import { Colors, Fonts, Radius, Spacing } from '../../theme/colors';
-import { AppIcon } from '../../components/common/AppIcon'
 const PERIOD_LABELS: Record<AdminDashboardPeriod, string> = {
   week: 'Semaine',
   month: 'Mois',
@@ -213,10 +215,12 @@ const PeakHoursChart = ({ hours }: { hours: PeakHourSlot[] }) => {
 
 export default function AdminStatisticsScreen({ navigation }: any) {
   const { fetchDashboard } = useAdmin();
+  const { unreadCount } = useNotifications();
   const [data, setData] = useState<AdminDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<AdminDashboardPeriod>('week');
+  const scrollBottomInset = useBottomInset();
 
   useEffect(() => {
     const loadData = async () => {
@@ -237,16 +241,17 @@ export default function AdminStatisticsScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      {/* ── Header ── */}
-            <View style={styles.header}>
-              <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.openDrawer()}>
-                <AppIcon name="menu" size={24} color={Colors.white} />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>Statistiques</Text>
-              <View style={styles.headerBtn} />
-            </View>
+      <AppHeader
+        left="menu"
+        title="Statistiques"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('AdminNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
-      <ScrollView style={styles.scrollContainer}>
+      <ScrollView style={styles.scrollContainer} contentContainerStyle={{ paddingBottom: scrollBottomInset }}>
         <PeriodSelector period={period} onSelect={setPeriod} />
 
         {loading ? (
@@ -292,9 +297,6 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     gap: Spacing.md,
   },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md },
-    headerBtn:   { padding: Spacing.sm, width: 40 },
-    headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
 
   periodSelector: {
     flexDirection: 'row',

@@ -7,13 +7,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
-  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useChat } from '../../hooks/useChat';
 import { useAuth } from '../../hooks/useAuth';
 import { Colors, Fonts, Spacing } from '../../theme/colors';
-import { AppIcon } from '../../components/common/AppIcon'; 
+import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
+import { formatRelativeTime } from '../../utils/formatDate';
 import type { ConversationSummary } from '../../types/chats.type';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,32 +32,8 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
   const recipientName = other_party
     ? `${other_party.first_name} ${other_party.last_name}`
     : 'Interlocuteur inconnu';
-    const timeSince = (date: string | Date) => {
-      const seconds = Math.floor(
-        (new Date().getTime() - new Date(date).getTime()) / 1000
-      );
-    
-      const intervals = [
-        { label: 'an', seconds: 31536000 },
-        { label: 'mois', seconds: 2592000 },
-        { label: 'jour', seconds: 86400 },
-        { label: 'h', seconds: 3600 },
-        { label: 'min', seconds: 60 },
-      ];
-    
-      for (const interval of intervals) {
-        const count = Math.floor(seconds / interval.seconds);
-      
-        if (count >= 1) {
-          return `il y a ${count} ${interval.label}${count > 1 && interval.label !== 'mois' ? 's' : ''}`;
-        }
-      }
-    
-      return "à l'instant";
-    };
-
   const timeAgo = last_message?.created_at
-  ? timeSince(last_message.created_at)
+  ? formatRelativeTime(last_message.created_at)
   : '';
 
   return (
@@ -82,7 +59,7 @@ function ConversationCard({ conversation, onPress }: ConversationCardProps) {
           <Text style={styles.name} numberOfLines={1}>
             {recipientName}
           </Text>
-          <Text style={styles.time}>{timeAgo}</Text>
+          <Text style={styles.time}>{timeAgo}{'  '}</Text>
         </View>
 
         <View style={styles.messageRow}>
@@ -134,13 +111,8 @@ export default function MessagesScreen({ navigation }: any) {
   return (
     <View style={styles.container}>
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-          <AppIcon name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Messages</Text>
-        <View style={styles.headerBtn} />
-      </View>
+      {/* Écran racine : ouvre le drawer côté driver, rien à gauche côté client (Bottom Tabs, pas de drawer) */}
+      <AppHeader left={user?.role === 'driver' ? 'menu' : 'none'} title="Messages" />
       <FlatList
         data={conversations}
         keyExtractor={item => item.reservation_id}
@@ -185,10 +157,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: '50%',
   },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.sm, paddingHorizontal: Spacing.md },
-  headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
-  
   list: {
     padding: Spacing.md,
   },

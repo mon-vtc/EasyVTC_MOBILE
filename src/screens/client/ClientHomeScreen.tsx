@@ -7,6 +7,7 @@ import { Ionicons }  from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuth }   from '../../hooks/useAuth';
 import { useReservation } from '../../hooks/useReservation';
+import { useClient } from '../../hooks/useClient';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -123,10 +124,12 @@ export default function ClientHomeScreen({ navigation }: Props) {
   const { homeReservations, fetchHomeReservations } = useReservation();
   const firstName = user?.first_name ?? 'Marie';
   const { notifications, unreadCount } = useNotifications();
+  const { myActiveCount, myActivePromoCodes, fetchMyPromoCodes } = useClient();
 
   // useEffect :
   useEffect(() => {
     fetchHomeReservations();
+    fetchMyPromoCodes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -259,30 +262,48 @@ export default function ClientHomeScreen({ navigation }: Props) {
             ))}
           </View>
 
-          {/* ── Programme fidélité ── */}
-          <View style={[styles.section, { marginBottom: Spacing.xxl }]}>
-            <LinearGradient 
-                  colors={[Colors.bordeaux, Colors.bordeauxLight]} 
-                  start={{ x: 0, y: 0 }} 
+          {/* ── Code promo disponible (affiché seulement si le client en a un) ── */}
+          {myActiveCount > 0 && (
+            <View style={[styles.section, { marginBottom: Spacing.xxl }]}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => navigation.navigate('PromoCodes')}
+              >
+                <LinearGradient
+                  colors={[Colors.bordeaux, Colors.bordeauxLight]}
+                  start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.flex}
-            >
-              <View style={styles.loyaltyCard}>
-                <View style={styles.loyaltyTop}>
-                  <View>
-                    <Text style={styles.loyaltyTitle}>Programme fidélité</Text>
-                    <Text style={styles.loyaltySub}>Gagnez des points à chaque course</Text>
+                >
+                  <View style={styles.promoCard}>
+                    <View style={styles.promoTop}>
+                      <View style={styles.flexShrink}>
+                        <Text style={styles.promoTitle}>
+                          {myActiveCount > 1
+                            ? `${myActiveCount} codes promo disponibles`
+                            : 'Un code promo est disponible'}
+                        </Text>
+                        <Text style={styles.promoSub} numberOfLines={1}>
+                          {myActivePromoCodes[0]?.name ?? 'Profitez-en dès votre prochaine course'}
+                        </Text>
+                      </View>
+                      <Ionicons name="pricetag-outline" size={32} color="rgba(255,255,255,0.6)" />
+                    </View>
+                    {myActivePromoCodes[0] && (
+                      <View style={styles.promoValueRow}>
+                        <Text style={styles.promoValueLabel}>Code {myActivePromoCodes[0].code}</Text>
+                        <Text style={styles.promoValueAmount}>
+                          {myActivePromoCodes[0].discount_type === 'percent'
+                            ? `-${myActivePromoCodes[0].discount_value}%`
+                            : `-${myActivePromoCodes[0].discount_value}€`}
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                  <Ionicons name="gift-outline" size={36} color="rgba(255,255,255,0.6)" />
-                </View>
-                <View style={styles.loyaltyPoints}>
-                  <Text style={styles.loyaltyPointsLabel}>Points accumulés</Text>
-                  <Text style={styles.loyaltyPointsValue}>450</Text>
-                </View>
-              </View>
-
-            </LinearGradient>
-          </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          )}
 
         </ScrollView>
       </View>
@@ -385,21 +406,21 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium, fontWeight: '500',
   },
 
-  // Loyalty
-  loyaltyCard: {
-    // backgroundColor:   Colors.bordeaux,
-    borderRadius:      Radius.lg,
-    padding:           Spacing.lg,
+  // Code promo (accueil)
+  flexShrink: { flexShrink: 1, marginRight: Spacing.sm },
+  promoCard: {
+    borderRadius: Radius.lg,
+    padding:      Spacing.lg,
   },
-  loyaltyTop: {
+  promoTop: {
     flexDirection:  'row',
     justifyContent: 'space-between',
     alignItems:     'flex-start',
     marginBottom:   Spacing.md,
   },
-  loyaltyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white },
-  loyaltySub:   { fontSize: Fonts.size.sm, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
-  loyaltyPoints: {
+  promoTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white },
+  promoSub:   { fontSize: Fonts.size.sm, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  promoValueRow: {
     flexDirection:   'row',
     justifyContent:  'space-between',
     alignItems:      'center',
@@ -407,6 +428,6 @@ const styles = StyleSheet.create({
     borderRadius:    Radius.md,
     padding:         Spacing.md,
   },
-  loyaltyPointsLabel: { color: 'rgba(255,255,255,0.8)', fontSize: Fonts.size.sm },
-  loyaltyPointsValue: { color: Colors.white, fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800' },
+  promoValueLabel:  { color: 'rgba(255,255,255,0.8)', fontSize: Fonts.size.sm },
+  promoValueAmount: { color: Colors.white, fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800' },
 });

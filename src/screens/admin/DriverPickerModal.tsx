@@ -15,6 +15,7 @@ import {
   KeyboardEvent,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Radius, Spacing } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 import type { AvailableDriverDto } from '../../types';
@@ -140,11 +141,12 @@ export default function DriverUserPickerModal({ visible, reservationRef, vehicle
    * l'offset et ne remonte pas du tout le contenu. L'écoute manuelle
    * via Keyboard.addListener est la seule solution fiable dans ce contexte.
    */
-  const sheetPadding = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
+  const sheetPadding = useRef(new Animated.Value(insets.bottom)).current;
 
   useEffect(() => {
     if (!visible) {
-      sheetPadding.setValue(0);
+      sheetPadding.setValue(insets.bottom);
       return;
     }
 
@@ -161,7 +163,7 @@ export default function DriverUserPickerModal({ visible, reservationRef, vehicle
 
     const onHide = (e: KeyboardEvent) => {
       Animated.timing(sheetPadding, {
-        toValue: 0,
+        toValue: insets.bottom,
         duration: Platform.OS === 'ios' ? e.duration ?? 250 : 200,
         useNativeDriver: false,
       }).start();

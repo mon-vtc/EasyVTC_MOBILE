@@ -9,12 +9,15 @@ export default {
   userInterfaceStyle: "light",
   splash: {
     image: "./assets/logo.png",
-    resizeMode: "native",
+    // resizeMode: "native",
     backgroundColor: "#ffffff",
   },
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.easyvtc.app",
+    splash: {
+      resizeMode: "contain", // "contain" ou "cover" sont supportés sur iOS
+    },
     infoPlist: {
       NSCameraUsageDescription: "Pour photographier vos documents chauffeur et votre photo de profil.",
       NSPhotoLibraryUsageDescription: "Pour sélectionner votre photo de profil ou vos documents depuis la galerie.",
@@ -23,6 +26,9 @@ export default {
     },
   },
   android: {
+    splash: {
+      resizeMode: "native",
+    },
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/android-icon-foreground.png",
@@ -32,8 +38,6 @@ export default {
     predictiveBackGestureEnabled: false,
     package: "com.easyvtc.app",
     usesCleartextTraffic: true,
-    compileSdkVersion: 35,
-    targetSdkVersion: 35, 
   },
   web: {
     favicon: "./assets/favicon.png",
@@ -44,6 +48,20 @@ export default {
   plugins: [
     "expo-secure-store",
     "expo-font",
+    "@react-native-community/datetimepicker",
+    "expo-sharing",
+    "expo-splash-screen",
+    "expo-status-bar",
+    "expo-web-browser",
+    [
+      "expo-build-properties",
+      {
+        android: {
+          compileSdkVersion: 36,
+          targetSdkVersion: 36,
+        },
+      },
+    ],
     [
       "expo-notifications",
       {
@@ -53,7 +71,6 @@ export default {
       },
     ],
   ],
-
   // ── EAS Build config ─────────────────────────────────────────────────────
   // Décommenter pour les builds EAS (production/preview)
   extra: {

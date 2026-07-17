@@ -10,12 +10,14 @@ import {
   StyleSheet, ActivityIndicator, Linking, RefreshControl, Platform, TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOrdersStore } from '../../store/orders.store';
 import { useAuthStore } from '../../store/auth.store';
 import { useToast } from '../../hooks/useToast';
 import type { Order } from '../../types/orders.types';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { OrderCard } from '../../components/common/OrderCard';
+import { AppHeader } from '../../components/common/AppHeader';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -23,6 +25,7 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
   const { orders, total, page, totalPages, isLoading, isFetchingNextPage, error, fetchMine, clearError } = useOrdersStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const { showToast } = useToast();
+  const insets = useSafeAreaInsets();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -71,10 +74,11 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mes bons de commande</Text>
-        <Text style={styles.headerCount}>{filteredOrders.length} document{filteredOrders.length > 1 ? 's' : ''}</Text>
-      </View>
+      <AppHeader
+        left="back"
+        title="Mes bons de commande"
+        subtitle={`${filteredOrders.length} document${filteredOrders.length > 1 ? 's' : ''}`}
+      />
 
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
@@ -96,7 +100,7 @@ export default function MyOrdersScreen({ navigation } : {navigation: any}) {
         renderItem={({ item }) => (
           <OrderCard order={item} token={token} role="client" onPress={handleCardPress} />
         )}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: styles.list.padding + insets.bottom }]}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />
         }
@@ -127,22 +131,6 @@ const styles = StyleSheet.create({
   centered: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
     backgroundColor: Colors.background,
-  },
-  header: {
-    backgroundColor: Colors.bordeaux,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.md,
-  },
-  headerTitle: {
-    fontSize: Fonts.size.xl,
-    fontFamily: Fonts.bold, fontWeight: '800',
-    color: Colors.white,
-  },
-  headerCount: {
-    fontSize: Fonts.size.sm,
-    color: Colors.beigeLight,
-    marginTop: 2,
   },
   list: {
     padding: Spacing.md,

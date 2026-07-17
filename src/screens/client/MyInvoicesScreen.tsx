@@ -12,6 +12,7 @@ import {
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import type { NavigationProp }      from '@react-navigation/native';
 import { Ionicons }           from '@expo/vector-icons';
+import { useSafeAreaInsets }  from 'react-native-safe-area-context';
 import { useInvoicesStore }   from '../../store/invoices.store';
 import { useAuthStore }       from '../../store/auth.store';
 import { invoicesApi }        from '../../services/api/invoices.api';
@@ -19,6 +20,7 @@ import type { Invoice }       from '../../types/invoices.types';
 import type { ClientTabParamList, ClientStackParamList } from '../../types/auth.types';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useToast } from '../../hooks/useToast';
+import { AppHeader } from '../../components/common/AppHeader';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -162,12 +164,13 @@ function InvoiceCard({
 export default function MyInvoicesScreen({
   route
 }: {
-  route?: RouteProp<ClientTabParamList, 'MyInvoices'>
+  route?: RouteProp<ClientStackParamList, 'MyInvoices'>
 }) {
   const navigation = useNavigation<NavigationProp<ClientStackParamList>>();
   const { invoices, page, totalPages, isLoading, isFetchingNextPage, error, fetch, clearError } = useInvoicesStore();
   const token = useAuthStore((s) => s.accessToken) ?? '';
   const { showToast } = useToast();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
 
   const load = useCallback(async () => {
@@ -207,12 +210,11 @@ export default function MyInvoicesScreen({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mes factures</Text>
-        <Text style={styles.headerCount}>
-          {filteredInvoices.length} facture{filteredInvoices.length > 1 ? 's' : ''}
-        </Text>
-      </View>
+      <AppHeader
+        left="back"
+        title="Mes factures"
+        subtitle={`${filteredInvoices.length} facture${filteredInvoices.length > 1 ? 's' : ''}`}
+      />
 
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
@@ -238,7 +240,7 @@ export default function MyInvoicesScreen({
             onPress={() => navigation.navigate('InvoiceDetails', { invoiceId: item.id })}
           />
         )}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: styles.list.padding + insets.bottom }]}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />
         }
@@ -264,14 +266,6 @@ export default function MyInvoicesScreen({
 const styles = StyleSheet.create({
   container:      { flex: 1, backgroundColor: Colors.background },
   centered:       { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
-  header: {
-    backgroundColor: Colors.bordeaux,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.md,
-  },
-  headerTitle:  { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.white },
-  headerCount:  { fontSize: Fonts.size.sm, color: Colors.beigeLight, marginTop: 2 },
   list:         { padding: Spacing.md, gap: Spacing.md },
   card: {
     backgroundColor: Colors.surface,

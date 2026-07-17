@@ -1,8 +1,9 @@
 // screens/driver/DriverProfileScreen.tsx
-import React, { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, Switch, Platform, Modal, TextInput, ActivityIndicator,
+  KeyboardAvoidingView, Linking,
 } from 'react-native';
 import { zodResolver }       from '@hookform/resolvers/zod';
 import { z }                 from 'zod';
@@ -17,6 +18,8 @@ import type { VehicleType, ZoneType, Vehicle } from '../../types/user.types';
 import type { DrawerScreenProps }     from '@react-navigation/drawer';
 import type { DriverDrawerParamList } from '../../types';
 import { useToast } from '../../hooks/useToast';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
+import { AppHeader } from '../../components/common/AppHeader';
 
 
 type Props = DrawerScreenProps<DriverDrawerParamList, 'DriverProfile'>;
@@ -38,7 +41,7 @@ function PasswordStrength({ value }: { value: string }) {
           <View key={rule.label} style={strengthStyles.row}>
             <Ionicons name={ok ? 'checkmark-circle' : 'ellipse-outline'} size={16}
               color={ok ? Colors.bordeauxLight : Colors.textMuted} />
-            <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>{rule.label}</Text>
+            <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>{rule.label}{'  '}</Text>
           </View>
         );
       })}
@@ -447,6 +450,7 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const { showToast } = useToast();
 
   const { showAlert } = useAlert();
+  const scrollBottomInset = useBottomInset(styles.scroll.paddingBottom);
   console.log('Petite verifiction de siret',siret,'et de zone', zone );
 
   // ── Modals ──────────────────────────────────────────────────
@@ -490,9 +494,18 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const handleEditToggle = useCallback(async () => {
     if (editMode) {
       try {
+        // Le backend rejette siret/zone/vehicle_type vides (regex/enum) — on n'envoie
+        // que les champs réellement renseignés pour ne pas faire échouer toute la sauvegarde.
+        const driverPayload: Record<string, string> = {};
+        if (ibanVal)       driverPayload.iban         = ibanVal;
+        if (vtcLicenseVal) driverPayload.vtc_license   = vtcLicenseVal;
+        if (siretVal)      driverPayload.siret         = siretVal;
+        if (zoneVal)       driverPayload.zone          = zoneVal;
+        if (vehicleTypeVal) driverPayload.vehicle_type = vehicleTypeVal;
+
         await updateDriverProfile(
           { first_name: firstName, last_name: lastName, phone },
-          { iban: ibanVal, vtc_license: vtcLicenseVal, siret: siretVal, zone: zoneVal, vehicle_type: vehicleTypeVal },
+          driverPayload,
         );
 
         if (pendingImage) {
@@ -516,18 +529,6 @@ export default function DriverProfileScreen({ navigation }: Props) {
 
   const handleEditToggleRef = useRef(handleEditToggle);
   useEffect(() => { handleEditToggleRef.current = handleEditToggle; }, [handleEditToggle]);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity style={{ marginRight: 20 }}
-          onPress={() => handleEditToggleRef.current()} disabled={isLoading}>
-          <Ionicons name={editMode ? 'checkmark-outline' : 'pencil-outline'}
-            size={22} color={Colors.white} />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, editMode, isLoading]);
 
   // ── Handlers véhicule ─────────────────────────────────────────
   const handleCreateVehicle = async (data: any): Promise<string> => {
@@ -573,7 +574,15 @@ export default function DriverProfileScreen({ navigation }: Props) {
 
   return (
     <View style={styles.flex}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <AppHeader
+        left="menu"
+        title="Mon compte"
+        rightIcon={{
+          name: editMode ? 'checkmark-outline' : 'pencil-outline',
+          onPress: () => { if (!isLoading) handleEditToggleRef.current(); },
+        }}
+      />
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: scrollBottomInset }]} showsVerticalScrollIndicator={false}>
 
         {/* Avatar */}
         <View style={styles.avatarSection}>
@@ -677,6 +686,8 @@ export default function DriverProfileScreen({ navigation }: Props) {
 
         {/* Actions */}
         <View style={styles.actionsSection}>
+          <ActionRow icon="notifications-outline" label="Notifications système" color={Colors.textPrimary} onPress={() => Linking.openSettings()} />
+          <View style={styles.divider} />
           <ActionRow icon="document-outline"    label="Mes documents"          color={Colors.bordeaux}     onPress={() => navigation.navigate('DriverDocuments')} />
           <View style={styles.divider} />
           <ActionRow icon="lock-closed-outline" label="Changer le mot de passe" color={Colors.textPrimary} onPress={() => { reset(); clearError(); setShowPasswordModal(true); }} />
@@ -732,33 +743,38 @@ export default function DriverProfileScreen({ navigation }: Props) {
       {/* ── Modal mot de passe ── */}
       <Modal visible={showPasswordModal} transparent animationType="fade"
         onRequestClose={() => { reset(); clearError(); setShowPasswordModal(false); }}>
-        <View style={modalStyles.overlay}>
+        <KeyboardAvoidingView
+          style={modalStyles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View style={modalStyles.card}>
-            <Text style={modalStyles.title}>Changer le mot de passe</Text>
-            {error && (
-              <View style={modalStyles.errorBanner}>
-                <Text style={modalStyles.errorText}>⚠️ {error}</Text>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <Text style={modalStyles.title}>Changer le mot de passe</Text>
+              {error && (
+                <View style={modalStyles.errorBanner}>
+                  <Text style={modalStyles.errorText}>⚠️ {error}</Text>
+                </View>
+              )}
+              <FormField<PasswordForm> name="current_password" control={control} label="Mot de passe actuel *"
+                secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.current_password?.message} />
+              <FormField<PasswordForm> name="new_password"     control={control} label="Nouveau mot de passe *"
+                secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.new_password?.message} />
+              <PasswordStrength value={newPasswordValue} />
+              <FormField<PasswordForm> name="confirm_password" control={control} label="Confirmer le mot de passe *"
+                secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.confirm_password?.message} />
+              <View style={modalStyles.actions}>
+                <TouchableOpacity style={[modalStyles.btn, modalStyles.btnCancel]}
+                  onPress={() => { reset(); clearError(); setShowPasswordModal(false); }} disabled={isLoading}>
+                  <Text style={modalStyles.btnCancelText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[modalStyles.btn, modalStyles.btnConfirm]}
+                  onPress={handleSubmit(onChangePassword)} disabled={isLoading}>
+                  <Text style={modalStyles.btnConfirmText}>{isLoading ? 'Envoi...' : 'Confirmer'}</Text>
+                </TouchableOpacity>
               </View>
-            )}
-            <FormField<PasswordForm> name="current_password" control={control} label="Mot de passe actuel *"
-              secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.current_password?.message} />
-            <FormField<PasswordForm> name="new_password"     control={control} label="Nouveau mot de passe *"
-              secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.new_password?.message} />
-            <PasswordStrength value={newPasswordValue} />
-            <FormField<PasswordForm> name="confirm_password" control={control} label="Confirmer le mot de passe *"
-              secureTextEntry showToggle icon="lock-closed-outline" editable={!isLoading} error={errors.confirm_password?.message} />
-            <View style={modalStyles.actions}>
-              <TouchableOpacity style={[modalStyles.btn, modalStyles.btnCancel]}
-                onPress={() => { reset(); clearError(); setShowPasswordModal(false); }} disabled={isLoading}>
-                <Text style={modalStyles.btnCancelText}>Annuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[modalStyles.btn, modalStyles.btnConfirm]}
-                onPress={handleSubmit(onChangePassword)} disabled={isLoading}>
-                <Text style={modalStyles.btnConfirmText}>{isLoading ? 'Envoi...' : 'Confirmer'}</Text>
-              </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
     </View>

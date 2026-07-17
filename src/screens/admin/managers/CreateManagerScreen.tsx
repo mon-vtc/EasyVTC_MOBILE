@@ -1,15 +1,17 @@
 // screens/admin/managers/CreateManagerScreen.tsx
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Platform,
+  View, Text, ScrollView, StyleSheet,
   TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { useToast } from '../../../hooks/useToast';
 import { AppInput } from '../../../components/common/AppInput';
 import { AppButton } from '../../../components/common/AppButton';
+import { AppHeader } from '../../../components/common/AppHeader';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
 
 const PRIORITY_OPTIONS = [
@@ -20,6 +22,7 @@ const PRIORITY_OPTIONS = [
 
 export default function CreateManagerScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { createManager } = useAdmin();
   const { showToast } = useToast();
 
@@ -87,18 +90,11 @@ export default function CreateManagerScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nouveau gestionnaire</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader left="back" title="Nouveau gestionnaire" />
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: styles.content.paddingBottom + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -199,18 +195,6 @@ export default function CreateManagerScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
   scroll:  { flex: 1 },
   content: { padding: Spacing.md, paddingBottom: Spacing.xl, gap: Spacing.md },

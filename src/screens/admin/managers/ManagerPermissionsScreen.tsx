@@ -2,12 +2,14 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Switch,
   TouchableOpacity, ActivityIndicator, Platform,
-} from 'react-native'; 
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useToast } from '../../../hooks/useToast';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../../hooks/useAdmin';
+import { AppHeader } from '../../../components/common/AppHeader';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
 import { MANAGER_PERMISSIONS, PERMISSION_LABELS } from '../../../types';
 import type { ManagersStackParamList, ManagerPermission } from '../../../types';
@@ -54,6 +56,7 @@ const PERMISSION_GROUPS: { title: string; icon: string; permissions: ManagerPerm
 
 export default function ManagerPermissionsScreen() {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const route = useRoute<any>();
   const { managerId } = route.params as { managerId: string };
 
@@ -130,16 +133,9 @@ export default function ManagerPermissionsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Permissions</Text>
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader left="back" title="Permissions" />
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]} showsVerticalScrollIndicator={false}>
 
         {/* Actions globales */}
         <View style={styles.globalRow}>
@@ -204,7 +200,7 @@ export default function ManagerPermissionsScreen() {
 
       {/* Bouton sauvegarder */}
       {isDirty && (
-        <View style={styles.footer}>
+        <View style={[styles.footer, { paddingBottom: styles.footer.paddingBottom + insets.bottom }]}>
           <TouchableOpacity
             style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
             onPress={handleSave}
@@ -228,18 +224,6 @@ export default function ManagerPermissionsScreen() {
 const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: Colors.background },
   center:      { flex: 1, justifyContent: 'center', alignItems: 'center' },
-
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
 
   scroll:        { flex: 1 },
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl },

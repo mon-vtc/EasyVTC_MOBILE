@@ -15,7 +15,12 @@ export type NotificationType =
   | 'reservation_cancelled'  // Chauffeur ou client : course annulée
   | 'new_reservation_admin'  // Admin : une nouvelle réservation est en attente d'assignation
   | 'support_reply'          // Client ou chauffeur : réponse à un ticket de support
-  | 'new_message';
+  | 'new_message'
+  | 'driver_reminder_24h'     // Chauffeur : rappel J-1 (24h avant la course)
+  | 'driver_reminder_2h'      // Chauffeur : rappel H-2 (2h avant la course)
+  | 'driver_reminder_30min'   // Chauffeur : rappel H-30min (mise en route)
+  | 'new_document_admin'      // Admin : nouveau document chauffeur en attente de validation
+  | 'weekly_digest_admin';    // Admin : bilan hebdomadaire automatique
 
 export type NotificationChannel = 'push' | 'email';
 export type NotificationStatus  = 'pending' | 'sent' | 'failed' | 'delivered';

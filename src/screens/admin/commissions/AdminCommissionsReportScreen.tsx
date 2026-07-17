@@ -6,13 +6,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
-  TouchableOpacity, RefreshControl, Platform,
+  TouchableOpacity, RefreshControl,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useCommissionSettings } from '../../../hooks/useCommissionSettings';
 import type { CommissionDetail, CommissionPeriod } from '../../../types/commission.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { AppIcon } from '../../../components/common/AppIcon';
+import { AppHeader } from '../../../components/common/AppHeader';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 
 const REPORT_PERIODS: { label: string; value: CommissionPeriod }[] = [
   { label: 'Semaine', value: 'week' },
@@ -44,7 +45,7 @@ function CommissionCard({ item }: { item: CommissionDetail }) {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.driverName}>{driverName}</Text>
-        <Text style={styles.rateBadge}>{rateLabel}</Text>
+        <Text style={styles.rateBadge}>{rateLabel}{'  '}</Text>
       </View>
       {item.reservation && (
         <Text style={styles.route} numberOfLines={1}>
@@ -55,15 +56,15 @@ function CommissionCard({ item }: { item: CommissionDetail }) {
       <View style={styles.separator} />
       <View style={styles.amountsRow}>
         <View style={styles.amountItem}>
-          <Text style={styles.amountLabel}>Brut</Text>
+          <Text style={styles.amountLabel}>{'Brut' + '  '}</Text>
           <Text style={styles.amountValue}>{formatCurrency(item.gross_amount)}</Text>
         </View>
         <View style={styles.amountItem}>
-          <Text style={styles.amountLabel}>Commission</Text>
+          <Text style={styles.amountLabel}>{'Commission' + '  '}</Text>
           <Text style={[styles.amountValue, styles.commissionValue]}>{formatCurrency(item.commission_amount)}</Text>
         </View>
         <View style={styles.amountItem}>
-          <Text style={styles.amountLabel}>Net chauffeur</Text>
+          <Text style={styles.amountLabel}>{'Net chauffeur' + '  '}</Text>
           <Text style={[styles.amountValue, styles.netValue]}>{formatCurrency(item.driver_net_amount)}</Text>
         </View>
       </View>
@@ -72,7 +73,6 @@ function CommissionCard({ item }: { item: CommissionDetail }) {
 }
 
 export default function AdminCommissionsReportScreen() {
-  const navigation = useNavigation();
   const {
     summary, commissions, commissionsTotal, commissionsPage,
     isLoading, error, fetchSummary, fetchCommissions,
@@ -82,6 +82,7 @@ export default function AdminCommissionsReportScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const limit = 20;
+  const listBottomInset = useBottomInset(styles.listContainer.paddingBottom);
 
   const load = useCallback(async (period: CommissionPeriod, page: number = 1) => {
     await Promise.all([
@@ -113,13 +114,7 @@ export default function AdminCommissionsReportScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-          <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Récap Commissions</Text>
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader left="back" title="Récap Commissions" />
 
       <FlatList
         data={commissions}
@@ -128,24 +123,24 @@ export default function AdminCommissionsReportScreen() {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.bordeaux} />}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[styles.listContainer, { paddingBottom: listBottomInset }]}
         ListHeaderComponent={
           <>
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>Chiffre d'affaires</Text>
+              <Text style={styles.summaryTitle}>{'Chiffre d\'affaires' + '  '}</Text>
               <Text style={styles.summaryAmount}>{formatCurrency(summary?.total_gross_eur ?? 0)}</Text>
               <View style={styles.summaryStats}>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{summary?.total_rides ?? 0}</Text>
-                  <Text style={styles.statLabel}>Courses</Text>
+                  <Text style={styles.statLabel}>{'Courses' + '  '}</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{formatCurrency(summary?.total_commission_eur ?? 0)}</Text>
-                  <Text style={styles.statLabel}>Part plateforme</Text>
+                  <Text style={styles.statLabel}>{'Part plateforme' + '  '}</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{formatCurrency(summary?.total_net_eur ?? 0)}</Text>
-                  <Text style={styles.statLabel}>Part chauffeurs</Text>
+                  <Text style={styles.statLabel}>{'Part chauffeurs' + '  '}</Text>
                 </View>
               </View>
             </View>
@@ -160,7 +155,7 @@ export default function AdminCommissionsReportScreen() {
             )}
 
             <View style={styles.filterCard}>
-              <Text style={styles.filterTitle}>Période</Text>
+              <Text style={styles.filterTitle}>{'Période' + '  '}</Text>
               <View style={styles.filterButtons}>
                 {REPORT_PERIODS.map(period => (
                   <TouchableOpacity
@@ -169,14 +164,14 @@ export default function AdminCommissionsReportScreen() {
                     onPress={() => setActivePeriod(period.value)}
                   >
                     <Text style={activePeriod === period.value ? styles.filterTextActive : styles.filterTextInactive}>
-                      {period.label}
+                      {period.label}{'  '}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
 
-            <Text style={styles.historyTitle}>Détail par course</Text>
+            <Text style={styles.historyTitle}>{'Détail par course' + '  '}</Text>
           </>
         }
         ListEmptyComponent={
@@ -192,17 +187,6 @@ export default function AdminCommissionsReportScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#F3F3F3' },
-  header: {
-    backgroundColor: Colors.bordeaux,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'android' ? Spacing.xxl : 56,
-    paddingBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerTitle: { color: Colors.white, fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: 'bold' },
-  headerBtn: { padding: Spacing.xs, width: 40, alignItems: 'center' },
   listContainer: { padding: Spacing.md, paddingBottom: Spacing.xxl },
 
   summaryCard: {

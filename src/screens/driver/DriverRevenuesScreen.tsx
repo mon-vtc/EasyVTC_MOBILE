@@ -4,16 +4,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
-  TouchableOpacity, RefreshControl, ScrollView, Platform, Image,
+  TouchableOpacity, RefreshControl, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { Logo } from '../../constants/logo';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useDriver } from '../../hooks/useDriver';
+import { useNotifications } from '../../hooks/useNotifications';
 import type { DriverRevenuesResult, RevenueTrip, RevenuesPeriod, RevenueStatus } from '../../types';
 import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 
 const REVENUE_PERIODS: { label: string; value: RevenuesPeriod }[] = [
   { label: 'Jour', value: 'day' },
@@ -61,22 +63,6 @@ const STATUS_LABELS: Record<string, string> = {
   undefined: 'Toutes les courses',
 };
 
-// ── Header personnalisé ─────────────────────────────────────────────────────
-function CustomHeader() {
-  const navigation = useNavigation();
-  return (
-    <View style={headerStyles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={headerStyles.backBtn}>
-        <AppIcon name="arrow-back" size={24} color={Colors.white} />
-      </TouchableOpacity>
-      <View style={headerStyles.center}>
-        <Image source={Logo.LogoEasyVTC} style={headerStyles.logo} resizeMode="contain" />
-      </View>
-      <View style={headerStyles.placeholder} />
-    </View>
-  );
-}
-
 const getTitleSuffix = (period: DriverRevenuesResult | null): string =>
   period ? (PERIOD_LABELS[period.period] ?? 'total') : '';
 
@@ -101,11 +87,11 @@ function SummaryCard({ revenues, status }: { revenues: DriverRevenuesResult | nu
       <View style={styles.summaryStats}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{totalTrips}</Text>
-          <Text style={styles.statLabel}>Courses</Text>
+          <Text style={styles.statLabel}>{'Courses' + '  '}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{formatCurrency(avgRevenue, currency)}</Text>
-          <Text style={styles.statLabel}>Revenu moyen</Text>
+          <Text style={styles.statLabel}>{'Revenu moyen' + '  '}</Text>
         </View>
       </View>
       <View style={styles.statusLabel}>
@@ -230,12 +216,14 @@ function HistoryItem({ item, onInvoicePress, activeStatus }: { item: RevenueTrip
 
 export default function DriverRevenuesScreen() {
   const navigation = useNavigation<any>();
+  const { unreadCount } = useNotifications();
   const { fetchRevenuesWithFilters, revenues, isFetchingRevenues, revenuesError } = useDriver();
   const [activePeriod, setActivePeriod] = useState<RevenuesPeriod>('week');
   const [activeStatus, setActiveStatus] = useState<'completed' | 'cancelled' | undefined>(undefined);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localRefreshing, setLocalRefreshing] = useState(false);
+  const listBottomInset = useBottomInset(styles.listContainer.paddingBottom);
 
   const handleFetchRevenues = useCallback(async (period: RevenuesPeriod, status: 'completed' | 'cancelled' | undefined, page: number = 1) => {
     try {
@@ -317,7 +305,15 @@ export default function DriverRevenuesScreen() {
 
   return (
     <View style={styles.root}>
-      <CustomHeader />
+      <AppHeader
+        left="menu"
+        title="Revenus"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('DriverNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
       <FlatList
         data={revenues?.trips ?? []}
         keyExtractor={(item, index) => `${item.reservation_id}-${index}`}
@@ -334,7 +330,7 @@ export default function DriverRevenuesScreen() {
             tintColor={Colors.bordeaux}
           />
         }
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[styles.listContainer, { paddingBottom: listBottomInset }]}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -437,31 +433,4 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: Spacing.xxl },
   emptyTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary, marginTop: Spacing.md },
   emptyText: { fontSize: Fonts.size.sm, color: Colors.textMuted, textAlign: 'center', marginTop: Spacing.sm, lineHeight: 20 },
-});
-
-const headerStyles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xxl,
-    paddingBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backBtn: {
-    padding: Spacing.xs,
-    width: 40,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  logo: {
-    width: 40,
-    height: 40,
-  },
-  placeholder: {
-    width: 40,
-  },
 });

@@ -1,15 +1,17 @@
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity, Platform, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useClient } from '../../hooks/useClient';
 import { SavingsSummaryCard } from '../../components/client/promo-codes/SavingsSummaryCard';
 import { PromoCodeCard } from '../../components/client/promo-codes/PromoCodeCard';
 import { Colors, Spacing, Fonts, Radius} from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
-import { Logo } from '../../constants/logo';
+import { AppHeader } from '../../components/common/AppHeader';
 
 export function PromoCodesScreen({}) {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const {
     myActivePromoCodes,
     myExpiredPromoCodes,
@@ -36,13 +38,7 @@ export function PromoCodesScreen({}) {
   return (
     <View style={styles.container}>
       {/**Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-          <AppIcon name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Image source={Logo.LogoEasyVTC} style={{ width: 32, height: 32 }} />
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader left="back" title="Codes promo" />
 
       <FlatList
         ListHeaderComponent={
@@ -73,7 +69,7 @@ export function PromoCodesScreen({}) {
             </View>
           );
         }}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]}
         refreshControl={<RefreshControl refreshing={isFetchingMyPromoCodes} onRefresh={onRefresh} />}
         ListEmptyComponent={
           !isFetchingMyPromoCodes ? (
@@ -105,9 +101,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: Radius.lg,
     borderBottomRightRadius: Radius.lg,
   },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.sm, paddingHorizontal: Spacing.md },
-  headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   pageTitle: {
     fontSize: 25,
     fontFamily: Fonts.bold, fontWeight: 'bold',

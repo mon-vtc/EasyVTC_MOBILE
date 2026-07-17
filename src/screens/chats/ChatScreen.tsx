@@ -8,12 +8,14 @@ import {
   ActivityIndicator, Image
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat } from '../../hooks/useChat';
 import { useReservation } from '../../hooks/useReservation';
 import { useAuth } from '../../hooks/useAuth';
 import { useAlert } from '../../hooks/useAlert';
 import { Colors, Fonts, Spacing } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
 import type { ChatMessage } from '../../types/chats.type';
 
 
@@ -39,11 +41,13 @@ function MessageBubble({ message, isOwn }: BubbleProps) {
   return (
     <View style={[b.row, isOwn ? b.rowRight : b.rowLeft, {elevation: 1, shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2}]}>
       <View style={[b.bubble, isOwn ? b.bubbleOwn : b.bubbleOther]}>
+        {/* Le "  " final évite un bug d'affichage Android/Hermes où un <Text> ne contenant
+            qu'une seule chaîne enfant peut tronquer visuellement son dernier caractère. */}
         <Text style={[b.text, isOwn ? b.textOwn : b.textOther]}>
-          {message.content}
+          {message.content}{'  '}
         </Text>
         <Text style={[b.time, isOwn ? b.timeOwn : b.timeOther]}>
-          {time}
+          {time}{'  '}
           {isOwn && (
             <Text> {message.read_at ? ' ✓✓' : ' ✓'}</Text>
           )}
@@ -76,12 +80,14 @@ const b = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   text: {
+    flexShrink: 1,
     fontSize: 15,
     lineHeight: 20,
   },
   textOwn:   { color: Colors.white },
   textOther: { color: Colors.textPrimary },
   time: {
+    flexShrink: 1,
     fontSize: 11,
     marginTop: 4,
     alignSelf: 'flex-end',
@@ -97,6 +103,7 @@ export default function ChatScreen({navigation}: any) {
   const route = useRoute<ChatScreenRouteProp>();
   const { reservationId } = route.params!;
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const {
     isLoadingMessages,
     activeConversationMessages,
@@ -193,77 +200,74 @@ export default function ChatScreen({navigation}: any) {
   return (
     <KeyboardAvoidingView
       style={s.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
 
       {/* ── Header ── */}
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => {
-          resetMessages();
-          navigation.goBack();
-        }} style={s.headerBtn}>
-          <AppIcon name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-
-        <View style={s.headerCenter}>
-          {user?.role !== 'driver' && driver ?  (
-            <>
-              <View style={s.avatarContainer}>
-                {driver.user.profile_photo_url ? (
-                  <Image source={{ uri: driver.user.profile_photo_url }} style={s.avatar} />
-                ) : (
-                  <View style={s.avatar}><AppIcon name="person-outline" size={20} color={Colors.bordeaux} /></View>
-                )}
-                <View style={[s.statusIndicator, driver.is_online ? s.statusOnline : s.statusOffline]} />
-              </View>
-              <View>
-                <Text style={s.driverName} numberOfLines={1}>
-                  {driver.user.first_name} {driver.user.last_name}
-                </Text>
-                <Text style={s.driverStatus}>
-                  {driver.is_online ? 'En ligne' : 'Hors ligne'}
-                </Text>
-              </View>
-            </>
-          ) : 
-            <>
-              <View style={s.avatarContainer}>
-                <View style={s.avatar}>
-                  {/* You can use an <Image> component here if you have the driver's avatar URL */}
-                  {reservation?.client?.profile_photo_url ? (
-                    <Image source={{ uri: reservation?.client?.profile_photo_url }} style={s.avatar} />
-
+      <AppHeader
+        left="back"
+        onBack={() => { resetMessages(); if (navigation.canGoBack()) navigation.goBack(); }}
+        centerElement={
+          <>
+            {user?.role !== 'driver' && driver ?  (
+              <>
+                <View style={s.avatarContainer}>
+                  {driver.user.profile_photo_url ? (
+                    <Image source={{ uri: driver.user.profile_photo_url }} style={s.avatar} />
                   ) : (
-                    <AppIcon name="person-outline" size={20} color={Colors.bordeaux} />
-                  )
-                  }
+                    <View style={s.avatar}><AppIcon name="person-outline" size={20} color={Colors.bordeaux} /></View>
+                  )}
+                  <View style={[s.statusIndicator, driver.is_online ? s.statusOnline : s.statusOffline]} />
                 </View>
-              </View>
-              <View>
-                <Text style={s.driverName} numberOfLines={1}>
-                  {reservation?.client?.first_name} {reservation?.client?.last_name}
-                </Text>
-              </View>
-            </>
+                <View>
+                  <Text style={s.driverName} numberOfLines={1}>
+                    {driver.user.first_name} {driver.user.last_name}
+                  </Text>
+                  <Text style={s.driverStatus}>
+                    {driver.is_online ? 'En ligne' : 'Hors ligne'}
+                  </Text>
+                </View>
+              </>
+            ) :
+              <>
+                <View style={s.avatarContainer}>
+                  <View style={s.avatar}>
+                    {/* You can use an <Image> component here if you have the driver's avatar URL */}
+                    {reservation?.client?.profile_photo_url ? (
+                      <Image source={{ uri: reservation?.client?.profile_photo_url }} style={s.avatar} />
 
-          }
-        </View>
+                    ) : (
+                      <AppIcon name="person-outline" size={20} color={Colors.bordeaux} />
+                    )
+                    }
+                  </View>
+                </View>
+                <View>
+                  <Text style={s.driverName} numberOfLines={1}>
+                    {reservation?.client?.first_name} {reservation?.client?.last_name}
+                  </Text>
+                </View>
+              </>
 
-        <TouchableOpacity 
-          style={[s.headerBtn, s.callBtn]}
-          onPress={() => {
-            const phone = user?.role === 'driver' ? reservation?.client?.phone : driver?.user.phone;
-            if (phone) {
-              showAlert({ title: 'Appeler', message: phone, buttons: [{ text: 'OK' }] });
-            } else {
-              showAlert({ title: 'Indisponible', message: 'Le numéro de téléphone n\'est pas disponible.', buttons: [{ text: 'OK' }] });
             }
-          }}
-        >
-          <AppIcon name="call-outline" size={22} color={Colors.white} />
-        </TouchableOpacity>
-      </View>
+          </>
+        }
+        rightElement={
+          <TouchableOpacity
+            style={s.callBtn}
+            onPress={() => {
+              const phone = user?.role === 'driver' ? reservation?.client?.phone : driver?.user.phone;
+              if (phone) {
+                showAlert({ title: 'Appeler', message: phone, buttons: [{ text: 'OK' }] });
+              } else {
+                showAlert({ title: 'Indisponible', message: 'Le numéro de téléphone n\'est pas disponible.', buttons: [{ text: 'OK' }] });
+              }
+            }}
+          >
+            <AppIcon name="call-outline" size={22} color={Colors.white} />
+          </TouchableOpacity>
+        }
+      />
       {/* Loader pendant que la réservation charge (si elle n'était pas dans le store) */}
       {/* {!reservation && isLoadingMessages && (
         <View style={s.centered}>
@@ -279,6 +283,7 @@ export default function ChatScreen({navigation}: any) {
       ) : (
       <FlatList
         ref={flatListRef}
+        style={s.messagesListContainer}
         data={activeConversationMessages}
         keyExtractor={item => item.id}
         renderItem={renderItem}
@@ -294,7 +299,7 @@ export default function ChatScreen({navigation}: any) {
       )}
 
       {/* ── Input ── */}
-      <View style={s.inputRow}>
+      <View style={[s.inputRow, { paddingBottom: s.inputRow.paddingVertical + insets.bottom }]}>
         <TextInput
           style={s.input}
           value={text}
@@ -335,31 +340,10 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingTop: Platform.OS === 'ios' ? 50 : Spacing.xxl,
-    paddingBottom: Spacing.sm,
-    backgroundColor: Colors.bordeaux,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  headerBtn: {
-    padding: 8,
-  },
   callBtn: {
     backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 20,
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
+    padding: 8,
   },
   avatarContainer: {
     position: 'relative',
@@ -394,6 +378,9 @@ const s = StyleSheet.create({
   driverStatus: {
     fontSize: Fonts.size.xs,
     color: Colors.textMuted,
+  },
+  messagesListContainer: {
+    flex: 1,
   },
   messagesList: {
     paddingVertical: 12,

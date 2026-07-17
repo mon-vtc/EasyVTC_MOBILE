@@ -1,11 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { createDrawerNavigator, DrawerNavigationOptions } from '@react-navigation/drawer';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { AppIcon } from '../components/common/AppIcon';
 import DrawerContent, { DrawerLabel } from './DrawerContent';
-import { Colors, Spacing, Fonts } from '../theme/colors';
-import { Logo }        from '../constants/logo';
 
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
 import AdminDocumentsScreen from '../screens/admin/AdminDocumentsScreen';
@@ -217,44 +213,12 @@ function AdminAuditLogsNavigator() {
 const Drawer = createDrawerNavigator<AdminDrawerParamList>();
 
 function AdminDrawerNavigator() {
-  const { unreadCount, unreadMessagesCount, unreadSupportCount } = useNotifications();
+  const { unreadMessagesCount, unreadSupportCount } = useNotifications();
 
-  const getDrawerScreenOptions = ({ navigation }: any): DrawerNavigationOptions => ({
-    headerStyle:      { backgroundColor: Colors.bordeaux, height: 100, elevation: 0, shadowOpacity: 0 },
-    headerTintColor:  Colors.white,
-    headerTitleAlign: 'center',
-  
-    headerTitle: () => (
-      <Image source={Logo.LogoEasyVTC} style={{ width: 40, height: 40, resizeMode: 'contain' }} />
-    ),
-  
-    headerLeft: () => (
-      <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={{ marginLeft: 20 }}>
-        <AppIcon name="menu-outline" size={28} color={Colors.white} />
-      </TouchableOpacity>
-    ),
-  
-    headerRight: () => (
-      <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.getParent()?.navigate('AdminNotificationList')}>
-        <AppIcon name="notifications-outline" size={26} color={Colors.white} />
-        {unreadCount > 0 && (
-          <View style={styles.notifBadge}>
-            <Text style={styles.notifText}>{unreadCount}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    ),
-  
-    drawerStyle:               { backgroundColor: Colors.surface, width: 280 },
-    drawerActiveTintColor:     Colors.bordeaux,
-    drawerInactiveTintColor:   Colors.textSecondary,
-    drawerActiveBackgroundColor: Colors.overlayLight,
-  });
-  
   return (
     <Drawer.Navigator
       drawerContent={(props) => <DrawerContent {...props} />}
-      screenOptions={getDrawerScreenOptions}
+      screenOptions={{ headerShown: false }}
     >
       <Drawer.Screen
         name="AdminHome"
@@ -450,22 +414,3 @@ export default function AdminNavigator() {
     </AdminRootStack.Navigator>
   );
 }
-
-const styles = StyleSheet.create({
-  labelRow:  { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  labelText: { fontSize: 16, color: Colors.textPrimary, flex: 1 },
-    headerIcons:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginRight: 20},
-    iconBtn:      { position: 'relative', padding: 6,borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', marginRight: 20 },
-    notifBadge: {
-      position:        'absolute',
-      top:             2, right: 2,
-      backgroundColor: '#FF5252',
-      borderRadius:    8,
-      minWidth:        16, height: 16,
-      alignItems:      'center',
-      justifyContent:  'center',
-      paddingHorizontal: 3,
-    },
-    notifText: { color: Colors.white, fontSize: 9, fontFamily: Fonts.bold, fontWeight: '800' },
-  
-});

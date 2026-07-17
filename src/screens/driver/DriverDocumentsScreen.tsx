@@ -13,6 +13,9 @@ import { UploadModal }           from '../../components/common/UploadModal';
 import type { UploadPayload }    from '../../components/common/UploadModal';
 import { useDocuments }          from '../../hooks/useDocuments';
 import type { DocumentView }     from '../../types/document.types';
+import { useNotifications }      from '../../hooks/useNotifications';
+import { AppHeader }             from '../../components/common/AppHeader';
+import { useNavigation }         from '@react-navigation/native';
 
 
 const completionPercent = (uploaded: number, total: number) =>
@@ -20,6 +23,7 @@ const completionPercent = (uploaded: number, total: number) =>
 
 export default function DriverDocumentsScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const {
     documentViews, isLoading, isUploading, error,
     fetchDocuments, uploadFromGallery, uploadFromFiles,
@@ -27,6 +31,7 @@ export default function DriverDocumentsScreen() {
     requiredMissing, pendingCount, rejectedCount,
   } = useDocuments();
   const { showToast } = useToast();
+  const { unreadCount } = useNotifications();
 
   const [refreshing,         setRefreshing]         = useState(false);
   const [viewerDoc,          setViewerDoc]          = useState<DocumentView | null>(null);
@@ -79,6 +84,16 @@ export default function DriverDocumentsScreen() {
 
   return (
     <View style={s.root}>
+
+      <AppHeader
+        left="menu"
+        title="Documents"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('DriverNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       {/* ── Header ── */}
       <View style={s.header}>
@@ -223,6 +238,7 @@ interface ViewerProps {
 }
 
 const DocumentViewer = ({ visible, view, onClose, onReplace }: ViewerProps) => {
+  const insets = useSafeAreaInsets();
   if (!view?.document) return null;
 
   const doc       = view.document;
@@ -287,7 +303,7 @@ const DocumentViewer = ({ visible, view, onClose, onReplace }: ViewerProps) => {
           <Text style={m.statusText}>{statusLabel}</Text>
         </View>
 
-        <View style={m.actions}>
+        <View style={[m.actions, { paddingBottom: m.actions.paddingBottom + insets.bottom }]}>
           <TouchableOpacity style={m.btnReplace} onPress={onReplace}>
             <Ionicons name="arrow-up-circle-outline" size={18} color="#fff" />
             <Text style={m.btnReplaceText}>Remplacer le document</Text>
@@ -360,7 +376,7 @@ const s = StyleSheet.create({
   loaderText: { color: Colors.textMuted, fontSize: Fonts.size.sm ?? 13 },
 
   uploadOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.45)',
     alignItems: 'center', justifyContent: 'center',
   },

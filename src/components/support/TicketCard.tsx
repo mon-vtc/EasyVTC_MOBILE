@@ -3,8 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { AppIcon } from '../common/AppIcon';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { SupportTicketRow } from '../../types/chats.type';
-import { formatDistanceToNow, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { formatRelativeTime } from '../../utils/formatDate';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketRow; onPress: () => void }) {
@@ -14,10 +13,7 @@ export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketR
 
   const priorityLabel = ticket.priority === 'urgent' ? 'Urgent' : 'Normal';
   const isUrgent = ticket.priority === 'urgent';
-  const timeAgo = formatDistanceToNow(parseISO(ticket.updated_at), {
-     addSuffix: true,
-     locale: fr,
-   });
+  const timeAgo = formatRelativeTime(ticket.updated_at);
 
   const isOwnTicket = user?.id === ticket.user_id;
 
@@ -69,7 +65,7 @@ export default function TicketCard({ ticket, onPress }: { ticket: SupportTicketR
           </View>
         </View>
 
-        <Text style={cardStyles.timeText}>{timeAgo}</Text>
+        <Text style={cardStyles.timeText}>{timeAgo}{'  '}</Text>
       </View>
 
       <Text style={cardStyles.preview} numberOfLines={1} ellipsizeMode="tail">

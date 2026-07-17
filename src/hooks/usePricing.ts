@@ -88,12 +88,15 @@ export function usePricing() {
   }), [config]);
 
   // ── Calcul dynamique de l'exemple ────────────────────────────────────────
-  const computeExample = useCallback((values: PricingFormValues): PricingExample => {
+  // `commissionRate` reflète le paramétrage actif dans "Règles de Commission"
+  // (zone + "Toutes catégories") — null si aucune règle active n'est configurée.
+  const computeExample = useCallback((
+    values: PricingFormValues,
+    commissionRate?: { type: 'percentage' | 'flat'; value: number } | null,
+  ): PricingExample => {
     const basePx      = toNum(values.base_price);
     const pxKm        = toNum(values.price_per_km);
     const pxMin       = toNum(values.price_per_min);
-    // const commRate    = toNum(values.commission_rate);
-    // const commVat     = toNum(values.commission_vat_rate);
 
     const currency    = PRICING_COUNTRY_CURRENCIES[activeCountry];
     const symbol      = PRICING_CURRENCY_SYMBOLS[currency] ?? currency;
@@ -108,12 +111,11 @@ export function usePricing() {
     const vat_20      = round2(subtotal_ht * vatRate);
     const total_ttc   = round2(subtotal_ht + vat_20);
 
-    // Commission : calculée sur le HT
-    // const commission_ht  = round2(subtotal_ht * (commRate  / 100));
-    // const commission_vat = round2(commission_ht * (commVat / 100));
-
-    const commission_ht  = round2(subtotal_ht * (0  / 100));
-    const commission_vat = round2(commission_ht * (0 / 100));
+    // Commission EasyVTC : calculée sur le HT selon le paramétrage actif
+    const commission_ht  = !commissionRate ? 0
+      : commissionRate.type === 'percentage' ? round2(subtotal_ht * (commissionRate.value / 100))
+      : round2(commissionRate.value);
+    const commission_vat = 0;
     const commission_ttc = round2(commission_ht + commission_vat);
 
     const net_driver = round2(total_ttc - commission_ttc);

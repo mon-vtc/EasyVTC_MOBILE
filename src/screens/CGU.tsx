@@ -3,13 +3,11 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
-  Platform,
 } from 'react-native';
-import { AppIcon } from '../components/common/AppIcon';
-import { Colors, Fonts, Spacing, Radius } from '../theme/colors';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Colors, Fonts, Spacing } from '../theme/colors';
+import { AppHeader } from '../components/common/AppHeader';
 
 type Props = {
   navigation: any;
@@ -59,35 +57,15 @@ const sections = [
 ];
 
 export default function TermsAndConditionsScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   return (
     <View style={styles.container}>
 
-      <LinearGradient
-        colors={[Colors.bordeaux, Colors.bordeauxLight]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.headerBtn}
-        >
-          <AppIcon
-            name="arrow-back"
-            size={24}
-            color={Colors.white}
-          />
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>
-          Conditions Générales{'\n'}
-          d'Utilisation
-        </Text>
-      </LinearGradient>
+      <AppHeader left="back" title="Conditions Générales d'Utilisation" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: styles.content.paddingBottom + insets.bottom }]}
       >
         {sections.map((section) => (
           <View key={section.title} style={styles.section}>
@@ -116,33 +94,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-
-  header: {
-    paddingTop: Platform.OS === 'ios'
-      ? 60
-      : Spacing.xl + 20,
-
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
-
-    borderBottomLeftRadius: Radius.xl,
-    borderBottomRightRadius: Radius.xl,
-  },
-
-  headerBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-
-  headerTitle: {
-    color: Colors.white,
-    fontSize: 25,
-    fontFamily: Fonts.bold, fontWeight: '800',
-    lineHeight: 36,
-    textAlign: 'center'
   },
 
   content: {

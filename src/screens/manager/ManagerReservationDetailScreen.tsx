@@ -20,6 +20,8 @@ import type { Reservation , AvailableDriverDto} from '../../types/reservations.t
 import { useToast } from '../../hooks/useToast';
 import { useAlert } from '../../hooks/useAlert';
 import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 
 type ScreenRoute = RouteProp<{ ManagerReservationDetail: { reservationId: string } }, 'ManagerReservationDetail'>;
 type ScreenNav = NavigationProp<any>;
@@ -51,7 +53,7 @@ function Badge({ status }: { status: Reservation['status'] }) {
   const cfg = STATUS_MAP[status];
   return (
     <View style={[S.badge, { backgroundColor: cfg.bg }]}>
-      <Text style={[S.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
+      <Text style={[S.badgeText, { color: cfg.color }]} numberOfLines={1}>{cfg.label}</Text>
     </View>
   );
 }
@@ -260,11 +262,14 @@ function DriverTab({
           <Text style={S.profileName}>{driver.user.first_name} {driver.user.last_name}</Text>
           <View style={S.driverBadgeRow}>
             <Text style={[S.profileRole, { color: Colors.bordeaux }]}>Chauffeur</Text>
-            {driver.rating != null && (
-              <View style={S.ratingBadge}>
-                <Ionicons name="star" size={12} color="#F9A825" />
-                <Text style={S.ratingText}>{driver.rating.toFixed(1)}</Text>
-              </View>
+            {driver.average_rating != null && (
+              <>
+                <View style={S.ratingBadge}>
+                  <Ionicons name="star" size={12} color="#F9A825" />
+                  <Text style={S.ratingText}>{driver.average_rating.toFixed(1)}</Text>
+                </View>
+                <Text style={S.ratingCountText}>({driver.ratings_count} avis)</Text>
+              </>
             )}
           </View>
         </View>
@@ -392,6 +397,7 @@ export default function ManagerReservationDetailScreen() {
   const [selectedTab, setSelectedTab]     = useState<TabKeys>('details');
   const [pickerVisible, setPickerVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
+  const bottomActionsInset = useBottomInset(S.bottomActions.paddingBottom);
 
 
   const reservationId = route.params?.reservationId;
@@ -497,20 +503,14 @@ export default function ManagerReservationDetailScreen() {
   return (
     <View style={S.screen}>
       {/* ── HEADER ── */}
-      <View style={S.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={S.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={Colors.bordeaux} />
-        </TouchableOpacity>
-        <View style={S.headerTextContainer}>
-          <Text style={S.title}>Réservation n° {reservation.id.slice(-8).toUpperCase()}</Text>
-          <Text style={S.subtitle}>
-            {new Date(reservation.created_at || new Date()).toLocaleDateString('fr-FR', {
-              day: '2-digit', month: 'long', year: 'numeric',
-            } as any)}
-          </Text>
-        </View>
-        <Badge status={reservation.status} />
-      </View>
+      <AppHeader
+        left="back"
+        title={`Réservation n° ${reservation.id.slice(-8).toUpperCase()}`}
+        subtitle={new Date(reservation.created_at || new Date()).toLocaleDateString('fr-FR', {
+          day: '2-digit', month: 'long', year: 'numeric',
+        } as any)}
+        rightElement={<Badge status={reservation.status} />}
+      />
 
       {/* ── TABS ── */}
       <View style={S.tabs}>
@@ -530,7 +530,7 @@ export default function ManagerReservationDetailScreen() {
       {/* ── CONTENT ── */}
       <ScrollView
         style={S.content}
-        contentContainerStyle={{ paddingBottom: hasBottomActions ? 140 : 24 }}
+        contentContainerStyle={{ paddingBottom: (hasBottomActions ? 140 : 24) + (hasBottomActions ? bottomActionsInset : 0) }}
         showsVerticalScrollIndicator={false}
       >
         <TabContent />
@@ -538,7 +538,7 @@ export default function ManagerReservationDetailScreen() {
 
       {/* ── BOTTOM ACTIONS ── */}
       {hasBottomActions && (
-        <View style={S.bottomActions}>
+        <View style={[S.bottomActions, { paddingBottom: bottomActionsInset }]}>
           {primaryAction && (
             <TouchableOpacity
               style={[S.primaryBtn, { backgroundColor: Colors.bordeaux, marginBottom: Spacing.sm }]}
@@ -593,25 +593,6 @@ const S = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  backBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: Colors.white,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
-  },
-  headerTextContainer: { flex: 1, marginLeft: Spacing.sm },
-  title: { color: Colors.white, fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800' },
-  subtitle: { color: 'rgba(255,255,255,0.75)', fontSize: Fonts.size.xs, marginTop: 2 },
 
   badge: { borderRadius: Radius.full, paddingHorizontal: Spacing.sm, paddingVertical: 4 },
   badgeText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700' },
@@ -690,6 +671,7 @@ const S = StyleSheet.create({
     paddingHorizontal: 6, paddingVertical: 2,
   },
   ratingText: { fontSize: Fonts.size.xs, fontFamily: Fonts.bold, fontWeight: '700', color: '#F9A825' },
+  ratingCountText: { fontSize: Fonts.size.xs, color: Colors.textSecondary },
 
   contactRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm, gap: Spacing.sm },
   contactIcon: {
@@ -713,8 +695,8 @@ const S = StyleSheet.create({
   paymentHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: Spacing.md },
   paymentTitle: { fontSize: Fonts.size.sm, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textSecondary },
   paymentRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm },
-  paymentLabel: { fontSize: Fonts.size.sm, color: Colors.textSecondary },
-  paymentValue: { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
+  paymentLabel: { flex: 1, flexShrink: 1, marginRight: Spacing.sm, fontSize: Fonts.size.sm, color: Colors.textSecondary },
+  paymentValue: { flexShrink: 0, fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
   paymentDivider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.sm },
   paymentTotalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   paymentTotalLabel: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary },

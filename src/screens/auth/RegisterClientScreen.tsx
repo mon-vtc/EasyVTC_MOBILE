@@ -52,7 +52,7 @@ function PasswordStrength({ value }: { value: string }) {
               color={ok ? Colors.bordeauxLight : Colors.textMuted}
             />
             <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>
-              {rule.label}
+              {rule.label}{'  '}
             </Text>
           </View>
         );

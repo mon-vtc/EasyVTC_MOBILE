@@ -11,21 +11,24 @@ import React, { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity, FlatList,
   StyleSheet, ActivityIndicator, KeyboardAvoidingView,
-  Platform, Image, Modal,
+  Platform, Modal,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation }  from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReservation } from '../../hooks/useReservation';
 import { useToast }       from '../../hooks/useToast';
 import { AppIcon }        from '../../components/common/AppIcon';
+import { AppHeader }      from '../../components/common/AppHeader';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Colors, Spacing, Fonts } from '../../theme/colors';
-import { Logo }           from '../../constants/logo';
 import type { GeoPoint, VehicleTypeOption } from '../../types/reservations.types';
 import type { PricingFlatRate } from '../../types/pricing.types';
 import CustomCalendarModal from '../../components/common/CustomCalendarModal';
 import CustomTimePickerModal from '../../components/common/CustomTimePickerModal';
 import { FavoriteAddress } from '../../types/favorites.types'
+import { useAddressSearch } from '../../hooks/useAddressSearch';
+import type { AddressSuggestion } from '../../services/geo/addressAutocomplete';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // VEHICLE ICONS — alignés avec VehicleType backend : standard | berline | van
@@ -119,27 +122,6 @@ function ForfaitDetailModal({
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// HEADER
-// ══════════════════════════════════════════════════════════════════════════════
-function BookingHeader({ onBack }: { onBack: () => void }) {
-  return (
-    <View style={hdr.container}>
-      <TouchableOpacity
-        onPress={onBack}
-        style={hdr.back}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
-      </TouchableOpacity>
-      <View style={hdr.center}>
-        <Image source={Logo.LogoEasyVTC} style={hdr.logo} resizeMode="contain" />
-      </View>
-      <View style={hdr.placeholder} />
-    </View>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
 // INDICATEUR D'ÉTAPES
 // ══════════════════════════════════════════════════════════════════════════════
 function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
@@ -177,6 +159,30 @@ function Step1({
   const [destinationError, setDestinationError] = useState<string | null>(null);
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [detailForfait, setDetailForfait] = useState<PricingFlatRate | null>(null);
+
+  // ── Suggestions d'adresses en temps réel (Photon/OpenStreetMap) ─────────────
+  const { suggestions: originSuggestions, isSearching: isSearchingOrigin } =
+    useAddressSearch(originInput, focusedInput === 'origin');
+  const { suggestions: destinationSuggestions, isSearching: isSearchingDestination } =
+    useAddressSearch(destinationInput, focusedInput === 'destination');
+
+  const handleSelectAddress = useCallback((suggestion: AddressSuggestion, target: 'origin' | 'destination') => {
+    const point: GeoPoint = {
+      address:   suggestion.label,
+      latitude:  suggestion.latitude,
+      longitude: suggestion.longitude,
+    };
+    if (target === 'origin') {
+      setOriginInput(suggestion.label);
+      setOrigin(point);
+      setOriginError(null);
+    } else {
+      setDestinationInput(suggestion.label);
+      setDestination(point);
+      setDestinationError(null);
+    }
+    setFocusedInput(null);
+  }, [setOrigin, setDestination]);
 
   // Synchronise les inputs locaux avec l'état global de la réservation
   // (utile si l'état est modifié par un forfait par exemple)
@@ -345,6 +351,23 @@ function Step1({
           ))}
         </View>
       )}
+      {/* Suggestions d'adresses (Photon) pour le départ */}
+      {focusedInput === 'origin' && originInput.trim().length >= 3 && (isSearchingOrigin || originSuggestions.length > 0) && (
+        <View style={styles.favoritesContainer}>
+          <Text style={styles.favoritesTitle}>Adresses</Text>
+          {isSearchingOrigin && originSuggestions.length === 0 && (
+            <ActivityIndicator size="small" color={Colors.bordeaux} style={{ marginVertical: Spacing.sm }} />
+          )}
+          {originSuggestions.map((s, idx) => (
+            <TouchableOpacity key={idx} style={styles.favoriteItem} onPress={() => handleSelectAddress(s, 'origin')}>
+              <AppIcon name="location-outline" size={16} color={Colors.textSecondary} />
+              <View style={{ flex: 1, marginLeft: Spacing.sm }}>
+                <Text style={styles.favoriteAddress} numberOfLines={2}>{s.label}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
       {booking.origin && (
         <Text style={styles.geoHint}>
           ✓ Position enregistrée — modifiez et quittez le champ pour recalculer
@@ -387,6 +410,23 @@ function Step1({
               <View style={{ flex: 1, marginLeft: Spacing.sm }}>
                 <Text style={styles.favoriteLabel}>{item.label}</Text>
                 <Text style={styles.favoriteAddress} numberOfLines={1}>{item.address}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+      {/* Suggestions d'adresses (Photon) pour la destination */}
+      {focusedInput === 'destination' && destinationInput.trim().length >= 3 && (isSearchingDestination || destinationSuggestions.length > 0) && (
+        <View style={styles.favoritesContainer}>
+          <Text style={styles.favoritesTitle}>Adresses</Text>
+          {isSearchingDestination && destinationSuggestions.length === 0 && (
+            <ActivityIndicator size="small" color={Colors.bordeaux} style={{ marginVertical: Spacing.sm }} />
+          )}
+          {destinationSuggestions.map((s, idx) => (
+            <TouchableOpacity key={idx} style={styles.favoriteItem} onPress={() => handleSelectAddress(s, 'destination')}>
+              <AppIcon name="location-outline" size={16} color={Colors.textSecondary} />
+              <View style={{ flex: 1, marginLeft: Spacing.sm }}>
+                <Text style={styles.favoriteAddress} numberOfLines={2}>{s.label}</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -860,6 +900,7 @@ function Step3({ booking, vehicleTypes, flatRates, setComment, isFetchingPrice }
 // ÉCRAN PRINCIPAL
 // ══════════════════════════════════════════════════════════════════════════════
 export default function BookingScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const {
     booking, vehicleTypes, isSubmitting, isFetchingPrice, error,
     isStep1Valid, isStep2Valid, isStep3Valid,
@@ -879,7 +920,7 @@ export default function BookingScreen({ navigation }: any) {
 
   const handleBack = () => {
     if (booking.step > 1) prevStep();
-    else { resetBooking(); nav.goBack(); }
+    else { resetBooking(); if (nav.canGoBack()) nav.goBack(); }
   };
 
   const handleNext = () => {
@@ -928,7 +969,7 @@ export default function BookingScreen({ navigation }: any) {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}>
-      <BookingHeader onBack={handleBack} />
+      <AppHeader left="back" onBack={handleBack} title="Nouvelle réservation" />
       <StepIndicator current={booking.step as 1 | 2 | 3} />
 
       <KeyboardAvoidingView
@@ -975,7 +1016,7 @@ export default function BookingScreen({ navigation }: any) {
       </KeyboardAvoidingView>
 
       {/* Barre de navigation bas */}
-      <View style={styles.navBar}>
+      <View style={[styles.navBar, { paddingBottom: styles.navBar.paddingBottom + insets.bottom }]}>
         {booking.step > 1 && (
           <TouchableOpacity style={styles.backBtn} onPress={prevStep}>
             <Text style={styles.backBtnText}>Retour</Text>
@@ -1213,22 +1254,6 @@ const styles = StyleSheet.create({
   nextBtnText:     { color: Colors.white, fontSize: 15, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
-// ── Header styles ──────────────────────────────────────────────────────────────
-const hdr = StyleSheet.create({
-  container: {
-    height: 100, backgroundColor: Colors.bordeaux,
-    flexDirection: 'row', alignItems: 'flex-end',
-    paddingBottom: 14, paddingHorizontal: 16,
-    elevation: 4, shadowColor: '#000', shadowOpacity: 0.15,
-    shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
-  },
-  back:        { width: 40, alignItems: 'flex-start' },
-  center:      { flex: 1, alignItems: 'center', gap: 2 },
-  logo:        { width: 40, height: 40 },
-  title:       { color: Colors.white, fontSize: 11, fontFamily: Fonts.semibold, fontWeight: '600', letterSpacing: 0.5 },
-  placeholder: { width: 40 },
-});
-
 // ── StepIndicator styles ───────────────────────────────────────────────────────
 const si = StyleSheet.create({
   row: {
@@ -1253,7 +1278,7 @@ const si = StyleSheet.create({
 // ── ForfaitDetailModal styles ──────────────────────────────────────────────────
 const fdm = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.45)',
   },
   sheet: {

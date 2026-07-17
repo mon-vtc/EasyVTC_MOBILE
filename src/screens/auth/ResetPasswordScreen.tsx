@@ -50,7 +50,7 @@ function PasswordStrength({ value }: { value: string }) {
               color={ok ? Colors.bordeauxLight : Colors.textMuted}
             />
             <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>
-              {rule.label}
+              {rule.label}{'  '}
             </Text>
           </View>
         );
@@ -211,7 +211,7 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
           >
             <Text style={styles.loginText}>
               Retour à la{' '}
-              <Text style={styles.loginBold}>connexion</Text>
+              <Text style={styles.loginBold}>{'connexion' + '  '}</Text>
             </Text>
           </TouchableOpacity>
         </View>

@@ -10,7 +10,8 @@ import { navigateFromNotification } from '../utils/notificationNavigation';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -19,6 +20,18 @@ Notifications.setNotificationHandler({
 async function getExpoPushToken(): Promise<string | null> {
   if (!Device.isDevice) {
     console.warn('Push: appareil physique requis');
+    return null;
+  }
+
+  // Les notifications push distantes ne sont plus supportées par Expo Go
+  // depuis le SDK 53 (nécessite un development build) — on évite de tenter
+  // l'enregistrement plutôt que de laisser getExpoPushTokenAsync() planter l'app.
+  // Note : appOwnership est déprécié au profit de executionEnvironment, mais ce
+  // dernier ('storeClient') regroupe Expo Go ET les development builds (qui, eux,
+  // supportent le push) — appOwnership === 'expo' reste le seul moyen de cibler
+  // précisément Expo Go.
+  if (Constants.appOwnership === 'expo') {
+    console.warn('Push: notifications distantes indisponibles sous Expo Go (SDK 53+) — utiliser un development build.');
     return null;
   }
 
@@ -32,10 +45,15 @@ async function getExpoPushToken(): Promise<string | null> {
     return null;
   }
 
-  const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-  const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
-  console.log('Expo Push Token:', token);
-  return token;
+  try {
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
+    console.log('Expo Push Token:', token);
+    return token;
+  } catch (err) {
+    console.warn('Push: échec de récupération du token', err);
+    return null;
+  }
 }
 
 export function usePushNotifications() {
@@ -125,8 +143,8 @@ export function usePushNotifications() {
     });
 
     return () => {
-      Notifications.removeNotificationSubscription(notificationListener);
-      Notifications.removeNotificationSubscription(responseListener);
+      notificationListener.remove();
+      responseListener.remove();
     };
   }, []);
 }

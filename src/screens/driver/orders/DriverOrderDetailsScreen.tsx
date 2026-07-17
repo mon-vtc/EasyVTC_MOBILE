@@ -12,7 +12,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Platform,
   ActivityIndicator,
   Linking,
   Share,
@@ -32,6 +31,8 @@ import { ordersApi } from '../../../services/api/orders.api';
 import { useToast } from '../../../hooks/useToast';
 import type { DriverOrdersStackParamList } from '../../../types/auth.types';
 import { Logo } from '../../../constants/logo';
+import { AppHeader } from '../../../components/common/AppHeader';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 
 type DetailsNavRoute = RouteProp<DriverOrdersStackParamList, 'DriverOrderDetails'>;
 type DetailsNavProp  = NavigationProp<DriverOrdersStackParamList, 'DriverOrderDetails'>;
@@ -80,6 +81,7 @@ export default function DriverOrderDetailsScreen() {
 
   const { showToast } = useToast();
   const [openingPdf, setOpeningPdf] = useState(false);
+  const scrollBottomInset = useBottomInset(styles.scrollContent.paddingBottom);
 
   useEffect(() => {
     if (!order) fetchDriverMine(token);
@@ -143,17 +145,13 @@ export default function DriverOrderDetailsScreen() {
   return (
     <View style={styles.container}>
       {/* ── Header barre de navigation ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Bon de commande</Text>
-        <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-          <Ionicons name="share-social-outline" size={22} color={Colors.white} />
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        left="back"
+        title="Bon de commande"
+        rightIcon={{ name: 'share-social-outline', onPress: handleShare }}
+      />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomInset }]}>
 
         {/* ══════════════════════════════════════════════════════════════════════
             DOCUMENT — BON DE COMMANDE
@@ -352,25 +350,6 @@ const styles = StyleSheet.create({
   centered:    { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.lg },
   errorText:   { fontSize: Fonts.size.md, color: Colors.error, textAlign: 'center', marginBottom: Spacing.md },
   linkText:    { fontSize: Fonts.size.md, color: Colors.bordeaux, fontFamily: Fonts.semibold, fontWeight: '600' },
-
-  header: {
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 60 : Spacing.xl,
-    paddingBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backBtn:     { padding: Spacing.xs },
-  shareBtn:    { padding: Spacing.xs },
-  headerTitle: {
-    fontSize: Fonts.size.md,
-    fontFamily: Fonts.bold, fontWeight: '700',
-    color: Colors.white,
-    textAlign: 'center',
-    flex: 1,
-  },
 
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl * 2 },
 

@@ -12,7 +12,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Platform,
   ActivityIndicator,
   Alert,
   Linking,
@@ -25,6 +24,7 @@ import {
   type RouteProp,
   type NavigationProp,
 } from '@react-navigation/native';
+import { useSafeAreaInsets }      from 'react-native-safe-area-context';
 import { Ionicons }               from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useInvoicesStore }       from '../../../store/invoices.store';
@@ -34,6 +34,7 @@ import type { ClientStackParamList } from '../../../types/auth.types';
 import type { InvoiceAdjustment } from '../../../types/invoices.types';
 import { Logo }                   from '../../../constants/logo';
 import { useToast }                   from '../../../hooks/useToast';
+import { AppHeader }              from '../../../components/common/AppHeader';
 
 // ── Types navigation ───────────────────────────────────────────────────────────
 type NavRoute = RouteProp<ClientStackParamList, 'InvoiceDetails'>;
@@ -66,6 +67,7 @@ export default function InvoiceDetailsScreen() {
   const route      = useRoute<NavRoute>();
   const { invoiceId } = route.params;
   const { showToast } = useToast();
+  const insets = useSafeAreaInsets();
 
   const token                             = useAuthStore(s => s.accessToken) ?? '';
   const { invoices, fetchById, isLoading } = useInvoicesStore();
@@ -154,18 +156,13 @@ export default function InvoiceDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* ── Header barre de navigation ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Facture</Text>
-        <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-          <Ionicons name="share-social-outline" size={22} color={Colors.white} />
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        left="back"
+        title="Facture"
+        rightIcon={{ name: 'share-social-outline', onPress: handleShare }}
+      />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]}>
 
         {/* ════════════════════════════════════════════════════════════════════
             DOCUMENT — FACTURE
@@ -404,26 +401,6 @@ const styles = StyleSheet.create({
   centered:  { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.lg },
   errorText: { fontSize: Fonts.size.md, color: Colors.error, textAlign: 'center', marginBottom: Spacing.md },
   linkText:  { fontSize: Fonts.size.md, color: Colors.bordeaux, fontFamily: Fonts.semibold, fontWeight: '600' },
-
-  // Header navigation
-  header: {
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 60 : Spacing.xl,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-  },
-  backBtn:     { padding: Spacing.xs },
-  shareBtn:    { padding: Spacing.xs },
-  headerTitle: {
-    fontSize:   Fonts.size.md,
-    fontFamily: Fonts.bold, fontWeight: '700',
-    color:      Colors.white,
-    textAlign:  'center',
-    flex:       1,
-  },
 
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl * 2 },
 

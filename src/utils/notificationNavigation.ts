@@ -8,14 +8,37 @@
 import { navigate } from '../navigation/navigationRef';
 import type { Notification, UserRole } from '../types';
 
+// Écran racine (Stack) qui enveloppe le Drawer de chaque rôle — voir
+// {Driver,Admin,Manager}Navigator.tsx : le RootStack de chaque navigator
+// n'expose que ce seul nom ('XxxMain'), le Drawer lui-même (avec ses écrans
+// 'DriverDocuments', 'AdminReservations', etc.) est imbriqué un niveau plus
+// bas. Un navigate() déclenché depuis la navigationRef globale (tap sur une
+// notification push, hors de l'arbre React) part toujours de ce niveau
+// racine, donc il faut repasser par 'XxxMain' avant de cibler un écran du
+// Drawer — sinon React Navigation lève "action NAVIGATE not handled by any
+// navigator" (le nom du Drawer n'existe pas au niveau racine).
+const ROOT_SCREEN: Partial<Record<UserRole, string>> = {
+  driver:  'DriverMain',
+  admin:   'AdminMain',
+  manager: 'ManagerMain',
+};
+
 export function navigateFromNotification(notification: Notification, role: UserRole | undefined): void {
   const reservationId = notification.data?.reservation_id;
   const invoiceId      = notification.data?.invoice_id;
   const ticketId       = notification.data?.ticket_id;
   const subject        = notification.data?.subject;
 
-  const navigateToNested = (route: string, nested: { screen: string; params: Record<string, unknown> }) => {
-    navigate(route, nested as object);
+  const rootScreen = role ? ROOT_SCREEN[role] : undefined;
+
+  // Navigue vers un écran du Drawer (`drawerScreen`), optionnellement en ciblant
+  // un écran précis de son Stack imbriqué (`nested`).
+  const navigateToNested = (drawerScreen: string, nested?: { screen: string; params: Record<string, unknown> }) => {
+    if (rootScreen) {
+      navigate(rootScreen, { screen: drawerScreen, params: nested } as object);
+    } else {
+      navigate(drawerScreen, nested as object);
+    }
   };
 
   const shipToRole = (): boolean => {
@@ -29,7 +52,7 @@ export function navigateFromNotification(notification: Notification, role: UserR
           navigateToNested('DriverInvoices', { screen: 'DriverInvoiceDetails', params: { invoiceId } });
           return true;
         }
-        navigate('DriverDocuments');
+        navigateToNested('DriverDocuments');
         return true;
 
       case 'admin':
@@ -41,7 +64,7 @@ export function navigateFromNotification(notification: Notification, role: UserR
           navigateToNested('AdminInvoices', { screen: 'InvoiceDetails', params: { invoiceId } });
           return true;
         }
-        navigate('AdminDocuments');
+        navigateToNested('AdminDocuments');
         return true;
 
       case 'manager':
@@ -53,7 +76,7 @@ export function navigateFromNotification(notification: Notification, role: UserR
           navigateToNested('ManagerInvoices', { screen: 'InvoiceDetails', params: { invoiceId } });
           return true;
         }
-        navigate('ManagerDocuments');
+        navigateToNested('ManagerDocuments');
         return true;
 
       case 'client':
@@ -75,7 +98,10 @@ export function navigateFromNotification(notification: Notification, role: UserR
     notification.type === 'trip_assigned' ||
     notification.type === 'trip_reminder' ||
     notification.type === 'driver_arrived' ||
-    notification.type === 'reservation_cancelled'
+    notification.type === 'reservation_cancelled' ||
+    notification.type === 'driver_reminder_24h' ||
+    notification.type === 'driver_reminder_2h' ||
+    notification.type === 'driver_reminder_30min'
   ) {
     if (!reservationId) {
       navigate('NotificationDetails', { notification });
@@ -101,7 +127,11 @@ export function navigateFromNotification(notification: Notification, role: UserR
 
   switch (notification.type) {
     case 'new_message':
-      if (reservationId) {
+      if (reservationId && role === 'driver') {
+        navigateToNested('DriverMessages', { screen: 'ChatScreen', params: { reservationId } });
+      } else if (reservationId && role === 'admin') {
+        navigateToNested('AdminDiscussions', { screen: 'AdminChatScreen', params: { reservationId } });
+      } else if (reservationId && (!role || role === 'client')) {
         navigate('ChatScreen', { reservationId });
       } else {
         navigate('NotificationDetails', { notification });
@@ -109,7 +139,11 @@ export function navigateFromNotification(notification: Notification, role: UserR
       break;
 
     case 'support_reply':
-      if (ticketId) {
+      if (ticketId && role === 'driver') {
+        navigateToNested('DriverSupport', { screen: 'SupportChat', params: { ticketId, subject: subject ?? 'Ticket de support' } });
+      } else if (ticketId && role === 'admin') {
+        navigateToNested('AdminSupport', { screen: 'SupportChat', params: { ticketId, subject: subject ?? 'Ticket de support' } });
+      } else if (ticketId && (!role || role === 'client')) {
         navigate('SupportChat', { ticketId, subject: subject ?? 'Ticket de support' });
       } else {
         navigate('NotificationDetails', { notification });

@@ -14,7 +14,11 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat } from '../../hooks/useChat';
+import { useNotifications } from '../../hooks/useNotifications';
+import { AppHeader } from '../../components/common/AppHeader';
+import { formatRelativeTime } from '../../utils/formatDate';
 import { Colors, Fonts } from '../../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import type { ActiveConversation } from '../../types';
@@ -166,6 +170,7 @@ interface AdminDiscussionScreenProps {
 }
 
 export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScreenProps) {
+  const insets = useSafeAreaInsets();
   const {
     supervisedConversations,
     supervisedConversationsTotal,
@@ -175,6 +180,7 @@ export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScr
     error,
     clearError,
   } = useChat();
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     loadConversations();
@@ -207,17 +213,7 @@ export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScr
 
   const formatTimeAgo = (dateStr: string | null): string => {
     if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'À l\'instant';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `Il y a ${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `Il y a ${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `Il y a ${days}j`;
+    return formatRelativeTime(dateStr);
   };
 
   const sortedConversations = useMemo(() => {
@@ -283,7 +279,7 @@ export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScr
             <Text numberOfLines={1} style={styles.lastMessage}>
               {item.last_message}
             </Text>
-            <Text style={styles.timeText}>{formatTimeAgo(item.last_message_at)}</Text>
+            <Text style={styles.timeText}>{formatTimeAgo(item.last_message_at)}{'  '}</Text>
           </View>
         )}
 
@@ -298,40 +294,61 @@ export default function AdminDiscussionScreen({ navigation }: AdminDiscussionScr
     );
   };
 
+  const header = (
+    <AppHeader
+      left="menu"
+      title="Supervision chats"
+      rightIcon={{
+        name: 'notifications-outline',
+        onPress: () => navigation.navigate('AdminNotificationList' as never),
+        badge: unreadCount,
+      }}
+    />
+  );
+
   if (isLoadingSupervisedConversations && supervisedConversations.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.bordeaux} />
+      <View style={{ flex: 1 }}>
+        {header}
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.bordeaux} />
+        </View>
       </View>
     );
   }
 
   if (!isLoadingSupervisedConversations && supervisedConversations.length === 0) {
     return (
-      <View style={styles.container}>
-        <View style={styles.emptyContainer}>
-          <Ionicons name="chatbubbles-outline" size={48} color={Colors.textSecondary} style={styles.emptyIcon} />
-          <Text style={styles.emptyText}>Aucune conversation active pour le moment</Text>
+      <View style={{ flex: 1 }}>
+        {header}
+        <View style={styles.container}>
+          <View style={styles.emptyContainer}>
+            <Ionicons name="chatbubbles-outline" size={48} color={Colors.textSecondary} style={styles.emptyIcon} />
+            <Text style={styles.emptyText}>Aucune conversation active pour le moment</Text>
+          </View>
         </View>
       </View>
     );
   }
 
   return (
-    <FlatList
-      contentContainerStyle={styles.contentContainer}
-      style={styles.container}
-      data={sortedConversations}
-      keyExtractor={item => item.reservation_id}
-      renderItem={renderConversationCard}
-      refreshControl={<RefreshControl refreshing={isLoadingSupervisedConversations} onRefresh={handleRefresh} />}
-      onEndReached={handleLoadMore}
-      onEndReachedThreshold={0.3}
-      ListFooterComponent={
-        isLoadingSupervisedConversations && supervisedConversations.length > 0 ? (
-          <ActivityIndicator size="small" color={Colors.bordeaux} style={{ marginVertical: 16 }} />
-        ) : null
-      }
-    />
+    <View style={{ flex: 1 }}>
+      {header}
+      <FlatList
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: styles.contentContainer.paddingVertical + insets.bottom }]}
+        style={styles.container}
+        data={sortedConversations}
+        keyExtractor={item => item.reservation_id}
+        renderItem={renderConversationCard}
+        refreshControl={<RefreshControl refreshing={isLoadingSupervisedConversations} onRefresh={handleRefresh} />}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={
+          isLoadingSupervisedConversations && supervisedConversations.length > 0 ? (
+            <ActivityIndicator size="small" color={Colors.bordeaux} style={{ marginVertical: 16 }} />
+          ) : null
+        }
+      />
+    </View>
   );
 }

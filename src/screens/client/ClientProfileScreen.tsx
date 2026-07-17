@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, Switch, Platform, Modal, TextInput,
+  KeyboardAvoidingView, Linking,
 } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
+import { Paths } from 'expo-file-system';
 import { z }           from 'zod';
 import { FormField }   from '../../components/forms/FormField';
 import { useFocusEffect } from '@react-navigation/native';
@@ -16,14 +18,19 @@ import { Ionicons }    from '@expo/vector-icons';
 import * as Sharing from 'expo-sharing';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
+import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { ClientTabParamList }   from '../../types/auth.types';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { ClientTabParamList, ClientStackParamList } from '../../types/auth.types';
 import { useAuthStore } from '../../store/auth.store';
 import { useMarketingStore } from '../../store/marketing.store';
-import { Logo }        from '../../constants/logo';
+import { AppHeader }   from '../../components/common/AppHeader';
 
 
-type Props = BottomTabScreenProps<ClientTabParamList, 'ClientProfile'>;
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<ClientTabParamList, 'ClientProfile'>,
+  NativeStackScreenProps<ClientStackParamList>
+>;
 
 // ── Règles mot de passe ─────────────────────────────────────────
 const PASSWORD_RULES = [
@@ -45,7 +52,7 @@ function PasswordStrength({ value }: { value: string }) {
               color={ok ? Colors.bordeauxLight : Colors.textMuted}
             />
             <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>
-              {rule.label}
+              {rule.label}{'  '}
             </Text>
           </View>
         );
@@ -177,31 +184,6 @@ export default function ClientProfileScreen({ navigation }: Props) {
     setEditMode(prev => !prev);
   }, [editMode, firstName, lastName, phone, pendingImage, confirmedImage, updateProfile, uploadAvatar]);
 
-  const handleEditToggleRef = React.useRef(handleEditToggle);
-  React.useEffect(() => {
-    handleEditToggleRef.current = handleEditToggle;
-  }, [handleEditToggle]);
-
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={{ marginRight: 20 }}
-          onPress={() => handleEditToggleRef.current()}
-          disabled={isLoading}
-        >
-          <Ionicons
-            name={editMode ? 'checkmark-outline' : 'pencil-outline'}
-            size={22}
-            color={Colors.white}
-          />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, editMode, isLoading]);
-
-
-
   // ── Modal mot de passe ──────────────────────────────────────
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -244,8 +226,8 @@ export default function ClientProfileScreen({ navigation }: Props) {
     try {
       const data = await exportMyData();
       const jsonString = JSON.stringify(data, null, 2);
-      const fileUri = FileSystem.documentDirectory + `easyvtc_export_${user!.id}.json`;
-      
+      const fileUri = `${Paths.document.uri}/easyvtc_export_${user!.id}.json`;
+
       await FileSystem.writeAsStringAsync(fileUri, jsonString, { encoding: FileSystem.EncodingType.UTF8 });
 
       if (await Sharing.isAvailableAsync()) {
@@ -263,23 +245,14 @@ export default function ClientProfileScreen({ navigation }: Props) {
     <View style={styles.flex}>
 
       {/* ── Header bordeaux ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-
-        <View style={styles.headerCenter}>
-          <Image source={Logo.LogoEasyVTC} style={{ width: 40, height: 40 }} />
-        </View>
-
-        <TouchableOpacity style={styles.headerBtn} onPress={handleEditToggle} disabled={isLoading}>
-          <Ionicons
-            name={editMode ? 'checkmark-outline' : 'pencil-outline'}
-            size={20}
-            color={Colors.white}
-          />
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        left="none"
+        title="Mon compte"
+        rightIcon={{
+          name: editMode ? 'checkmark-outline' : 'pencil-outline',
+          onPress: () => { if (!isLoading) handleEditToggle(); },
+        }}
+      />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
@@ -405,6 +378,16 @@ export default function ClientProfileScreen({ navigation }: Props) {
 
         {/* ── Actions ── */}
         <View style={styles.actionsSection}>
+          <TouchableOpacity style={styles.actionRow} onPress={() => Linking.openSettings()}>
+            <View style={styles.actionLeft}>
+              <Ionicons name="notifications-outline" size={20} color={Colors.textPrimary} />
+              <Text style={styles.actionLabel}>Notifications système</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
           <TouchableOpacity
             style={styles.actionRow}
             onPress={() => { reset(); clearError(); setShowPasswordModal(true); }}
@@ -429,7 +412,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
           <View style={styles.divider} />
 
           <TouchableOpacity
-            style={styles.actionRow}
+            style={[styles.actionRow, styles.logoutRow]}
             testID="profile-logout-btn"
             onPress={() => {
               showAlert({title: 'Déconnexion', message: 'Voulez-vous vraiment vous déconnecter ?', buttons: [
@@ -440,7 +423,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
           >
             <View style={styles.actionLeft}>
               <Ionicons name="log-out-outline" size={20} color={Colors.bordeaux} />
-              <Text style={[styles.actionLabel, { color: Colors.bordeaux }]}>Se déconnecter</Text>
+              <Text style={[styles.actionLabel, styles.logoutLabel]}>Se déconnecter</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={Colors.bordeaux} />
           </TouchableOpacity>
@@ -471,55 +454,60 @@ export default function ClientProfileScreen({ navigation }: Props) {
         animationType="fade"
         onRequestClose={() => { reset(); clearError(); setShowPasswordModal(false); }}
       >
-        <View style={modalStyles.overlay}>
+        <KeyboardAvoidingView
+          style={modalStyles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View style={modalStyles.card}>
-            <Text style={modalStyles.title}>Changer le mot de passe</Text>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <Text style={modalStyles.title}>Changer le mot de passe</Text>
 
-            <FormField<PasswordForm>
-              name="current_password"
-              control={control}
-              label="Mot de passe actuel *"
-              secureTextEntry
-              showToggle
-              editable={!isLoading}
-              error={errors.current_password?.message}
-            />
-            <FormField<PasswordForm>
-              name="new_password"
-              control={control}
-              label="Nouveau mot de passe *"
-              secureTextEntry
-              showToggle
-              editable={!isLoading}
-              error={errors.new_password?.message}
-            />
-            <PasswordStrength value={newPasswordValue} />
-            <FormField<PasswordForm>
-              name="confirm_password"
-              control={control}
-              label="Confirmer le mot de passe *"
-              secureTextEntry
-              showToggle
-              error={errors.confirm_password?.message}
-            />
+              <FormField<PasswordForm>
+                name="current_password"
+                control={control}
+                label="Mot de passe actuel *"
+                secureTextEntry
+                showToggle
+                editable={!isLoading}
+                error={errors.current_password?.message}
+              />
+              <FormField<PasswordForm>
+                name="new_password"
+                control={control}
+                label="Nouveau mot de passe *"
+                secureTextEntry
+                showToggle
+                editable={!isLoading}
+                error={errors.new_password?.message}
+              />
+              <PasswordStrength value={newPasswordValue} />
+              <FormField<PasswordForm>
+                name="confirm_password"
+                control={control}
+                label="Confirmer le mot de passe *"
+                secureTextEntry
+                showToggle
+                error={errors.confirm_password?.message}
+              />
 
-            <View style={modalStyles.actions}>
-              <TouchableOpacity
-                style={[modalStyles.btn, modalStyles.btnCancel]}
-                onPress={() => { reset(); setShowPasswordModal(false); }}
-              >
-                <Text style={modalStyles.btnCancelText}>Annuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[modalStyles.btn, modalStyles.btnConfirm]}
-                onPress={handleSubmit(onChangePassword)}
-                disabled={isLoading}
-              >
-                <Text style={modalStyles.btnConfirmText}>Confirmer</Text>
-              </TouchableOpacity>
-            </View>
+              <View style={modalStyles.actions}>
+                <TouchableOpacity
+                  style={[modalStyles.btn, modalStyles.btnCancel]}
+                  onPress={() => { reset(); setShowPasswordModal(false); }}
+                >
+                  <Text style={modalStyles.btnCancelText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[modalStyles.btn, modalStyles.btnConfirm]}
+                  onPress={handleSubmit(onChangePassword)}
+                  disabled={isLoading}
+                >
+                  <Text style={modalStyles.btnConfirmText}>Confirmer</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Modal Suppression Compte ── */}
@@ -631,19 +619,6 @@ const fieldStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
 
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerBtn:    { padding: Spacing.sm },
-  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
-  headerTitle:  { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.md },
-
   scroll: { paddingBottom: Spacing.xxl },
 
   avatarSection: { alignItems: 'center', paddingVertical: Spacing.xl },
@@ -700,6 +675,8 @@ const styles = StyleSheet.create({
   actionLeft:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   actionLabel: { fontSize: Fonts.size.md, color: Colors.textPrimary, fontFamily: Fonts.medium, fontWeight: '500' },
   divider:     { height: 1, backgroundColor: Colors.border },
+  logoutRow:   { backgroundColor: Colors.overlayLight, borderRadius: Radius.md, marginVertical: Spacing.xs, paddingHorizontal: Spacing.sm },
+  logoutLabel: { color: Colors.bordeaux, fontFamily: Fonts.bold, fontWeight: '700' },
 });
 
 const modalStyles = StyleSheet.create({
@@ -715,6 +692,7 @@ const modalStyles = StyleSheet.create({
     borderRadius:    Radius.lg,
     padding:         Spacing.lg,
     width:           '100%',
+    maxHeight:       '90%',
     shadowColor:     '#000',
     shadowOffset:    { width: 0, height: 8 },
     shadowOpacity:   0.15,

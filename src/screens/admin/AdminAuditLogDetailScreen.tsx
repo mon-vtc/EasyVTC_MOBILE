@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useMemo} from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../hooks/useAdmin';
 import { AppIcon } from '../../components/common/AppIcon';
+import { AppHeader } from '../../components/common/AppHeader';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { AdminAuditLogsStackParamList } from '../../types';
 
@@ -12,7 +14,7 @@ function DetailRow({ label, value, color }: { label: string; value: string | nul
   if (!value) return null;
   return (
     <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailLabel}>{label}{'  '}</Text>
       <Text style={[styles.detailValue, color ? { color } : {}]}>{value}</Text>
     </View>
   );
@@ -49,6 +51,7 @@ function ValueChange({ field, oldValue, newValue }: { field: string; oldValue: a
 
 export default function AdminAuditLogDetailScreen({ navigation }: any) {
   const route = useRoute<ScreenRouteProp>();
+  const insets = useSafeAreaInsets();
   const { logId } = route.params;
   const {
     selectedAuditLog: log,
@@ -89,15 +92,9 @@ export default function AdminAuditLogDetailScreen({ navigation }: any) {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <AppIcon name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Détail du log</Text>
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader left="back" title="Détail du log" />
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: styles.scroll.padding + insets.bottom }]}>
         <View style={styles.card}>
           <DetailRow label="Action" value={log.action} />
           <DetailRow label="Date" value={new Date(log.created_at).toLocaleString('fr-FR')} />
@@ -136,14 +133,6 @@ export default function AdminAuditLogDetailScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.bordeaux,
-    paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom: Spacing.md, paddingHorizontal: Spacing.md,
-  },
-  headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   scroll: { padding: Spacing.md, gap: Spacing.md },
   card: {
     backgroundColor: Colors.white,

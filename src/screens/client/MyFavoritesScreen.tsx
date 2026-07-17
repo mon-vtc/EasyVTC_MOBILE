@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Modal, TextInput, Platform, Image, ScrollView
+  ActivityIndicator, Modal, TextInput, Platform, ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useToast } from '../../hooks/useToast';
 import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
@@ -13,7 +14,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AppIcon } from '../../components/common/AppIcon';
-import { Logo } from '../../constants/logo'
+import { AppHeader } from '../../components/common/AppHeader';
 import { useDebounce } from '../../hooks/useDebounce';
 
 
@@ -101,6 +102,7 @@ function AddFavoriteModal({
     resolver: zodResolver(addFavoriteSchema),
     defaultValues: { label: '', address: '' },
   });
+  const insets = useSafeAreaInsets();
 
   const addressInput = watch('address');
   const debouncedAddress = useDebounce(addressInput, 300);
@@ -151,7 +153,7 @@ function AddFavoriteModal({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={modalStyles.overlay}>
-        <View style={modalStyles.card}>
+        <View style={[modalStyles.card, { paddingBottom: modalStyles.card.paddingBottom + insets.bottom }]}>
           <Text style={modalStyles.title}>Ajouter un favori</Text>
           <Controller
             control={control}
@@ -257,7 +259,7 @@ export default function MyFavoritesScreen({ navigation }: any) {
           <Ionicons name={iconInfo.name} size={24} color={iconInfo.color} />
         </View>
         <View style={styles.cardContent}>
-          <Text style={styles.cardLabel}>{item.label}</Text>
+          <Text style={styles.cardLabel}>{item.label}{'  '}</Text>
           <Text style={styles.cardAddress}>{item.address}</Text>
         </View>
         <TouchableOpacity onPress={() => handleDelete(item.id, item.label)} style={styles.deleteButton}>
@@ -271,13 +273,7 @@ export default function MyFavoritesScreen({ navigation }: any) {
     <View style={styles.container}>
       
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-          <AppIcon name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Image source={Logo.LogoEasyVTC} style={{ width: 32, height: 32 }} />
-        <View style={styles.headerBtn} />
-      </View>
+      <AppHeader left="back" title="Mes favoris" />
 
       {isLoading ? (
         <ActivityIndicator size="large" color={Colors.bordeaux} style={{ marginTop: 50 }} />
@@ -334,9 +330,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.bordeaux, paddingTop: Platform.OS === 'ios' ? 56 : Spacing.xl + 8, paddingBottom: Spacing.sm, paddingHorizontal: Spacing.md },
-  headerBtn: { padding: Spacing.sm, width: 40 },
-  headerTitle: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '800', fontSize: Fonts.size.lg },
   titleZone: {
     flexDirection: 'row',
     justifyContent: 'space-between',

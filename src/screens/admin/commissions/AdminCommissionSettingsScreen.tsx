@@ -6,9 +6,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Modal, TextInput, Switch, Platform
+  ActivityIndicator, Modal, TextInput, Switch,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,9 +16,11 @@ import { useCommissionSettings } from '../../../hooks/useCommissionSettings';
 import { useVehicleTypes } from '../../../hooks/useVehicleTypes';
 import { useAlert } from '../../../hooks/useAlert';
 import { useToast } from '../../../hooks/useToast';
+import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
 import type { CommissionSetting, CommissionZone, CommissionRateType } from '../../../types';
 import { AppIcon } from '../../../components/common/AppIcon';
 import { AppButton } from '../../../components/common/AppButton';
+import { AppHeader } from '../../../components/common/AppHeader';
 import { Colors, Fonts, Radius, Spacing } from '../../../theme/colors';
 import { Picker } from '@react-native-picker/picker';
 
@@ -39,7 +40,6 @@ type CommissionFormValues = z.infer<typeof formSchema>;
 
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function AdminCommissionSettingsScreen() {
-  const navigation = useNavigation();
   const { showAlert } = useAlert();
   const { showToast } = useToast();
   const {
@@ -60,6 +60,8 @@ export default function AdminCommissionSettingsScreen() {
   const [activeZone, setActiveZone] = useState<CommissionZone>('france');
   const [isModalVisible, setModalVisible] = useState(false);
   const [editingSetting, setEditingSetting] = useState<CommissionSetting | null>(null);
+  const scrollBottomInset = useBottomInset(Spacing.xl);
+  const modalBottomInset = useBottomInset(styles.modalContent.paddingBottom);
 
   // ── Formulaire (react-hook-form) ────────────────────────────────────────────
   const { control, handleSubmit, reset, formState: { errors } } = useForm<CommissionFormValues>({
@@ -158,18 +160,13 @@ export default function AdminCommissionSettingsScreen() {
   // ── Rendu ───────────────────────────────────────────────────────────────────
   return (
     <View style={styles.screen}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-          <AppIcon name="arrow-back-outline" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Règles de Commission</Text>
-        <TouchableOpacity onPress={openModalForCreate} style={styles.headerBtn}>
-          <AppIcon name="add-outline" size={28} color={Colors.white} />
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        left="back"
+        title="Règles de Commission"
+        rightIcon={{ name: 'add', onPress: openModalForCreate }}
+      />
 
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: scrollBottomInset }}>
         {/* Sélecteur de zone */}
         <View style={styles.zoneSelector}>
           {(['france', 'senegal'] as CommissionZone[]).map((zone) => (
@@ -179,7 +176,7 @@ export default function AdminCommissionSettingsScreen() {
               onPress={() => setActiveZone(zone)}
             >
               <Text style={[styles.zoneText, activeZone === zone && styles.zoneTextActive]}>
-                {zone === 'france' ? 'France' : 'Sénégal'}
+                {(zone === 'france' ? 'France' : 'Sénégal') + '  '}
               </Text>
             </TouchableOpacity>
           ))}
@@ -195,15 +192,15 @@ export default function AdminCommissionSettingsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitle}>{setting.label}</Text>
                   <Text style={styles.cardSubtitle}>
-                    {setting.vehicle_type
+                    {(setting.vehicle_type
                       ? vehicleTypes.find(vt => vt.code === setting.vehicle_type)?.label ?? setting.vehicle_type
-                      : 'Toutes catégories'}
+                      : 'Toutes catégories') + '  '}
                   </Text>
                 </View>
                 <View style={styles.cardRate}>
                   <Text style={styles.rateValue}>{setting.rate_value}</Text>
                   <Text style={styles.rateType}>
-                    {setting.rate_type === 'percentage' ? '%' : 'fixe'}
+                    {' ' + (setting.rate_type === 'percentage' ? '%' : 'fixe')}{'  '}
                   </Text>
                 </View>
               </View>
@@ -211,7 +208,7 @@ export default function AdminCommissionSettingsScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <View style={[styles.statusDot, { backgroundColor: setting.is_active ? Colors.success : Colors.error }]} />
                   <Text style={[styles.statusText, { color: setting.is_active ? Colors.success : Colors.error }]}>
-                    {setting.is_active ? 'Actif' : 'Inactif'}
+                    {(setting.is_active ? 'Actif' : 'Inactif') + '  '}
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 16 }}>
@@ -239,7 +236,7 @@ export default function AdminCommissionSettingsScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { paddingBottom: modalBottomInset }]}>
             <Text style={styles.modalTitle}>
               {editingSetting ? 'Modifier la règle' : 'Nouvelle règle'}
             </Text>
@@ -366,17 +363,6 @@ export default function AdminCommissionSettingsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1, padding: Spacing.md },
-  header: {
-    backgroundColor: Colors.bordeaux,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'android' ? Spacing.xxl : 56,
-    paddingBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerTitle: { color: Colors.white, fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: 'bold' },
-  headerBtn: { padding: Spacing.xs, width: 40, alignItems: 'center' },
   zoneSelector: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
@@ -407,7 +393,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: Fonts.size.md, fontFamily: Fonts.bold, fontWeight: 'bold', color: Colors.textPrimary },
   cardSubtitle: { fontSize: Fonts.size.sm, color: Colors.textSecondary, marginTop: 2 },
-  cardRate: { alignItems: 'flex-end' },
+  cardRate: { flexDirection: 'row', alignItems: 'baseline' },
   rateValue: { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: 'bold', color: Colors.bordeaux },
   rateType: { fontSize: Fonts.size.xs, color: Colors.textSecondary },
   cardFooter: {

@@ -2,12 +2,15 @@
 import React, { useState, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
-  TextInput, TouchableOpacity, RefreshControl, Platform,
+  TextInput, TouchableOpacity, RefreshControl,
 } from 'react-native';
-import { useNavigation, useFocusEffect, DrawerActions } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../../hooks/useAdmin';
+import { useNotifications } from '../../../hooks/useNotifications';
+import { AppHeader } from '../../../components/common/AppHeader';
 import type { ManagersStackParamList, UserProfile } from '../../../types';
 import ManagerListItem from './ManagerListItem';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
@@ -23,11 +26,13 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
 
 export default function ManagersListScreen() {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const {
     managers, isManagersLoading, isFetchingNextManagersPage,
     managersPage, managersPageTotal,
     fetchManagers, clearManagersError,
   } = useAdmin();
+  const { unreadCount } = useNotifications();
 
   const [search,    setSearch]    = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
@@ -86,28 +91,26 @@ export default function ManagersListScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerBtn}
-          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        >
-          <Ionicons name="menu-outline" size={26} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Gestionnaires</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <AppHeader
+        left="menu"
+        title="Gestionnaires"
+        rightIcon={{
+          name: 'notifications-outline',
+          onPress: () => navigation.navigate('AdminNotificationList' as never),
+          badge: unreadCount,
+        }}
+      />
 
       {/* Carte stats */}
       <View style={styles.statsCard}>
         <View style={styles.statBlock}>
           <Text style={styles.statNumber}>{managers.length}</Text>
-          <Text style={styles.statLabel}>Total</Text>
+          <Text style={styles.statLabel}>{'Total' + '  '}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statBlock}>
           <Text style={[styles.statNumber, { color: Colors.beige }]}>{onDutyCount}</Text>
-          <Text style={styles.statLabel}>En service</Text>
+          <Text style={styles.statLabel}>{'En service' + '  '}</Text>
           <View style={styles.progressBar}>
             <View
               style={[
@@ -188,7 +191,7 @@ export default function ManagersListScreen() {
 
       {/* FAB */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { bottom: styles.fab.bottom + insets.bottom }]}
         onPress={() => navigation.navigate('CreateManager')}
         activeOpacity={0.8}
       >
@@ -200,18 +203,6 @@ export default function ManagersListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerBtn:   { padding: Spacing.sm, width: 40 },
-  headerTitle: { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.white },
 
   statsCard: {
     flexDirection:   'row',

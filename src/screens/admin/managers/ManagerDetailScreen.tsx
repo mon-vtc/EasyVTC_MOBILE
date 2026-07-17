@@ -2,15 +2,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Linking, Platform, Image, Modal,
+  ActivityIndicator, Linking, Image, Modal,
   TextInput,
 } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { useToast } from '../../../hooks/useToast';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
+import { AppHeader } from '../../../components/common/AppHeader';
 import type { ManagersStackParamList, UserProfile } from '../../../types';
 
 type Nav = NativeStackNavigationProp<ManagersStackParamList, 'ManagerDetail'>;
@@ -35,6 +37,7 @@ function ChangeStatusModal({
   onConfirm: (status: NextStatus, reason: string) => void;
   isLoading: boolean;
 }) {
+  const insets = useSafeAreaInsets();
   const [chosen, setChosen] = useState<NextStatus | null>(null);
   const [reason, setReason] = useState('');
 
@@ -55,7 +58,7 @@ function ChangeStatusModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={modalSt.overlay}>
-        <View style={modalSt.card}>
+        <View style={[modalSt.card, { paddingBottom: modalSt.card.paddingBottom + insets.bottom }]}>
           <Text style={modalSt.title}>Modifier le statut</Text>
           <Text style={modalSt.subtitle}>{manager.first_name} {manager.last_name} · Gestionnaire</Text>
 
@@ -150,6 +153,7 @@ const modalSt = StyleSheet.create({
 // ── Screen principal ─────────────────────────────────────────────
 export default function ManagerDetailScreen() {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const route = useRoute<any>();
   const { managerId } = route.params as { managerId: string };
 
@@ -210,21 +214,16 @@ export default function ManagerDetailScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profil gestionnaire</Text>
-        <TouchableOpacity
-          style={styles.headerEditBtn}
-          onPress={() => navigation.navigate('EditManager', { managerId: manager.id })}
-        >
-          <Ionicons name="pencil-outline" size={20} color={Colors.white} />
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        left="back"
+        title="Profil gestionnaire"
+        rightIcon={{
+          name: 'pencil-outline',
+          onPress: () => navigation.navigate('EditManager', { managerId: manager.id }),
+        }}
+      />
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: styles.scrollContent.paddingBottom + insets.bottom }]} showsVerticalScrollIndicator={false}>
         {/* Carte identité */}
         <View style={styles.identityCard}>
           <View style={styles.avatarWrapper}>
@@ -284,7 +283,7 @@ export default function ManagerDetailScreen() {
             <View style={[styles.actionIconCircle, { backgroundColor: '#F5E2E2' }]}>
               <Ionicons name="shield-outline" size={22} color={Colors.bordeaux} />
             </View>
-            <Text style={styles.actionLabel}>Statut</Text>
+            <Text style={styles.actionLabel}>{'Statut' + '  '}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -295,7 +294,7 @@ export default function ManagerDetailScreen() {
             <View style={[styles.actionIconCircle, { backgroundColor: '#EDE7F6' }]}>
               <Ionicons name="key-outline" size={22} color="#7B1FA2" />
             </View>
-            <Text style={styles.actionLabel}>Accès</Text>
+            <Text style={styles.actionLabel}>{'Accès' + '  '}</Text>
           </TouchableOpacity>
         </View>
 
@@ -333,25 +332,25 @@ export default function ManagerDetailScreen() {
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Statut</Text>
+            <Text style={styles.detailLabel}>{'Statut' + '  '}</Text>
             <Text style={[styles.detailValue, { color: statusCfg.color }]}>{statusCfg.label}</Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Membre depuis</Text>
+            <Text style={styles.detailLabel}>{'Membre depuis' + '  '}</Text>
             <Text style={styles.detailValue}>{memberSince}</Text>
           </View>
 
           {manager.coverage_zone ? (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Zone de couverture</Text>
+              <Text style={styles.detailLabel}>{'Zone de couverture' + '  '}</Text>
               <Text style={styles.detailValue}>{manager.coverage_zone}</Text>
             </View>
           ) : null}
 
           {manager.priority_level ? (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Niveau de priorité</Text>
+              <Text style={styles.detailLabel}>{'Niveau de priorité' + '  '}</Text>
               <Text style={styles.detailValue}>
                 {manager.priority_level === 1 ? 'Standard'
                   : manager.priority_level === 2 ? 'Prioritaire'
@@ -362,7 +361,7 @@ export default function ManagerDetailScreen() {
 
           {manager.status_reason && (
             <View style={[styles.detailRow, { flexDirection: 'column', gap: 4 }]}>
-              <Text style={styles.detailLabel}>Motif du statut</Text>
+              <Text style={styles.detailLabel}>{'Motif du statut' + '  '}</Text>
               <Text style={[styles.detailValue, { textAlign: 'left' }]}>{manager.status_reason}</Text>
             </View>
           )}
@@ -384,19 +383,6 @@ const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: Colors.background },
   center:      { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.md },
   errorText:   { fontSize: Fonts.size.md, color: Colors.textMuted },
-
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    backgroundColor:   Colors.bordeaux,
-    paddingTop:        Platform.OS === 'ios' ? 56 : Spacing.xl + 8,
-    paddingBottom:     Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  headerBtn:     { padding: Spacing.sm, width: 40 },
-  headerTitle:   { fontSize: Fonts.size.lg, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.white },
-  headerEditBtn: { padding: Spacing.sm, width: 40, alignItems: 'flex-end' },
 
   scroll:        { flex: 1 },
   scrollContent: { padding: Spacing.md, paddingBottom: Spacing.xl },

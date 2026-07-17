@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, Switch, Platform, Modal, TextInput,
+  KeyboardAvoidingView, Linking,
 } from 'react-native';
 import { zodResolver }       from '@hookform/resolvers/zod';
 import { z }                 from 'zod';
@@ -18,6 +19,8 @@ import type { ManagerDrawerParamList } from '../../types';
 import { usePermissions } from '../../hooks/usePermissions';
 import { PERMISSION_LABELS } from '../../types';
 import type { ManagerPermission } from '../../types';
+import { AppHeader } from '../../components/common/AppHeader';
+import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 
 type Props = DrawerScreenProps<ManagerDrawerParamList, 'ManagerProfile'>;
 
@@ -41,7 +44,7 @@ function PasswordStrength({ value }: { value: string }) {
               color={ok ? Colors.bordeauxLight : Colors.textMuted}
             />
             <Text style={[strengthStyles.text, ok && strengthStyles.textOk]}>
-              {rule.label}
+              {rule.label}{'  '}
             </Text>
           </View>
         );
@@ -78,6 +81,7 @@ export default function ManagerProfileScreen({ navigation }: Props) {
   const { permissions } = usePermissions();
   const { showAlert } = useAlert();
   const { showToast } = useToast();
+  const scrollBottomInset = useBottomInset(styles.scroll.paddingBottom);
 
   const [pendingImage,   setPendingImage]   = useState<string | null>(null); // sélectionnée, pas encore uploadée
   const [confirmedImage, setConfirmedImage] = useState<string | null>(null); // uploadée avec succès
@@ -136,24 +140,6 @@ export default function ManagerProfileScreen({ navigation }: Props) {
     handleEditToggleRef.current = handleEditToggle;
   }, [handleEditToggle]);
 
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={{ marginRight: 20 }}
-          onPress={() => handleEditToggleRef.current()}
-          disabled={isLoading}
-        >
-          <Ionicons
-            name={editMode ? 'checkmark-outline' : 'pencil-outline'}
-            size={22}
-            color={Colors.white}
-          />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, editMode, isLoading]);
-
   // ── Modal mot de passe ─────────────────────────────────────
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const { control, handleSubmit, reset, formState: { errors } } = useForm<PasswordForm>({
@@ -211,7 +197,15 @@ export default function ManagerProfileScreen({ navigation }: Props) {
 
   return (
     <View style={styles.flex}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <AppHeader
+        left="menu"
+        title="Mon compte"
+        rightIcon={{
+          name: editMode ? 'checkmark-outline' : 'pencil-outline',
+          onPress: () => { if (!isLoading) handleEditToggleRef.current(); },
+        }}
+      />
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: scrollBottomInset }]} showsVerticalScrollIndicator={false}>
 
         {/* ── Avatar ── */}
         <View style={styles.avatarSection}>
@@ -306,6 +300,16 @@ export default function ManagerProfileScreen({ navigation }: Props) {
         {/* ── Actions ── */}
         <View style={styles.actionsSection}>
 
+          <TouchableOpacity style={styles.actionRow} onPress={() => Linking.openSettings()}>
+            <View style={styles.actionLeft}>
+              <Ionicons name="notifications-outline" size={20} color={Colors.textPrimary} />
+              <Text style={styles.actionLabel}>Notifications système</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
           <TouchableOpacity style={styles.actionRow} onPress={() => { reset(); clearError(); setShowPasswordModal(true); }}>
             <View style={styles.actionLeft}>
               <Ionicons name="lock-closed-outline" size={20} color={Colors.textPrimary} />
@@ -354,65 +358,70 @@ export default function ManagerProfileScreen({ navigation }: Props) {
         animationType="fade"
         onRequestClose={() => { reset(); clearError(); setShowPasswordModal(false); }}
       >
-        <View style={modalStyles.overlay}>
+        <KeyboardAvoidingView
+          style={modalStyles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View style={modalStyles.card}>
-            <Text style={modalStyles.title}>Changer le mot de passe</Text>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <Text style={modalStyles.title}>Changer le mot de passe</Text>
 
-            {error && (
-              <View style={modalStyles.errorBanner}>
-                <Text style={modalStyles.errorText}>⚠️ {error}</Text>
+              {error && (
+                <View style={modalStyles.errorBanner}>
+                  <Text style={modalStyles.errorText}>⚠️ {error}</Text>
+                </View>
+              )}
+
+              <FormField<PasswordForm>
+                name="current_password"
+                control={control}
+                label="Mot de passe actuel *"
+                secureTextEntry showToggle
+                icon="lock-closed-outline"
+                editable={!isLoading}
+                error={errors.current_password?.message}
+              />
+              <FormField<PasswordForm>
+                name="new_password"
+                control={control}
+                label="Nouveau mot de passe *"
+                secureTextEntry showToggle
+                icon="lock-closed-outline"
+                editable={!isLoading}
+                error={errors.new_password?.message}
+              />
+              <PasswordStrength value={newPasswordValue} />
+              <FormField<PasswordForm>
+                name="confirm_password"
+                control={control}
+                label="Confirmer le mot de passe *"
+                secureTextEntry showToggle
+                icon="lock-closed-outline"
+                editable={!isLoading}
+                error={errors.confirm_password?.message}
+              />
+
+              <View style={modalStyles.actions}>
+                <TouchableOpacity
+                  style={[modalStyles.btn, modalStyles.btnCancel]}
+                  onPress={() => { reset(); clearError(); setShowPasswordModal(false); }}
+                  disabled={isLoading}
+                >
+                  <Text style={modalStyles.btnCancelText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[modalStyles.btn, modalStyles.btnConfirm]}
+                  onPress={handleSubmit(onChangePassword)}
+                  disabled={isLoading}
+                >
+                  <Text style={modalStyles.btnConfirmText}>
+                    {isLoading ? 'Envoi...' : 'Confirmer'}
+                  </Text>
+                </TouchableOpacity>
               </View>
-            )}
-
-            <FormField<PasswordForm>
-              name="current_password"
-              control={control}
-              label="Mot de passe actuel *"
-              secureTextEntry showToggle
-              icon="lock-closed-outline"
-              editable={!isLoading}
-              error={errors.current_password?.message}
-            />
-            <FormField<PasswordForm>
-              name="new_password"
-              control={control}
-              label="Nouveau mot de passe *"
-              secureTextEntry showToggle
-              icon="lock-closed-outline"
-              editable={!isLoading}
-              error={errors.new_password?.message}
-            />
-            <PasswordStrength value={newPasswordValue} />
-            <FormField<PasswordForm>
-              name="confirm_password"
-              control={control}
-              label="Confirmer le mot de passe *"
-              secureTextEntry showToggle
-              icon="lock-closed-outline"
-              editable={!isLoading}
-              error={errors.confirm_password?.message}
-            />
-
-            <View style={modalStyles.actions}>
-              <TouchableOpacity
-                style={[modalStyles.btn, modalStyles.btnCancel]}
-                onPress={() => { reset(); clearError(); setShowPasswordModal(false); }}
-                disabled={isLoading}
-              >
-                <Text style={modalStyles.btnCancelText}>Annuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[modalStyles.btn, modalStyles.btnConfirm]}
-                onPress={handleSubmit(onChangePassword)}
-                disabled={isLoading}
-              >
-                <Text style={modalStyles.btnConfirmText}>
-                  {isLoading ? 'Envoi...' : 'Confirmer'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -499,7 +508,7 @@ const styles = StyleSheet.create({
 
 const modalStyles = StyleSheet.create({
   overlay:        { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', padding: Spacing.lg },
-  card:           { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, width: '100%', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 10 },
+  card:           { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.lg, width: '100%', maxHeight: '90%', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 10 },
   title:          { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.textPrimary, marginBottom: Spacing.lg },
   errorBanner:    { backgroundColor: Colors.errorLight, borderRadius: Radius.sm, borderLeftWidth: 3, borderLeftColor: Colors.error, padding: Spacing.md, marginBottom: Spacing.md },
   errorText:      { color: Colors.error, fontSize: Fonts.size.sm },
