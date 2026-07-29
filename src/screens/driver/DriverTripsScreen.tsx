@@ -8,6 +8,7 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppHeader } from '../../components/common/AppHeader';
 import { useBottomInset } from '../../hooks/useSafeAreaPadding';
+import { useNotifications } from '../../hooks/useNotifications';
 import type { PlanningReservation } from '../../types/drivers.types';
 const DAYS_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -157,6 +158,7 @@ function RideInfoCard({ item, onPress }: { item: PlanningReservation, onPress: (
 
 export default function DriverPlanningScreen({ navigation }: any) {
   const { getMyPlanning } = useDriver();
+  const { unreadCount } = useNotifications();
   // `displayDate` est utilisé pour filtrer la liste. null = tout le mois.
   const [displayDate, setDisplayDate] = useState<string | null>(new Date().toISOString().split('T')[0]);
   const [allReservations, setAllReservations] = useState<PlanningReservation[]>([]);
@@ -223,6 +225,7 @@ export default function DriverPlanningScreen({ navigation }: any) {
         rightIcon={{
           name: 'notifications-outline',
           onPress: () => navigation.navigate('DriverNotifications' as never),
+          badge: unreadCount,
         }}
       />
       <CalendarView 

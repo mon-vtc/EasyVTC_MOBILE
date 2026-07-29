@@ -22,6 +22,7 @@ import ReservationFilterModal, {
 } from '../../components/common/ReservationFilterModal';
 import { filtersToApiParams, useSortedReservations, isFiltersActive, requiresGlobalSort } from '../../hooks/useReservationFilters';
 import { useBottomInset } from '../../hooks/useSafeAreaPadding';
+import { useNotifications } from '../../hooks/useNotifications';
 
 type DriverReservationsProps = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationsList'>;
 
@@ -100,6 +101,7 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
     reservations, fetchDriverReservations, fetchAllDriverPages,
     start, isLoading, isFetchingNextPage, page, totalPages
   } = useReservation();
+  const { unreadCount } = useNotifications();
 
   const [isSorting, setIsSorting] = useState(false);
 
@@ -214,6 +216,7 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
         rightIcon={{
           name: 'notifications-outline',
           onPress: () => navigation.getParent()?.getParent()?.navigate('DriverNotificationList' as any),
+          badge: unreadCount,
         }}
       />
 

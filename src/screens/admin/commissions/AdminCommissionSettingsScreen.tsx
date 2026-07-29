@@ -7,6 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   ActivityIndicator, Modal, TextInput, Switch,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,7 +17,7 @@ import { useCommissionSettings } from '../../../hooks/useCommissionSettings';
 import { useVehicleTypes } from '../../../hooks/useVehicleTypes';
 import { useAlert } from '../../../hooks/useAlert';
 import { useToast } from '../../../hooks/useToast';
-import { useBottomInset } from '../../../hooks/useSafeAreaPadding';
+import { useBottomInset, useKeyboardAwareBottomInset } from '../../../hooks/useSafeAreaPadding';
 import type { CommissionSetting, CommissionZone, CommissionRateType } from '../../../types';
 import { AppIcon } from '../../../components/common/AppIcon';
 import { AppButton } from '../../../components/common/AppButton';
@@ -61,7 +62,7 @@ export default function AdminCommissionSettingsScreen() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [editingSetting, setEditingSetting] = useState<CommissionSetting | null>(null);
   const scrollBottomInset = useBottomInset(Spacing.xl);
-  const modalBottomInset = useBottomInset(styles.modalContent.paddingBottom);
+  const modalBottomInset = useKeyboardAwareBottomInset(styles.modalContent.paddingBottom);
 
   // ── Formulaire (react-hook-form) ────────────────────────────────────────────
   const { control, handleSubmit, reset, formState: { errors } } = useForm<CommissionFormValues>({
@@ -236,11 +237,13 @@ export default function AdminCommissionSettingsScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalBackdrop}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={[styles.modalContent, { paddingBottom: modalBottomInset }]}>
             <Text style={styles.modalTitle}>
               {editingSetting ? 'Modifier la règle' : 'Nouvelle règle'}
             </Text>
 
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             {/* Libellé */}
             <Controller
               control={control}
@@ -333,6 +336,7 @@ export default function AdminCommissionSettingsScreen() {
                 </View>
               )}
             />
+            </ScrollView>
 
             {/* Actions */}
             <View style={styles.modalActions}>
@@ -350,6 +354,7 @@ export default function AdminCommissionSettingsScreen() {
               />
             </View>
           </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </View>
@@ -416,6 +421,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: Radius.xl,
     padding: Spacing.lg,
     paddingBottom: 40,
+    maxHeight: '90%',
   },
   modalTitle: {
     fontSize: Fonts.size.lg,

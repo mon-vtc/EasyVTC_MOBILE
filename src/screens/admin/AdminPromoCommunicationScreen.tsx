@@ -12,6 +12,7 @@ import {
   Modal,
   Platform,
   FlatList as RNFlatList,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -774,7 +775,7 @@ export default function AdminPromoCommunicationScreen() {
 
       {/* ── Modal Promo ── */}
       <Modal visible={isModalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{editingPromo ? 'Modifier un code promo' : 'Nouveau code promo'}</Text>
             <ScrollView contentContainerStyle={styles.modalScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -1062,12 +1063,12 @@ export default function AdminPromoCommunicationScreen() {
               </View>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Modal Sélection clients ── */}
       <Modal visible={isClientSelectorVisible} animationType="slide" transparent onRequestClose={() => setClientSelectorVisible(false)}>
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Sélectionner des clients</Text>
             <TextInput
@@ -1128,12 +1129,12 @@ export default function AdminPromoCommunicationScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Modal Campagne ── */}
       <Modal visible={isCampaignModalVisible} animationType="slide" transparent onRequestClose={() => setCampaignModalVisible(false)}>
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{editingCampaign ? 'Modifier la campagne' : 'Nouvelle Campagne'}</Text>
             <ScrollView contentContainerStyle={styles.modalScroll} keyboardShouldPersistTaps="handled">
@@ -1236,7 +1237,7 @@ export default function AdminPromoCommunicationScreen() {
               </View>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

@@ -7,6 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, TextInput, ScrollView,
   StyleSheet, ActivityIndicator,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useAdmin } from '../../hooks/useAdmin';
 import { useToast } from '../../hooks/useToast';
@@ -81,6 +82,7 @@ export default function AdminAppConfigScreen() {
           <ActivityIndicator size="large" color={Colors.bordeaux} />
         </View>
       ) : (
+        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: scrollBottomInset }]} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Coordonnées support</Text>
           <Text style={styles.subtitle}>
@@ -129,6 +131,7 @@ export default function AdminAppConfigScreen() {
             style={styles.saveBtn}
           />
         </ScrollView>
+        </KeyboardAvoidingView>
       )}
     </View>
   );

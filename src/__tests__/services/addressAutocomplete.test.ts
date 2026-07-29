@@ -30,6 +30,7 @@ describe('searchAddress (Photon)', () => {
               street: 'Rue de Rivoli',
               city: 'Paris',
               country: 'France',
+              countrycode: 'FR',
             },
           },
         ],
@@ -40,6 +41,38 @@ describe('searchAddress (Photon)', () => {
 
     expect(results).toEqual([
       { label: '12 Rue de Rivoli, Paris, France', latitude: 48.8566, longitude: 2.3522 },
+    ]);
+  });
+
+  it('exclut les résultats hors de la liste des pays autorisés (France + Europe)', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        features: [
+          {
+            geometry: { coordinates: [2.402391, 48.7431683] },
+            properties: { name: 'Orly', county: 'Val-de-Marne', country: 'France', countrycode: 'FR' },
+          },
+          {
+            geometry: { coordinates: [49.2052638, 46.5995748] },
+            properties: { name: 'Орлы', country: 'Kazakhstan', countrycode: 'KZ' },
+          },
+          {
+            geometry: { coordinates: [28.315994, 57.575191] },
+            properties: { name: 'Орлы', country: 'Russie', countrycode: 'RU' },
+          },
+          {
+            geometry: { coordinates: [-17.4677, 14.7167] },
+            properties: { name: 'Plateau', city: 'Dakar', country: 'Sénégal', countrycode: 'SN' },
+          },
+        ],
+      }),
+    }) as any;
+
+    const results = await searchAddress('Orly');
+
+    expect(results).toEqual([
+      { label: 'Orly, Val-de-Marne, France', latitude: 48.7431683, longitude: 2.402391 },
     ]);
   });
 
@@ -64,19 +97,19 @@ describe('searchAddress (Photon)', () => {
       ok: true,
       json: async () => ({
         features: [
-          { geometry: { coordinates: [] }, properties: { city: 'Dakar' } },
+          { geometry: { coordinates: [] }, properties: { city: 'Lyon', countrycode: 'FR' } },
           {
-            geometry: { coordinates: [-17.4677, 14.7167] },
-            properties: { name: 'Plateau', city: 'Dakar', country: 'Sénégal' },
+            geometry: { coordinates: [4.8357, 45.7640] },
+            properties: { name: 'Bellecour', city: 'Lyon', country: 'France', countrycode: 'FR' },
           },
         ],
       }),
     }) as any;
 
-    const results = await searchAddress('Plateau Dakar');
+    const results = await searchAddress('Bellecour Lyon');
 
     expect(results).toEqual([
-      { label: 'Plateau, Dakar, Sénégal', latitude: 14.7167, longitude: -17.4677 },
+      { label: 'Bellecour, Lyon, France', latitude: 45.7640, longitude: 4.8357 },
     ]);
   });
 });

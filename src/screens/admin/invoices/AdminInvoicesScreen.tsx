@@ -5,7 +5,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, Modal, TextInput,
+  View, Text, FlatList, TouchableOpacity, Modal, TextInput, ScrollView,
   StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +20,7 @@ import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useToast } from '../../../hooks/useToast';
 import { useNotifications } from '../../../hooks/useNotifications';
 import { AppHeader } from '../../../components/common/AppHeader';
+import { useKeyboardAwareBottomInset } from '../../../hooks/useSafeAreaPadding';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ function AdjustPriceModal({ invoice, token, onClose }: {
 }) {
   const { adjustPrice, isAdjusting } = useInvoicesStore();
   const { showToast } = useToast();
-  const insets = useSafeAreaInsets();
+  const sheetBottomInset = useKeyboardAwareBottomInset(styles.modalSheet.padding);
   const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
   const [newAmount, setNewAmount] = useState(String(invoice.amount_ttc));
   const [reason,    setReason]    = useState('');
@@ -70,7 +71,7 @@ function AdjustPriceModal({ invoice, token, onClose }: {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.modalOverlay}
       >
-        <View style={[styles.modalSheet, { paddingBottom: styles.modalSheet.padding + insets.bottom }]}>
+        <View style={[styles.modalSheet, { paddingBottom: sheetBottomInset }]}>
           {/* En-tête modal */}
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Ajuster le prix</Text>
@@ -79,6 +80,7 @@ function AdjustPriceModal({ invoice, token, onClose }: {
             </TouchableOpacity>
           </View>
 
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={styles.modalSubtitle}>{invoice.invoice_number}</Text>
 
           {/* Prix actuel */}
@@ -126,6 +128,7 @@ function AdjustPriceModal({ invoice, token, onClose }: {
               ))}
             </View>
           )}
+          </ScrollView>
 
           {/* Bouton valider */}
           <TouchableOpacity

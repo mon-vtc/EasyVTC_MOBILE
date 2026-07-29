@@ -40,7 +40,9 @@
     // Actions
     hydrate:        ()                          => Promise<void>;
     login:          (payload: LoginPayload)     => Promise<void>;
-    loginWithGoogle: (accessToken: string, refreshToken?: string) => Promise<void>;
+    // Retourne un mot de passe temporaire si le compte Google vient d'être créé
+    // (à afficher une seule fois côté UI) — undefined pour un compte déjà existant.
+    loginWithGoogle: (accessToken: string, refreshToken?: string) => Promise<string | undefined>;
     register:       (payload: RegisterPayload)  => Promise<void>;
     logout:         ()                          => Promise<void>;
     forceLogout:    ()                          => Promise<void>;
@@ -146,7 +148,7 @@
       try {
         const res = await authApi.google(accessToken, refreshToken);
         if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de connexion avec Google');
-        const { user, access_token, refresh_token } = res.data;
+        const { user, access_token, refresh_token, temp_password } = res.data;
         await secureStorage.setTokens(access_token, refresh_token ?? '');
         set({
           user: mapApiUser(user),
@@ -154,6 +156,7 @@
           refreshToken: refresh_token,
           isLoading: false,
         });
+        return temp_password;
       } catch (err: unknown) {
         set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
         throw err;

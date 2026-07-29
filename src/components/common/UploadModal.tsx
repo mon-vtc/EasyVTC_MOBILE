@@ -10,7 +10,7 @@ import DateTimePicker, {
 }                          from '@react-native-community/datetimepicker';
 import * as ImagePicker    from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardAwareBottomInset } from '../../hooks/useSafeAreaPadding';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { DocumentView } from '../../types/document.types';
 
@@ -64,7 +64,7 @@ const maxDate = () => {
 // ─── Composant ───────────────────────────────────────────────
 
 export const UploadModal = ({ visible, view, isUploading, onClose, onConfirm }: Props) => {
-  const insets = useSafeAreaInsets();
+  const actionsBottomInset = useKeyboardAwareBottomInset(s.actions.paddingBottom);
   const [selectedFile,      setSelectedFile]      = useState<UploadPayload['file'] | null>(null);
   const [expiryDate,        setExpiryDate]        = useState<Date | null>(null);
   // Android uniquement : contrôle l'affichage du dialog natif
@@ -142,7 +142,7 @@ export const UploadModal = ({ visible, view, isUploading, onClose, onConfirm }: 
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <View style={s.root}>
@@ -308,7 +308,7 @@ export const UploadModal = ({ visible, view, isUploading, onClose, onConfirm }: 
           </ScrollView>
 
           {/* ── Actions ── */}
-          <View style={[s.actions, { paddingBottom: s.actions.paddingBottom + insets.bottom }]}>
+          <View style={[s.actions, { paddingBottom: actionsBottomInset }]}>
             <TouchableOpacity
               style={[s.btnConfirm, !isReady && s.btnDisabled]}
               onPress={handleConfirm}

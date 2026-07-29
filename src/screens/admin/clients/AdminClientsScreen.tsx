@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   TextInput, Image, RefreshControl, Modal, ActivityIndicator,
+  KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,6 +13,7 @@ import { useClientsStore, useAuthStore } from '../../../store';
 import { useToast } from '../../../hooks/useToast';
 import { useNotifications } from '../../../hooks/useNotifications';
 import { AppHeader } from '../../../components/common/AppHeader';
+import { useKeyboardAwareBottomInset } from '../../../hooks/useSafeAreaPadding';
 import type { ClientWithStats, ClientGlobalStats, ClientListFilters, ClientsStackParamList } from '../../../types';
 
 type Nav = NativeStackNavigationProp<ClientsStackParamList, 'ClientsList'>;
@@ -44,7 +46,7 @@ function StatusModal({
 }) {
   const [chosen, setChosen] = useState<NextStatus | null>(null);
   const [reason, setReason] = useState('');
-  const modalInsets = useSafeAreaInsets();
+  const cardBottomInset = useKeyboardAwareBottomInset(modalSt.card.paddingBottom);
 
   const reset = () => { setChosen(null); setReason(''); };
   const handleClose = () => { reset(); onClose(); };
@@ -60,10 +62,12 @@ function StatusModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={modalSt.overlay}>
-        <View style={[modalSt.card, { paddingBottom: modalSt.card.paddingBottom + modalInsets.bottom }]}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={[modalSt.card, { paddingBottom: cardBottomInset }]}>
           <Text style={modalSt.title}>Statut du compte</Text>
           <Text style={modalSt.subtitle}>{client.first_name} {client.last_name}</Text>
 
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={modalSt.label}>Nouvelle action</Text>
           {ACTIONS.map(a => (
             <TouchableOpacity
@@ -90,6 +94,7 @@ function StatusModal({
             multiline
             numberOfLines={3}
           />
+          </ScrollView>
 
           <View style={modalSt.btnRow}>
             <TouchableOpacity style={modalSt.btnCancel} onPress={handleClose}>
@@ -111,6 +116,7 @@ function StatusModal({
             </TouchableOpacity>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
@@ -124,6 +130,7 @@ const modalSt = StyleSheet.create({
     borderTopRightRadius: Radius.lg,
     padding:   Spacing.lg,
     paddingBottom: Spacing.xl,
+    maxHeight: '90%',
   },
   title:         { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux, marginBottom: 4 },
   subtitle:      { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.md },
