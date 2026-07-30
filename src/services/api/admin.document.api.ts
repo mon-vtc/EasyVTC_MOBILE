@@ -9,12 +9,12 @@
 //  PATCH  /admin/documents/:id/reject         → rejeter avec motif obligatoire
 // ─────────────────────────────────────────────────────────────
 import { api } from '../../lib/api';
-import type { DriverDocument } from '../../types';
+import type { DriverDocument, DocumentType } from '../../types';
 
 // ── Filtres disponibles sur GET /admin/documents ─────────────
 export interface AdminDocumentFilter {
   status?:        'pending' | 'validated' | 'rejected' | 'expired';
-  doc_type?:      'license' | 'insurance' | 'vtc_card' | 'kbis' | 'company_doc';
+  doc_type?:      DocumentType;
   driver_id?:     string;
   expiring_soon?: boolean;   // documents expirant dans 30 jours
   page?:          number;
