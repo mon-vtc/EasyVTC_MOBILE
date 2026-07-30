@@ -43,7 +43,7 @@ export default function CancelReservationModal({ visible, reservationRef, onConf
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={styles.overlay}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, Modal, Linking, Image, TextInput,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
@@ -453,6 +454,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
       {/* ── Modal confirmation terminer ──────────────────── */}
       <Modal transparent visible={confirmModal} animationType="fade">
         <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Terminer la course ?</Text>
             <Text style={styles.modalMessage}>Le client a bien été déposé ?</Text>
@@ -497,6 +499,7 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
               </TouchableOpacity>
             </View>
           </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 

@@ -13,7 +13,7 @@ export const authApi = {
    * Envoie l'access_token obtenu via expo-web-browser à /auth/google/token.
    * Ne pas utiliser /auth/google qui est une redirection web.
    */
-  google: async (accessToken: string, refreshToken?: string): Promise<ApiResponse<{ user: AuthUser; access_token: string; refresh_token: string | null }>> => {
+  google: async (accessToken: string, refreshToken?: string): Promise<ApiResponse<{ user: AuthUser; access_token: string; refresh_token: string | null; temp_password?: string }>> => {
     return api.post('/auth/google/token', { access_token: accessToken, refresh_token: refreshToken });
   },
 

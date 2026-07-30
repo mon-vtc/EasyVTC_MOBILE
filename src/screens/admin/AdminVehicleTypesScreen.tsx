@@ -15,7 +15,7 @@ import { useVehicleTypes }    from '../../hooks/useVehicleTypes';
 import { AppIcon }            from '../../components/common/AppIcon';
 import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
-import { useBottomInset, useTopInset } from '../../hooks/useSafeAreaPadding';
+import { useBottomInset, useTopInset, useKeyboardAwareBottomInset } from '../../hooks/useSafeAreaPadding';
 import { Logo }               from '../../constants/logo';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type {
@@ -242,7 +242,7 @@ function VehicleTypeFormModal({
   saving:   boolean;
 }) {
   const { showToast } = useToast();
-  const bottomInset = useBottomInset(modal.sheet.padding);
+  const bottomInset = useKeyboardAwareBottomInset(modal.sheet.padding);
   const [form, setForm] = useState<FormValues>(emptyForm());
 
   useEffect(() => {

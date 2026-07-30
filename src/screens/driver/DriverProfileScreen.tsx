@@ -745,7 +745,7 @@ export default function DriverProfileScreen({ navigation }: Props) {
         onRequestClose={() => { reset(); clearError(); setShowPasswordModal(false); }}>
         <KeyboardAvoidingView
           style={modalStyles.overlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <View style={modalStyles.card}>
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>

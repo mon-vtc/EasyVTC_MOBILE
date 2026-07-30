@@ -29,6 +29,7 @@ import { useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
+import { useAlert } from './useAlert';
 
 // URL de redirection OAuth — scheme déclaré dans app.config.js
 // Valide pour dev build et prod build. Expo Go n'est pas supporté pour OAuth Google.
@@ -48,6 +49,7 @@ function isSupabaseConfigured(): boolean {
 
 export function useGoogleAuth() {
   const { loginWithGoogle } = useAuth();
+  const { showAlert } = useAlert();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState<string | null>(null);
 
@@ -101,7 +103,18 @@ export function useGoogleAuth() {
       }
 
       // Envoyer le token Supabase à l'API → POST /auth/google/token
-      await loginWithGoogle(accessToken, refreshToken);
+      const tempPassword = await loginWithGoogle(accessToken, refreshToken);
+
+      // Présent uniquement à la toute première connexion (compte Google nouvellement créé) —
+      // Google ne fournit aucun mot de passe applicatif, donc un mot de passe temporaire est
+      // généré côté serveur. On l'affiche une seule fois ici, en plus de l'email de bienvenue.
+      if (tempPassword) {
+        showAlert({
+          title: 'Votre mot de passe temporaire',
+          message: `Un mot de passe temporaire a été créé pour votre compte : ${tempPassword}\n\nIl vous a aussi été envoyé par email. Nous vous recommandons de le modifier dès maintenant depuis Mon compte → Modifier le mot de passe.`,
+          buttons: [{ text: 'Compris' }],
+        });
+      }
 
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erreur de connexion Google';

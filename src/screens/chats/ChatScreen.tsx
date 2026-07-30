@@ -8,7 +8,7 @@ import {
   ActivityIndicator, Image
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation, useFocusEffect } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardAwareBottomInset } from '../../hooks/useSafeAreaPadding';
 import { useChat } from '../../hooks/useChat';
 import { useReservation } from '../../hooks/useReservation';
 import { useAuth } from '../../hooks/useAuth';
@@ -103,7 +103,7 @@ export default function ChatScreen({navigation}: any) {
   const route = useRoute<ChatScreenRouteProp>();
   const { reservationId } = route.params!;
   const { user } = useAuth();
-  const insets = useSafeAreaInsets();
+  const inputRowBottomInset = useKeyboardAwareBottomInset(s.inputRow.paddingVertical);
   const {
     isLoadingMessages,
     activeConversationMessages,
@@ -299,7 +299,7 @@ export default function ChatScreen({navigation}: any) {
       )}
 
       {/* ── Input ── */}
-      <View style={[s.inputRow, { paddingBottom: s.inputRow.paddingVertical + insets.bottom }]}>
+      <View style={[s.inputRow, { paddingBottom: inputRowBottomInset }]}>
         <TextInput
           style={s.input}
           value={text}

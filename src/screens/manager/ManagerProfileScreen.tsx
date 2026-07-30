@@ -360,7 +360,7 @@ export default function ManagerProfileScreen({ navigation }: Props) {
       >
         <KeyboardAvoidingView
           style={modalStyles.overlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <View style={modalStyles.card}>
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>

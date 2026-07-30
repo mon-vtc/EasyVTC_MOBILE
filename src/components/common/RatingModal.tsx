@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import {
   Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
@@ -49,7 +50,8 @@ export default function RatingModal({ visible, driverName, isSubmitting, onConfi
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <View style={styles.container}>
 
           {/* Header */}
           <View style={styles.header}>
@@ -120,6 +122,7 @@ export default function RatingModal({ visible, driverName, isSubmitting, onConfi
           </View>
 
         </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );

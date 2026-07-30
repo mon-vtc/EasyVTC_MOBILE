@@ -153,8 +153,7 @@ export default function AdminHomeScreen({ navigation }: any) {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      // On lance les chargements, mais on n'attend pas leur retour ici
-      const statsPromise = fetchDashboardStats();
+      // On lance les chargements en parallèle
       const bookingsPromise = fetchAdminHomeReservations();
       const driversPromise = fetchDrivers({ is_online: true, limit: 5 });
 

@@ -3,7 +3,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   ActivityIndicator, Linking, Image, Modal,
-  TextInput,
+  TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +13,7 @@ import { useAdmin } from '../../../hooks/useAdmin';
 import { useToast } from '../../../hooks/useToast';
 import { Colors, Spacing, Radius, Fonts } from '../../../theme/colors';
 import { AppHeader } from '../../../components/common/AppHeader';
+import { useKeyboardAwareBottomInset } from '../../../hooks/useSafeAreaPadding';
 import type { ManagersStackParamList, UserProfile } from '../../../types';
 
 type Nav = NativeStackNavigationProp<ManagersStackParamList, 'ManagerDetail'>;
@@ -37,7 +38,7 @@ function ChangeStatusModal({
   onConfirm: (status: NextStatus, reason: string) => void;
   isLoading: boolean;
 }) {
-  const insets = useSafeAreaInsets();
+  const cardBottomInset = useKeyboardAwareBottomInset(modalSt.card.paddingBottom);
   const [chosen, setChosen] = useState<NextStatus | null>(null);
   const [reason, setReason] = useState('');
 
@@ -58,10 +59,12 @@ function ChangeStatusModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={modalSt.overlay}>
-        <View style={[modalSt.card, { paddingBottom: modalSt.card.paddingBottom + insets.bottom }]}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={[modalSt.card, { paddingBottom: cardBottomInset }]}>
           <Text style={modalSt.title}>Modifier le statut</Text>
           <Text style={modalSt.subtitle}>{manager.first_name} {manager.last_name} · Gestionnaire</Text>
 
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={modalSt.label}>Nouvelle action</Text>
           {ACTIONS.map(a => (
             <TouchableOpacity
@@ -88,6 +91,7 @@ function ChangeStatusModal({
             multiline
             numberOfLines={3}
           />
+          </ScrollView>
 
           <View style={modalSt.btnRow}>
             <TouchableOpacity style={modalSt.btnCancel} onPress={handleClose}>
@@ -109,6 +113,7 @@ function ChangeStatusModal({
             </TouchableOpacity>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
@@ -120,6 +125,7 @@ const modalSt = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg,
     padding: Spacing.lg, paddingBottom: Spacing.xl,
+    maxHeight: '90%',
   },
   title:          { fontSize: Fonts.size.lg, fontFamily: Fonts.bold, fontWeight: '800', color: Colors.bordeaux, marginBottom: 4 },
   subtitle:       { fontSize: Fonts.size.sm, color: Colors.textMuted, marginBottom: Spacing.md },

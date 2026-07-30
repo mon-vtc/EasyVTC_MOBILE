@@ -22,7 +22,9 @@ const schema = z.object({
   first_name: z.string().min(2, 'Prénom trop court'),
   last_name:  z.string().min(2, 'Nom trop court'),
   email:      z.string().email('Email invalide'),
-  phone:      z.string().regex(/^\+?[1-9]\d{7,14}$/, 'Numéro invalide'),
+  // Accepte le format E.164 (+33...) et les formats locaux avec 0 initial (France/Sénégal),
+  // avec ou sans séparateurs — doit rester aligné avec phoneSchema côté API (common.validator.ts).
+  phone:      z.string().trim().regex(/^\+?[0-9](?:[\s.-]?[0-9]){6,14}$/, 'Numéro invalide'),
   password:   z.string()
                 .min(8,      'Min. 8 caractères')
                 .regex(/[A-Z]/, 'Une lettre majuscule requise')
@@ -113,7 +115,7 @@ export default function RegisterDriverScreen({ navigation }: Props) {
     >
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           contentContainerStyle={styles.scroll}

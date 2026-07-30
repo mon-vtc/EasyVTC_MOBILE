@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Platform, RefreshControl, Image, Modal, TextInput,
-  ActivityIndicator, Animated,
+  ActivityIndicator, Animated, KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
@@ -423,32 +423,34 @@ function RejectModal({ visible, onClose, onConfirm, isActing }: {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={() => { setReason(''); onClose(); }}>
       <View style={mStyles.overlay}>
-        <View style={mStyles.card}>
-          <Text style={mStyles.title}>Motif de rejet</Text>
-          <Text style={mStyles.subtitle}>Expliquez pourquoi ce document est rejeté (min. 10 caractères).</Text>
-          <TextInput
-            style={mStyles.input} multiline numberOfLines={4}
-            placeholder="Ex: Document illisible..." placeholderTextColor={Colors.textMuted}
-            value={reason} onChangeText={setReason} autoFocus
-          />
-          <Text style={[mStyles.counter, { color: isValid ? '#43A047' : Colors.textMuted }]}>
-            {reason.trim().length} / 10 caractères minimum
-          </Text>
-          <View style={mStyles.actions}>
-            <TouchableOpacity style={mStyles.btnCancel} onPress={() => { setReason(''); onClose(); }}>
-              <Text style={mStyles.btnCancelText}>Annuler</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[mStyles.btnConfirm, !isValid && { opacity: 0.5 }]}
-              onPress={() => { if (isValid) { onConfirm(reason.trim()); setReason(''); } }}
-              disabled={!isValid || isActing}
-            >
-              {isActing
-                ? <ActivityIndicator size="small" color={Colors.white} />
-                : <Text style={mStyles.btnConfirmText}>Rejeter</Text>}
-            </TouchableOpacity>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <View style={mStyles.card}>
+            <Text style={mStyles.title}>Motif de rejet</Text>
+            <Text style={mStyles.subtitle}>Expliquez pourquoi ce document est rejeté (min. 10 caractères).</Text>
+            <TextInput
+              style={mStyles.input} multiline numberOfLines={4}
+              placeholder="Ex: Document illisible..." placeholderTextColor={Colors.textMuted}
+              value={reason} onChangeText={setReason} autoFocus
+            />
+            <Text style={[mStyles.counter, { color: isValid ? '#43A047' : Colors.textMuted }]}>
+              {reason.trim().length} / 10 caractères minimum
+            </Text>
+            <View style={mStyles.actions}>
+              <TouchableOpacity style={mStyles.btnCancel} onPress={() => { setReason(''); onClose(); }}>
+                <Text style={mStyles.btnCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[mStyles.btnConfirm, !isValid && { opacity: 0.5 }]}
+                onPress={() => { if (isValid) { onConfirm(reason.trim()); setReason(''); } }}
+                disabled={!isValid || isActing}
+              >
+                {isActing
+                  ? <ActivityIndicator size="small" color={Colors.white} />
+                  : <Text style={mStyles.btnConfirmText}>Rejeter</Text>}
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );

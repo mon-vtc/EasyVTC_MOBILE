@@ -11,7 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import { Colors, Fonts, Spacing } from '../theme/colors';
+import { Colors, Fonts, Spacing, Radius } from '../theme/colors';
 import { AppIcon } from '../components/common/AppIcon';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -72,7 +72,13 @@ function MenuItem({
     <DrawerItem
       label={() => <DrawerLabel icon={icon} label={label} badgeCount={badgeCount} />}
       focused={focused}
-      onPress={() => props.navigation.navigate(routeName as never)}
+      onPress={() => {
+        if (focused) {
+          props.navigation.closeDrawer();
+        } else {
+          props.navigation.navigate(routeName as never);
+        }
+      }}
       activeTintColor={Colors.bordeaux}
       inactiveTintColor={Colors.textPrimary}
       activeBackgroundColor={Colors.overlayLight}
@@ -278,7 +284,7 @@ const styles = StyleSheet.create({
   badgeText:       { color: Colors.placeHolder, opacity: 0.8, marginTop: Spacing.xs },
   menu:            { paddingTop: Spacing.sm },
   sectionHeader:   { fontSize: 12, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: Spacing.md, marginBottom: Spacing.xs, marginLeft: Spacing.lg },
-  menuItem:        { marginVertical: -2 },
+  menuItem:        { marginVertical: 2, marginHorizontal: Spacing.sm, borderRadius: Radius.md },
   footer:          { padding: Spacing.lg, paddingBottom: Spacing.lg },
   divider:         { height: 1, backgroundColor: Colors.border, marginBottom: Spacing.md },
   logoutBtn:       { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.sm },

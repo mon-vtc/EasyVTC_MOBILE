@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Modal, TextInput, Platform, ScrollView
+  ActivityIndicator, Modal, TextInput, Platform, ScrollView, KeyboardAvoidingView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useToast } from '../../hooks/useToast';
 import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
@@ -16,6 +15,7 @@ import { z } from 'zod';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppHeader } from '../../components/common/AppHeader';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useKeyboardAwareBottomInset } from '../../hooks/useSafeAreaPadding';
 
 
 const ICONS_MAP: Record<FavoriteAddressType, { name: React.ComponentProps<typeof Ionicons>['name'], color: string, bg: string }> = {
@@ -102,7 +102,7 @@ function AddFavoriteModal({
     resolver: zodResolver(addFavoriteSchema),
     defaultValues: { label: '', address: '' },
   });
-  const insets = useSafeAreaInsets();
+  const cardBottomInset = useKeyboardAwareBottomInset(modalStyles.card.paddingBottom);
 
   const addressInput = watch('address');
   const debouncedAddress = useDebounce(addressInput, 300);
@@ -152,32 +152,37 @@ function AddFavoriteModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={modalStyles.overlay}>
-        <View style={[modalStyles.card, { paddingBottom: modalStyles.card.paddingBottom + insets.bottom }]}>
+      <KeyboardAvoidingView
+        style={modalStyles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={[modalStyles.card, { paddingBottom: cardBottomInset }]}>
           <Text style={modalStyles.title}>Ajouter un favori</Text>
-          <Controller
-            control={control}
-            name="label"
-            render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-              <View style={fieldStyles.wrapper}>
-                <Text style={fieldStyles.label}>Nom du favori (ex: Maison, Travail...)</Text>
-                <View style={[fieldStyles.inputWrapper, error ? { borderColor: Colors.error } : {}]}>
-                  <TextInput
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholder="Domicile"
-                    style={fieldStyles.input}
-                  />
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <Controller
+              control={control}
+              name="label"
+              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                <View style={fieldStyles.wrapper}>
+                  <Text style={fieldStyles.label}>Nom du favori (ex: Maison, Travail...)</Text>
+                  <View style={[fieldStyles.inputWrapper, error ? { borderColor: Colors.error } : {}]}>
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="Domicile"
+                      style={fieldStyles.input}
+                    />
+                  </View>
+                  {error && <Text style={fieldStyles.errorText}>{error.message}</Text>}
                 </View>
-                {error && <Text style={fieldStyles.errorText}>{error.message}</Text>}
-              </View>
-            )} />
-          <AddressAutocomplete
-            control={control}
-            suggestions={suggestions}
-            onSelectSuggestion={handleSelectSuggestion}
-          />
+              )} />
+            <AddressAutocomplete
+              control={control}
+              suggestions={suggestions}
+              onSelectSuggestion={handleSelectSuggestion}
+            />
+          </ScrollView>
           <View style={modalStyles.actions}>
             <TouchableOpacity style={[modalStyles.btn, modalStyles.btnCancel]} onPress={onClose} disabled={isSaving}>
               <Text style={modalStyles.btnCancelText}>Annuler</Text>
@@ -187,7 +192,7 @@ function AddFavoriteModal({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -447,6 +452,7 @@ const modalStyles = StyleSheet.create({
     borderTopRightRadius: Radius.xl,
     padding: Spacing.lg,
     paddingBottom: Platform.OS === 'ios' ? Spacing.xxl : Spacing.lg,
+    maxHeight: '90%',
   },
   suggestionsContainer: {
     maxHeight: 150,

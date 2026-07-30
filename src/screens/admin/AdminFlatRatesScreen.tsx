@@ -302,7 +302,7 @@ function CreateModal({
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={[hdr.container, { height: hdr.container.height + insets.top, paddingTop: insets.top }]}>
           <TouchableOpacity
@@ -472,7 +472,7 @@ function FlatRateDetailScreen({
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           contentContainerStyle={{ padding: 16, paddingBottom: 16 + insets.bottom, gap: 16 }}
