@@ -22,7 +22,6 @@ export interface TripSnapshot {
   pickup_address: string;
   dest_address:   string;
   vehicle_type:   string;
-  country:        string;
   scheduled_at:   string;
   nb_passengers:  number;
   comment:        string | null;
@@ -30,7 +29,7 @@ export interface TripSnapshot {
   pricing_type:   'formula' | 'flat_rate';
   distance_km?:   number;
   final_price:    number | null;
-  currency:       'EUR' | 'XOF';
+  currency:       'EUR';
 }
 
 // ── Entité principale ─────────────────────────────────────────────────────────

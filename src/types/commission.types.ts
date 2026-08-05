@@ -3,7 +3,6 @@
 // Sprint 6 — EasyVTC
 // ══════════════════════════════════════════════════════════════════════════════
 
-export type CommissionZone = 'france' | 'senegal';
 export type CommissionRateType = 'percentage' | 'flat';
 export type CommissionPeriod = 'day' | 'week' | 'month' | 'all';
 
@@ -11,7 +10,6 @@ export type CommissionPeriod = 'day' | 'week' | 'month' | 'all';
 export interface CommissionSetting {
   id: string;
   label: string;
-  zone: CommissionZone;
   vehicle_type: string | null;
   rate_type: CommissionRateType;
   rate_value: number;
@@ -23,7 +21,6 @@ export interface CommissionSetting {
 
 export interface CreateCommissionSettingDto {
   label: string;
-  zone: CommissionZone;
   vehicle_type?: string | null;
   rate_type: CommissionRateType;
   rate_value: number;
@@ -31,7 +28,6 @@ export interface CreateCommissionSettingDto {
 
 export interface UpdateCommissionSettingDto {
   label?: string;
-  zone?: CommissionZone;
   vehicle_type?: string | null;
   rate_type?: CommissionRateType;
   rate_value?: number;
@@ -44,13 +40,11 @@ export interface Commission {
   reservation_id: string;
   driver_id: string;
   commission_setting_id: string | null;
-  zone: string;
   rate_type: string;
   rate_value: number;
   gross_amount: number;
   commission_amount: number;
   driver_net_amount: number;
-  currency: string;
   calculated_at: string;
 }
 
@@ -76,15 +70,11 @@ export interface CommissionSummary {
   total_gross_eur: number;
   total_commission_eur: number;
   total_net_eur: number;
-  total_gross_xof: number;
-  total_commission_xof: number;
-  total_net_xof: number;
   commissions: CommissionDetail[];
 }
 
 export interface CommissionListFilters {
   period?: CommissionPeriod;
-  zone?: CommissionZone;
   page?: number;
   limit?: number;
 }

@@ -157,7 +157,6 @@ export const reservationApi = {
   ): Promise<ApiResponse<ReservationListResult>> => {
     const params = new URLSearchParams();
     if (filters?.status)    params.set('status',    filters.status);
-    if (filters?.country)   params.set('country',   filters.country);
     if (filters?.driver_id) params.set('driver_id', filters.driver_id);
     if (filters?.client_id) params.set('client_id', filters.client_id);
     if (filters?.date_from) params.set('date_from', filters.date_from);

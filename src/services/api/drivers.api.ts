@@ -9,7 +9,7 @@ import type { UpdateDriverMePayload, ChangeDriverStatusPayload } from '../../typ
 import type { PlanningPeriod, PlanningReservation, DriverRevenuesResult, RevenuesPeriod} from '../../types';
 export const driverApi = {
 
-  /** PATCH /drivers/me — siret, zone, vehicle_type */
+  /** PATCH /drivers/me — siret, vehicle_type */
   updateMe: (token: string, payload: UpdateDriverMePayload): Promise<ApiResponse<DriverUser>> =>
     api.patch('/drivers/me', payload, token),
 
@@ -23,7 +23,6 @@ export const driverApi = {
     if (params?.page)         query.set('page', String(params.page));
     if (params?.limit)        query.set('limit', String(params.limit));
     if (params?.status)       query.set('status', params.status);
-    if (params?.zone)         query.set('zone', params.zone);
     if (params?.vehicle_type) query.set('vehicle_type', params.vehicle_type);
     if (params?.is_online !== undefined) query.set('is_online', String(params.is_online));
     if (params?.search)       query.set('search', params.search);

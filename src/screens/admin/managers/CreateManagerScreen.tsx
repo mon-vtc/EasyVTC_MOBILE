@@ -148,7 +148,7 @@ export default function CreateManagerScreen() {
 
           <AppInput
             label="Zone de couverture"
-            placeholder="Ex : Île-de-France, Dakar Nord…"
+            placeholder="Ex : Île-de-France, Auvergne-Rhône-Alpes…"
             value={coverageZone}
             onChangeText={setCoverageZone}
             error={errors.coverageZone}

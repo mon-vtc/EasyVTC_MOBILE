@@ -43,12 +43,7 @@ export const vehicleApi = {
 
     /** GET /vehicle-types — Types de véhicule disponibles avec tarifs */
   getVehicleTypes: (
-    token:    string,
-    country?: string,
-  ): Promise<ApiResponse<VehicleTypeOption[]>> => {
-    const qs = country ? `?country=${country}` : '';
-    return (
-    api.get(`/vehicle-types${qs}`, token)
-    )
-  },
+    token: string,
+  ): Promise<ApiResponse<VehicleTypeOption[]>> =>
+    api.get('/vehicle-types', token),
 };

@@ -53,7 +53,7 @@ function InvoiceCard({
 }) {
   const [openingPdf, setOpeningPdf] = useState(false);
 
-  const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
+  const currency = 'EUR';
   const { showToast } = useToast();
 
   const handleOpenPdf = async () => {

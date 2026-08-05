@@ -222,7 +222,6 @@ export function useDriver() {
     vtcLicense:  driver?.vtc_license  ?? null,
     iban:        driver?.iban         ?? null,
     siret:       driver?.siret        ?? null,
-    zone:        driver?.zone         ?? null,
     vehicleType: driver?.vehicle_type ?? null,
     isOnline:    driver?.is_online    ?? false,
     status:      driver?.driverStatus       ?? null,

@@ -24,9 +24,7 @@ import type {
   Reservation,
   ReservationListFilters,
 } from '../types/reservations.types';
-import type { PricingCountry, PricingFlatRate } from '../types/pricing.types';
-
-const COUNTRY: PricingCountry = 'france';
+import type { PricingFlatRate } from '../types/pricing.types';
 
 // Détection auto du supplément aéroport — même règle que côté backend
 // (reservations.service.ts) pour que l'estimation affichée corresponde au
@@ -109,7 +107,7 @@ export function useReservation() {
   // ── Chargement initial des types de véhicule depuis l'API ────────────────
   useEffect(() => {
     if (vehicleTypes.length > 0) return;
-    vehicleTypesApi.getActiveTypes(COUNTRY)
+    vehicleTypesApi.getActiveTypes()
       .then(res => {
         if (res.ok && res.data && res.data.length > 0) {
           useReservationStore.setState({
@@ -129,7 +127,7 @@ export function useReservation() {
 
   // ── Chargement initial des forfaits ───────────────────────────────────────
   useEffect(() => {
-    pricingApi.listFlatRates(undefined, COUNTRY, { is_active: true, limit: 100 })
+    pricingApi.listFlatRates(undefined, { is_active: true, limit: 100 })
       .then(res => {
         if (res.ok && res.data) {
           setFlatRates(res.data.flat_rates);
@@ -212,8 +210,8 @@ export function useReservation() {
    * pour éviter tout stale closure. Peut être appelé autant de fois que
    * nécessaire — le debounce absorbe les appels rapides.
    *
-   * Formule Haversine pour la distance, puis POST vers pricingApi.estimate()
-   * avec country='france'. Le résultat est stocké dans le store via setEstimate().
+   * Formule Haversine pour la distance, puis POST vers pricingApi.estimate().
+   * Le résultat est stocké dans le store via setEstimate().
    */
   const fetchEstimate = useCallback((
     origin:        GeoPoint,
@@ -248,7 +246,6 @@ export function useReservation() {
         const scheduled_at = date && time ? new Date(`${date}T${time}:00`).toISOString() : undefined;
 
         const res = await pricingApi.estimate(token, {
-          country:       COUNTRY,
           distance_km,
           duration_min,
           nb_passengers: _nbPassengers,
@@ -287,7 +284,6 @@ export function useReservation() {
     if (!token) return;
     useReservationStore.setState({ isFetchingPrice: true });
     pricingApi.estimate(token, {
-      country:       COUNTRY,
       flat_rate_id:  flatRateId,
       nb_passengers: nbPassengers,
     }).then(res => {
@@ -426,7 +422,7 @@ export function useReservation() {
 
   // ── Soumission ─────────────────────────────────────────────────────────────
   const submitBooking = useCallback(async (): Promise<Reservation> => {
-    return _submitBooking(accessTokenRef.current!, COUNTRY);
+    return _submitBooking(accessTokenRef.current!);
   }, [_submitBooking]);
 
   const homeReservations       = useReservationStore(s => s.homeReservations);

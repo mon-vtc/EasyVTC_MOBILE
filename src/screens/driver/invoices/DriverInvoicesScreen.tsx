@@ -31,7 +31,7 @@ function fmtAmount(n: number) {
 
 function InvoiceCard({ invoice, token, onPress }: { invoice: Invoice; token: string; onPress: (invoice: Invoice) => void }) {
   const [opening, setOpening] = useState(false);
-  const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
+  const currency = 'EUR';
   const snap = invoice.trip_snapshot;
   const { showToast } = useToast();
 

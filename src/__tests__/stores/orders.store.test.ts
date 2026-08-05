@@ -3,7 +3,7 @@ import { act } from '@testing-library/react-native';
 import { useOrdersStore } from '../../store/orders.store';
 import { ordersApi } from '../../services/api/orders.api';
 import { Order, OrderListResult, TripSnapshot } from '../../types/orders.types';
-import { PricingCountry, PricingType } from '../../types/pricing.types';
+import { PricingType } from '../../types/pricing.types';
 
 jest.mock('../../services/api/orders.api');
 const mockOrdersApi = ordersApi as jest.Mocked<typeof ordersApi>;
@@ -18,7 +18,7 @@ const mockOrder = {
   passenger_snapshot: { first_name: 'Jean', last_name: 'D', phone: null },
   trip_snapshot: {
     pickup_address: '10 rue de la Paix', dest_address: 'CDG',
-    vehicle_type: 'berline', country: 'france' as PricingCountry, scheduled_at: '2024-06-01T10:00:00Z',
+    vehicle_type: 'berline', scheduled_at: '2024-06-01T10:00:00Z',
     nb_passengers: 2, comment: null, via: '', pricing_type: 'formula' as PricingType,
     final_price: 45.0, currency: 'EUR' as TripSnapshot['currency'],
   },

@@ -9,7 +9,6 @@ import type {
   CommissionSetting,
   CreateCommissionSettingDto,
   UpdateCommissionSettingDto,
-  CommissionZone,
   CommissionDetail,
   CommissionSummary,
   CommissionPeriod,
@@ -28,7 +27,7 @@ interface CommissionSettingsState {
   commissionsTotal: number;
   commissionsPage:  number;
 
-  fetchSettings: (token: string, filters?: { zone?: CommissionZone; is_active?: boolean }) => Promise<void>;
+  fetchSettings: (token: string, filters?: { is_active?: boolean }) => Promise<void>;
   createSetting: (token: string, dto: CreateCommissionSettingDto) => Promise<CommissionSetting | null>;
   updateSetting: (token: string, id: string, dto: UpdateCommissionSettingDto) => Promise<CommissionSetting | null>;
   deleteSetting: (token: string, id: string) => Promise<void>;

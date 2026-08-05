@@ -138,7 +138,6 @@ export type {
 } from './chats.type';
 
 export type {
-  CommissionZone,
   CommissionRateType,
   CommissionSetting,
   CreateCommissionSettingDto,

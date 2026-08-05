@@ -39,7 +39,7 @@ export const authApi = {
 
   /**
    * Réinitialisation du mot de passe.
-   * Le token est le JWT issu du lien Supabase reçu par email (access_token dans le fragment #).
+   * Le token est le code de réinitialisation à usage unique reçu par email (voir /auth/forgot-password).
    */
   resetPassword: async (token: string, newPassword: string): Promise<ApiResponse<null>> => {
     return api.post('/auth/reset-password', { new_password: newPassword }, token);

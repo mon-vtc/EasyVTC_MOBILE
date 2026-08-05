@@ -7,6 +7,7 @@ import { useForm, useWatch }           from 'react-hook-form';
 import { zodResolver }                 from '@hookform/resolvers/zod';
 import { z }                           from 'zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect }              from '@react-navigation/native';
 import { Ionicons }                    from '@expo/vector-icons';
 
 import { FormField }   from '../../components/forms/FormField';
@@ -72,6 +73,14 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'ResetPassword'>;
 export default function ResetPasswordScreen({ navigation, route }: Props) {
   const { resetPassword, isLoading, error, clearError } = useAuth();
   const [done, setDone] = React.useState(false);
+
+  // Une erreur laissée par un écran précédent (login, forgot-password...) ne doit pas
+  // s'afficher ici avant même que l'utilisateur ait soumis le formulaire.
+  useFocusEffect(
+    React.useCallback(() => {
+      clearError();
+    }, [clearError])
+  );
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -140,7 +149,7 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
         <View style={styles.titleBlock}>
           <Text style={styles.title}>Nouveau mot de passe</Text>
           <Text style={styles.description}>
-            Copiez le token depuis le lien reçu par email, puis choisissez un nouveau mot de passe.
+            Copiez le code reçu par email, puis choisissez un nouveau mot de passe.
           </Text>
         </View>
 
@@ -154,16 +163,16 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
           <View style={styles.infoBox}>
             <Ionicons name="information-circle-outline" size={18} color={Colors.bordeaux} />
             <Text style={styles.infoText}>
-              Le token se trouve dans l'URL du lien reçu par email, après{' '}
-              <Text style={styles.infoCode}>#access_token=</Text>
+              Le code de réinitialisation se trouve dans l'email que vous avez reçu, sous
+              « Votre code de réinitialisation ».
             </Text>
           </View>
 
           <FormField<FormData>
             name="token"
             control={control}
-            label="Token (depuis l'email) *"
-            placeholder="eyJhbGciOiJIUzI1Ni..."
+            label="Code (depuis l'email) *"
+            placeholder="Collez le code reçu par email"
             icon="key-outline"
             editable={!isLoading}
             error={errors.token?.message}
@@ -285,11 +294,6 @@ const styles = StyleSheet.create({
     fontSize:   Fonts.size.sm,
     color:      Colors.textCallToAction,
     lineHeight: 18,
-  },
-  infoCode: {
-    fontFamily:  Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    color:       Colors.bordeaux,
-    fontWeight:  '600',
   },
 
   button: { marginTop: Spacing.sm },

@@ -25,7 +25,6 @@ export interface VehicleTypeRecord {
   capacity:           number;
   icon:               string | null;
   base_price_france:  number;
-  base_price_senegal: number;
   is_active:          boolean;
   sort_order:         number;
   created_at:         string;
@@ -39,7 +38,6 @@ export interface CreateVehicleTypePayload {
   capacity:           number;
   icon?:              string | null;
   base_price_france:  number;
-  base_price_senegal?: number;
   is_active?:         boolean;
   sort_order?:        number;
 }
@@ -50,7 +48,6 @@ export interface UpdateVehicleTypePayload {
   capacity?:          number;
   icon?:              string | null;
   base_price_france?: number;
-  base_price_senegal?:number;
   is_active?:         boolean;
   sort_order?:        number;
 }
@@ -59,10 +56,9 @@ export interface UpdateVehicleTypePayload {
 
 export const vehicleTypesApi = {
 
-  // Public — liste des types actifs avec prix selon pays
-  getActiveTypes(country?: string): Promise<ApiResponse<VehicleTypePublic[]>> {
-    const query = country ? `?country=${country}` : '';
-    return api.get(`/vehicle-types${query}`);
+  // Public — liste des types actifs
+  getActiveTypes(): Promise<ApiResponse<VehicleTypePublic[]>> {
+    return api.get('/vehicle-types');
   },
 
   // Admin — liste complète (actifs + inactifs)

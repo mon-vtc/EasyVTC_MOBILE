@@ -17,7 +17,6 @@ export interface PlanningReservation {
   vehicle_type: VehicleType | null;
   price_final: number | null;
   price_estimated: number;
-  country: string;
   client: {
     first_name: string;
     last_name: string;
@@ -68,7 +67,6 @@ export interface DriverRevenuesResult {
   total_net: number;           // ce que le chauffeur perçoit réellement
   total_revenue: number;       // alias de total_net (rétro-compatibilité)
   currency: string;
-  revenue_by_currency: { EUR: number; XOF: number };
   trips: RevenueTrip[];
   page?: number;
   limit?: number;

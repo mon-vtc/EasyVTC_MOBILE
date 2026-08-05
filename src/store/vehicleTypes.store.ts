@@ -21,7 +21,7 @@ interface VehicleTypesState {
   isLoading: boolean;
   error:     string | null;
 
-  fetchActiveTypes: (country?: string)                                              => Promise<void>;
+  fetchActiveTypes: ()                                                              => Promise<void>;
   fetchAllTypes:    (token: string)                                                 => Promise<void>;
   createType:       (token: string, dto: CreateVehicleTypePayload)                 => Promise<void>;
   updateType:       (token: string, id: string, dto: UpdateVehicleTypePayload)     => Promise<void>;
@@ -35,11 +35,11 @@ export const useVehicleTypesStore = create<VehicleTypesState>((set, get) => ({
   isLoading:   false,
   error:       null,
 
-  // ── Public : types actifs avec prix selon pays ──────────────────────────────
-  fetchActiveTypes: async (country) => {
+  // ── Public : types actifs ────────────────────────────────────────────────────
+  fetchActiveTypes: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await vehicleTypesApi.getActiveTypes(country);
+      const res = await vehicleTypesApi.getActiveTypes();
       if (res.ok && res.data) {
         set({ activeTypes: res.data });
       } else {

@@ -2,7 +2,7 @@
 import { act } from '@testing-library/react-native';
 import { usePricingStore } from '../../store/pricing.store';
 import { pricingApi } from '../../services/api/pricing.api';
-import { PricingCountry, PricingFlatRate, PricingGrid, SavePricingConfigDto, UpdatePricingGridDto } from '../../types/pricing.types';
+import { PricingFlatRate, PricingGrid, SavePricingConfigDto, UpdatePricingGridDto } from '../../types/pricing.types';
 
 jest.mock('../../services/api/pricing.api');
 const mockPricingApi = pricingApi as jest.Mocked<typeof pricingApi>;
@@ -11,8 +11,6 @@ const TOKEN = 'test-token';
 
 const mockGrid = {
   id: 'grid-1',
-  country: 'france' as PricingCountry,
-  currency: 'EUR',
   base_price: 5.0,
   price_per_km: 1.8,
   price_per_min: 0.3,
@@ -35,10 +33,8 @@ const mockFlatRate = {
   destination_label: 'CDG',
   price: 65.0,
   pickup_surcharge: 0,
-  country: 'france' as PricingCountry,
   is_active: true,
   created_by: 'admin',
-  currency: 'EUR',
   updated_at: '2024-01-01T00:00:00Z',
   created_at: '2024-01-01T00:00:00Z',
 } as const satisfies PricingFlatRate;
@@ -54,26 +50,12 @@ const mockFlatRateListResult = {
 const resetStore = () =>
   usePricingStore.setState({
     config: null,
-    activeCountry: 'france',
     isLoading: false,
     isSaving: false,
     error: null,
     flatRates: [],
     flatRatesTotal: 0,
   });
-
-// ══════════════════════════════════════════════════════════════════════════
-// setCountry
-// ══════════════════════════════════════════════════════════════════════════
-describe('usePricingStore › setCountry', () => {
-  it('change activeCountry et réinitialise config', () => {
-    usePricingStore.setState({ activeCountry: 'france', config: { country: 'france', grid: mockGrid } });
-    usePricingStore.getState().setCountry('senegal');
-    const state = usePricingStore.getState();
-    expect(state.activeCountry).toBe('senegal');
-    expect(state.config).toBeNull();
-  });
-});
 
 // ══════════════════════════════════════════════════════════════════════════
 // fetchConfig
@@ -84,19 +66,18 @@ describe('usePricingStore › fetchConfig', () => {
   it('charge la grille tarifaire active', async () => {
     mockPricingApi.getActiveGrid.mockResolvedValue({ ok: true, data: mockGrid, message: 'OK' });
 
-    await act(async () => { await usePricingStore.getState().fetchConfig(TOKEN, 'france'); });
+    await act(async () => { await usePricingStore.getState().fetchConfig(TOKEN); });
 
     const state = usePricingStore.getState();
     expect(state.config).not.toBeNull();
     expect(state.config?.grid.id).toBe('grid-1');
-    expect(state.config?.country).toBe('france');
     expect(state.isLoading).toBe(false);
   });
 
   it('retourne config: null (sans erreur) si aucune grille existe (404)', async () => {
     mockPricingApi.getActiveGrid.mockResolvedValue({ ok: false, message: 'Not found' });
 
-    await act(async () => { await usePricingStore.getState().fetchConfig(TOKEN, 'france'); });
+    await act(async () => { await usePricingStore.getState().fetchConfig(TOKEN); });
 
     expect(usePricingStore.getState().config).toBeNull();
     expect(usePricingStore.getState().error).toBeNull();
@@ -106,7 +87,7 @@ describe('usePricingStore › fetchConfig', () => {
     mockPricingApi.getActiveGrid.mockResolvedValue({ ok: true, data: undefined, message: 'Grille introuvable' });
 
     await expect(
-      act(async () => { await usePricingStore.getState().fetchConfig(TOKEN, 'france'); })
+      act(async () => { await usePricingStore.getState().fetchConfig(TOKEN); })
     ).rejects.toThrow('Grille introuvable');
   });
 });
@@ -121,35 +102,21 @@ describe('usePricingStore › saveConfig (création)', () => {
     mockPricingApi.createGrid.mockResolvedValue({ ok: true, data: mockGrid, message: 'Created' });
 
     await act(async () => {
-      await usePricingStore.getState().saveConfig(TOKEN, 'france' as PricingCountry, {
-        grid: { 
-          base_price: 5, 
-          price_per_km: 1.8, 
-          price_per_min: 0.3, 
-          minimum_price: 10 
+      await usePricingStore.getState().saveConfig(TOKEN, {
+        grid: {
+          base_price: 5,
+          price_per_km: 1.8,
+          price_per_min: 0.3,
+          minimum_price: 10
         } as UpdatePricingGridDto,
       });
     });
 
     expect(mockPricingApi.createGrid).toHaveBeenCalledWith(TOKEN, expect.objectContaining({
-      country: 'france',
-      currency: 'EUR',
       base_price: 5,
     }));
     expect(usePricingStore.getState().config?.grid.id).toBe('grid-1');
     expect(usePricingStore.getState().isSaving).toBe(false);
-  });
-
-  it('utilise XOF pour le Sénégal', async () => {
-    mockPricingApi.createGrid.mockResolvedValue({ ok: true, data: mockGrid, message: 'Created' });
-
-    await act(async () => {
-      await usePricingStore.getState().saveConfig(TOKEN, 'senegal', {
-        grid: { base_price: 3000, price_per_km: 500, price_per_min: 50, minimum_price: 5000 },
-      });
-    });
-
-    expect(mockPricingApi.createGrid).toHaveBeenCalledWith(TOKEN, expect.objectContaining({ currency: 'XOF' }));
   });
 });
 
@@ -160,7 +127,7 @@ describe('usePricingStore › saveConfig (mise à jour)', () => {
   beforeEach(() => {
     resetStore();
     jest.clearAllMocks();
-    usePricingStore.setState({ config: { country: 'france', grid: mockGrid } });
+    usePricingStore.setState({ config: { grid: mockGrid } });
   });
 
   it('met à jour la grille via PATCH si config existe', async () => {
@@ -168,7 +135,7 @@ describe('usePricingStore › saveConfig (mise à jour)', () => {
     mockPricingApi.updateGrid.mockResolvedValue({ ok: true, data: updatedGrid, message: 'OK' });
 
     await act(async () => {
-      await usePricingStore.getState().saveConfig(TOKEN, 'france', {
+      await usePricingStore.getState().saveConfig(TOKEN, {
         grid: { base_price: 6 },
       });
     });
@@ -179,20 +146,19 @@ describe('usePricingStore › saveConfig (mise à jour)', () => {
 
   it('stocke l\'erreur si le PATCH échoue', async () => {
     mockPricingApi.updateGrid.mockResolvedValue({ ok: false, message: 'Erreur grille' });
-    
+
     await expect(
       act(async () => {
         await usePricingStore.getState().saveConfig(
-          TOKEN, 
-          'france' as PricingCountry, 
+          TOKEN,
           { grid: {} as UpdatePricingGridDto } as SavePricingConfigDto
         );
       })
     ).rejects.toThrow('Erreur grille');
-  
+
     // Attendre que Zustand flushe les updates
     await act(async () => {});
-  
+
     expect(usePricingStore.getState().isSaving).toBe(false);
   });
 });
@@ -208,7 +174,7 @@ describe('usePricingStore › fetchFlatRates', () => {
       ok: true, data: mockFlatRateListResult, message: 'OK',
     });
 
-    await act(async () => { await usePricingStore.getState().fetchFlatRates(TOKEN, 'france'); });
+    await act(async () => { await usePricingStore.getState().fetchFlatRates(TOKEN); });
 
     expect(usePricingStore.getState().flatRates).toHaveLength(1);
     expect(usePricingStore.getState().flatRatesTotal).toBe(1);
@@ -237,8 +203,6 @@ describe('usePricingStore › createFlatRate', () => {
         origin_label: 'Paris',
         destination_label: 'CDG',
         price: 65.0,
-        currency: 'EUR',     // ← ajouter
-        country: 'france',
         pickup_surcharge: 0,
       });
     });

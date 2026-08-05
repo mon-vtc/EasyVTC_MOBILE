@@ -9,7 +9,6 @@ import { useAuth } from './useAuth';
 import { useAuthStore } from '../store/auth.store';
 import { useCommissionSettingsStore } from '../store/commission.store';
 import type {
-  CommissionZone,
   CreateCommissionSettingDto,
   UpdateCommissionSettingDto,
   CommissionPeriod,
@@ -42,7 +41,7 @@ export function useCommissionSettings() {
     clearError,
   } = useCommissionSettingsStore();
 
-  const fetchSettings = useCallback((filters?: { zone?: CommissionZone; is_active?: boolean }) => {
+  const fetchSettings = useCallback((filters?: { is_active?: boolean }) => {
     return _fetch(accessToken!, filters);
   }, [accessToken, _fetch]);
 

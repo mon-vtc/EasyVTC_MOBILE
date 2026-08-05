@@ -18,7 +18,7 @@ import { useVehicleTypes } from '../../../hooks/useVehicleTypes';
 import { useAlert } from '../../../hooks/useAlert';
 import { useToast } from '../../../hooks/useToast';
 import { useBottomInset, useKeyboardAwareBottomInset } from '../../../hooks/useSafeAreaPadding';
-import type { CommissionSetting, CommissionZone, CommissionRateType } from '../../../types';
+import type { CommissionSetting, CommissionRateType } from '../../../types';
 import { AppIcon } from '../../../components/common/AppIcon';
 import { AppButton } from '../../../components/common/AppButton';
 import { AppHeader } from '../../../components/common/AppHeader';
@@ -28,7 +28,6 @@ import { Picker } from '@react-native-picker/picker';
 // ── Schéma de validation du formulaire ────────────────────────────────────────
 const formSchema = z.object({
   label: z.string().min(3, 'Le libellé est requis (min 3 caractères).'),
-  zone: z.enum(['france', 'senegal']),
   vehicle_type: z.string().nullable(),
   rate_type: z.enum(['percentage', 'flat']),
   rate_value: z.preprocess(
@@ -58,7 +57,6 @@ export default function AdminCommissionSettingsScreen() {
   const { allTypes: vehicleTypes, refresh: fetchVehicleTypes } = useVehicleTypes();
 
   // ── États locaux ────────────────────────────────────────────────────────────
-  const [activeZone, setActiveZone] = useState<CommissionZone>('france');
   const [isModalVisible, setModalVisible] = useState(false);
   const [editingSetting, setEditingSetting] = useState<CommissionSetting | null>(null);
   const scrollBottomInset = useBottomInset(Spacing.xl);
@@ -69,7 +67,6 @@ export default function AdminCommissionSettingsScreen() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       label: '',
-      zone: activeZone,
       vehicle_type: null,
       rate_type: 'percentage',
       rate_value: 0,
@@ -79,8 +76,8 @@ export default function AdminCommissionSettingsScreen() {
 
   // ── Effets ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchSettings({ zone: activeZone });
-  }, [activeZone, fetchSettings]);
+    fetchSettings({});
+  }, [fetchSettings]);
 
   useEffect(() => {
     fetchVehicleTypes();
@@ -97,7 +94,6 @@ export default function AdminCommissionSettingsScreen() {
     setEditingSetting(null);
     reset({
       label: '',
-      zone: activeZone,
       vehicle_type: null,
       rate_type: 'percentage',
       rate_value: 0,
@@ -110,7 +106,6 @@ export default function AdminCommissionSettingsScreen() {
     setEditingSetting(setting);
     reset({
       label: setting.label,
-      zone: setting.zone,
       vehicle_type: setting.vehicle_type,
       rate_type: setting.rate_type,
       rate_value: setting.rate_value,
@@ -129,7 +124,7 @@ export default function AdminCommissionSettingsScreen() {
         showToast({ type: 'success', message: 'Nouvelle règle de commission créée.' });
       }
       setModalVisible(false);
-      fetchSettings({ zone: activeZone }); // Re-fetch
+      fetchSettings({}); // Re-fetch
     } catch (e: any) {
       showToast({ type: 'error', message: e.message ?? 'Erreur de sauvegarde' });
     }
@@ -148,7 +143,7 @@ export default function AdminCommissionSettingsScreen() {
             try {
               await deleteSetting(setting.id);
               showToast({ type: 'success', message: 'Règle supprimée.' });
-              fetchSettings({ zone: activeZone }); // Re-fetch
+              fetchSettings({}); // Re-fetch
             } catch (e: any) {
               showToast({ type: 'error', message: e.message ?? 'Erreur de suppression' });
             }
@@ -168,21 +163,6 @@ export default function AdminCommissionSettingsScreen() {
       />
 
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: scrollBottomInset }}>
-        {/* Sélecteur de zone */}
-        <View style={styles.zoneSelector}>
-          {(['france', 'senegal'] as CommissionZone[]).map((zone) => (
-            <TouchableOpacity
-              key={zone}
-              style={[styles.zoneTab, activeZone === zone && styles.zoneTabActive]}
-              onPress={() => setActiveZone(zone)}
-            >
-              <Text style={[styles.zoneText, activeZone === zone && styles.zoneTextActive]}>
-                {(zone === 'france' ? 'France' : 'Sénégal') + '  '}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
         {/* Liste des règles */}
         {isLoading ? (
           <ActivityIndicator size="large" color={Colors.bordeaux} style={{ marginTop: 40 }} />
@@ -225,7 +205,7 @@ export default function AdminCommissionSettingsScreen() {
           ))
         )}
         {settings.length === 0 && !isLoading && (
-          <Text style={styles.emptyText}>Aucune règle de commission pour cette zone.</Text>
+          <Text style={styles.emptyText}>Aucune règle de commission configurée.</Text>
         )}
       </ScrollView>
 
@@ -368,17 +348,6 @@ export default function AdminCommissionSettingsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1, padding: Spacing.md },
-  zoneSelector: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: 4,
-    marginBottom: Spacing.lg,
-  },
-  zoneTab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: Radius.md },
-  zoneTabActive: { backgroundColor: Colors.bordeauxLight },
-  zoneText: { fontSize: Fonts.size.md, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textSecondary },
-  zoneTextActive: { color: Colors.white },
   card: {
     backgroundColor: Colors.white,
     borderRadius: Radius.md,

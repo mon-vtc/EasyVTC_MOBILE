@@ -4,26 +4,11 @@
 // Aligné avec le backend pricing.types.ts
 // ══════════════════════════════════════════════════════════════════════════════
 
-// ── Géographie ───────────────────────────────────────────────────────────────
-export type PricingCountry = 'france' | 'senegal';
-
 // ── Type de tarif ─────────────────────────────────────────────────────────────
 export type PricingType = 'formula' | 'flat_rate';
 
-// ── Labels ───────────────────────────────────────────────────────────────────
-export const PRICING_COUNTRY_LABELS: Record<PricingCountry, string> = {
-  france:  'France',
-  senegal: 'Sénégal',
-};
-
-export const PRICING_COUNTRY_CURRENCIES: Record<PricingCountry, string> = {
-  france:  'EUR',
-  senegal: 'XOF',
-};
-
 export const PRICING_CURRENCY_SYMBOLS: Record<string, string> = {
   EUR: '€',
-  XOF: 'F CFA',
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -33,12 +18,10 @@ export const PRICING_CURRENCY_SYMBOLS: Record<string, string> = {
 // ── Grille tarifaire (formule de base) ────────────────────────────────────────
 export interface PricingGrid {
   id:                   string;
-  country:              PricingCountry;
   base_price:           number;
   price_per_km:         number;
   price_per_min:        number;
   minimum_price:        number;
-  currency:             string;
   tva_rate:             number;          // 0.10 = 10 %, 0 = pas de TVA
   airport_supplement:   number;          // Montant fixe supplément aéroport
   night_supplement_rate: number;         // 0.15 = +15 %, 0 = désactivé
@@ -53,13 +36,11 @@ export interface PricingGrid {
 // ── Forfait itinéraire ────────────────────────────────────────────────────────
 export interface PricingFlatRate {
   id:                  string;
-  country:             PricingCountry;
   label:               string;
   origin_label:        string;
   destination_label:   string;
   price:               number;
   pickup_surcharge:    number;  // Surcharge par passager supplémentaire (0 = aucune)
-  currency:            string;
   is_active:           boolean;
   created_at:          string;
   updated_at:          string;
@@ -68,15 +49,13 @@ export interface PricingFlatRate {
 
 // ── Config locale (construction côté store) ──────────────────────────────────
 export interface PricingConfig {
-  country: PricingCountry;
-  grid:    PricingGrid;
+  grid: PricingGrid;
 }
 
 // ── Réponse GET /pricing/config ───────────────────────────────────────────────
 export interface PricingConfigCommission {
   id:        string;
   label:     string;
-  zone:      string;
   rate_type: 'percentage' | 'flat';
   rate_value: number;
   tva_rate:   number;
@@ -102,7 +81,6 @@ export interface PricingConfigExample {
 }
 
 export interface PricingConfigResult {
-  country:    PricingCountry;
   grid:       PricingGrid;
   commission: PricingConfigCommission | null;
   example:    PricingConfigExample;
@@ -110,7 +88,6 @@ export interface PricingConfigResult {
 
 // ── DTO PATCH /pricing/config ────────────────────────────────────────────────
 export interface PricingConfigUpdateDto {
-  country:               PricingCountry;
   base_price?:           number;
   price_per_km?:         number;
   price_per_min?:        number;
@@ -129,12 +106,10 @@ export interface PricingConfigUpdateDto {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export interface CreatePricingGridDto {
-  country:       PricingCountry;
   base_price:    number;
   price_per_km:  number;
   price_per_min: number;
   minimum_price: number;
-  currency:      string;
 }
 
 export interface UpdatePricingGridDto {
@@ -160,7 +135,6 @@ export interface SavePricingConfigDto {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export interface PriceEstimateDto {
-  country:        PricingCountry;
   distance_km?:   number;
   duration_min?:  number;
   flat_rate_id?:  string;
@@ -202,7 +176,6 @@ export interface PriceBreakdown {
 
 export interface PriceEstimateResult {
   pricing_type: PricingType;
-  country:      PricingCountry;
   currency:     string;
   final_price:  number;
   amount_ht:    number;
@@ -213,7 +186,6 @@ export interface PriceEstimateResult {
 
 // ── Filtres liste forfaits ────────────────────────────────────────────────────
 export interface FlatRateListFilters {
-  country?:   PricingCountry;
   is_active?: boolean;
   page?:      number;
   limit?:     number;

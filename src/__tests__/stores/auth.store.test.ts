@@ -6,7 +6,6 @@ import { userApi } from '../../services/api/user.api';
 import { authStorage as secureStorage } from '../../services/auth/auth-storage';
 import { AuthUser, UserRole, UserStatus } from '../../types';
 import { DriverStatus } from '../../types/auth.types';
-import { PricingCountry } from '../../types/pricing.types';
 import { DriverProfile, Vehicle, VehicleType } from '../../types/user.types';
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
@@ -44,7 +43,6 @@ const baseUser = {
   //   status: 'pending' as DriverStatus,
   //   vehicle_type: null,
   //   siret: null,
-  //   zone: 'france' as PricingCountry,
   //   tva_rate: 0,
   //   is_online: false,
   //   created_at: '2024-01-01T00:00:00Z',
@@ -61,7 +59,6 @@ const driverRawUser = {
     status: 'active'  as DriverStatus,
     vehicle_type: 'berline' as VehicleType,
     siret: '1234567890 1234',
-    zone: 'france' as PricingCountry,
     iban: 'FR76...',
     vtc_license: 'VTC123',
     tva_rate: 20,
@@ -115,7 +112,6 @@ describe('mapApiUser', () => {
     expect(result.driverStatus).toBe('active' as DriverStatus);
     expect(result.vehicle_type).toBe('berline' as VehicleType);
     expect(result.siret).toBe('1234567890 1234');
-    expect(result.zone).toBe('france' as PricingCountry);
     expect(result.tva_rate).toBe(20);
     expect(result.is_online).toBe(false);
   });

@@ -398,16 +398,16 @@ export default function BookingConfirmationScreen() {
               <Text style={styles.priceFinalLabel}>Prix final estimé</Text>
               <View style={styles.priceRow}>
                 <Text style={styles.priceLabel}>Prix initial</Text>
-                <Text style={styles.priceInitialValue}>{formatPrice(r.price_estimated + r.discount_amount, r.country === 'france' ? '€' : ' CFA')}</Text>
+                <Text style={styles.priceInitialValue}>{formatPrice(r.price_estimated + r.discount_amount, '€')}</Text>
               </View>
               <View style={styles.priceRow}>
                 <Text style={styles.priceDiscountLabel}>Réduction</Text>
-                <Text style={styles.priceDiscountValue}>- {formatPrice(r.discount_amount, r.country === 'france' ? '€' : ' CFA')}</Text>
+                <Text style={styles.priceDiscountValue}>- {formatPrice(r.discount_amount, '€')}</Text>
               </View>
               <View style={styles.priceDivider} />
               <View style={styles.priceRow}>
                 <Text style={styles.priceFinalValueLabel}>Total à régler</Text>
-                <Text style={styles.priceValue}>{formatPrice(r.price_estimated, r.country === 'france' ? '€' : ' CFA')}</Text>
+                <Text style={styles.priceValue}>{formatPrice(r.price_estimated, '€')}</Text>
               </View>
             </View>
           </Animated.View>
@@ -417,7 +417,7 @@ export default function BookingConfirmationScreen() {
               <Text style={styles.priceLabel}>Prix estimé</Text>
               <Text style={styles.priceNote}>Paiement à effectuer directement auprès du chauffeur</Text>
             </View>
-            <Text style={styles.priceValue}>{formatPrice(r?.price_estimated, r?.country === 'france' ? '€' : ' CFA')}</Text>
+            <Text style={styles.priceValue}>{formatPrice(r?.price_estimated, '€')}</Text>
           </Animated.View>
         )}
 

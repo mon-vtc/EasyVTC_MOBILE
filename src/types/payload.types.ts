@@ -1,5 +1,5 @@
 // types/payload.types.ts
-import type { VehicleType, ZoneType } from './user.types';
+import type { VehicleType } from './user.types';
 
 export interface LoginPayload {
   email:    string;
@@ -47,7 +47,6 @@ export interface UpdateDriverMePayload {
   iban?:        string;   // stocké côté user
   vtc_license?: string;   // stocké côté user
   siret?:        string;
-  zone?:         ZoneType;
   vehicle_type?: VehicleType;
 }
 
