@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { usePricing }    from '../../hooks/usePricing';
-import type { PricingFlatRate, PricingCountry } from '../../types/pricing.types';
+import type { PricingFlatRate } from '../../types/pricing.types';
 import { useAlert } from '../../hooks/useAlert';
 import { AppIcon }       from '../../components/common/AppIcon';
 import { AppHeader }     from '../../components/common/AppHeader';
@@ -18,6 +18,7 @@ import { Colors, Spacing, Radius, Fonts } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import type {AppIconProps}  from '../../types/app-icon-props.types';
 import { useToast } from '../../hooks/useToast';
+import { usePermissions } from '../../hooks/usePermissions';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -39,7 +40,6 @@ type FlatRateFormValues = {
 // ══════════════════════════════════════════════════════════════════════════════
 
 function fmt(n: number, symbol: string): string {
-  if (symbol === 'F CFA') return `${Math.round(n).toLocaleString('fr-FR')} F CFA`;
   return `${n.toFixed(2)} ${symbol}`;
 }
 
@@ -107,12 +107,12 @@ function Field({
 // HEADER LISTE
 // ══════════════════════════════════════════════════════════════════════════════
 
-function ListHeader({ onAdd }: { onAdd: () => void }) {
+function ListHeader({ onAdd, canAdd }: { onAdd: () => void; canAdd: boolean }) {
   return (
     <AppHeader
       left="back"
       title="Forfaits"
-      rightIcon={{ name: 'add-outline', onPress: onAdd }}
+      rightIcon={canAdd ? { name: 'add-outline', onPress: onAdd } : undefined}
     />
   );
 }
@@ -126,21 +126,23 @@ function DetailHeader({
   onBack,
   onToggleEdit,
   title,
+  canEdit,
 }: {
   isEditing: boolean;
   onBack: () => void;
   onToggleEdit: () => void;
   title?: string;
+  canEdit: boolean;
 }) {
   return (
     <AppHeader
       left="back"
       onBack={onBack}
       title={title ?? 'Détail du forfait'}
-      rightIcon={{
+      rightIcon={canEdit ? {
         name: isEditing ? 'close-outline' : 'create-outline',
         onPress: onToggleEdit,
-      }}
+      } : undefined}
     />
   );
 }
@@ -155,17 +157,21 @@ function ThreeDotMenu({
   visible,
   onAction,
   onClose,
+  canEdit,
 }: {
   visible: boolean;
   onAction: (a: QuickAction) => void;
   onClose: () => void;
+  canEdit: boolean;
 }) {
   if (!visible) return null;
 
   const actions: { key: QuickAction; label: string; icon: string; color?: string }[] = [
     { key: 'view',   label: 'Voir le détail', icon: 'eye-outline' },
-    { key: 'edit',   label: 'Modifier',       icon: 'create-outline' },
-    { key: 'delete', label: 'Supprimer',      icon: 'trash-outline', color: '#E53935' },
+    ...(canEdit ? [
+      { key: 'edit' as const,   label: 'Modifier',  icon: 'create-outline' },
+      { key: 'delete' as const, label: 'Supprimer', icon: 'trash-outline', color: '#E53935' },
+    ] : []),
   ];
 
   return (
@@ -200,11 +206,13 @@ function FlatRateCard({
   currencySymbol,
   onPress,
   onAction,
+  canEdit,
 }: {
   item: PricingFlatRate;
   currencySymbol: string;
   onPress: () => void;
   onAction: (a: QuickAction) => void;
+  canEdit: boolean;
 }) {
   const [menuVisible, setMenuVisible] = useState(false);
 
@@ -256,6 +264,7 @@ function FlatRateCard({
         visible={menuVisible}
         onAction={onAction}
         onClose={() => setMenuVisible(false)}
+        canEdit={canEdit}
       />
     </TouchableOpacity>
   );
@@ -402,6 +411,7 @@ function FlatRateDetailScreen({
   onBack,
   onSave,
   onDelete,
+  canEdit,
 }: {
   item: PricingFlatRate;
   currencySymbol: string;
@@ -409,6 +419,7 @@ function FlatRateDetailScreen({
   onBack: () => void;
   onSave: (id: string, form: FlatRateFormValues) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  canEdit: boolean;
 }) {
   const { showAlert } = useAlert();
   const insets = useSafeAreaInsets();
@@ -468,7 +479,7 @@ function FlatRateDetailScreen({
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}>
-      <DetailHeader isEditing={isEditing} onBack={onBack} onToggleEdit={handleToggleEdit} title={item.label} />
+      <DetailHeader isEditing={isEditing} onBack={onBack} onToggleEdit={handleToggleEdit} title={item.label} canEdit={canEdit} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -532,8 +543,6 @@ function FlatRateDetailScreen({
           <View style={sec.container}>
             <Text style={sec.title}>Informations système</Text>
             <View style={sec.body}>
-              <MetaRow label="Pays"       value={item.country === 'france' ? 'France' : 'Sénégal'} />
-              <MetaRow label="Devise"     value={item.currency} />
               <MetaRow
                 label="Statut"
                 value={item.is_active ? 'Actif' : 'Inactif'}
@@ -567,7 +576,7 @@ function FlatRateDetailScreen({
           )}
 
           {/* ── Bouton supprimer — mode lecture uniquement ─────────────── */}
-          {!isEditing && (
+          {!isEditing && canEdit && (
             <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
               <AppIcon name="trash-outline" size={18} color="#E53935" />
               <Text style={styles.deleteBtnText}>Supprimer ce forfait</Text>
@@ -597,7 +606,6 @@ function MetaRow({ label, value, color }: { label: string; value: string; color?
 
 export default function AdminFlatRatesScreen() {
   const {
-    activeCountry,
     flatRates,
     isLoading,
     isSaving,
@@ -614,6 +622,8 @@ export default function AdminFlatRatesScreen() {
   const [createVisible, setCreateVisible] = useState(false);
   const { showToast } = useToast();
   const { showAlert } = useAlert();
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission('manage_pricing');
 
   useEffect(() => {
     if (error) showToast({ type: 'error', title: 'Erreur', message: error, onPress: clearError });
@@ -623,7 +633,7 @@ export default function AdminFlatRatesScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}>
-        <ListHeader onAdd={() => {}} />
+        <ListHeader onAdd={() => {}} canAdd={canEdit} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.bordeaux} />
           <Text style={styles.loadingText}>Chargement des forfaits…</Text>
@@ -640,6 +650,7 @@ export default function AdminFlatRatesScreen() {
         item={fresh}
         currencySymbol={currencySymbol}
         isSaving={isSaving}
+        canEdit={canEdit}
         onBack={() => setSelectedItem(null)}
         onSave={async (id, form) => {
           await updateFlatRate(id, {
@@ -686,7 +697,7 @@ export default function AdminFlatRatesScreen() {
   // ── Vue liste ─────────────────────────────────────────────────────────────
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}>
-      <ListHeader onAdd={() => setCreateVisible(true)} />
+      <ListHeader onAdd={() => setCreateVisible(true)} canAdd={canEdit} />
 
       <FlatList
         data={flatRates}
@@ -713,6 +724,7 @@ export default function AdminFlatRatesScreen() {
             currencySymbol={currencySymbol}
             onPress={() => setSelectedItem(item)}
             onAction={handleQuickAction(item)}
+            canEdit={canEdit}
           />
         )}
       />
@@ -724,8 +736,6 @@ export default function AdminFlatRatesScreen() {
         onClose={() => setCreateVisible(false)}
         onSave={async (form) => {
           await createFlatRate({
-            country:           activeCountry,
-            currency:          activeCountry === 'france' ? 'EUR' : 'XOF',
             label:             form.label,
             origin_label:      form.origin_label,
             destination_label: form.destination_label,

@@ -19,11 +19,14 @@ export const MANAGER_PERMISSIONS = [
   'view_clients',
   // Tarification
   'view_pricing',
+  'manage_pricing',
   // Documents
   'view_documents',
+  'validate_documents',
   // Finances
   'view_orders',
   'view_invoices',
+  'adjust_invoice_price',
   // Évaluations
   'view_ratings',
   // Support
@@ -64,18 +67,21 @@ export interface AppConfigEntry {
 }
 
 export const PERMISSION_LABELS: Record<ManagerPermission, string> = {
-  view_reservations:  'Voir les réservations',
-  assign_reservation: 'Attribuer un chauffeur',
-  cancel_reservation: 'Annuler une réservation',
-  view_users:         'Voir les utilisateurs',
-  view_drivers:       'Voir les chauffeurs',
-  view_clients:       'Voir les clients',
-  view_pricing:       'Voir les tarifs',
-  view_documents:     'Valider les documents chauffeurs',
-  view_orders:        'Voir les bons de commande',
-  view_invoices:      'Voir les factures',
-  view_ratings:       'Voir les évaluations',
-  manage_support:     'Gérer le support / chat',
+  view_reservations:    'Voir les réservations',
+  assign_reservation:   'Attribuer un chauffeur',
+  cancel_reservation:   'Annuler une réservation',
+  view_users:           'Voir les utilisateurs',
+  view_drivers:         'Voir les chauffeurs',
+  view_clients:         'Voir les clients',
+  view_pricing:         'Voir les tarifs',
+  manage_pricing:       'Modifier la tarification',
+  view_documents:       'Voir les documents chauffeurs',
+  validate_documents:   'Valider / rejeter les documents chauffeurs',
+  view_orders:          'Voir les bons de commande',
+  view_invoices:        'Voir les factures',
+  adjust_invoice_price: 'Ajuster le prix d\'une facture',
+  view_ratings:         'Voir les évaluations',
+  manage_support:       'Gérer le support / chat',
 };
 
 export interface UserProfile {

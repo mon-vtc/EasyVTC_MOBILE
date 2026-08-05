@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useClientsStore, useAuthStore } from '../../../store';
 import { useToast } from '../../../hooks/useToast';
+import { useAuth } from '../../../hooks/useAuth';
 import { useNotifications } from '../../../hooks/useNotifications';
 import { AppHeader } from '../../../components/common/AppHeader';
 import { useKeyboardAwareBottomInset } from '../../../hooks/useSafeAreaPadding';
@@ -163,11 +164,12 @@ const modalSt = StyleSheet.create({
 
 // ── Carte client ─────────────────────────────────────────────────────────────
 function ClientCard({
-  client, onPress, onAction,
+  client, onPress, onAction, canChangeStatus,
 }: {
   client:   ClientWithStats;
   onPress:  (c: ClientWithStats) => void;
   onAction: (c: ClientWithStats) => void;
+  canChangeStatus: boolean;
 }) {
   const initials  = `${client.first_name?.[0] ?? ''}${client.last_name?.[0] ?? ''}`.toUpperCase();
   const statusCfg = STATUS_CONFIG[client.status] ?? STATUS_CONFIG.active;
@@ -235,15 +237,17 @@ function ClientCard({
           <Text style={cardSt.statLabel}>{'Dernière' + '  '}</Text>
           <Text style={cardSt.statValue}>{lastDate}</Text>
         </View>
-        <TouchableOpacity
-          style={cardSt.actionBtn}
-          onPress={(e) => { e.stopPropagation(); onAction(client); }}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          activeOpacity={0.75}
-        >
-          <Ionicons name="shield-outline" size={14} color={Colors.bordeaux} />
-          <Text style={cardSt.actionText}>{'Statut' + '  '}</Text>
-        </TouchableOpacity>
+        {canChangeStatus && (
+          <TouchableOpacity
+            style={cardSt.actionBtn}
+            onPress={(e) => { e.stopPropagation(); onAction(client); }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="shield-outline" size={14} color={Colors.bordeaux} />
+            <Text style={cardSt.actionText}>{'Statut' + '  '}</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -330,6 +334,7 @@ export default function AdminClientsScreen() {
 
   const { showToast } = useToast();
   const { unreadCount } = useNotifications();
+  const { isAdmin } = useAuth();
 
   const clients            = useClientsStore(s => s.clients);
   const total              = useClientsStore(s => s.total);
@@ -494,6 +499,7 @@ export default function AdminClientsScreen() {
               client={item}
               onPress={client => navigation.navigate('ClientDetail', { clientId: client.id })}
               onAction={client => { setActionClient(client); setModalVisible(true); }}
+              canChangeStatus={isAdmin}
             />
           )}
           contentContainerStyle={[styles.list, { paddingBottom: styles.list.paddingBottom + insets.bottom }]}

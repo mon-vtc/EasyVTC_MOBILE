@@ -30,17 +30,17 @@ const PERMISSION_GROUPS: { title: string; icon: string; permissions: ManagerPerm
   {
     title: 'Tarification',
     icon: 'pricetag-outline',
-    permissions: ['view_pricing'],
+    permissions: ['view_pricing', 'manage_pricing'],
   },
   {
     title: 'Documents chauffeurs',
     icon: 'document-text-outline',
-    permissions: ['view_documents'],
+    permissions: ['view_documents', 'validate_documents'],
   },
   {
     title: 'Documents financiers',
     icon: 'receipt-outline',
-    permissions: ['view_orders', 'view_invoices'],
+    permissions: ['view_orders', 'view_invoices', 'adjust_invoice_price'],
   },
   {
     title: 'Évaluations',

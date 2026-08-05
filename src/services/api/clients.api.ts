@@ -35,5 +35,5 @@ export const clientsApi = {
 
   // PUT /admin/users/:id/status — réutilise l'endpoint existant
   changeClientStatus: (token: string, clientId: string, payload: UpdateUserStatusPayload) =>
-    api.patch<AuthUser>(`/admin/users/${clientId}/status`, payload, token),
+    api.put<AuthUser>(`/admin/users/${clientId}/status`, payload, token),
 };
