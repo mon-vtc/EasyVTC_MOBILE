@@ -32,11 +32,11 @@ const REVENUE_STATUS_FILTERS: { label: string; value: 'completed' | 'cancelled' 
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function formatCurrency(value: number, currency: string): string {
-  return new Intl.NumberFormat(currency === 'EUR' ? 'fr-FR' : 'fr-SN', {
+  return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency,
-    minimumFractionDigits: currency === 'EUR' ? 2 : 0,
-    maximumFractionDigits: currency === 'EUR' ? 2 : 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value);
 }
 

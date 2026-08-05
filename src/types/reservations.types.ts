@@ -4,7 +4,7 @@
 // Aligné avec le backend (reservations.types.ts serveur)
 // ══════════════════════════════════════════════════════════════════════════════
 
-import type { PricingCountry, PriceBreakdown } from './pricing.types';
+import type { PriceBreakdown } from './pricing.types';
 
 // ── Statuts ───────────────────────────────────────────────────────────────────
 // Aligné avec le backend : 'driver_arrived' est géré côté front uniquement
@@ -70,9 +70,8 @@ export interface Reservation {
   dest_lat:       number | null;
   dest_lng:       number | null;
 
-  // Véhicule & pays
+  // Véhicule
   vehicle_type: VehicleType;
-  country:      PricingCountry;
 
   // Tarification
   pricing_type:    'flat_rate' | 'formula' | null;
@@ -123,7 +122,7 @@ export interface Reservation {
 // Backend (CreateReservationDto) :
 //   pickup_address, pickup_lat?, pickup_lng?
 //   dest_address,   dest_lat?,   dest_lng?
-//   vehicle_type, country, scheduled_at
+//   vehicle_type, scheduled_at
 //   nb_passengers?, comment?
 //   distance_km?, duration_min?, flat_rate_id?
 export interface CreateReservationDto {
@@ -135,9 +134,8 @@ export interface CreateReservationDto {
   dest_lat?:      number;
   dest_lng?:      number;
 
-  // Véhicule & pays
+  // Véhicule
   vehicle_type: VehicleType;
-  country:      PricingCountry;
 
   // Horaire
   scheduled_at: string; // ISO 8601
@@ -155,7 +153,6 @@ export interface CreateReservationDto {
 // ── Filtres liste ─────────────────────────────────────────────────────────────
 export interface ReservationListFilters {
   status?:    ReservationStatus;
-  country?:   PricingCountry;
   driver_id?: string;
   client_id?: string;
   date_from?: string; // ISO
@@ -224,7 +221,6 @@ export interface AvailableDriverDto {
   is_online:    boolean;
   status:       string;
   vehicle_type: string | null;
-  zone:         string | null;
   user: {
     id:                string;
     first_name:        string;

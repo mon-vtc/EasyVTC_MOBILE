@@ -4,7 +4,6 @@ import { useReservationStore } from '../../store/reservation.store';
 import { reservationApi } from '../../services/api/reservation.api';
 import { vehicleApi } from '../../services/api/vehicle.api';
 import { VehicleType, ReservationStatus, Reservation } from '../../types/reservations.types';
-import { PricingCountry } from '../../types/pricing.types';
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 jest.mock('../../services/api/reservation.api');
@@ -29,7 +28,6 @@ const mockReservation = {
   dest_lat: 49.0,
   dest_lng: 2.55,
   vehicle_type: 'berline' as VehicleType,
-  country: 'france' as PricingCountry,
   pricing_type: null,
   flat_rate_id: null,
   price_estimated: 45.0,
@@ -156,21 +154,19 @@ describe('useReservationStore › fetchAll', () => {
     expect(useReservationStore.getState().totalPages).toBe(5);
   });
 
-  it('transmet les filtres admin (driver_id, client_id, country)', async () => {
+  it('transmet les filtres admin (driver_id, client_id)', async () => {
     mockReservationApi.listAll.mockResolvedValue({ ok: true, data: mockListResult, message: 'OK' });
 
     await act(async () => {
       await useReservationStore.getState().fetchAll(TOKEN, {
         driver_id: 'driver-1',
         client_id: 'client-1',
-        country: 'senegal',
       });
     });
 
     expect(mockReservationApi.listAll).toHaveBeenCalledWith(TOKEN, expect.objectContaining({
       driver_id: 'driver-1',
       client_id: 'client-1',
-      country: 'senegal',
     }));
   });
 });
@@ -403,7 +399,7 @@ describe('useReservationStore › submitBooking', () => {
 
     let result: Reservation | null = null;
     await act(async () => {
-      result = await useReservationStore.getState().submitBooking(TOKEN, 'france' as PricingCountry );
+      result = await useReservationStore.getState().submitBooking(TOKEN);
     });
 
     expect(result!.id).toBe('resa-1');
@@ -415,7 +411,7 @@ describe('useReservationStore › submitBooking', () => {
     useReservationStore.getState().setOrigin(null);
 
     await expect(
-      act(async () => { await useReservationStore.getState().submitBooking(TOKEN, 'france' as PricingCountry ); })
+      act(async () => { await useReservationStore.getState().submitBooking(TOKEN); })
     ).rejects.toThrow('Formulaire incomplet');
   });
 
@@ -428,14 +424,13 @@ describe('useReservationStore › submitBooking', () => {
     });
 
     await act(async () => {
-      await useReservationStore.getState().submitBooking(TOKEN, 'france' as PricingCountry );
+      await useReservationStore.getState().submitBooking(TOKEN);
     });
 
     expect(mockReservationApi.create).toHaveBeenCalledWith(TOKEN, expect.objectContaining({
       pickup_address: '10 rue de la Paix',
       dest_address: 'CDG',
       vehicle_type: 'berline',
-      country: 'france' as PricingCountry ,
       distance_km: 12.5,
       duration_min: 25,
       flat_rate_id: 'flat-1',
@@ -464,7 +459,7 @@ describe('useReservationStore › fetchVehicleTypes', () => {
     mockVehicleApi.getVehicleTypes.mockResolvedValue({ ok: true, data: types, message: 'OK' });
 
     await act(async () => {
-      await useReservationStore.getState().fetchVehicleTypes(TOKEN, 'france' as PricingCountry  as PricingCountry );
+      await useReservationStore.getState().fetchVehicleTypes(TOKEN);
     });
 
     expect(useReservationStore.getState().vehicleTypes).toHaveLength(1);

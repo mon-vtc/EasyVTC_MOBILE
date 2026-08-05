@@ -53,7 +53,7 @@ function ReservationCard({ reservation, onDetails, onAction }: {
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
   const price = reservation.price_final ?? reservation.price_estimated;
   const refNumber = `BC-${reservation.id.slice(-6).toUpperCase()}`;
-  const currencySymbol = reservation.country === 'france' ? '€' : ' CFA';
+  const currencySymbol = '€';
 
   let primaryText = 'Voir';
   if (status === 'assigned')    primaryText = 'Démarrer';

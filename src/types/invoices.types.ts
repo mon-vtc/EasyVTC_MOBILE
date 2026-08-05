@@ -12,7 +12,6 @@ export interface DriverBillingSnapshot {
   email:      string | null;
   siret:      string | null;
   tva_rate:   number;
-  zone:       string;
 }
 
 export interface ClientInvoiceSnapshot {
@@ -26,7 +25,6 @@ export interface TripInvoiceSnapshot {
   pickup_address:      string;
   dest_address:        string;
   vehicle_type:        string;
-  country:             string;
   scheduled_at:        string;
   started_at:          string | null;
   ended_at:            string | null;

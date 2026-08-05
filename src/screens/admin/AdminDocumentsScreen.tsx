@@ -13,6 +13,7 @@ import { useBottomInset, useTopInset } from '../../hooks/useSafeAreaPadding';
 import DocumentViewer         from '../../components/admin/DocumentViewer';
 import type { AdminDocument } from '../../services/api/admin.document.api';
 import { useToast } from '../../hooks/useToast';
+import { usePermissions } from '../../hooks/usePermissions';
 
 // ── URL de base Supabase Storage ─────────────────────────────
 const SUPABASE_STORAGE_URL = process.env.SUPABASE_STORAGE_URL;
@@ -273,8 +274,8 @@ function DocRow({ docType, doc, onOpen, onValidate, onReject, isActing, isFetchi
   docType: typeof DOC_TYPES[number];
   doc:     AdminDocument | undefined;
   onOpen:  () => void;
-  onValidate: () => void;
-  onReject:   () => void;
+  onValidate?: () => void;
+  onReject?:   () => void;
   isActing:   boolean;
   isFetching: boolean;
 }) {
@@ -330,7 +331,7 @@ function DocRow({ docType, doc, onOpen, onValidate, onReject, isActing, isFetchi
           </TouchableOpacity>
         )}
 
-        {status === 'pending' && (
+        {status === 'pending' && onValidate && onReject && (
           <View style={dStyles.actRow}>
             <TouchableOpacity style={[dStyles.actBtn, { backgroundColor: '#43A047' }]} onPress={onValidate} disabled={isActing}>
               {isActing
@@ -482,6 +483,8 @@ export default function AdminDocumentsScreen({ navigation }: Props) {
 
   const { showToast } = useToast();
   const { showAlert } = useAlert();
+  const { hasPermission } = usePermissions();
+  const canValidate = hasPermission('validate_documents');
   const topInset = useTopInset();
   const scrollBottomInset = useBottomInset(s.scroll.padding);
 
@@ -720,8 +723,8 @@ const folders = useMemo(() => {
                     docType={docType}
                     doc={doc}
                     onOpen={() => doc && handleOpenViewer(doc)}
-                    onValidate={() => doc && handleValidate(doc.id)}
-                    onReject={() => doc && setRejectTarget(doc.id)}
+                    onValidate={canValidate ? () => doc && handleValidate(doc.id) : undefined}
+                    onReject={canValidate ? () => doc && setRejectTarget(doc.id) : undefined}
                     isActing={isActing && !!doc && actingId === doc.id}
                     isFetching={isFetching && !!doc && fetchingId === doc.id}
                   />
@@ -744,8 +747,8 @@ const folders = useMemo(() => {
             ? `${viewerDoc.driver.user.first_name} ${viewerDoc.driver.user.last_name}`
             : 'Chauffeur'}
           status={viewerDoc.status as any}
-          onValidate={viewerDoc.status === 'pending' ? () => handleValidate(viewerDoc.id) : undefined}
-          onReject={viewerDoc.status === 'pending'   ? () => setRejectTarget(viewerDoc.id) : undefined}
+          onValidate={viewerDoc.status === 'pending' && canValidate ? () => handleValidate(viewerDoc.id) : undefined}
+          onReject={viewerDoc.status === 'pending'   && canValidate ? () => setRejectTarget(viewerDoc.id) : undefined}
           isActing={isActing && actingId === viewerDoc.id}
         />
       )}

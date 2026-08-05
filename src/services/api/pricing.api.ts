@@ -13,7 +13,6 @@ import type {
   UpdatePricingGridDto,
   PriceEstimateDto,
   PriceEstimateResult,
-  PricingCountry,
   FlatRateListFilters,
 } from '../../types/pricing.types';
 
@@ -32,20 +31,15 @@ export const pricingApi = {
   // GRILLES TARIFAIRES
   // ══════════════════════════════════════════════════════════════════════════
 
-  /** GET /pricing/grids/active/:country — public */
-  getActiveGrid: (
-    country: PricingCountry,
-  ): Promise<ApiResponse<PricingGrid>> =>
-    api.get(`/pricing/grids/active/${country}`),
+  /** GET /pricing/grids/active — public */
+  getActiveGrid: (): Promise<ApiResponse<PricingGrid>> =>
+    api.get('/pricing/grids/active'),
 
-  /** GET /pricing/grids?country=france — admin */
+  /** GET /pricing/grids — admin */
   getAllGrids: (
-    token:    string,
-    country?: PricingCountry,
-  ): Promise<ApiResponse<PricingGrid[]>> => {
-    const qs = country ? `?country=${country}` : '';
-    return api.get(`/pricing/grids${qs}`, token);
-  },
+    token: string,
+  ): Promise<ApiResponse<PricingGrid[]>> =>
+    api.get('/pricing/grids', token),
 
   /** POST /pricing/grids — admin (désactive l'ancienne côté backend) */
   createGrid: (
@@ -69,11 +63,9 @@ export const pricingApi = {
   /** GET /pricing/flat-rates — public */
   listFlatRates: (
     token?:   string,
-    country?: PricingCountry,
-    filters?: Omit<FlatRateListFilters, 'country'>,
+    filters?: FlatRateListFilters,
   ): Promise<ApiResponse<FlatRateListResult>> => {
     const params = new URLSearchParams();
-    if (country)                          params.set('country',   country);
     if (filters?.is_active !== undefined) params.set('is_active', String(filters.is_active));
     if (filters?.page)                    params.set('page',      String(filters.page));
     if (filters?.limit)                   params.set('limit',     String(filters.limit));

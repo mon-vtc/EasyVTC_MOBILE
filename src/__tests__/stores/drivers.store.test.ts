@@ -4,7 +4,6 @@ import { useDriversStore } from '../../store/drivers.store';
 import { driverApi } from '../../services/api/drivers.api';
 import { AuthUser, DriverWithUser, PaginatedDrivers, ListDriversParams, ChangeDriverStatusPayload } from '../../types';
 import { DriverStatus, VehicleType,  } from '../../types/user.types';
-import { PricingCountry } from '../../types/pricing.types';
 
 jest.mock('../../services/api/drivers.api');
 const mockDriverApi = driverApi as jest.Mocked<typeof driverApi>;
@@ -17,7 +16,6 @@ const mockDriverWithUser = {
   status: 'active' as DriverStatus,
   vehicle_type: 'berline' as VehicleType,
   siret: '12345678901234',
-  zone: 'france' as PricingCountry,
   tva_rate: 20,
   is_online: true,
   created_at: '2024-01-01T00:00:00Z',
@@ -79,7 +77,6 @@ describe('useDriversStore › fetchDrivers', () => {
     await act(async () => {
       await useDriversStore.getState().fetchDrivers(TOKEN, {
         status: 'active' as ListDriversParams['status'],
-        zone: 'france' as PricingCountry,
         is_online: true,
         page: 2,
         limit: 10,
@@ -88,7 +85,6 @@ describe('useDriversStore › fetchDrivers', () => {
 
     expect(mockDriverApi.listDrivers).toHaveBeenCalledWith(TOKEN, expect.objectContaining({
       status: 'active' as DriverStatus,
-      zone: 'france' as PricingCountry,
       is_online: true,
     }));
   });

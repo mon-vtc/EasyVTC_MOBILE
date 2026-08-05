@@ -82,7 +82,7 @@ interface ReservationState {
   assign: (token: string, id: string, driverId: string) => Promise<void>;
 
   // ── Formulaire booking ─────────────────────────────────────────────────────
-  fetchVehicleTypes: (token: string, country?: string) => Promise<void>;
+  fetchVehicleTypes: (token: string) => Promise<void>;
   setBookingStep:    (step: BookingStep)                => void;
   setOrigin:         (point: GeoPoint | null)           => void;
   setDestination:    (point: GeoPoint | null)           => void;
@@ -101,7 +101,7 @@ interface ReservationState {
    * Construit le DTO avec les noms de champs attendus par le serveur :
    *   pickup_address / dest_address / nb_passengers / distance_km / duration_min
    */
-  submitBooking: (token: string, country: string) => Promise<Reservation>;
+  submitBooking: (token: string) => Promise<Reservation>;
   resetBooking:  ()                               => void;
 
   clearError:    () => void;
@@ -314,10 +314,10 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
   },
 
   // ── Types de véhicule ──────────────────────────────────────────────────────
-  fetchVehicleTypes: async (token, country) => {
+  fetchVehicleTypes: async (token) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await vehicleApi.getVehicleTypes(token, country);      
+      const res = await vehicleApi.getVehicleTypes(token);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur chargement véhicules');
       set({ vehicleTypes: res.data, isLoading: false });
     } catch (err: unknown) {
@@ -512,7 +512,7 @@ fetchAllDriverPages: async (token, filters) => {
    *
    * Le champ 'luggage' est conservé en local uniquement (non supporté backend).
    */
-  submitBooking: async (token, country) => {
+  submitBooking: async (token) => {
     const { booking } = get();
 
     // Avec forfait : origin/destination non obligatoires (l'itinéraire est défini par le forfait).
@@ -545,9 +545,8 @@ fetchAllDriverPages: async (token, filters) => {
         ...(booking.destination?.latitude  ? { dest_lat: booking.destination.latitude  } : {}),
         ...(booking.destination?.longitude ? { dest_lng: booking.destination.longitude } : {}),
 
-        // Véhicule & pays
+        // Véhicule
         vehicle_type: booking.vehicle_type!,
-        country:      country as any,
 
         // Horaire
         scheduled_at,

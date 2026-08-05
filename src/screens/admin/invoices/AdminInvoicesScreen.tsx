@@ -19,6 +19,7 @@ import type { Invoice }     from '../../../types/invoices.types';
 import { Colors, Fonts, Spacing, Radius } from '../../../theme/colors';
 import { useToast } from '../../../hooks/useToast';
 import { useNotifications } from '../../../hooks/useNotifications';
+import { usePermissions } from '../../../hooks/usePermissions';
 import { AppHeader } from '../../../components/common/AppHeader';
 import { useKeyboardAwareBottomInset } from '../../../hooks/useSafeAreaPadding';
 
@@ -42,7 +43,7 @@ function AdjustPriceModal({ invoice, token, onClose }: {
   const { adjustPrice, isAdjusting } = useInvoicesStore();
   const { showToast } = useToast();
   const sheetBottomInset = useKeyboardAwareBottomInset(styles.modalSheet.padding);
-  const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
+  const currency = 'EUR';
   const [newAmount, setNewAmount] = useState(String(invoice.amount_ttc));
   const [reason,    setReason]    = useState('');
 
@@ -149,14 +150,15 @@ function AdjustPriceModal({ invoice, token, onClose }: {
 
 // ── Carte facture ─────────────────────────────────────────────────────────────
 
-function InvoiceRow({ invoice, token, onAdjust, onPress }: {
+function InvoiceRow({ invoice, token, onAdjust, onPress, canAdjust }: {
   invoice:  Invoice;
   token:    string;
   onAdjust: (inv: Invoice) => void;
   onPress: (inv: Invoice) => void;
+  canAdjust: boolean;
 }) {
   const [opening, setOpening] = useState(false);
-  const currency = invoice.trip_snapshot.country === 'senegal' ? 'XOF' : 'EUR';
+  const currency = 'EUR';
   const snap = invoice.trip_snapshot;
   const { showToast } = useToast();
 
@@ -225,13 +227,15 @@ function InvoiceRow({ invoice, token, onAdjust, onPress }: {
           <Text style={styles.actionBtnText}>PDF</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.actionBtnAdjust]}
-          onPress={() => onAdjust(invoice)}
-        >
-          <Ionicons name="pencil-outline" size={14} color={Colors.white} />
-          <Text style={styles.actionBtnText}>Ajuster</Text>
-        </TouchableOpacity>
+        {canAdjust && (
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnAdjust]}
+            onPress={() => onAdjust(invoice)}
+          >
+            <Ionicons name="pencil-outline" size={14} color={Colors.white} />
+            <Text style={styles.actionBtnText}>Ajuster</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -248,6 +252,8 @@ export default function AdminInvoicesScreen() {
   const [search, setSearch] = useState('');
   const { showToast } = useToast();
   const { unreadCount } = useNotifications();
+  const { hasPermission } = usePermissions();
+  const canAdjust = hasPermission('adjust_invoice_price');
 
   const load = useCallback(async () => {
     try { await fetch(token); } catch { /* handled */ }
@@ -306,7 +312,7 @@ export default function AdminInvoicesScreen() {
         data={filtered}
         keyExtractor={(i) => i.id}
         renderItem={({ item }) => (
-          <InvoiceRow invoice={item} token={token} onAdjust={setAdjustTarget} onPress={handleViewInvoice} />
+          <InvoiceRow invoice={item} token={token} onAdjust={setAdjustTarget} onPress={handleViewInvoice} canAdjust={canAdjust} />
         )}
         contentContainerStyle={[styles.list, { paddingBottom: styles.list.paddingBottom + insets.bottom }]}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} tintColor={Colors.bordeaux} />}

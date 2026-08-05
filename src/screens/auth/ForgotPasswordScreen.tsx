@@ -7,6 +7,7 @@ import { useForm }                     from 'react-hook-form';
 import { zodResolver }                 from '@hookform/resolvers/zod';
 import { z }                           from 'zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect }              from '@react-navigation/native';
 import { Ionicons }                    from '@expo/vector-icons';
 
 import { FormField } from '../../components/forms/FormField';
@@ -26,6 +27,14 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   const { forgotPassword, isLoading, error, clearError } = useAuth();
   const [sent, setSent]           = useState(false);
   const [sentEmail, setSentEmail] = useState('');
+
+  // Une erreur laissée par un écran précédent (login...) ne doit pas s'afficher ici
+  // avant même que l'utilisateur ait soumis le formulaire.
+  useFocusEffect(
+    React.useCallback(() => {
+      clearError();
+    }, [clearError])
+  );
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),

@@ -62,8 +62,8 @@ describe('searchAddress (Photon)', () => {
             properties: { name: 'Орлы', country: 'Russie', countrycode: 'RU' },
           },
           {
-            geometry: { coordinates: [-17.4677, 14.7167] },
-            properties: { name: 'Plateau', city: 'Dakar', country: 'Sénégal', countrycode: 'SN' },
+            geometry: { coordinates: [-6.8498, 34.0209] },
+            properties: { name: 'Agdal', city: 'Rabat', country: 'Maroc', countrycode: 'MA' },
           },
         ],
       }),
@@ -79,7 +79,7 @@ describe('searchAddress (Photon)', () => {
   it('retourne un tableau vide si la réponse HTTP est en erreur', async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false }) as any;
 
-    const results = await searchAddress('Dakar Sénégal');
+    const results = await searchAddress('Rabat Maroc');
 
     expect(results).toEqual([]);
   });
@@ -87,7 +87,7 @@ describe('searchAddress (Photon)', () => {
   it('retourne un tableau vide si fetch lève une exception (réseau, requête annulée)', async () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('network error')) as any;
 
-    const results = await searchAddress('Dakar Sénégal');
+    const results = await searchAddress('Rabat Maroc');
 
     expect(results).toEqual([]);
   });

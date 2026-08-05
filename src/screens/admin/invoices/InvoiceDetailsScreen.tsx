@@ -139,7 +139,7 @@ export default function InvoiceDetailsScreen() {
   const snap     = invoice.trip_snapshot;
   const driver   = invoice.driver_billing;
   const client   = invoice.client_snapshot;
-  const currency = snap.country === 'senegal' ? 'XOF' : 'EUR';
+  const currency = 'EUR';
   const tvaAmount = invoice.tva_rate > 0
     ? Math.round((invoice.amount_ttc - invoice.amount_ht) * 100) / 100
     : 0;

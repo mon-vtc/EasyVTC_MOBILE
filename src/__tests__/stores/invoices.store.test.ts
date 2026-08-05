@@ -13,11 +13,11 @@ const mockInvoice = {
   trip_id: 'trip-1',
   invoice_number: 'INV-001',
   pdf_url: null,
-  driver_billing: { first_name: 'Marc', last_name: 'M', phone: null, email: null, siret: null, tva_rate: 20, zone: 'france' },
+  driver_billing: { first_name: 'Marc', last_name: 'M', phone: null, email: null, siret: null, tva_rate: 20 },
   client_snapshot: { first_name: 'Jean', last_name: 'D', phone: null, email: null },
   trip_snapshot: {
     pickup_address: '10 rue de la Paix', dest_address: 'CDG', vehicle_type: 'berline',
-    country: 'france', scheduled_at: '2024-06-01T10:00:00Z',
+    scheduled_at: '2024-06-01T10:00:00Z',
     started_at: null, ended_at: null, actual_distance_km: null, actual_duration_min: null,
   },
   amount_ht: 45.0,

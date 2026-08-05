@@ -3,7 +3,6 @@ import type { AuthUser } from './auth.types';
 
 export type VehicleType  = 'standard' | 'berline' | 'van';
 export type DriverStatus = 'pending' | 'active' | 'rejected' | 'suspended' | 'on_trip' | 'probationary' | 'on_trip_probationary';
-export type ZoneType     = 'senegal' | 'france'; 
 
 // ── DriverProfile (réponse brute API avant mapApiUser) ──────────
 export interface DriverProfile {
@@ -13,7 +12,6 @@ export interface DriverProfile {
   siret:        string | null;
   tva_rate:     number;
   is_online:    boolean;
-  zone:         ZoneType;
   created_at:   string;
   updated_at:   string;
   trips_count?:     number;        // Optionnel — ajouté par l'admin endpoint
@@ -29,7 +27,6 @@ export interface DriverWithUser {
   siret: string | null;
   tva_rate: number;
   is_online: boolean;
-  zone: ZoneType;
   created_at: string;
   updated_at: string;
   trips_count: number;        // Nombre de courses complétées
@@ -82,7 +79,6 @@ export interface DriverUser extends AuthUser {
   siret:        string | null;
   tva_rate:     number;
   is_online:    boolean;
-  zone:         ZoneType;
   vehicle_type: VehicleType | null;
   vehicle:      Vehicle | null; // véhicule actif, peut être null
 }

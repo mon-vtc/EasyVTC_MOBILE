@@ -14,7 +14,7 @@ import * as ImagePicker      from 'expo-image-picker';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { FormField }         from '../../components/forms/FormField';
 import { useDriver }         from '../../hooks/useDriver';
-import type { VehicleType, ZoneType, Vehicle } from '../../types/user.types';
+import type { VehicleType, Vehicle } from '../../types/user.types';
 import type { DrawerScreenProps }     from '@react-navigation/drawer';
 import type { DriverDrawerParamList } from '../../types';
 import { useToast } from '../../hooks/useToast';
@@ -443,7 +443,7 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const {
     user, logout, changePassword, isLoading, error, clearError, login,
     updateDriverProfile, uploadAvatar,
-    vehicle, vehicleType, iban, vtcLicense, siret, zone,
+    vehicle, vehicleType, iban, vtcLicense, siret,
     createVehicle, uploadVehiclePhoto, updateVehicle, deleteVehicle,
   } = useDriver();
 
@@ -451,7 +451,7 @@ export default function DriverProfileScreen({ navigation }: Props) {
 
   const { showAlert } = useAlert();
   const scrollBottomInset = useBottomInset(styles.scroll.paddingBottom);
-  console.log('Petite verifiction de siret',siret,'et de zone', zone );
+  console.log('Petite verifiction de siret', siret);
 
   // ── Modals ──────────────────────────────────────────────────
   const [showCreateVehicle, setShowCreateVehicle] = useState(false);
@@ -473,7 +473,6 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const [ibanVal,       setIbanVal]       = useState(iban              ?? '');
   const [vtcLicenseVal, setVtcLicense]    = useState(vtcLicense        ?? '');
   const [siretVal,      setSiretVal]      = useState(siret             ?? '');
-  const [zoneVal,       setZoneVal]       = useState<ZoneType>(zone    ?? '');
   const [vehicleTypeVal, setVehicleType]  = useState<VehicleType>(vehicleType ?? 'standard');
 
   // ── Préférences ──────────────────────────────────────────────
@@ -494,13 +493,12 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const handleEditToggle = useCallback(async () => {
     if (editMode) {
       try {
-        // Le backend rejette siret/zone/vehicle_type vides (regex/enum) — on n'envoie
+        // Le backend rejette siret/vehicle_type vides (regex/enum) — on n'envoie
         // que les champs réellement renseignés pour ne pas faire échouer toute la sauvegarde.
         const driverPayload: Record<string, string> = {};
         if (ibanVal)       driverPayload.iban         = ibanVal;
         if (vtcLicenseVal) driverPayload.vtc_license   = vtcLicenseVal;
         if (siretVal)      driverPayload.siret         = siretVal;
-        if (zoneVal)       driverPayload.zone          = zoneVal;
         if (vehicleTypeVal) driverPayload.vehicle_type = vehicleTypeVal;
 
         await updateDriverProfile(
@@ -525,7 +523,7 @@ export default function DriverProfileScreen({ navigation }: Props) {
       }
     }
     setEditMode(prev => !prev);
-  }, [editMode, firstName, lastName, phone, ibanVal, vtcLicenseVal, siretVal, zoneVal, vehicleTypeVal, pendingImage]);
+  }, [editMode, firstName, lastName, phone, ibanVal, vtcLicenseVal, siretVal, vehicleTypeVal, pendingImage]);
 
   const handleEditToggleRef = useRef(handleEditToggle);
   useEffect(() => { handleEditToggleRef.current = handleEditToggle; }, [handleEditToggle]);
@@ -618,7 +616,6 @@ export default function DriverProfileScreen({ navigation }: Props) {
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Informations chauffeur</Text>
             <ProfileField label="SIRET"            value={siretVal}      editable={editMode} onChangeText={setSiretVal} />
-            <ProfileField label="Zone"             value={zoneVal}       editable={editMode} onChangeText={v => setZoneVal(v as ZoneType)} />
             <ProfileField label="Type de véhicule" value={vehicleTypeVal} editable={editMode}
               onChangeText={v => setVehicleType(v as VehicleType)} />
           </View>

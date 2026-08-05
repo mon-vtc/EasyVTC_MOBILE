@@ -85,7 +85,6 @@ function mapDriverWithUserToAuthUser(driverWithUser: DriverWithUser | DriverWith
       siret:        driverWithUser.siret,
       tva_rate:     driverWithUser.tva_rate,
       is_online:    driverWithUser.is_online,
-      zone:         driverWithUser.zone,
       created_at:   driverWithUser.created_at,
       updated_at:   driverWithUser.updated_at,
       trips_count:  driverWithUser.trips_count,

@@ -10,9 +10,10 @@ import {
 } from 'react-native';
 import { usePricing }          from '../../hooks/usePricing';
 import { useCommissionSettings } from '../../hooks/useCommissionSettings';
-import type { PricingCountry, PricingFormValues, PricingExample } from '../../types/pricing.types';
+import type { PricingFormValues, PricingExample } from '../../types/pricing.types';
 import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
+import { usePermissions } from '../../hooks/usePermissions';
 import { AppIcon }             from '../../components/common/AppIcon';
 import { AppHeader }           from '../../components/common/AppHeader';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
@@ -27,51 +28,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 function PricingHeader({
   isEditing,
   onToggleEdit,
+  canEdit,
 }: {
   isEditing: boolean;
   onToggleEdit: () => void;
+  canEdit: boolean;
 }) {
   return (
     <AppHeader
       left="back"
       title="Grille tarifaire"
-      rightIcon={{
+      rightIcon={canEdit ? {
         name: isEditing ? 'close-outline' : 'create-outline',
         onPress: onToggleEdit,
-      }}
+      } : undefined}
     />
-  );
-}
-
-// ── Sélecteur de pays ────────────────────────────────────────────────────────
-function CountrySelector({
-  active,
-  onChange,
-  disabled,
-}: {
-  active: PricingCountry;
-  onChange: (c: PricingCountry) => void;
-  disabled?: boolean;
-}) {
-  const countries: { key: PricingCountry; label: string }[] = [
-    { key: 'france',  label: 'France' },
-    // { key: 'senegal', label: 'Sénégal' },
-  ];
-  return (
-    <View style={cs.row}>
-      {countries.map(c => (
-        <TouchableOpacity
-          key={c.key}
-          style={[cs.tab, active === c.key && cs.tabActive]}
-          onPress={() => !disabled && onChange(c.key)}
-          activeOpacity={disabled ? 1 : 0.8}
-        >
-          <Text style={[cs.tabText, active === c.key && cs.tabTextActive]}>
-            {c.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
   );
 }
 
@@ -170,7 +141,6 @@ function ExampleRow({
 // ══════════════════════════════════════════════════════════════════════════════
 
 function fmt(n: number, symbol: string): string {
-  if (symbol === 'F CFA') return `${Math.round(n).toLocaleString('fr-FR')} F CFA`;
   return `${n.toFixed(2)} ${symbol}`;
 }
 
@@ -181,13 +151,11 @@ function fmt(n: number, symbol: string): string {
 export default function AdminPricingScreen() {
   const {
     config,
-    activeCountry,
     isLoading,
     isSaving,
     error,
     clearError,
     currencySymbol,
-    setCountry,
     saveConfig,
     getInitialFormValues,
     computeExample,
@@ -196,15 +164,17 @@ export default function AdminPricingScreen() {
   const insets = useSafeAreaInsets();
   const { showToast } = useToast();
   const { showAlert } = useAlert();
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission('manage_pricing');
   // ── Mode édition ─────────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
 
-  // ── Commission active (zone + "Toutes catégories") pour l'exemple de calcul ──
+  // ── Commission active ("Toutes catégories") pour l'exemple de calcul ──────
   const { settings: commissionSettings, fetchSettings: fetchCommissionSettings } = useCommissionSettings();
 
   useEffect(() => {
-    fetchCommissionSettings({ zone: activeCountry, is_active: true });
-  }, [activeCountry, fetchCommissionSettings]);
+    fetchCommissionSettings({ is_active: true });
+  }, [fetchCommissionSettings]);
 
   const activeCommissionRate = useMemo(() => {
     const setting = commissionSettings.find(s => s.vehicle_type === null && s.is_active);
@@ -243,12 +213,6 @@ export default function AdminPricingScreen() {
   const set = useCallback((key: keyof PricingFormValues) => (v: string) =>
     setForm(prev => ({ ...prev, [key]: v })),
   []);
-
-  const handleCountryChange = (country: PricingCountry) => {
-    setCountry(country);
-    setIsEditing(false);
-    // form sera hydraté par le useEffect quand config change
-  };
 
   // Bascule crayon / annulation
   const handleToggleEdit = () => {
@@ -296,7 +260,7 @@ export default function AdminPricingScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}>
-        <PricingHeader isEditing={false} onToggleEdit={() => {}} />
+        <PricingHeader isEditing={false} onToggleEdit={() => {}} canEdit={canEdit} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.bordeaux} />
           <Text style={styles.loadingText}>Chargement des tarifs…</Text>
@@ -311,7 +275,7 @@ export default function AdminPricingScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background ?? '#F5F5F5' }}>
-      <PricingHeader isEditing={isEditing} onToggleEdit={handleToggleEdit} />
+      <PricingHeader isEditing={isEditing} onToggleEdit={handleToggleEdit} canEdit={canEdit} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -332,13 +296,6 @@ export default function AdminPricingScreen() {
               </Text>
             </View>
           )}
-
-          {/* ── Sélecteur de pays ────────────────────────────────────────── */}
-          <CountrySelector
-            active={activeCountry}
-            onChange={handleCountryChange}
-            disabled={isEditing}
-          />
 
           {/* ── Tarifs de base ───────────────────────────────────────────── */}
           <Section title="Tarifs de base">
@@ -459,18 +416,6 @@ export default function AdminPricingScreen() {
               separator
             />
 
-            {/* {activeCountry === 'france' && (
-              <ExampleRow
-                label={`\t\tTVA (20%)`}
-                value={`+ ${fmt(example.vat_20, currencySymbol)}`}
-              />
-            )}
-            <ExampleRow
-              label="Total TTC"
-              value={fmt(example.total_ttc, currencySymbol)}
-              bold
-            /> */}
-
             <ExampleRow
               label={activeCommissionRate
                 ? `Commission EasyVTC (${activeCommissionRate.type === 'percentage' ? `${activeCommissionRate.value}%` : fmt(activeCommissionRate.value, currencySymbol)})`
@@ -580,39 +525,6 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontFamily: Fonts.bold, fontWeight: '700',
     fontSize: 16,
-  },
-});
-
-// ── CountrySelector ───────────────────────────────────────────────────────────
-const cs = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surface ?? '#fff',
-    borderRadius: 10,
-    padding: 4,
-    gap: 4,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  tabActive: {
-    backgroundColor: Colors.bordeauxLight,
-  },
-  tabText: {
-    fontSize: 14,
-    fontFamily: Fonts.semibold, fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  tabTextActive: {
-    color: Colors.white,
   },
 });
 

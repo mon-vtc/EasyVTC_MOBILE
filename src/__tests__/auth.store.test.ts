@@ -331,7 +331,7 @@ describe('loginWithGoogle() — REGRESSION', () => {
       role: 'driver' as const,
       driver: {
         id: 'd1', status: 'active' as const, vehicle_type: 'berline' as const,
-        siret: null, tva_rate: 0, is_online: false, zone: 'france' as const,
+        siret: null, tva_rate: 0, is_online: false,
         created_at: '2026-01-01', updated_at: '2026-01-01',
       },
       vehicle: null,

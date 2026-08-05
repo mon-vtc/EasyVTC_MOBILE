@@ -9,13 +9,12 @@ import { useAuthStore }           from '../store/auth.store';
 import { usePricingStore }        from '../store/pricing.store';
 import { useAuth }                from './useAuth';
 import type {
-  PricingCountry,
   PricingFormValues,
   PricingExample,
   SavePricingConfigDto,
   PricingFlatRate,
 } from '../types/pricing.types';
-import { PRICING_CURRENCY_SYMBOLS, PRICING_COUNTRY_CURRENCIES } from '../types/pricing.types';
+import { PRICING_CURRENCY_SYMBOLS } from '../types/pricing.types';
 
 // ── Exemple de calcul avec distances fixes ────────────────────────────────────
 const EXAMPLE_KM  = 15;
@@ -43,12 +42,10 @@ export function usePricing() {
 
 
   const config        = usePricingStore(s => s.config);
-  const activeCountry = usePricingStore(s => s.activeCountry);
   const isLoading     = usePricingStore(s => s.isLoading);
   const isSaving      = usePricingStore(s => s.isSaving);
   const error         = usePricingStore(s => s.error);
   const flatRates     = usePricingStore(s => s.flatRates);
-  const _setCountry   = usePricingStore(s => s.setCountry);
   const _fetchConfig  = usePricingStore(s => s.fetchConfig);
   const _saveConfig   = usePricingStore(s => s.saveConfig);
   const _fetchRates   = usePricingStore(s => s.fetchFlatRates);
@@ -57,18 +54,13 @@ export function usePricing() {
   const _deactivate   = usePricingStore(s => s.deactivateFlatRate);
   const clearError    = usePricingStore(s => s.clearError);
 
-  // ── Auto-fetch à chaque changement de pays ────────────────────────────────
+  // ── Chargement initial ────────────────────────────────────────────────────
   useEffect(() => {
     if (accessToken) {
-      _fetchConfig(accessToken, activeCountry);
-      _fetchRates(accessToken, activeCountry);
+      _fetchConfig(accessToken);
+      _fetchRates(accessToken);
     }
-  }, [activeCountry, accessToken]);
-
-  // ── Sélection pays ────────────────────────────────────────────────────────
-  const setCountry = useCallback((country: PricingCountry) => {
-    _setCountry(country);
-  }, [_setCountry]);
+  }, [accessToken]);
 
   // ── Valeurs initiales du formulaire depuis la config chargée ─────────────
   const getInitialFormValues = useCallback((): PricingFormValues => ({
@@ -89,7 +81,7 @@ export function usePricing() {
 
   // ── Calcul dynamique de l'exemple ────────────────────────────────────────
   // `commissionRate` reflète le paramétrage actif dans "Règles de Commission"
-  // (zone + "Toutes catégories") — null si aucune règle active n'est configurée.
+  // ("Toutes catégories") — null si aucune règle active n'est configurée.
   const computeExample = useCallback((
     values: PricingFormValues,
     commissionRate?: { type: 'percentage' | 'flat'; value: number } | null,
@@ -98,17 +90,11 @@ export function usePricing() {
     const pxKm        = toNum(values.price_per_km);
     const pxMin       = toNum(values.price_per_min);
 
-    const currency    = PRICING_COUNTRY_CURRENCIES[activeCountry];
-    const symbol      = PRICING_CURRENCY_SYMBOLS[currency] ?? currency;
-
     const km_cost     = round2(pxKm  * EXAMPLE_KM);
     const min_cost    = round2(pxMin * EXAMPLE_MIN);
     const subtotal_ht = round2(basePx + km_cost + min_cost);
 
-    // TVA 20% sur le HT course (France uniquement, Sénégal pas de TVA)
-    // const vatRate     = activeCountry === 'france' ? 0.20 : 0;
-    const vatRate     =  0;
-    const vat_20      = round2(subtotal_ht * vatRate);
+    const vat_20      = 0;
     const total_ttc   = round2(subtotal_ht + vat_20);
 
     // Commission EasyVTC : calculée sur le HT selon le paramétrage actif
@@ -132,9 +118,9 @@ export function usePricing() {
       commission_vat,
       commission_ttc,
       net_driver,
-      currency_symbol: symbol,
+      currency_symbol: PRICING_CURRENCY_SYMBOLS.EUR ?? '€',
     };
-  }, [activeCountry]);
+  }, []);
 
   // ── Sauvegarde ────────────────────────────────────────────────────────────
   const saveConfig = useCallback(async (values: PricingFormValues) => {
@@ -151,34 +137,27 @@ export function usePricing() {
         night_end:             values.night_end   || undefined,
       },
     };
-    await _saveConfig(accessToken!, activeCountry, dto);
-  }, [accessToken, activeCountry, _saveConfig]);
-
-  // ── Symbole monnaie actif ─────────────────────────────────────────────────
-  const currencySymbol = PRICING_CURRENCY_SYMBOLS[
-    PRICING_COUNTRY_CURRENCIES[activeCountry]
-  ] ?? '€';
+    await _saveConfig(accessToken!, dto);
+  }, [accessToken, _saveConfig]);
 
   return {
     // État
     config,
-    activeCountry,
     isLoading,
     isSaving,
     error,
     clearError,
-    currencySymbol,
+    currencySymbol: PRICING_CURRENCY_SYMBOLS.EUR ?? '€',
 
     // Forfaits
     flatRates,
 
     // Actions
-    setCountry,
     saveConfig,
     getInitialFormValues,
     computeExample,
 
-    fetchFlatRates:    ()                                               => _fetchRates(accessToken!, activeCountry),
+    fetchFlatRates:    ()                                               => _fetchRates(accessToken!),
     createFlatRate:    (dto: Omit<PricingFlatRate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'is_active'>) =>
                          _createRate(accessToken!, dto),
     updateFlatRate:    (id: string, dto: Partial<PricingFlatRate>)     => _updateRate(accessToken!, id, dto),

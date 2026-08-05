@@ -6,7 +6,6 @@
 import { api } from '../../lib/api';
 import type { ApiResponse } from '../../types';
 import type {
-  CommissionZone,
   CommissionPeriod,
   CommissionSetting,
   CreateCommissionSettingDto,
@@ -19,10 +18,9 @@ import type {
 export const commissionApi = {
   listSettings: (
     token: string,
-    filters?: { zone?: CommissionZone; is_active?: boolean },
+    filters?: { is_active?: boolean },
   ): Promise<ApiResponse<CommissionSetting[]>> => {
     const params = new URLSearchParams();
-    if (filters?.zone) params.set('zone', filters.zone);
     if (filters?.is_active !== undefined) params.set('is_active', String(filters.is_active));
     const qs = params.toString() ? `?${params.toString()}` : '';
     return api.get(`/admin/commission-settings${qs}`, token);
@@ -70,7 +68,6 @@ export const commissionApi = {
   ): Promise<ApiResponse<CommissionListResult>> => {
     const params = new URLSearchParams();
     if (filters?.period) params.set('period', filters.period);
-    if (filters?.zone) params.set('zone', filters.zone);
     if (filters?.page !== undefined) params.set('page', String(filters.page));
     if (filters?.limit !== undefined) params.set('limit', String(filters.limit));
     const qs = params.toString() ? `?${params.toString()}` : '';

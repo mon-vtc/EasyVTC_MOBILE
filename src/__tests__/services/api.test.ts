@@ -9,7 +9,7 @@ import { pricingApi }       from '../../services/api/pricing.api';
 import { commissionApi }    from '../../services/api/commission.api';
 import { vehicleApi }       from '../../services/api/vehicle.api';
 import { api }              from '../../lib/api';
-import { PricingCountry, PriceEstimateDto } from '../../types/pricing.types';
+import { PriceEstimateDto } from '../../types/pricing.types';
 import { AdjustInvoicePriceDto } from '../../types/invoices.types';
 import { VehicleType } from '../../types/user.types';
 
@@ -130,15 +130,13 @@ describe('reservationApi › listMine URL builder', () => {
 });
 
 describe('reservationApi › listAll URL builder (admin)', () => {
-  it('inclut country, driver_id et client_id dans la querystring', () => {
+  it('inclut driver_id et client_id dans la querystring', () => {
     mockApi.get.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
     reservationApi.listAll(TOKEN, {
-      country: 'senegal',
       driver_id: 'drv-1',
       client_id: 'cli-1',
     });
     const url = (mockApi.get as jest.Mock).mock.calls[0][0] as string;
-    expect(url).toContain('country=senegal');
     expect(url).toContain('driver_id=drv-1');
     expect(url).toContain('client_id=cli-1');
   });
@@ -206,29 +204,14 @@ describe('vehicleApi › getVehicleTypes (mock)', () => {
     });
   });
 
-  it('retourne les 3 types de véhicule pour la france', async () => {
-    const result = await vehicleApi.getVehicleTypes(TOKEN, 'france' as PricingCountry);
+  it('retourne les 3 types de véhicule', async () => {
+    const result = await vehicleApi.getVehicleTypes(TOKEN);
     expect(result.ok).toBe(true);
     expect(result.data).toHaveLength(3);
     const types = result.data!.map(v => v.type);
     expect(types).toContain('standard');
     expect(types).toContain('berline');
     expect(types).toContain('van');
-  });
-
-  it('retourne des prix en XOF pour le sénégal', async () => {
-    jest.spyOn(vehicleApi, 'getVehicleTypes').mockResolvedValue({
-      ok: true,
-      message: 'OK',
-      data: [
-        { type: 'standard', label: 'Standard', base_price: 3000, icon: 'car-outline', capacity: 2, description: '1-2 passagers' },
-        { type: 'berline',  label: 'Berline',  base_price: 3900, icon: 'car-outline', capacity: 4, description: '1-4 passagers' },
-        { type: 'van',      label: 'Van',      base_price: 4800, icon: 'car-outline', capacity: 6, description: '1-6 passagers' },
-      ],
-    });
-    const result = await vehicleApi.getVehicleTypes(TOKEN, 'senegal' as PricingCountry);
-    const standard = result.data!.find(v => v.type === 'standard' as VehicleType);
-    expect(standard?.base_price).toBe(3000);
   });
 });
 
@@ -315,19 +298,13 @@ describe('ordersApi', () => {
 // pricingApi — routes publiques et admin
 // ══════════════════════════════════════════════════════════════════════════
 describe('pricingApi › grilles', () => {
-  it('getActiveGrid appelle /pricing/grids/active/:country', () => {
+  it('getActiveGrid appelle /pricing/grids/active', () => {
     mockApi.get.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
-    pricingApi.getActiveGrid('france' as PricingCountry);
-    expect(mockApi.get).toHaveBeenCalledWith('/pricing/grids/active/france');
+    pricingApi.getActiveGrid();
+    expect(mockApi.get).toHaveBeenCalledWith('/pricing/grids/active');
   });
 
-  it('getAllGrids appelle /pricing/grids avec country optionnel', () => {
-    mockApi.get.mockResolvedValue({ ok: true, data: [], message: 'OK' });
-    pricingApi.getAllGrids(TOKEN, 'senegal');
-    expect(mockApi.get).toHaveBeenCalledWith('/pricing/grids?country=senegal', TOKEN);
-  });
-
-  it('getAllGrids sans country n\'ajoute pas de querystring', () => {
+  it('getAllGrids appelle /pricing/grids', () => {
     mockApi.get.mockResolvedValue({ ok: true, data: [], message: 'OK' });
     pricingApi.getAllGrids(TOKEN);
     expect(mockApi.get).toHaveBeenCalledWith('/pricing/grids', TOKEN);
@@ -336,11 +313,10 @@ describe('pricingApi › grilles', () => {
   it('createGrid envoie le bon DTO', () => {
     mockApi.post.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
     pricingApi.createGrid(TOKEN, {
-      country: 'france', currency: 'EUR',
       base_price: 5, price_per_km: 1.8, price_per_min: 0.3, minimum_price: 10,
     });
     expect(mockApi.post).toHaveBeenCalledWith('/pricing/grids', expect.objectContaining({
-      country: 'france', currency: 'EUR', base_price: 5,
+      base_price: 5,
     }), TOKEN);
   });
 
@@ -354,17 +330,17 @@ describe('pricingApi › grilles', () => {
 describe('pricingApi › forfaits', () => {
   it('listFlatRates appelle /pricing/flat-rates', () => {
     mockApi.get.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
-    pricingApi.listFlatRates(TOKEN, 'france');
+    pricingApi.listFlatRates(TOKEN, { is_active: true });
     const url = (mockApi.get as jest.Mock).mock.calls[0][0] as string;
     expect(url).toContain('/pricing/flat-rates');
-    expect(url).toContain('country=france');
+    expect(url).toContain('is_active=true');
   });
 
   it('createFlatRate appelle POST /pricing/flat-rates', () => {
     mockApi.post.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
     pricingApi.createFlatRate(TOKEN, {
       label: 'Paris → CDG', origin_label: 'Paris', destination_label: 'CDG',
-      price: 65, country: 'france', currency: 'EUR', pickup_surcharge: 0,
+      price: 65, pickup_surcharge: 0,
     });
     expect(mockApi.post).toHaveBeenCalledWith('/pricing/flat-rates', expect.any(Object), TOKEN);
   });
@@ -379,7 +355,6 @@ describe('pricingApi › forfaits', () => {
 describe('pricingApi › estimate', () => {
   it('appelle POST /pricing/estimate avec le DTO', () => {
     const PriceEstimateDTO = {
-      country:       'france' as PricingCountry,
       distance_km:  45,
       duration_min: 15,
       flat_rate_id: 'flat-1',
@@ -400,11 +375,10 @@ describe('commissionApi › params commission', () => {
     expect(mockApi.get).toHaveBeenCalledWith('/admin/commission-settings', TOKEN);
   });
 
-  it('listSettings construit la querystring avec zone et is_active', () => {
+  it('listSettings construit la querystring avec is_active', () => {
     mockApi.get.mockResolvedValue({ ok: true, data: [], message: 'OK' });
-    commissionApi.listSettings(TOKEN, { zone: 'france', is_active: true });
+    commissionApi.listSettings(TOKEN, { is_active: true });
     const url = (mockApi.get as jest.Mock).mock.calls[0][0] as string;
-    expect(url).toContain('zone=france');
     expect(url).toContain('is_active=true');
   });
 
@@ -415,7 +389,7 @@ describe('commissionApi › params commission', () => {
   });
 
   it('createSetting appelle POST /admin/commission-settings', () => {
-    const dto = { label: 'Commission France', zone: 'france' as const, rate_type: 'percentage' as const, rate_value: 15 };
+    const dto = { label: 'Commission France', rate_type: 'percentage' as const, rate_value: 15 };
     mockApi.post.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
     commissionApi.createSetting(TOKEN, dto);
     expect(mockApi.post).toHaveBeenCalledWith('/admin/commission-settings', dto, TOKEN);
@@ -441,11 +415,10 @@ describe('commissionApi › params commission', () => {
 
   it('listCommissions appelle /admin/commissions avec filtres', () => {
     mockApi.get.mockResolvedValue({ ok: true, data: {}, message: 'OK' });
-    commissionApi.listCommissions(TOKEN, { period: 'all', zone: 'senegal', page: 2, limit: 10 });
+    commissionApi.listCommissions(TOKEN, { period: 'all', page: 2, limit: 10 });
     const url = (mockApi.get as jest.Mock).mock.calls[0][0] as string;
     expect(url).toContain('/admin/commissions');
     expect(url).toContain('period=all');
-    expect(url).toContain('zone=senegal');
     expect(url).toContain('page=2');
     expect(url).toContain('limit=10');
   });
