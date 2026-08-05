@@ -23,6 +23,7 @@ export default {
       NSPhotoLibraryUsageDescription: "Pour sélectionner votre photo de profil ou vos documents depuis la galerie.",
       NSLocationWhenInUseUsageDescription: "Pour indiquer votre position de prise en charge lors d'une réservation.",
       NSUserNotificationsUsageDescription: "Pour recevoir les notifications de course, rappels et alertes importantes.",
+      "ITSAppUsesNonExemptEncryption": false
     },
   },
   android: {
