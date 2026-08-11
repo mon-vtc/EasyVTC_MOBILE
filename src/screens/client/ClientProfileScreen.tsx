@@ -161,7 +161,16 @@ export default function ClientProfileScreen({ navigation }: Props) {
   const handleEditToggle = React.useCallback(async () => {
     if (editMode) {
       try {
-        await updateProfile({ first_name: firstName, last_name: lastName, phone });
+        // N'envoyer le téléphone que s'il a été renseigné — sinon un compte
+        // Google (téléphone vide à la création) fait systématiquement échouer
+        // la validation du téléphone (chaîne vide rejetée) même quand seuls
+        // le prénom/nom ont été modifiés.
+        const trimmedPhone = phone.trim();
+        await updateProfile({
+          first_name: firstName,
+          last_name: lastName,
+          ...(trimmedPhone ? { phone: trimmedPhone } : {}),
+        });
 
         if (pendingImage) {
           const formData = new FormData();
@@ -175,9 +184,9 @@ export default function ClientProfileScreen({ navigation }: Props) {
         }
 
         showToast({ type: 'success', title: 'Succès', message: 'Profil mis à jour avec succès.' });
-      } catch (err) {
+      } catch (err: any) {
         if (__DEV__) console.error('Update error:', err);
-        showToast({ type: 'error', title: 'Erreur', message: 'Impossible de sauvegarder les modifications.' });
+        showToast({ type: 'error', title: 'Erreur', message: err?.message ?? 'Impossible de sauvegarder les modifications.' });
         return;
       }
     }
@@ -208,13 +217,15 @@ export default function ClientProfileScreen({ navigation }: Props) {
     }
   };
 
+  const isGoogleAccount = user?.auth_provider === 'google';
+
   const handleAnonymize = async (password: string) => {
-    if (!password) {
+    if (!isGoogleAccount && !password) {
       showToast({ type: 'error', title: 'Erreur', message: 'Le mot de passe est requis.' });
       return;
     }
     try {
-      await anonymizeMyAccount(password);
+      await anonymizeMyAccount(isGoogleAccount ? undefined : password);
       showToast({ type: 'success', title: 'Compte supprimé', message: 'Votre compte et vos données ont été supprimés.' });
       setShowDeleteModal(false);
     } catch (err: any) {
@@ -433,7 +444,9 @@ export default function ClientProfileScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.actionRow} onPress={() => {
             showAlert({
               title: 'Supprimer mon compte',
-              message: 'Cette action est irréversible. Pour confirmer, veuillez saisir votre mot de passe.',
+              message: isGoogleAccount
+                ? 'Cette action est irréversible. Voulez-vous vraiment supprimer votre compte et toutes vos données ?'
+                : 'Cette action est irréversible. Pour confirmer, veuillez saisir votre mot de passe.',
               buttons: [{ text: 'Annuler', style: 'cancel' }, { text: 'Continuer', onPress: () => setShowDeleteModal(true) }]
             });
           }}>
@@ -521,24 +534,28 @@ export default function ClientProfileScreen({ navigation }: Props) {
           <View style={modalStyles.card}>
             <Text style={modalStyles.title}>Supprimer le compte</Text>
             <Text style={modalStyles.warningText}>
-              Cette action est irréversible. Pour confirmer, veuillez saisir votre mot de passe.
+              {isGoogleAccount
+                ? 'Cette action est irréversible. Confirmez la suppression de votre compte et de toutes vos données.'
+                : 'Cette action est irréversible. Pour confirmer, veuillez saisir votre mot de passe.'}
             </Text>
 
-            <View style={fieldStyles.wrapper}>
-              <Text style={fieldStyles.label}>Mot de passe</Text>
-              <View style={fieldStyles.inputWrapper}>
-                <TextInput
-                  value={deletePassword}
-                  onChangeText={setDeletePassword}
-                  editable={!isLoading}
-                  secureTextEntry
-                  style={fieldStyles.input}
-                  selectionColor={Colors.bordeaux}
-                  underlineColorAndroid="transparent"
-                  placeholder="Saisissez votre mot de passe"
-                />
+            {!isGoogleAccount && (
+              <View style={fieldStyles.wrapper}>
+                <Text style={fieldStyles.label}>Mot de passe</Text>
+                <View style={fieldStyles.inputWrapper}>
+                  <TextInput
+                    value={deletePassword}
+                    onChangeText={setDeletePassword}
+                    editable={!isLoading}
+                    secureTextEntry
+                    style={fieldStyles.input}
+                    selectionColor={Colors.bordeaux}
+                    underlineColorAndroid="transparent"
+                    placeholder="Saisissez votre mot de passe"
+                  />
+                </View>
               </View>
-            </View>
+            )}
 
             <View style={modalStyles.actions}>
               <TouchableOpacity

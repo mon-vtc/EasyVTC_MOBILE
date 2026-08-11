@@ -24,6 +24,6 @@ export function useAuth() {
     updateProfile:  s.updateProfile,
     uploadAvatar:   s.uploadAvatar,
     exportMyData:   s.exportMyData,
-    anonymizeMyAccount: s.anonymizeMyAccount as (password: string) => Promise<void>,
+    anonymizeMyAccount: s.anonymizeMyAccount,
   }));
 }

@@ -1,4 +1,4 @@
-export type { UserRole, UserStatus, AuthUser, AuthTokens,
+export type { UserRole, UserStatus, AuthUser, AuthTokens, GoogleAuthOptions,
               AuthStackParamList, ClientTabParamList,
               DriverDrawerParamList, AdminDrawerParamList,
               ManagerDrawerParamList, ManagerReservationsStackParamList,
