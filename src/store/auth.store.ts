@@ -145,7 +145,9 @@
     loginWithGoogle: async (accessToken, refreshToken, options) => {
       set({ isLoading: true, error: null });
       try {
-        const res = await authApi.google(accessToken, refreshToken, options);
+        const res = options !== undefined
+          ? await authApi.google(accessToken, refreshToken, options)
+          : await authApi.google(accessToken, refreshToken);
         if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de connexion avec Google');
         const { user, access_token, refresh_token, temp_password } = res.data;
         await secureStorage.setTokens(access_token, refresh_token ?? '');
