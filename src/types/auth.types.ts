@@ -21,6 +21,9 @@ export interface AuthUser {
   status_changed_by: string | null;
   rgpd_consent:      boolean;
   rgpd_consent_at:   string | null;
+  // 'google' si le compte n'a pas de mot de passe fiable connu de l'utilisateur —
+  // sert à adapter l'écran de suppression de compte (pas de champ mot de passe).
+  auth_provider?:    'password' | 'google';
   deleted_at:        string | null;
   created_at:        string;
   updated_at:        string;
@@ -29,6 +32,17 @@ export interface AuthUser {
   vehicle?:  import('./user.types').Vehicle | null;
   // Permissions RBAC — tableau vide pour tous les rôles sauf manager
   permissions?: import('./admin.types').ManagerPermission[];
+}
+
+// ── Options d'inscription/connexion Google ────────────────────────
+// intent='register' : complète l'inscription (rôle + CGU) d'un compte Google
+//   qui n'a jamais été explicitement inscrit.
+// intent='login' (ou absent) : connexion simple, refusée par l'API si le
+//   compte n'a jamais été inscrit.
+export interface GoogleAuthOptions {
+  intent?: 'login' | 'register';
+  role?: 'client' | 'driver';
+  accept_terms?: boolean;
 }
 
 // ── Tokens ───────────────────────────────────────────────────────

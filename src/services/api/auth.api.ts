@@ -1,5 +1,5 @@
 import { api } from '../../lib/api';
-import type { ApiResponse, AuthUser, AvatarUploadResponseData, LoginPayload, RegisterPayload } from '../../types';
+import type { ApiResponse, AuthUser, AvatarUploadResponseData, LoginPayload, RegisterPayload, GoogleAuthOptions } from '../../types';
 
 export const authApi = {
 
@@ -9,12 +9,14 @@ export const authApi = {
   },
 
   /**
-   * Connexion Google depuis l'app mobile.
+   * Connexion/inscription Google depuis l'app mobile.
    * Envoie l'access_token obtenu via expo-web-browser à /auth/google/token.
    * Ne pas utiliser /auth/google qui est une redirection web.
+   * options.intent='register' complète l'inscription (rôle + CGU) d'un compte
+   * Google jamais inscrit ; sans quoi l'API refuse la connexion (404).
    */
-  google: async (accessToken: string, refreshToken?: string): Promise<ApiResponse<{ user: AuthUser; access_token: string; refresh_token: string | null; temp_password?: string }>> => {
-    return api.post('/auth/google/token', { access_token: accessToken, refresh_token: refreshToken });
+  google: async (accessToken: string, refreshToken?: string, options?: GoogleAuthOptions): Promise<ApiResponse<{ user: AuthUser; access_token: string; refresh_token: string | null; temp_password?: string }>> => {
+    return api.post('/auth/google/token', { access_token: accessToken, refresh_token: refreshToken, ...options });
   },
 
   register: async (payload: RegisterPayload): Promise<ApiResponse<{ user: AuthUser; access_token: string; refresh_token: string | null }>> => {

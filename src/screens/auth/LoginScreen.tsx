@@ -47,7 +47,7 @@ export default function LoginScreen({ navigation }: Props) {
   const handleGooglePress = () => {
     clearError();
     clearGoogleError();
-    signInWithGoogle();
+    signInWithGoogle({ intent: 'login' });
   };
 
   const anyLoading = isLoading || googleLoading;

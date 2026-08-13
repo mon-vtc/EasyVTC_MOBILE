@@ -4,7 +4,7 @@
   import { rgpdApi }        from '../services/api/rgpd.api';
   import { authStorage as secureStorage }  from '../services/auth/auth-storage';
   import { useNotificationsStore } from './notifications.store';
-  import type { AuthUser, LoginPayload, RegisterPayload, UpdateProfilePayload, RgpdExport } from '../types';
+  import type { AuthUser, LoginPayload, RegisterPayload, UpdateProfilePayload, RgpdExport, GoogleAuthOptions } from '../types';
 
   // ── Utilitaire : aplatir la réponse API → AuthUser/DriverUser ──
   export function mapApiUser(raw: any): AuthUser {
@@ -41,7 +41,7 @@
     login:          (payload: LoginPayload)     => Promise<void>;
     // Retourne un mot de passe temporaire si le compte Google vient d'être créé
     // (à afficher une seule fois côté UI) — undefined pour un compte déjà existant.
-    loginWithGoogle: (accessToken: string, refreshToken?: string) => Promise<string | undefined>;
+    loginWithGoogle: (accessToken: string, refreshToken?: string, options?: GoogleAuthOptions) => Promise<string | undefined>;
     register:       (payload: RegisterPayload)  => Promise<void>;
     logout:         ()                          => Promise<void>;
     forceLogout:    ()                          => Promise<void>;
@@ -51,7 +51,7 @@
     updateProfile: (payload: UpdateProfilePayload) => Promise<void>;
     uploadAvatar:   (formData: FormData, pendingImage?: string) => Promise<void>;
     exportMyData:   () => Promise<RgpdExport>;
-    anonymizeMyAccount: (password: string) => Promise<void>;
+    anonymizeMyAccount: (password?: string) => Promise<void>;
     clearError:     ()                          => void;
   }
 
@@ -142,10 +142,12 @@
   },
 
     // ── Login with Google ─────────────────────────────────────────────────
-    loginWithGoogle: async (accessToken, refreshToken) => {
+    loginWithGoogle: async (accessToken, refreshToken, options) => {
       set({ isLoading: true, error: null });
       try {
-        const res = await authApi.google(accessToken, refreshToken);
+        const res = options !== undefined
+          ? await authApi.google(accessToken, refreshToken, options)
+          : await authApi.google(accessToken, refreshToken);
         if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de connexion avec Google');
         const { user, access_token, refresh_token, temp_password } = res.data;
         await secureStorage.setTokens(access_token, refresh_token ?? '');
@@ -230,7 +232,12 @@
         if (!accessToken) throw new Error('Utilisateur non authentifié');
 
         const res = await userApi.updateMe(accessToken, payload);
-        if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la mise à jour');
+        if (!res.ok || !res.data) {
+          // Remonter le détail par champ (ex: { phone: ["Numéro invalide"] })
+          // plutôt que le seul message générique "Données invalides".
+          const firstFieldError = res.errors ? Object.values(res.errors)[0]?.[0] : undefined;
+          throw new Error(firstFieldError ?? res.message ?? 'Erreur lors de la mise à jour');
+        }
 
         // Fusionner l'ancien utilisateur avec les nouvelles données pour préserver
         // les champs spécifiques au rôle (permissions, driver, vehicle, etc.)

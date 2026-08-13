@@ -30,6 +30,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { useAlert } from './useAlert';
+import type { GoogleAuthOptions } from '../types';
 
 // URL de redirection OAuth — scheme déclaré dans app.config.js
 // Valide pour dev build et prod build. Expo Go n'est pas supporté pour OAuth Google.
@@ -53,7 +54,7 @@ export function useGoogleAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState<string | null>(null);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (options?: GoogleAuthOptions) => {
     if (!isSupabaseConfigured()) {
       setError('Configuration Supabase manquante. Vérifiez EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_ANON_KEY dans .env');
       return;
@@ -103,7 +104,7 @@ export function useGoogleAuth() {
       }
 
       // Envoyer le token Supabase à l'API → POST /auth/google/token
-      const tempPassword = await loginWithGoogle(accessToken, refreshToken);
+      const tempPassword = await loginWithGoogle(accessToken, refreshToken, options);
 
       // Présent uniquement à la toute première connexion (compte Google nouvellement créé) —
       // Google ne fournit aucun mot de passe applicatif, donc un mot de passe temporaire est

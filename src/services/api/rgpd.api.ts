@@ -25,12 +25,14 @@ export const rgpdApi = {
 
   /**
    * Demande l'anonymisation (suppression RGPD) du compte de l'utilisateur.
-   * Cette action est irréversible.
+   * Cette action est irréversible. password est optionnel : les comptes créés
+   * via Google n'en ont pas de fiable, le backend ne l'exige que pour les
+   * comptes 'password' (cf. auth_provider sur AuthUser).
    * @param token - Le token d'authentification.
    * @param userId - L'ID de l'utilisateur à anonymiser.
    * @returns Une confirmation de l'anonymisation.
    */
-  anonymizeMyAccount: (token: string, userId: string, password: string): Promise<ApiResponse<AnonymizeResult>> =>
-    // Le backend attend { confirm: true, password: '...' } dans le corps de la requête
+  anonymizeMyAccount: (token: string, userId: string, password?: string): Promise<ApiResponse<AnonymizeResult>> =>
+    // Le backend attend { confirm: true, password?: '...' } dans le corps de la requête
     api.delete<AnonymizeResult>(`/users/${userId}/anonymize`, token, { confirm: true, password }),
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, KeyboardAvoidingView, Platform,
@@ -15,6 +15,7 @@ import { AppButton }     from '../../components/common/AppButton';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuth }       from '../../hooks/useAuth';
 import { useGoogleAuth } from '../../hooks/useGoogleAuth';
+import { useToast }      from '../../hooks/useToast';
 import type { AuthStackParamList } from '../../types/auth.types';
 import { Logo } from '../../constants/logo';
 
@@ -77,7 +78,15 @@ export default function RegisterClientScreen({ navigation }: Props) {
   const [cguAccepted, setCguAccepted] = useState(false);
   const { register, isLoading, error, clearError } = useAuth();
   const { signInWithGoogle, isLoading: googleLoading, error: googleError, clearError: clearGoogleError } = useGoogleAuth();
+  const { showToast } = useToast();
   const anyLoading = isLoading || googleLoading;
+
+  // Repartir sur un écran propre à chaque visite — sinon un message d'erreur
+  // (ex: tentative Google précédente) reste affiché indéfiniment.
+  useEffect(() => {
+    clearError();
+    clearGoogleError();
+  }, []);
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -259,8 +268,15 @@ export default function RegisterClientScreen({ navigation }: Props) {
               </View>
 
               <TouchableOpacity
-                style={[styles.googleButton, anyLoading && { opacity: 0.6 }]}
-                onPress={() => { clearError(); clearGoogleError(); signInWithGoogle(); }}
+                style={[styles.googleButton, (anyLoading || !cguAccepted) && { opacity: 0.6 }]}
+                onPress={() => {
+                  if (!cguAccepted) {
+                    showToast({ type: 'warning', title: 'CGU requises', message: 'Cochez la case ci-dessus pour accepter les conditions d\'utilisation avant de continuer.' });
+                    return;
+                  }
+                  clearError(); clearGoogleError();
+                  signInWithGoogle({ intent: 'register', role: 'client', accept_terms: true });
+                }}
                 disabled={anyLoading}
               >
                 {googleLoading ? (
