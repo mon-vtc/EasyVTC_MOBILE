@@ -3,7 +3,7 @@ export default {
   name: "EasyVTC",
   slug: "easyvtc",
   owner: "easyvtc",
-  version: "1.0.1",
+  version: "1.0.2",
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
