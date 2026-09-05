@@ -67,8 +67,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: EAS Build Preview (Android)
-        run: eas build --platform android --profile preview --non-interactive --no-wait
+      - name: EAS Build Preview (Android + iOS)
+        run: eas build --platform all --profile preview --non-interactive --no-wait
 
   # ─────────────────────────────────────────────
   # Job 3 : EAS Build Production (main uniquement)
@@ -99,5 +99,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: EAS Build Production (Android)
-        run: eas build --platform android --profile production --non-interactive --no-wait
+      - name: EAS Build Production (Android + iOS)
+        run: eas build --platform all --profile production --non-interactive --no-wait
