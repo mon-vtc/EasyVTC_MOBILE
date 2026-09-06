@@ -39,11 +39,11 @@ jobs:
           EXPO_PUBLIC_API_URL: http://localhost:4000
 
   # ─────────────────────────────────────────────
-  # Job 2 : EAS Build Preview (develop uniquement)
+  # Job 2a : EAS Build Preview — Android (develop uniquement)
   # Nécessite le secret EXPO_TOKEN dans GitHub → Settings → Secrets
   # ─────────────────────────────────────────────
-  eas-preview:
-    name: EAS Build — Preview (develop)
+  eas-preview-android:
+    name: EAS Build — Preview Android (develop)
     needs: test-mobile
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -67,15 +67,49 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: EAS Build Preview (Android + iOS)
-        run: eas build --platform all --profile preview --non-interactive --no-wait
+      - name: EAS Build Preview (Android)
+        run: eas build --platform android --profile preview --non-interactive --no-wait
 
   # ─────────────────────────────────────────────
-  # Job 3 : EAS Build Production (main uniquement)
+  # Job 2b : EAS Build Preview — iOS (develop uniquement)
+  # Nécessite le secret EXPO_TOKEN dans GitHub → Settings → Secrets
+  # Bloqué tant qu'aucun profil Ad Hoc/appareil de test n'est enregistré
+  # côté Apple Developer — voir NOTE_CI_IOS.md
+  # ─────────────────────────────────────────────
+  eas-preview-ios:
+    name: EAS Build — Preview iOS (develop)
+    needs: test-mobile
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: EAS Build Preview (iOS)
+        run: eas build --platform ios --profile preview --non-interactive --no-wait
+
+  # ─────────────────────────────────────────────
+  # Job 3a : EAS Build Production — Android (main uniquement)
   # Nécessite le secret EXPO_TOKEN dans GitHub → Settings → Secrets
   # ─────────────────────────────────────────────
-  eas-production:
-    name: EAS Build — Production (main)
+  eas-production-android:
+    name: EAS Build — Production Android (main)
     needs: test-mobile
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -99,5 +133,37 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: EAS Build Production (Android + iOS)
-        run: eas build --platform all --profile production --non-interactive --no-wait
+      - name: EAS Build Production (Android)
+        run: eas build --platform android --profile production --non-interactive --no-wait
+
+  # ─────────────────────────────────────────────
+  # Job 3b : EAS Build Production — iOS (main uniquement)
+  # Nécessite le secret EXPO_TOKEN dans GitHub → Settings → Secrets
+  # ─────────────────────────────────────────────
+  eas-production-ios:
+    name: EAS Build — Production iOS (main)
+    needs: test-mobile
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: EAS Build Production (iOS)
+        run: eas build --platform ios --profile production --non-interactive --no-wait
