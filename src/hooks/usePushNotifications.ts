@@ -1,6 +1,6 @@
 // hooks/usePushNotifications.ts
 import { useEffect, useRef } from 'react';
-import * as Notifications from 'expo-notifications';
+import type * as NotificationsType from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { notificationsApi } from '../services/api/notifications.api';
@@ -8,30 +8,38 @@ import { useAuthStore } from '../store/auth.store';
 import { useNotificationsStore } from '../store/notifications.store';
 import { navigateFromNotification } from '../utils/notificationNavigation';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Les notifications push distantes ne sont plus supportées par Expo Go depuis
+// le SDK 53 : le simple fait de charger (require) expo-notifications fait
+// planter le bundle JS au démarrage sous Expo Go Android, avant même qu'on
+// appelle une seule de ses fonctions. On ne le require() donc que hors Expo
+// Go, avec un require() différé (jamais évalué si isExpoGo est vrai) plutôt
+// qu'un import statique (toujours évalué au chargement du module).
+// Note : appOwnership est déprécié au profit de executionEnvironment, mais ce
+// dernier ('storeClient') regroupe Expo Go ET les development builds (qui, eux,
+// supportent le push), appOwnership === 'expo' reste le seul moyen de cibler
+// précisément Expo Go.
+const isExpoGo = Constants.appOwnership === 'expo';
+
+let Notifications: typeof NotificationsType | null = null;
+if (!isExpoGo) {
+  Notifications = require('expo-notifications') as typeof NotificationsType;
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+} else {
+  console.warn('Push: notifications indisponibles sous Expo Go (SDK 53+), utiliser un development build.');
+}
 
 async function getExpoPushToken(): Promise<string | null> {
+  if (!Notifications) return null; // Expo Go : notifications indisponibles
+
   if (!Device.isDevice) {
     console.warn('Push: appareil physique requis');
-    return null;
-  }
-
-  // Les notifications push distantes ne sont plus supportées par Expo Go
-  // depuis le SDK 53 (nécessite un development build) — on évite de tenter
-  // l'enregistrement plutôt que de laisser getExpoPushTokenAsync() planter l'app.
-  // Note : appOwnership est déprécié au profit de executionEnvironment, mais ce
-  // dernier ('storeClient') regroupe Expo Go ET les development builds (qui, eux,
-  // supportent le push) — appOwnership === 'expo' reste le seul moyen de cibler
-  // précisément Expo Go.
-  if (Constants.appOwnership === 'expo') {
-    console.warn('Push: notifications distantes indisponibles sous Expo Go (SDK 53+) — utiliser un development build.');
     return null;
   }
 
@@ -101,9 +109,12 @@ export function usePushNotifications() {
   const lastHandledRequestId = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!Notifications) return; // Expo Go : aucun écouteur à poser
+    const notif = Notifications;
+
     // Résout une notification (payload ne contient que `notification_id` + data
     // contextuelle) en l'entité complète, puis navigue vers l'écran cible.
-    const handleNotificationTap = async (response: Notifications.NotificationResponse) => {
+    const handleNotificationTap = async (response: NotificationsType.NotificationResponse) => {
       const requestId = response.notification.request.identifier;
       if (lastHandledRequestId.current === requestId) return; // évite le double traitement (cold start + listener)
       lastHandledRequestId.current = requestId;
@@ -126,7 +137,7 @@ export function usePushNotifications() {
       }
     };
 
-    const notificationListener = Notifications.addNotificationReceivedListener(() => {
+    const notificationListener = notif.addNotificationReceivedListener(() => {
       // Reçue en foreground : rafraîchir la liste/badge depuis la source de vérité
       // (le payload push ne porte pas assez d'infos pour insérer localement).
       const { accessToken } = useAuthStore.getState();
@@ -135,10 +146,10 @@ export function usePushNotifications() {
       }
     });
 
-    const responseListener = Notifications.addNotificationResponseReceivedListener(handleNotificationTap);
+    const responseListener = notif.addNotificationResponseReceivedListener(handleNotificationTap);
 
     // App lancée depuis un état "killed" via tap sur la notification
-    Notifications.getLastNotificationResponseAsync().then((response) => {
+    notif.getLastNotificationResponseAsync().then((response) => {
       if (response) handleNotificationTap(response);
     });
 
