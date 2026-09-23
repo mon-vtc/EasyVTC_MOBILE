@@ -108,6 +108,7 @@ export type DriverReservationsStackParamList = {
   DriverInvoiceDetails: { invoiceId: string };
   SupportList: undefined;
   SupportChat: { ticketId: string, subject: string };
+  ManualReservation: undefined;
 };
 
 export type DriverTripsStackParamList = {
@@ -174,6 +175,7 @@ export type DriverDrawerParamList = {
 export type ManagerReservationsStackParamList = {
   ManagerReservationsList: undefined;
   ManagerReservationDetail: { reservationId: string; };
+  ManualReservation: undefined;
 };
 
 export type ManagerNotificationsStackParamList = {
@@ -247,6 +249,7 @@ export type ReservationsStackParamList = {
   DriverDetail: { driverId: string };
   InvoiceDetails:      { invoiceId: string };
   ClientDetail: { clientId: string };
+  ManualReservation: undefined;
 
 };
 

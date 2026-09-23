@@ -18,6 +18,7 @@ import ManagerHomeScreen         from '../screens/manager/ManagerHomeScreen';
 import ManagerReservationsScreen from '../screens/manager/ManagerReservationsScreen';
 import ManagerReservationDetailScreen from '../screens/manager/ManagerReservationDetailScreen';
 import ManagerProfileScreen      from '../screens/manager/ManagerProfileScreen';
+import ManualReservationScreen   from '../screens/common/ManualReservationScreen';
 
 // Réutilisation des écrans admin en lecture seule pour les gestionnaires
 import AdminDriversScreen        from '../screens/admin/drivers/AdminDriversScreen';
@@ -59,6 +60,7 @@ function ManagerReservationsStack() {
     <ReservationsStack.Navigator screenOptions={{ headerShown: false }}>
       <ReservationsStack.Screen name="ManagerReservationsList" component={ManagerReservationsScreen} />
       <ReservationsStack.Screen name="ManagerReservationDetail" component={ManagerReservationDetailScreen} />
+      <ReservationsStack.Screen name="ManualReservation" component={ManualReservationScreen} />
     </ReservationsStack.Navigator>
   );
 }

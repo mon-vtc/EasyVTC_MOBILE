@@ -19,6 +19,7 @@ import AdminOrdersDetailScreen from '../screens/admin/orders/OrderDetailsScreen'
 import AdminInvoicesDetailScreen from '../screens/admin/invoices/InvoiceDetailsScreen';
 import AdminClientsScreen from '../screens/admin/clients/AdminClientsScreen';
 import AdminClientDetailScreen from '../screens/admin/clients/AdminClientDetailScreen';
+import ManualReservationScreen from '../screens/common/ManualReservationScreen';
 import AdminVehicleTypesScreen from '../screens/admin/AdminVehicleTypesScreen';
 import AdminReviewsScreen      from '../screens/admin/AdminReviewsScreen';
 import AdminCommissionSettingsScreen from '../screens/admin/commissions/AdminCommissionSettingsScreen';
@@ -93,6 +94,7 @@ function AdminReservationsStack() {
       <ReservationsStack.Screen name="DriverDetail" component={AdminDriverDetailScreen} />
       <ReservationsStack.Screen name="InvoiceDetails" component={AdminInvoicesDetailScreen} />
       <ReservationsStack.Screen name="ClientDetail" component={AdminClientDetailScreen} />
+      <ReservationsStack.Screen name="ManualReservation" component={ManualReservationScreen} />
     </ReservationsStack.Navigator>
   );
 }

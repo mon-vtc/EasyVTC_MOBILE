@@ -440,6 +440,64 @@ describe('useReservationStore › submitBooking', () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
+// submitManualBooking (personnel : chauffeur, admin, gestionnaire)
+// ══════════════════════════════════════════════════════════════════════════
+describe('useReservationStore › submitManualBooking', () => {
+  const origin = { address: '10 rue de la Paix', latitude: 48.87, longitude: 2.33 };
+  const destination = { address: 'CDG', latitude: 49.00, longitude: 2.55 };
+
+  beforeEach(() => {
+    resetStore();
+    jest.clearAllMocks();
+    useReservationStore.getState().setOrigin(origin);
+    useReservationStore.getState().setDestination(destination);
+    useReservationStore.getState().setVehicleType('berline');
+    useReservationStore.getState().setDate('2024-12-25');
+    useReservationStore.getState().setTime('14:30');
+    useReservationStore.getState().setEstimate(45.0, 12.5, 25);
+  });
+
+  it('lève une erreur si aucun client n\'est sélectionné', async () => {
+    await expect(
+      act(async () => { await useReservationStore.getState().submitManualBooking(TOKEN); })
+    ).rejects.toThrow('Formulaire incomplet');
+
+    expect(mockReservationApi.createManual).not.toHaveBeenCalled();
+  });
+
+  it('transmet client_id pour un client existant', async () => {
+    useReservationStore.getState().setManualClient({ mode: 'existing', client_id: 'client-42', label: 'Marie Dupont' });
+    mockReservationApi.createManual.mockResolvedValue({ ok: true, data: mockReservation, message: 'Created' });
+
+    let result: Reservation | null = null;
+    await act(async () => {
+      result = await useReservationStore.getState().submitManualBooking(TOKEN);
+    });
+
+    expect(result!.id).toBe('resa-1');
+    expect(mockReservationApi.createManual).toHaveBeenCalledWith(TOKEN, expect.objectContaining({
+      client_id: 'client-42',
+      pickup_address: '10 rue de la Paix',
+      dest_address: 'CDG',
+    }));
+    expect(useReservationStore.getState().reservations).toHaveLength(1);
+  });
+
+  it('transmet une fiche client minimale pour un nouveau client', async () => {
+    useReservationStore.getState().setManualClient({ mode: 'new', first_name: 'Marie', last_name: 'Dupont', phone: '+33612345678' });
+    mockReservationApi.createManual.mockResolvedValue({ ok: true, data: mockReservation, message: 'Created' });
+
+    await act(async () => {
+      await useReservationStore.getState().submitManualBooking(TOKEN);
+    });
+
+    expect(mockReservationApi.createManual).toHaveBeenCalledWith(TOKEN, expect.objectContaining({
+      client: { first_name: 'Marie', last_name: 'Dupont', phone: '+33612345678' },
+    }));
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
 // fetchVehicleTypes
 // ══════════════════════════════════════════════════════════════════════════
 describe('useReservationStore › fetchVehicleTypes', () => {

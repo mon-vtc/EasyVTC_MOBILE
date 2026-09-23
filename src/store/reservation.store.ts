@@ -11,6 +11,8 @@ import type {
   ReservationListFilters,
   ReservationListResult,
   CreateReservationDto,
+  CreateManualReservationDto,
+  ManualClientSelection,
   BookingFormState,
   BookingStep,
   GeoPoint,
@@ -95,6 +97,7 @@ interface ReservationState {
   setComment:        (text: string)                     => void;
   setFlatRateId:     (id: string | null)                => void;
   setPromoCode:      (code: string | null)              => void;
+  setManualClient:   (client: ManualClientSelection | null) => void;
 
   /**
    * Soumet la réservation au backend.
@@ -102,6 +105,11 @@ interface ReservationState {
    *   pickup_address / dest_address / nb_passengers / distance_km / duration_min
    */
   submitBooking: (token: string) => Promise<Reservation>;
+  /**
+   * Variante personnel : crée une réservation au nom d'un client (client_id
+   * existant ou fiche minimale à créer). Réservé chauffeur/admin/gestionnaire.
+   */
+  submitManualBooking: (token: string) => Promise<Reservation>;
   resetBooking:  ()                               => void;
 
   clearError:    () => void;
@@ -498,6 +506,7 @@ fetchAllDriverPages: async (token, filters) => {
   setComment:      (comment)       => set(s => ({ booking: { ...s.booking, comment } })),
   setFlatRateId:   (flat_rate_id)  => set(s => ({ booking: { ...s.booking, flat_rate_id } })),
   setPromoCode:    (promo_code)    => set(s => ({ booking: { ...s.booking, promo_code } })),
+  setManualClient: (manualClient)  => set(s => ({ booking: { ...s.booking, manualClient } })),
   setEstimate: (estimated_price, distance_km, duration_min) =>
     set(s => ({ booking: { ...s.booking, estimated_price, distance_km, duration_min } })),
 
@@ -569,6 +578,75 @@ fetchAllDriverPages: async (token, filters) => {
       };
       console.log('DTO envoyé au backend :', dto);
       const res = await reservationApi.create(token, dto);
+      if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la réservation');
+
+      set(state => ({
+        reservations: [res.data!, ...state.reservations],
+        isSubmitting: false,
+      }));
+
+      return res.data!;
+    } catch (err: unknown) {
+      set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isSubmitting: false });
+      throw err;
+    }
+  },
+
+  /**
+   * Construit le même DTO que submitBooking, en y ajoutant l'identification du
+   * client (client_id existant ou client à créer). Sans code promo : non
+   * applicable à une réservation créée par le personnel.
+   */
+  submitManualBooking: async (token) => {
+    const { booking } = get();
+
+    const hasRoute = !!(booking.origin && booking.destination);
+    const hasForfait = !!booking.flat_rate_id;
+
+    if (
+      !booking.manualClient ||
+      (!hasRoute && !hasForfait) ||
+      !booking.vehicle_type ||
+      !booking.date         ||
+      !booking.time
+    ) {
+      throw new Error('Formulaire incomplet');
+    }
+
+    set({ isSubmitting: true, error: null });
+
+    try {
+      const scheduled_at = new Date(`${booking.date}T${booking.time}:00`).toISOString();
+
+      const dto: CreateManualReservationDto = {
+        pickup_address: booking.origin?.address ?? '',
+        ...(booking.origin?.latitude  ? { pickup_lat: booking.origin.latitude  } : {}),
+        ...(booking.origin?.longitude ? { pickup_lng: booking.origin.longitude } : {}),
+        dest_address:   booking.destination?.address ?? '',
+        ...(booking.destination?.latitude  ? { dest_lat: booking.destination.latitude  } : {}),
+        ...(booking.destination?.longitude ? { dest_lng: booking.destination.longitude } : {}),
+
+        vehicle_type: booking.vehicle_type!,
+        scheduled_at,
+        nb_passengers: booking.nb_passengers,
+
+        ...(booking.distance_km  != null && { distance_km:  booking.distance_km }),
+        ...(booking.duration_min != null && { duration_min: booking.duration_min }),
+        ...(booking.flat_rate_id && { flat_rate_id: booking.flat_rate_id }),
+        ...(booking.comment.trim() && { comment: booking.comment.trim() }),
+
+        ...(booking.manualClient.mode === 'existing'
+          ? { client_id: booking.manualClient.client_id }
+          : {
+              client: {
+                first_name: booking.manualClient.first_name,
+                last_name:  booking.manualClient.last_name,
+                phone:      booking.manualClient.phone,
+              },
+            }),
+      };
+
+      const res = await reservationApi.createManual(token, dto);
       if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la réservation');
 
       set(state => ({

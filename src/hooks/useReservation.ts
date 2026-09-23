@@ -66,6 +66,7 @@ export function useReservation() {
   const _complete          = useReservationStore(s => s.complete);
   const _assign            = useReservationStore(s => s.assign);
   const _submitBooking     = useReservationStore(s => s.submitBooking);
+  const _submitManualBooking = useReservationStore(s => s.submitManualBooking);
   const _resetBooking      = useReservationStore(s => s.resetBooking);
   const _setStep           = useReservationStore(s => s.setBookingStep);
   const _setOrigin         = useReservationStore(s => s.setOrigin);
@@ -79,6 +80,7 @@ export function useReservation() {
   const _setEstimate       = useReservationStore(s => s.setEstimate);
   const _setFlatRateId     = useReservationStore(s => s.setFlatRateId);
   const _setPromoCode      = useReservationStore(s => s.setPromoCode);
+  const _setManualClient   = useReservationStore(s => s.setManualClient);
   const _fetchAllPages       = useReservationStore(s => s.fetchAllPages);
   const _fetchAllDriverPages = useReservationStore(s => s.fetchAllDriverPages);
   const _fetchAllAdminPages = useReservationStore(s => s.fetchAllAdminPages);
@@ -425,6 +427,10 @@ export function useReservation() {
     return _submitBooking(accessTokenRef.current!);
   }, [_submitBooking]);
 
+  const submitManualBooking = useCallback(async (): Promise<Reservation> => {
+    return _submitManualBooking(accessTokenRef.current!);
+  }, [_submitManualBooking]);
+
   const homeReservations       = useReservationStore(s => s.homeReservations);
   const adminHomeReservations = useReservationStore(s => s.adminHomeReservations);
   const driverHomeReservations = useReservationStore(s => s.driverHomeReservations);
@@ -478,6 +484,10 @@ export function useReservation() {
 
     // Setters étape 3
     setComment: _setComment,
+
+    // Réservation manuelle (personnel)
+    setManualClient: _setManualClient,
+    submitManualBooking,
 
     // Géolocalisation
     getCurrentLocation,

@@ -11,6 +11,7 @@ import type { UserStatus } from './auth.types';
 export const MANAGER_PERMISSIONS = [
   // Réservations
   'view_reservations',
+  'create_reservation',
   'assign_reservation',
   'cancel_reservation',
   // Utilisateurs & chauffeurs
@@ -68,6 +69,7 @@ export interface AppConfigEntry {
 
 export const PERMISSION_LABELS: Record<ManagerPermission, string> = {
   view_reservations:    'Voir les réservations',
+  create_reservation:   'Réserver pour un client',
   assign_reservation:   'Attribuer un chauffeur',
   cancel_reservation:   'Annuler une réservation',
   view_users:           'Voir les utilisateurs',

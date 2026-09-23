@@ -21,6 +21,7 @@ import MessagesScreen from '../screens/client/MessagesScreen'; // Réutilisé po
 import SupportListScreen from '../screens/support/SupportListScreen';
 import SupportChatScreen from '../screens/support/SupportChatScreen';
 import DriverReviewScreen        from '../screens/driver/DriverReviewScreen';
+import ManualReservationScreen   from '../screens/common/ManualReservationScreen';
 import DriverRevenuesScreen from '../screens/driver/DriverRevenuesScreen';
 import CGU from '../screens/CGU';
 import type { DriverDrawerParamList, DriverReservationsStackParamList, DriverOrdersStackParamList, DriverNotificationsStackParamList, DriverMessagesStackParamList, SupportStackParamList, DriverTripsStackParamList, RevenuStackParamList } from '../types/auth.types';
@@ -38,6 +39,7 @@ function DriverReservationsStackScreen() {
       <DriverReservationsStack.Screen name="DriverInvoiceDetails" component={DriverInvoiceDetailScreen} />
       <DriverReservationsStack.Screen name="SupportList" component={SupportListScreen} />
       <DriverReservationsStack.Screen name="SupportChat" component={SupportChatScreen} />
+      <DriverReservationsStack.Screen name="ManualReservation" component={ManualReservationScreen} />
 
     </DriverReservationsStack.Navigator>
   );
