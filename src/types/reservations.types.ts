@@ -60,6 +60,9 @@ export interface Reservation {
   client_id:   string;
   driver_id:   string | null;
   assigned_by: string | null;
+  // Chauffeur/admin/gestionnaire ayant créé la réservation au nom du client.
+  // Absent/null si le client l'a créée lui-même depuis l'application.
+  created_by?: string | null;
   status:      ReservationStatus;
 
   // Localisation — noms de champs identiques au backend
@@ -106,6 +109,13 @@ export interface Reservation {
     profile_photo_url:string | null;
   };
   driver?: AvailableDriverDto | null ;
+  /** Chauffeur/admin/gestionnaire ayant créé la réservation, si créée manuellement. */
+  creator?: {
+    id:         string;
+    first_name: string;
+    last_name:  string;
+    role:       string;
+  } | null;
   // {
   //   id:           string;
   //   vehicle_type: VehicleType | null;
@@ -150,6 +160,30 @@ export interface CreateReservationDto {
   flat_rate_id?: string;
 }
 
+// ── DTO création manuelle (personnel : chauffeur, admin, gestionnaire) ────────
+// Même trajet/véhicule/horaire que CreateReservationDto (sans code promo, non
+// applicable à une réservation créée par le personnel), plus l'identification
+// du client visé : compte existant (client_id) ou fiche minimale à créer.
+export interface ManualClientInput {
+  first_name: string;
+  last_name:  string;
+  phone:      string;
+}
+
+export interface CreateManualReservationDto extends CreateReservationDto {
+  client_id?: string;
+  client?:    ManualClientInput;
+}
+
+export interface ClientSearchResult {
+  id:                  string;
+  first_name:          string;
+  last_name:           string;
+  phone:               string | null;
+  email:               string;
+  is_managed_account:  boolean;
+}
+
 // ── Filtres liste ─────────────────────────────────────────────────────────────
 export interface ReservationListFilters {
   status?:    ReservationStatus;
@@ -192,9 +226,17 @@ export interface BookingFormState {
   flat_rate_id:    string | null;
   promo_code:      string | null;
 
+  // Réservation manuelle (personnel) : client visé, absent en réservation client classique
+  manualClient: ManualClientSelection | null;
+
   // Navigation
   step: BookingStep;
 }
+
+// ── Sélection du client pour une réservation manuelle ─────────────────────────
+export type ManualClientSelection =
+  | { mode: 'existing'; client_id: string; label: string }
+  | { mode: 'new'; first_name: string; last_name: string; phone: string };
 
 export const BOOKING_INITIAL_STATE: BookingFormState = {
   origin:          null,
@@ -210,6 +252,7 @@ export const BOOKING_INITIAL_STATE: BookingFormState = {
   comment:         '',
   flat_rate_id:    null,
   promo_code:      null,
+  manualClient:    null,
   step:            1,
 };
 

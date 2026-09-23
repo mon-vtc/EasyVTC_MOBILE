@@ -19,6 +19,15 @@ export const authApi = {
     return api.post('/auth/google/token', { access_token: accessToken, refresh_token: refreshToken, ...options });
   },
 
+  /**
+   * Connexion/inscription Apple depuis l'app mobile (Sign in with Apple).
+   * Envoie l'access_token Supabase (obtenu via signInWithIdToken) à /auth/apple/token.
+   * full_name n'est fourni par Apple qu'à la toute première connexion sur l'appareil.
+   */
+  apple: async (accessToken: string, refreshToken?: string, fullName?: string, options?: GoogleAuthOptions): Promise<ApiResponse<{ user: AuthUser; access_token: string; refresh_token: string | null; temp_password?: string }>> => {
+    return api.post('/auth/apple/token', { access_token: accessToken, refresh_token: refreshToken, full_name: fullName, ...options });
+  },
+
   register: async (payload: RegisterPayload): Promise<ApiResponse<{ user: AuthUser; access_token: string; refresh_token: string | null }>> => {
     return api.post('/auth/register', payload);
   },

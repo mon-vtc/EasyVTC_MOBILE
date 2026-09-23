@@ -11,6 +11,8 @@ import type {
   ReservationListFilters,
   ReservationListResult,
   CreateReservationDto,
+  CreateManualReservationDto,
+  ClientSearchResult,
   AvailableDriverDto,
 } from '../../types/reservations.types';
 
@@ -85,6 +87,31 @@ export const reservationApi = {
     reason?: string,
   ): Promise<ApiResponse<Reservation>> =>
     api.patch(`/reservations/${id}/cancel`, { reason }, token),
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // PERSONNEL : réservation créée pour un client (chauffeur, admin, gestionnaire)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * POST /reservations/manual
+   * Crée une réservation au nom d'un client. Réservé au personnel (chauffeur,
+   * admin, gestionnaire avec la permission create_reservation).
+   */
+  createManual: (
+    token: string,
+    dto:   CreateManualReservationDto,
+  ): Promise<ApiResponse<Reservation>> =>
+    api.post('/reservations/manual', dto, token),
+
+  /**
+   * GET /reservations/clients/search?q=...
+   * Recherche un client par nom ou téléphone, pour la création manuelle.
+   */
+  searchClients: (
+    token: string,
+    query: string,
+  ): Promise<ApiResponse<ClientSearchResult[]>> =>
+    api.get(`/reservations/clients/search?q=${encodeURIComponent(query)}`, token),
 
   // ══════════════════════════════════════════════════════════════════════════
   // CHAUFFEUR

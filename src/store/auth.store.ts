@@ -42,6 +42,9 @@
     // Retourne un mot de passe temporaire si le compte Google vient d'être créé
     // (à afficher une seule fois côté UI) — undefined pour un compte déjà existant.
     loginWithGoogle: (accessToken: string, refreshToken?: string, options?: GoogleAuthOptions) => Promise<string | undefined>;
+    // Retourne un mot de passe temporaire si le compte Apple vient d'être créé
+    // (à afficher une seule fois côté UI), undefined pour un compte déjà existant.
+    loginWithApple: (accessToken: string, refreshToken?: string | null, fullName?: string, options?: GoogleAuthOptions) => Promise<string | undefined>;
     register:       (payload: RegisterPayload)  => Promise<void>;
     logout:         ()                          => Promise<void>;
     forceLogout:    ()                          => Promise<void>;
@@ -149,6 +152,27 @@
           ? await authApi.google(accessToken, refreshToken, options)
           : await authApi.google(accessToken, refreshToken);
         if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de connexion avec Google');
+        const { user, access_token, refresh_token, temp_password } = res.data;
+        await secureStorage.setTokens(access_token, refresh_token ?? '');
+        set({
+          user: mapApiUser(user),
+          accessToken: access_token,
+          refreshToken: refresh_token,
+          isLoading: false,
+        });
+        return temp_password;
+      } catch (err: unknown) {
+        set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
+        throw err;
+      }
+    },
+
+    // ── Login with Apple ──────────────────────────────────────────────────
+    loginWithApple: async (accessToken, refreshToken, fullName, options) => {
+      set({ isLoading: true, error: null });
+      try {
+        const res = await authApi.apple(accessToken, refreshToken ?? undefined, fullName, options);
+        if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur de connexion avec Apple');
         const { user, access_token, refresh_token, temp_password } = res.data;
         await secureStorage.setTokens(access_token, refresh_token ?? '');
         set({

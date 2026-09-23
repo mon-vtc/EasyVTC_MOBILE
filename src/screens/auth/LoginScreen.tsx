@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, Image, StyleSheet, ScrollView,
   TouchableOpacity, KeyboardAvoidingView, Platform,
@@ -9,12 +9,14 @@ import { z }                           from 'zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient }              from 'expo-linear-gradient';
 import { Ionicons }                    from '@expo/vector-icons';
+import * as AppleAuthentication         from 'expo-apple-authentication';
 
 import { FormField }      from '../../components/forms/FormField';
 import { AppButton }      from '../../components/common/AppButton';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuth }        from '../../hooks/useAuth';
 import { useGoogleAuth }  from '../../hooks/useGoogleAuth';
+import { useAppleAuth }   from '../../hooks/useAppleAuth';
 import type { AuthStackParamList } from '../../types/auth.types';
 import { Logo } from '../../constants/logo';
 
@@ -28,11 +30,19 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
   const [rememberMe, setRememberMe] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
   const { login, isLoading, error, clearError } = useAuth();
   const { signInWithGoogle, isLoading: googleLoading, error: googleError, clearError: clearGoogleError } = useGoogleAuth();
-  
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({ 
-    resolver: zodResolver(schema) 
+  const { signInWithApple, isLoading: appleLoading, error: appleError, clearError: clearAppleError } = useAppleAuth();
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
+    }
+  }, []);
+
+  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema)
   });
 
   const onSubmit = async (data: FormData) => {
@@ -50,7 +60,14 @@ export default function LoginScreen({ navigation }: Props) {
     signInWithGoogle({ intent: 'login' });
   };
 
-  const anyLoading = isLoading || googleLoading;
+  const handleApplePress = () => {
+    if (anyLoading) return;
+    clearError();
+    clearAppleError();
+    signInWithApple({ intent: 'login' });
+  };
+
+  const anyLoading = isLoading || googleLoading || appleLoading;
 
   return (
     <LinearGradient 
@@ -85,9 +102,9 @@ export default function LoginScreen({ navigation }: Props) {
             />
 
             <View style={styles.cardContent}>
-              {(error || googleError) && (
+              {(error || googleError || appleError) && (
                 <View style={styles.errorBanner}>
-                  <Text style={styles.errorText}>⚠️ {error ?? googleError}</Text>
+                  <Text style={styles.errorText}>⚠️ {error ?? googleError ?? appleError}</Text>
                 </View>
               )}
 
@@ -165,6 +182,19 @@ export default function LoginScreen({ navigation }: Props) {
                   </>
                 )}
               </TouchableOpacity>
+
+              {/* Guideline 4.8 : alternative Apple exigée dès lors qu'un login
+                  tiers (Google) est proposé, bouton officiel Apple obligatoire,
+                  affiché uniquement là où Sign in with Apple est disponible. */}
+              {appleAvailable && (
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={Radius.lg}
+                  style={[styles.appleButton, anyLoading && { opacity: 0.6 }]}
+                  onPress={handleApplePress}
+                />
+              )}
             </View>
 
             {/* FIX: section inscription — layout colonne avec width: 100% implicite */}
@@ -272,6 +302,9 @@ const styles = StyleSheet.create({
   },
   googleIcon: { width: 20, height: 20, marginRight: Spacing.md },
   googleText: { fontFamily: Fonts.semibold, fontWeight: '600', color: '#333' },
+
+  /* ── Apple ── */
+  appleButton: { width: '100%', height: 48, marginTop: Spacing.md },
 
   /* ── Inscription ── */
   /* FIX: layout vertical pur — pas de flexDirection row, 

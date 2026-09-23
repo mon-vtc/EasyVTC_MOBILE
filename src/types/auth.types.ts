@@ -21,9 +21,9 @@ export interface AuthUser {
   status_changed_by: string | null;
   rgpd_consent:      boolean;
   rgpd_consent_at:   string | null;
-  // 'google' si le compte n'a pas de mot de passe fiable connu de l'utilisateur —
+  // 'google'/'apple' si le compte n'a pas de mot de passe fiable connu de l'utilisateur,
   // sert à adapter l'écran de suppression de compte (pas de champ mot de passe).
-  auth_provider?:    'password' | 'google';
+  auth_provider?:    'password' | 'google' | 'apple';
   deleted_at:        string | null;
   created_at:        string;
   updated_at:        string;
@@ -108,6 +108,7 @@ export type DriverReservationsStackParamList = {
   DriverInvoiceDetails: { invoiceId: string };
   SupportList: undefined;
   SupportChat: { ticketId: string, subject: string };
+  ManualReservation: undefined;
 };
 
 export type DriverTripsStackParamList = {
@@ -174,6 +175,7 @@ export type DriverDrawerParamList = {
 export type ManagerReservationsStackParamList = {
   ManagerReservationsList: undefined;
   ManagerReservationDetail: { reservationId: string; };
+  ManualReservation: undefined;
 };
 
 export type ManagerNotificationsStackParamList = {
@@ -247,6 +249,7 @@ export type ReservationsStackParamList = {
   DriverDetail: { driverId: string };
   InvoiceDetails:      { invoiceId: string };
   ClientDetail: { clientId: string };
+  ManualReservation: undefined;
 
 };
 

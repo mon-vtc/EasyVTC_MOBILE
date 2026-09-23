@@ -15,6 +15,7 @@ export function useAuth() {
     error:          s.error,
     login:          s.login,
     loginWithGoogle: s.loginWithGoogle,
+    loginWithApple: s.loginWithApple,
     register:       s.register,
     logout:         s.logout,
     changePassword:  s.changePassword,
