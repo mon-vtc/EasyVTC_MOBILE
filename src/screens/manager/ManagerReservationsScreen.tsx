@@ -12,6 +12,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import type { Reservation, ReservationStatus, AvailableDriverDto } from '../../types/reservations.types';
 import { usePermissions } from '../../hooks/usePermissions';
 import { AppHeader } from '../../components/common/AppHeader';
+import { FloatingActionButton } from '../../components/common/FloatingActionButton';
 import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 
 type FilterTab = 'all' | 'pending' | 'assigned' | 'completed' | 'cancelled';
@@ -381,13 +382,7 @@ export default function ManagerReservationsScreen({ navigation }: any) {
 
       {/* ── Réserver pour un client (personne ne pouvant pas réserver elle-même) ── */}
       {hasPermission('create_reservation') && (
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() => navigation.navigate('ManualReservation')}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="add" size={26} color={Colors.white} />
-        </TouchableOpacity>
+        <FloatingActionButton onPress={() => navigation.navigate('ManualReservation')} />
       )}
 
     </View>
@@ -397,13 +392,6 @@ export default function ManagerReservationsScreen({ navigation }: any) {
 // ── STYLES ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
-  fab: {
-    position: 'absolute', right: Spacing.lg, bottom: Spacing.lg,
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: Colors.bordeaux, alignItems: 'center', justifyContent: 'center',
-    elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4,
-  },
-
   tabsWrapper: {
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
