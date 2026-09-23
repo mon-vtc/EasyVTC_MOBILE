@@ -217,15 +217,16 @@ export default function ClientProfileScreen({ navigation }: Props) {
     }
   };
 
-  const isGoogleAccount = user?.auth_provider === 'google';
+  // Comptes Google/Apple : pas de mot de passe fiable connu de l'utilisateur.
+  const isOAuthAccount = user?.auth_provider === 'google' || user?.auth_provider === 'apple';
 
   const handleAnonymize = async (password: string) => {
-    if (!isGoogleAccount && !password) {
+    if (!isOAuthAccount && !password) {
       showToast({ type: 'error', title: 'Erreur', message: 'Le mot de passe est requis.' });
       return;
     }
     try {
-      await anonymizeMyAccount(isGoogleAccount ? undefined : password);
+      await anonymizeMyAccount(isOAuthAccount ? undefined : password);
       showToast({ type: 'success', title: 'Compte supprimé', message: 'Votre compte et vos données ont été supprimés.' });
       setShowDeleteModal(false);
     } catch (err: any) {
@@ -444,7 +445,7 @@ export default function ClientProfileScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.actionRow} onPress={() => {
             showAlert({
               title: 'Supprimer mon compte',
-              message: isGoogleAccount
+              message: isOAuthAccount
                 ? 'Cette action est irréversible. Voulez-vous vraiment supprimer votre compte et toutes vos données ?'
                 : 'Cette action est irréversible. Pour confirmer, veuillez saisir votre mot de passe.',
               buttons: [{ text: 'Annuler', style: 'cancel' }, { text: 'Continuer', onPress: () => setShowDeleteModal(true) }]
@@ -534,12 +535,12 @@ export default function ClientProfileScreen({ navigation }: Props) {
           <View style={modalStyles.card}>
             <Text style={modalStyles.title}>Supprimer le compte</Text>
             <Text style={modalStyles.warningText}>
-              {isGoogleAccount
+              {isOAuthAccount
                 ? 'Cette action est irréversible. Confirmez la suppression de votre compte et de toutes vos données.'
                 : 'Cette action est irréversible. Pour confirmer, veuillez saisir votre mot de passe.'}
             </Text>
 
-            {!isGoogleAccount && (
+            {!isOAuthAccount && (
               <View style={fieldStyles.wrapper}>
                 <Text style={fieldStyles.label}>Mot de passe</Text>
                 <View style={fieldStyles.inputWrapper}>

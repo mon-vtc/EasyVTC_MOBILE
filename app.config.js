@@ -13,8 +13,9 @@ export default {
     backgroundColor: "#ffffff",
   },
   ios: {
-    supportsTablet: true,
+    supportsTablet: false,
     bundleIdentifier: "com.easyvtc.app",
+    usesAppleSignIn: true,
     splash: {
       resizeMode: "contain", // "contain" ou "cover" sont supportés sur iOS
     },
@@ -48,6 +49,7 @@ export default {
 
   plugins: [
     "expo-secure-store",
+    "expo-apple-authentication",
     "expo-font",
     "@react-native-community/datetimepicker",
     "expo-sharing",

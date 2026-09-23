@@ -9,12 +9,14 @@ import { z }                           from 'zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient }              from 'expo-linear-gradient';
 import { Ionicons }                    from '@expo/vector-icons';
+import * as AppleAuthentication        from 'expo-apple-authentication';
 
 import { FormField }     from '../../components/forms/FormField';
 import { AppButton }     from '../../components/common/AppButton';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useAuth }       from '../../hooks/useAuth';
 import { useGoogleAuth } from '../../hooks/useGoogleAuth';
+import { useAppleAuth }  from '../../hooks/useAppleAuth';
 import { useToast }      from '../../hooks/useToast';
 import type { AuthStackParamList } from '../../types/auth.types';
 import { Logo } from '../../constants/logo';
@@ -76,16 +78,22 @@ const strengthStyles = StyleSheet.create({
 // ── Screen ─────────────────────────────────────────────────────
 export default function RegisterDriverScreen({ navigation }: Props) {
   const [cguAccepted, setCguAccepted] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
   const { register, isLoading, error, clearError } = useAuth();
   const { signInWithGoogle, isLoading: googleLoading, error: googleError, clearError: clearGoogleError } = useGoogleAuth();
+  const { signInWithApple, isLoading: appleLoading, error: appleError, clearError: clearAppleError } = useAppleAuth();
   const { showToast } = useToast();
-  const anyLoading = isLoading || googleLoading;
+  const anyLoading = isLoading || googleLoading || appleLoading;
 
   // Repartir sur un écran propre à chaque visite — sinon un message d'erreur
   // (ex: tentative Google précédente) reste affiché indéfiniment.
   useEffect(() => {
     clearError();
     clearGoogleError();
+    clearAppleError();
+    if (Platform.OS === 'ios') {
+      AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
+    }
   }, []);
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -152,9 +160,9 @@ export default function RegisterDriverScreen({ navigation }: Props) {
 
             <View style={styles.cardContent}>
 
-              {(error || googleError) && (
+              {(error || googleError || appleError) && (
                 <View style={styles.errorBanner}>
-                  <Text style={styles.errorText}>⚠️ {error ?? googleError}</Text>
+                  <Text style={styles.errorText}>⚠️ {error ?? googleError ?? appleError}</Text>
                 </View>
               )}
 
@@ -289,6 +297,24 @@ export default function RegisterDriverScreen({ navigation }: Props) {
                 )}
               </TouchableOpacity>
 
+              {appleAvailable && (
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_UP}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={Radius.lg}
+                  style={[styles.appleButton, (anyLoading || !cguAccepted) && { opacity: 0.6 }]}
+                  onPress={() => {
+                    if (!cguAccepted) {
+                      showToast({ type: 'warning', title: 'CGU requises', message: 'Cochez la case ci-dessus pour accepter les conditions d\'utilisation avant de continuer.' });
+                      return;
+                    }
+                    if (anyLoading) return;
+                    clearError(); clearAppleError();
+                    signInWithApple({ intent: 'register', role: 'driver', accept_terms: true });
+                  }}
+                />
+              )}
+
             </View>
 
             {/* FIX: lien login en colonne pour ne plus tronquer */}
@@ -374,6 +400,9 @@ const styles = StyleSheet.create({
   },
   googleIcon: { width: 20, height: 20, marginRight: Spacing.md },
   googleText: { fontFamily: Fonts.semibold, fontWeight: '600', color: '#333' },
+
+  /* ── Apple ── */
+  appleButton: { width: '100%', height: 48, marginTop: Spacing.md },
 
   /* ── Inscription / Login link ── */
   /* FIX: layout vertical pur, pas de flexDirection row */
