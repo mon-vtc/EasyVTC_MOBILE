@@ -1,5 +1,5 @@
 /**
- * Hook — Connexion Sign in with Apple, via expo-apple-authentication + Supabase
+ * Hook : connexion Sign in with Apple, via expo-apple-authentication + Supabase
  *
  * Flux :
  *  1. Génère un nonce aléatoire (expo-crypto).
@@ -7,7 +7,7 @@
  *     ce nonce (SHA-256) avant de l'envoyer à Apple, et récupère un identityToken
  *     (JWT signé par Apple) contenant le hash du nonce, ainsi que fullName/email
  *     UNIQUEMENT lors de la toute première connexion (Apple ne les renvoie plus
- *     ensuite — on les transmet donc immédiatement à l'API pour les stocker).
+ *     ensuite, on les transmet donc immédiatement à l'API pour les stocker).
  *  3. supabase.auth.signInWithIdToken({ provider: 'apple', token, nonce }) →
  *     Supabase vérifie la signature Apple et le nonce, ouvre une session.
  *  4. On envoie l'access_token Supabase à l'API → POST /auth/apple/token
@@ -91,7 +91,7 @@ export function useAppleAuth() {
       }
 
     } catch (err: unknown) {
-      // L'utilisateur a annulé la fenêtre Apple — ce n'est pas une erreur à afficher.
+      // L'utilisateur a annulé la fenêtre Apple, ce n'est pas une erreur à afficher.
       const code = (err as { code?: string } | undefined)?.code;
       if (code === 'ERR_REQUEST_CANCELED') {
         setIsLoading(false);

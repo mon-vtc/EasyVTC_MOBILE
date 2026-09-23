@@ -43,7 +43,7 @@
     // (à afficher une seule fois côté UI) — undefined pour un compte déjà existant.
     loginWithGoogle: (accessToken: string, refreshToken?: string, options?: GoogleAuthOptions) => Promise<string | undefined>;
     // Retourne un mot de passe temporaire si le compte Apple vient d'être créé
-    // (à afficher une seule fois côté UI) — undefined pour un compte déjà existant.
+    // (à afficher une seule fois côté UI), undefined pour un compte déjà existant.
     loginWithApple: (accessToken: string, refreshToken?: string | null, fullName?: string, options?: GoogleAuthOptions) => Promise<string | undefined>;
     register:       (payload: RegisterPayload)  => Promise<void>;
     logout:         ()                          => Promise<void>;

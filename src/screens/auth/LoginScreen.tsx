@@ -184,7 +184,7 @@ export default function LoginScreen({ navigation }: Props) {
               </TouchableOpacity>
 
               {/* Guideline 4.8 : alternative Apple exigée dès lors qu'un login
-                  tiers (Google) est proposé — bouton officiel Apple obligatoire,
+                  tiers (Google) est proposé, bouton officiel Apple obligatoire,
                   affiché uniquement là où Sign in with Apple est disponible. */}
               {appleAvailable && (
                 <AppleAuthentication.AppleAuthenticationButton

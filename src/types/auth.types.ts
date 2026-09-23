@@ -21,7 +21,7 @@ export interface AuthUser {
   status_changed_by: string | null;
   rgpd_consent:      boolean;
   rgpd_consent_at:   string | null;
-  // 'google'/'apple' si le compte n'a pas de mot de passe fiable connu de l'utilisateur —
+  // 'google'/'apple' si le compte n'a pas de mot de passe fiable connu de l'utilisateur,
   // sert à adapter l'écran de suppression de compte (pas de champ mot de passe).
   auth_provider?:    'password' | 'google' | 'apple';
   deleted_at:        string | null;
