@@ -72,14 +72,19 @@ jobs:
 
   # ─────────────────────────────────────────────
   # Job 2b : EAS Build Preview — iOS (develop uniquement)
-  # Nécessite le secret EXPO_TOKEN dans GitHub → Settings → Secrets
-  # Bloqué tant qu'aucun profil Ad Hoc/appareil de test n'est enregistré
-  # côté Apple Developer — voir NOTE_CI_IOS.md
+  # Désactivé (if: false) : échoue systématiquement en mode non-interactif
+  # tant qu'aucun profil Ad Hoc/appareil de test n'est enregistré côté Apple
+  # Developer, ce qui faisait échouer tout le pipeline à chaque push sur
+  # develop alors que les tests et le build Android passent. Voir
+  # NOTE_CI_IOS.md pour la procédure de déblocage (eas device:create puis
+  # eas build --profile preview --platform ios en interactif, une seule
+  # fois), puis remettre la condition d'origine ci-dessous une fois fait :
+  #   if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
   # ─────────────────────────────────────────────
   eas-preview-ios:
     name: EAS Build — Preview iOS (develop)
     needs: test-mobile
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    if: false
     runs-on: ubuntu-latest
 
     steps:
