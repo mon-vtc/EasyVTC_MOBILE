@@ -22,7 +22,6 @@ import { Colors } from '../../theme/colors';
 
 const FAB_SIZE = 56;
 const MARGIN = 20;
-const TAP_THRESHOLD = 6; // px : en dessous, on considère que c'est un appui, pas un glissé
 
 interface FloatingActionButtonProps {
   onPress: () => void;
@@ -42,6 +41,28 @@ export function FloatingActionButton({
   const translateY = useSharedValue(height - FAB_SIZE - initialBottom);
   const startX = useSharedValue(0);
   const startY = useSharedValue(0);
+  const scale = useSharedValue(1);
+
+  const snapToNearestEdge = () => {
+    const isRight = translateX.value + FAB_SIZE / 2 > width / 2;
+    translateX.value = withSpring(isRight ? width - FAB_SIZE - MARGIN : MARGIN, { damping: 16 });
+    translateY.value = withSpring(
+      Math.min(Math.max(translateY.value, MARGIN), height - FAB_SIZE - MARGIN),
+      { damping: 16 },
+    );
+  };
+
+  // Course entre les deux gestes : un appui bref déclenche Tap immédiatement
+  // (pas besoin d'attendre onEnd du Pan), un glissé continu prend le dessus
+  // et déclenche Pan à la place.
+  const tap = Gesture.Tap()
+    .maxDistance(8)
+    .onBegin(() => { scale.value = withSpring(0.9, { damping: 14 }); })
+    .onEnd((_, success) => {
+      scale.value = withSpring(1, { damping: 14 });
+      if (success) runOnJS(onPress)();
+    })
+    .onFinalize(() => { scale.value = withSpring(1, { damping: 14 }); });
 
   const pan = Gesture.Pan()
     .onStart(() => {
@@ -52,26 +73,22 @@ export function FloatingActionButton({
       translateX.value = startX.value + e.translationX;
       translateY.value = startY.value + e.translationY;
     })
-    .onEnd((e) => {
-      const moved = Math.hypot(e.translationX, e.translationY);
-      if (moved < TAP_THRESHOLD) {
-        runOnJS(onPress)();
-      }
-      // Accroche au bord le plus proche, et reste dans les limites verticales de l'écran.
-      const isRight = translateX.value + FAB_SIZE / 2 > width / 2;
-      translateX.value = withSpring(isRight ? width - FAB_SIZE - MARGIN : MARGIN, { damping: 16 });
-      translateY.value = withSpring(
-        Math.min(Math.max(translateY.value, MARGIN), height - FAB_SIZE - MARGIN),
-        { damping: 16 },
-      );
+    .onEnd(() => {
+      snapToNearestEdge();
     });
 
+  const gesture = Gesture.Race(tap, pan);
+
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }, { translateY: translateY.value }],
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
   }));
 
   return (
-    <GestureDetector gesture={pan}>
+    <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.fab, animatedStyle]}>
         <AppIcon name={iconName} size={26} color={Colors.white} />
       </Animated.View>

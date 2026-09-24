@@ -1,10 +1,10 @@
 // components/CustomCalendarModal.tsx
 import React, { useState } from 'react';
 import {
-  Modal, View, Text, TouchableOpacity, StyleSheet, FlatList,
+  Modal, View, Text, TouchableOpacity, StyleSheet, Platform,
 } from 'react-native';
 import { Colors, Fonts } from '../../theme/colors';
-import {AppIcon} from './AppIcon';
+import { AppIcon } from './AppIcon';
 
 const DAYS_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin',
@@ -44,7 +44,6 @@ export default function CustomCalendarModal({ visible, selectedDate, onConfirm, 
       ...Array(offset).fill(null),
       ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
     ];
-    // Complète pour avoir des lignes entières
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
   };
@@ -59,25 +58,30 @@ export default function CustomCalendarModal({ visible, selectedDate, onConfirm, 
   const cells = buildCells();
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
       <View style={s.overlay}>
-        <View style={s.card}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onCancel} />
+        <View style={s.sheet}>
+          <View style={s.handle} />
 
-          {/* ── Header ── */}
+          {/* ── En-tête ── */}
           <View style={s.header}>
+            <View style={s.headerIcon}>
+              <AppIcon name="calendar-outline" size={20} color={Colors.white} />
+            </View>
             <Text style={s.headerTitle}>Choisir une date</Text>
-            <TouchableOpacity onPress={onCancel}>
-              <AppIcon name="close-outline" size={22} color={Colors.white} />
+            <TouchableOpacity onPress={onCancel} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <AppIcon name="close-outline" size={22} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
           {/* ── Navigation mois ── */}
           <View style={s.nav}>
-            <TouchableOpacity onPress={prevMonth} style={s.navBtn}>
+            <TouchableOpacity onPress={prevMonth} style={s.navBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <AppIcon name="chevron-back-outline" size={20} color={Colors.bordeaux} />
             </TouchableOpacity>
             <Text style={s.navTitle}>{MONTHS[viewMonth]} {viewYear}</Text>
-            <TouchableOpacity onPress={nextMonth} style={s.navBtn}>
+            <TouchableOpacity onPress={nextMonth} style={s.navBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <AppIcon name="chevron-forward-outline" size={20} color={Colors.bordeaux} />
             </TouchableOpacity>
           </View>
@@ -101,11 +105,7 @@ export default function CustomCalendarModal({ visible, selectedDate, onConfirm, 
               return (
                 <TouchableOpacity
                   key={`day-${day}`}
-                  style={[
-                    s.cell,
-                    selected && s.cellSelected,
-                    today_ && !selected && s.cellToday,
-                  ]}
+                  style={s.cell}
                   onPress={() => !past && onConfirm(toISO(day))}
                   disabled={past}
                   activeOpacity={0.7}
@@ -123,8 +123,8 @@ export default function CustomCalendarModal({ visible, selectedDate, onConfirm, 
             })}
           </View>
 
-          {/* ── Bouton Annuler ── */}
-          <TouchableOpacity style={s.cancelBtn} onPress={onCancel}>
+          {/* ── Annuler ── */}
+          <TouchableOpacity style={s.cancelBtn} onPress={onCancel} activeOpacity={0.85}>
             <Text style={s.cancelText}>Annuler</Text>
           </TouchableOpacity>
 
@@ -137,74 +137,80 @@ export default function CustomCalendarModal({ visible, selectedDate, onConfirm, 
 const s = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
   },
-  card: {
-    width: '100%',
+  sheet: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    overflow: 'hidden',
-    elevation: 10,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    elevation: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
   },
-  // Header
+  handle: {
+    alignSelf: 'center',
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: Colors.border ?? '#D1D5DB',
+    marginTop: 10, marginBottom: 6,
+  },
+  // En-tête
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Colors.bordeaux,
-    paddingHorizontal: 16,
+    gap: 12,
     paddingVertical: 14,
   },
+  headerIcon: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: Colors.bordeaux,
+    alignItems: 'center', justifyContent: 'center',
+  },
   headerTitle: {
-    color: Colors.white,
-    fontSize: 16,
-    fontFamily: Fonts.bold, fontWeight: 'bold',
+    flex: 1,
+    fontSize: 17,
+    fontFamily: Fonts.bold, fontWeight: '700',
+    color: Colors.textPrimary,
   },
   // Navigation
   nav: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   navBtn: {
-    padding: 6,
-    borderRadius: 8,
-    backgroundColor: Colors.bordeauxLight + '22',
+    padding: 8,
+    borderRadius: 10,
+    backgroundColor: Colors.surface ?? '#F5F5F5',
   },
   navTitle: {
     fontSize: 15,
     fontFamily: Fonts.bold, fontWeight: '700',
-    color: Colors.bordeaux,
+    color: Colors.textPrimary,
   },
   // Jours semaine
   weekRow: {
     flexDirection: 'row',
-    paddingHorizontal: 8,
-    paddingBottom: 6,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.bordeauxLight + '44',
+    borderBottomColor: Colors.border ?? '#EEE',
   },
   weekDay: {
     flex: 1,
     textAlign: 'center',
     fontSize: 12,
     fontFamily: Fonts.semibold, fontWeight: '600',
-    color: Colors.bordeauxLight,
+    color: Colors.textSecondary,
   },
   // Grille
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 8,
     paddingVertical: 8,
   },
   cell: {
@@ -212,39 +218,37 @@ const s = StyleSheet.create({
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 100,
-  },
-  cellSelected: {
-    backgroundColor: Colors.bordeaux,
-  },
-  cellToday: {
-    borderWidth: 1.5,
-    borderColor: Colors.bordeaux,
   },
   cellText: {
-    fontSize: 14,
-    color: '#2d4150',
+    fontSize: 15,
+    color: Colors.textPrimary,
+    width: 36, height: 36, lineHeight: 36, textAlign: 'center', borderRadius: 18,
   },
   cellTextPast: {
-    color: '#c8d0d8',
+    color: Colors.textSecondary,
+    opacity: 0.35,
   },
   cellTextToday: {
     color: Colors.bordeaux,
     fontFamily: Fonts.bold, fontWeight: '700',
+    borderWidth: 1.5,
+    borderColor: Colors.bordeaux,
   },
   cellTextSelected: {
     color: Colors.white,
     fontFamily: Fonts.bold, fontWeight: '700',
+    backgroundColor: Colors.bordeaux,
   },
   // Annuler
   cancelBtn: {
     alignItems: 'center',
     paddingVertical: 14,
-    borderTopWidth: 1,
-    borderTopColor: Colors.bordeauxLight + '44',
+    marginTop: 8,
+    borderRadius: 12,
+    backgroundColor: Colors.surface ?? '#F5F5F5',
   },
   cancelText: {
-    color: Colors.bordeauxLight,
+    color: Colors.textSecondary,
     fontSize: 15,
     fontFamily: Fonts.semibold, fontWeight: '600',
   },
