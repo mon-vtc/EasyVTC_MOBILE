@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { AppIcon } from '../../components/common/AppIcon';
 import { AppHeader } from '../../components/common/AppHeader';
+import { FloatingActionButton } from '../../components/common/FloatingActionButton';
 import { useReservation } from '../../hooks/useReservation';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import type { Reservation, ReservationListFilters, ReservationStatus } from '../../types/reservations.types';
@@ -340,13 +341,7 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
       />
 
       {/* ── Réserver pour un client (personne ne pouvant pas réserver elle-même) ── */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('ManualReservation')}
-        activeOpacity={0.85}
-      >
-        <AppIcon name="add" size={26} color={Colors.white} />
-      </TouchableOpacity>
+      <FloatingActionButton onPress={() => navigation.navigate('ManualReservation')} />
 
     </View>
   );
@@ -354,12 +349,6 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
 
 const styles = StyleSheet.create({
   flex:   { flex: 1, backgroundColor: Colors.background },
-  fab: {
-    position: 'absolute', right: Spacing.lg, bottom: Spacing.lg,
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: Colors.bordeaux, alignItems: 'center', justifyContent: 'center',
-    elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4,
-  },
 
   tabBar:        { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm, backgroundColor: Colors.surface, borderRadius: Radius.md, padding: 4, marginHorizontal: Spacing.md, marginTop: Spacing.sm },
   tabItem:       { flex: 1, alignItems: 'center', paddingVertical: Spacing.sm, borderRadius: Radius.sm },

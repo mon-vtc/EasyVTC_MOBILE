@@ -1,10 +1,12 @@
 // components/CustomTimePickerModal.tsx
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView,
+  NativeSyntheticEvent, NativeScrollEvent, Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Fonts } from '../../theme/colors';
-import {AppIcon} from './AppIcon';
+import { AppIcon } from './AppIcon';
 
 interface Props {
   visible: boolean;
@@ -13,100 +15,137 @@ interface Props {
   onCancel: () => void;
 }
 
+const ITEM_HEIGHT = 44;
+const VISIBLE_ITEMS = 5;
+const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
+const PADDING = ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2);
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// ── Colonne à défilement, façon roue (snap au centre) ──────────────────────
+function WheelColumn({
+  values,
+  selected,
+  onSelect,
+}: {
+  values: number[];
+  selected: number;
+  onSelect: (v: number) => void;
+}) {
+  const scrollRef = useRef<ScrollView>(null);
+  const initialIndex = Math.max(0, values.indexOf(selected));
+
+  const snapToIndex = (index: number, animated = true) => {
+    const clamped = Math.min(Math.max(index, 0), values.length - 1);
+    scrollRef.current?.scrollTo({ y: clamped * ITEM_HEIGHT, animated });
+    onSelect(values[clamped]);
+  };
+
+  const handleSettle = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(e.nativeEvent.contentOffset.y / ITEM_HEIGHT);
+    snapToIndex(index, false);
+  };
+
+  return (
+    <View style={s.colContainer}>
+      <ScrollView
+        ref={scrollRef}
+        showsVerticalScrollIndicator={false}
+        snapToInterval={ITEM_HEIGHT}
+        decelerationRate="fast"
+        contentContainerStyle={{ paddingVertical: PADDING }}
+        contentOffset={{ x: 0, y: initialIndex * ITEM_HEIGHT }}
+        onMomentumScrollEnd={handleSettle}
+        onScrollEndDrag={(e) => {
+          // Android : un petit glissé sans inertie ne déclenche pas onMomentumScrollEnd.
+          if (Platform.OS === 'android') handleSettle(e);
+        }}
+      >
+        {values.map((v) => {
+          const isSelected = v === selected;
+          return (
+            <TouchableOpacity
+              key={v}
+              style={s.item}
+              onPress={() => snapToIndex(values.indexOf(v))}
+              activeOpacity={0.6}
+            >
+              <Text style={[s.itemText, isSelected && s.itemTextSelected]}>{pad(v)}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      {/* Bande de sélection centrale, sous le contenu défilant */}
+      <View style={s.selectionBand} pointerEvents="none" />
+
+      {/* Fondus haut/bas pour signaler que la colonne défile */}
+      <LinearGradient
+        colors={[Colors.white, Colors.white + '00']}
+        style={[s.fade, { top: 0 }]}
+        pointerEvents="none"
+      />
+      <LinearGradient
+        colors={[Colors.white + '00', Colors.white]}
+        style={[s.fade, { bottom: 0 }]}
+        pointerEvents="none"
+      />
+    </View>
+  );
+}
+
 export default function CustomTimePickerModal({ visible, selectedTime, onConfirm, onCancel }: Props) {
   const initH = selectedTime ? parseInt(selectedTime.split(':')[0]) : new Date().getHours();
   const initM = selectedTime ? parseInt(selectedTime.split(':')[1]) : 0;
 
   const [hour, setHour]     = useState(initH);
-  const [minute, setMinute] = useState(initM);
+  const [minute, setMinute] = useState(initM - (initM % 5));
 
   const HOURS   = Array.from({ length: 24 }, (_, i) => i);
-  const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5); // 0,5,10,...,55
+  const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
 
-  const pad = (n: number) => String(n).padStart(2, '0');
-
-  const handleConfirm = () => {
-    onConfirm(`${pad(hour)}:${pad(minute)}`);
-  };
-
-  const ColPicker = ({
-    values,
-    selected,
-    onSelect,
-  }: {
-    values: number[];
-    selected: number;
-    onSelect: (v: number) => void;
-  }) => (
-    <ScrollView
-      style={s.col}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={s.colContent}
-    >
-      {values.map(v => (
-        <TouchableOpacity
-          key={v}
-          style={[s.item, v === selected && s.itemSelected]}
-          onPress={() => onSelect(v)}
-          activeOpacity={0.7}
-        >
-          <Text style={[s.itemText, v === selected && s.itemTextSelected]}>
-            {pad(v)}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
+  const handleConfirm = () => onConfirm(`${pad(hour)}:${pad(minute)}`);
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
       <View style={s.overlay}>
-        <View style={s.card}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onCancel} />
+        <View style={s.sheet}>
+          <View style={s.handle} />
 
-          {/* ── Header ── */}
+          {/* ── En-tête ── */}
           <View style={s.header}>
+            <View style={s.headerIcon}>
+              <AppIcon name="time-outline" size={20} color={Colors.white} />
+            </View>
             <Text style={s.headerTitle}>Choisir une heure</Text>
-            <TouchableOpacity onPress={onCancel}>
-              <AppIcon name="close-outline" size={22} color={Colors.white} />
+            <TouchableOpacity onPress={onCancel} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <AppIcon name="close-outline" size={22} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
-          {/* ── Preview ── */}
-          <View style={s.preview}>
-            <Text style={s.previewText}>{pad(hour)} : {pad(minute)}</Text>
-          </View>
-
-          {/* ── Colonnes ── */}
+          {/* ── Roues Heures / Minutes ── */}
           <View style={s.pickerRow}>
-
-            {/* Label + colonne Heures */}
             <View style={s.colWrapper}>
               <Text style={s.colLabel}>Heures</Text>
-              <View style={s.colContainer}>
-                <ColPicker values={HOURS} selected={hour} onSelect={setHour} />
-              </View>
+              <WheelColumn values={HOURS} selected={hour} onSelect={setHour} />
             </View>
 
-            {/* Séparateur */}
             <Text style={s.separator}>:</Text>
 
-            {/* Label + colonne Minutes */}
             <View style={s.colWrapper}>
               <Text style={s.colLabel}>Minutes</Text>
-              <View style={s.colContainer}>
-                <ColPicker values={MINUTES} selected={minute} onSelect={setMinute} />
-              </View>
+              <WheelColumn values={MINUTES} selected={minute} onSelect={setMinute} />
             </View>
-
           </View>
 
           {/* ── Actions ── */}
           <View style={s.actions}>
-            <TouchableOpacity style={s.cancelBtn} onPress={onCancel}>
+            <TouchableOpacity style={[s.actionBtn, s.cancelBtn]} onPress={onCancel} activeOpacity={0.85}>
               <Text style={s.cancelText}>Annuler</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={s.confirmBtn} onPress={handleConfirm}>
-              <Text style={s.confirmText}>Confirmer</Text>
+            <TouchableOpacity style={[s.actionBtn, s.confirmBtn]} onPress={handleConfirm} activeOpacity={0.85}>
+              <Text style={s.confirmText}>Confirmer {pad(hour)}:{pad(minute)}</Text>
             </TouchableOpacity>
           </View>
 
@@ -119,136 +158,126 @@ export default function CustomTimePickerModal({ visible, selectedTime, onConfirm
 const s = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
   },
-  card: {
-    width: '100%',
+  sheet: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    overflow: 'hidden',
-    elevation: 10,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    elevation: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
   },
-  // Header
+  handle: {
+    alignSelf: 'center',
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: Colors.border ?? '#D1D5DB',
+    marginTop: 10, marginBottom: 6,
+  },
+  // En-tête
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Colors.bordeaux,
-    paddingHorizontal: 16,
+    gap: 12,
     paddingVertical: 14,
   },
+  headerIcon: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: Colors.bordeaux,
+    alignItems: 'center', justifyContent: 'center',
+  },
   headerTitle: {
-    color: Colors.white,
-    fontSize: 16,
-    fontFamily: Fonts.bold, fontWeight: 'bold',
-  },
-  // Preview heure
-  preview: {
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.bordeauxLight + '44',
-  },
-  previewText: {
-    fontSize: 42,
+    flex: 1,
+    fontSize: 17,
     fontFamily: Fonts.bold, fontWeight: '700',
-    color: Colors.bordeaux,
-    letterSpacing: 4,
+    color: Colors.textPrimary,
   },
-  // Colonnes
+  // Roues
   pickerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    gap: 8,
+    paddingVertical: 8,
+    gap: 4,
   },
-  colWrapper: {
-    alignItems: 'center',
-    flex: 1,
-  },
+  colWrapper: { alignItems: 'center', flex: 1 },
   colLabel: {
     fontSize: 12,
     fontFamily: Fonts.semibold, fontWeight: '600',
-    color: Colors.bordeauxLight,
-    marginBottom: 6,
+    color: Colors.textSecondary,
+    marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   colContainer: {
-    height: 180,
-    borderWidth: 1.5,
-    borderColor: Colors.bordeauxLight + '55',
-    borderRadius: 12,
-    overflow: 'hidden',
+    height: PICKER_HEIGHT,
+    width: '100%',
   },
-  col: {
-    flex: 1,
+  selectionBand: {
+    position: 'absolute',
+    left: 8, right: 8,
+    top: PADDING, height: ITEM_HEIGHT,
+    borderRadius: 10,
+    backgroundColor: Colors.bordeaux + '14',
+    borderTopWidth: 1, borderBottomWidth: 1,
+    borderColor: Colors.bordeaux + '33',
   },
-  colContent: {
-    paddingVertical: 4,
+  fade: {
+    position: 'absolute', left: 0, right: 0, height: PADDING,
   },
   item: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    height: ITEM_HEIGHT,
     alignItems: 'center',
-    marginHorizontal: 4,
-    marginVertical: 2,
-    borderRadius: 8,
-  },
-  itemSelected: {
-    backgroundColor: Colors.bordeaux,
+    justifyContent: 'center',
   },
   itemText: {
-    fontSize: 18,
-    color: '#2d4150',
+    fontSize: 19,
+    color: Colors.textSecondary,
     fontFamily: Fonts.medium, fontWeight: '500',
   },
   itemTextSelected: {
-    color: Colors.white,
+    color: Colors.bordeaux,
     fontFamily: Fonts.bold, fontWeight: '700',
+    fontSize: 21,
+  },
+  separator: {
+    fontSize: 22,
+    fontFamily: Fonts.bold, fontWeight: '700',
+    color: Colors.bordeaux,
+    marginTop: 8 + PADDING - 12,
   },
   // Actions
   actions: {
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: Colors.bordeauxLight + '44',
+    gap: 10,
+    marginTop: 12,
   },
-  cancelBtn: {
+  actionBtn: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 14,
-    borderRightWidth: 1,
-    borderRightColor: Colors.bordeauxLight + '44',
+    borderRadius: 12,
+  },
+  cancelBtn: {
+    backgroundColor: Colors.surface ?? '#F5F5F5',
   },
   cancelText: {
-    color: Colors.bordeauxLight,
+    color: Colors.textSecondary,
     fontSize: 15,
     fontFamily: Fonts.semibold, fontWeight: '600',
   },
   confirmBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 14,
-    backgroundColor: Colors.bordeaux + '11',
+    backgroundColor: Colors.bordeaux,
   },
   confirmText: {
-    color: Colors.bordeaux,
+    color: Colors.white,
     fontSize: 15,
     fontFamily: Fonts.bold, fontWeight: '700',
-  },
-  separator: {
-    fontSize: 24,
-    fontFamily: Fonts.bold, fontWeight: '700',
-    color: Colors.bordeaux,
-    marginHorizontal: 8,
   },
 });

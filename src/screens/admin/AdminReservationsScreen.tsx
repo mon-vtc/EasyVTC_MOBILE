@@ -18,6 +18,7 @@ import { useReservation } from '../../hooks/useReservation';
 import { useToast } from '../../hooks/useToast';
 import { useNotifications } from '../../hooks/useNotifications';
 import { AppHeader } from '../../components/common/AppHeader';
+import { FloatingActionButton } from '../../components/common/FloatingActionButton';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import DriverPickerModal from './DriverPickerModal';
 import type { Reservation, ReservationStatus, AvailableDriverDto, ReservationListFilters } from '../../types/reservations.types';
@@ -453,13 +454,7 @@ export default function AdminReservationsScreen({ navigation }: any) {
       />
 
       {/* ── Réserver pour un client (personne ne pouvant pas réserver elle-même) ── */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('ManualReservation')}
-        activeOpacity={0.85}
-      >
-        <AppIcon name="add" size={26} color={Colors.white} />
-      </TouchableOpacity>
+      <FloatingActionButton onPress={() => navigation.navigate('ManualReservation')} />
 
     </View>
   );
@@ -468,13 +463,6 @@ export default function AdminReservationsScreen({ navigation }: any) {
 // ── STYLES ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
-  fab: {
-    position: 'absolute', right: Spacing.lg, bottom: Spacing.lg,
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: Colors.bordeaux, alignItems: 'center', justifyContent: 'center',
-    elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4,
-  },
-
   tabsWrapper: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
   tabsContent: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, flexDirection: 'row', gap: Spacing.sm, alignItems: 'center' },
   tab:            { paddingHorizontal: Spacing.md, paddingVertical: 7, borderRadius: Radius.full, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border },
