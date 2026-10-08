@@ -2,14 +2,15 @@
  * Hook : connexion Sign in with Apple, via expo-apple-authentication + Supabase
  *
  * Flux :
- *  1. Génère un nonce aléatoire (expo-crypto).
- *  2. AppleAuthentication.signInAsync({ nonce, requestedScopes }) → Expo hashe
- *     ce nonce (SHA-256) avant de l'envoyer à Apple, et récupère un identityToken
- *     (JWT signé par Apple) contenant le hash du nonce, ainsi que fullName/email
- *     UNIQUEMENT lors de la toute première connexion (Apple ne les renvoie plus
- *     ensuite, on les transmet donc immédiatement à l'API pour les stocker).
- *  3. supabase.auth.signInWithIdToken({ provider: 'apple', token, nonce }) →
- *     Supabase vérifie la signature Apple et le nonce, ouvre une session.
+ *  1. Génère un nonce aléatoire (expo-crypto), puis calcule son hash SHA-256.
+ *  2. AppleAuthentication.signInAsync({ nonce: hashedNonce, requestedScopes }) →
+ *     le nonce HASHÉ est envoyé à Apple, qui l'embarque tel quel dans l'identityToken
+ *     (JWT signé par Apple) renvoyé, avec fullName/email UNIQUEMENT lors de la
+ *     toute première connexion (Apple ne les renvoie plus ensuite, on les
+ *     transmet donc immédiatement à l'API pour les stocker).
+ *  3. supabase.auth.signInWithIdToken({ provider: 'apple', token, nonce: rawNonce }) →
+ *     Supabase hashe à son tour le nonce BRUT fourni et le compare au claim
+ *     `nonce` du token pour vérifier la signature Apple, puis ouvre une session.
  *  4. On envoie l'access_token Supabase à l'API → POST /auth/apple/token
  *     → profil + tokens métier (même pattern que useGoogleAuth.ts).
  *
@@ -40,14 +41,18 @@ export function useAppleAuth() {
     setError(null);
 
     try {
-      const nonce = randomNonce();
+      const rawNonce = randomNonce();
+      const hashedNonce = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        rawNonce,
+      );
 
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
-        nonce,
+        nonce: hashedNonce,
       });
 
       if (!credential.identityToken) {
@@ -66,7 +71,7 @@ export function useAppleAuth() {
       const { data, error: supabaseError } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken,
-        nonce,
+        nonce: rawNonce,
       });
 
       if (supabaseError || !data.session) {
