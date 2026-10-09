@@ -2,32 +2,30 @@
  * Hook : connexion Sign in with Apple, via expo-apple-authentication + Supabase
  *
  * Flux :
- *  1. Génère un nonce aléatoire (expo-crypto).
- *  2. AppleAuthentication.signInAsync({ nonce, requestedScopes }) → Expo hashe
- *     ce nonce (SHA-256) avant de l'envoyer à Apple, et récupère un identityToken
- *     (JWT signé par Apple) contenant le hash du nonce, ainsi que fullName/email
- *     UNIQUEMENT lors de la toute première connexion (Apple ne les renvoie plus
- *     ensuite, on les transmet donc immédiatement à l'API pour les stocker).
- *  3. supabase.auth.signInWithIdToken({ provider: 'apple', token, nonce }) →
- *     Supabase vérifie la signature Apple et le nonce, ouvre une session.
- *  4. On envoie l'access_token Supabase à l'API → POST /auth/apple/token
+ *  1. AppleAuthentication.signInAsync({ requestedScopes }) → récupère un identityToken
+ *     (JWT signé par Apple), ainsi que fullName/email UNIQUEMENT lors de la toute
+ *     première connexion (Apple ne les renvoie plus ensuite, on les transmet donc
+ *     immédiatement à l'API pour les stocker).
+ *  2. supabase.auth.signInWithIdToken({ provider: 'apple', token }) → Supabase
+ *     vérifie la signature Apple et ouvre une session.
+ *  3. On envoie l'access_token Supabase à l'API → POST /auth/apple/token
  *     → profil + tokens métier (même pattern que useGoogleAuth.ts).
+ *
+ * Pas de paramètre nonce : volontaire, pour suivre exactement l'exemple officiel
+ * Supabase pour Expo (supabase.com/docs/guides/auth/social-login/auth-apple).
+ * Un essai avec nonce haché en SHA-256 (pattern Firebase/Flutter) est tombé sur un
+ * bug GoTrue non résolu ("Nonces mismatch", comparaison hex vs base64url —
+ * supabase/auth#2378) ; l'exemple Expo officiel n'utilise pas de nonce du tout.
  *
  * Guideline 4.8 : Sign in with Apple est l'alternative exigée par Apple dès lors
  * qu'un login tiers (ici Google) est proposé.
  */
 import { useState } from 'react';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import * as Crypto from 'expo-crypto';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { useAlert } from './useAlert';
 import type { GoogleAuthOptions } from '../types';
-
-function randomNonce(): string {
-  const bytes = Crypto.getRandomBytes(16);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-}
 
 export function useAppleAuth() {
   const { loginWithApple } = useAuth();
@@ -40,14 +38,11 @@ export function useAppleAuth() {
     setError(null);
 
     try {
-      const nonce = randomNonce();
-
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
-        nonce,
       });
 
       if (!credential.identityToken) {
@@ -66,7 +61,6 @@ export function useAppleAuth() {
       const { data, error: supabaseError } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken,
-        nonce,
       });
 
       if (supabaseError || !data.session) {
