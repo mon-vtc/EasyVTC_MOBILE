@@ -1,4 +1,4 @@
-import { searchAddress } from '../../services/geo/addressAutocomplete';
+import { searchAddress, isInServiceArea } from '../../services/geo/addressAutocomplete';
 
 describe('searchAddress (Photon)', () => {
   const originalFetch = global.fetch;
@@ -111,5 +111,21 @@ describe('searchAddress (Photon)', () => {
     expect(results).toEqual([
       { label: 'Bellecour, Lyon, France', latitude: 45.7640, longitude: 4.8357 },
     ]);
+  });
+});
+
+describe('isInServiceArea', () => {
+  it('accepte Paris, CDG, Nice, Ajaccio et Bruxelles', () => {
+    expect(isInServiceArea(48.8566, 2.3522)).toBe(true);
+    expect(isInServiceArea(49.0097, 2.5479)).toBe(true);
+    expect(isInServiceArea(43.7102, 7.262)).toBe(true);
+    expect(isInServiceArea(41.9192, 8.7386)).toBe(true);
+    expect(isInServiceArea(50.8503, 4.3517)).toBe(true);
+  });
+
+  it("rejette un géocodage aberrant à l'étranger (Grèce, USA, Dakar)", () => {
+    expect(isInServiceArea(37.9838, 23.7275)).toBe(false);
+    expect(isInServiceArea(40.7128, -74.006)).toBe(false);
+    expect(isInServiceArea(14.7167, -17.4677)).toBe(false);
   });
 });

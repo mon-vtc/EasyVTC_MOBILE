@@ -10,7 +10,7 @@
 //     client n'a pas encore de compte.
 // ══════════════════════════════════════════════════════════════════════════════
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -233,6 +233,8 @@ export default function ManualReservationScreen({ navigation }: any) {
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  // Garde anti-course blur/sélection — même cas que CreateReservationScreen (7229 km).
+  const addressSelectionRef = useRef(0);
 
   const { suggestions: originSuggestions, isSearching: isSearchingOrigin } =
     useAddressSearch(originInput, focusedInput === 'origin');
@@ -252,6 +254,7 @@ export default function ManualReservationScreen({ navigation }: any) {
   }, [error]);
 
   const handleSelectAddress = useCallback((suggestion: AddressSuggestion, target: 'origin' | 'destination') => {
+    addressSelectionRef.current++;
     const point: GeoPoint = { address: suggestion.label, latitude: suggestion.latitude, longitude: suggestion.longitude };
     if (target === 'origin') {
       setOriginInput(suggestion.label);
@@ -267,6 +270,7 @@ export default function ManualReservationScreen({ navigation }: any) {
     setIsGeolocating(true);
     const point = await getCurrentLocation();
     if (point) {
+      addressSelectionRef.current++;
       setOriginInput(point.address);
       setOrigin(point);
     } else {
@@ -278,7 +282,10 @@ export default function ManualReservationScreen({ navigation }: any) {
   const handleOriginBlur = async () => {
     const trimmed = originInput.trim();
     if (!trimmed) { setOrigin(null); return; }
+    if (trimmed === booking.origin?.address) return;
+    const selection = addressSelectionRef.current;
     const point = await geocodeAddress(trimmed);
+    if (selection !== addressSelectionRef.current) return;
     if (point) setOrigin({ ...point, address: trimmed });
     else showToast({ title: 'Adresse invalide', message: "Impossible de trouver l'adresse de départ.", type: 'error' });
   };
@@ -286,7 +293,10 @@ export default function ManualReservationScreen({ navigation }: any) {
   const handleDestinationBlur = async () => {
     const trimmed = destinationInput.trim();
     if (!trimmed) { setDestination(null); return; }
+    if (trimmed === booking.destination?.address) return;
+    const selection = addressSelectionRef.current;
     const point = await geocodeAddress(trimmed);
+    if (selection !== addressSelectionRef.current) return;
     if (point) setDestination({ ...point, address: trimmed });
     else showToast({ title: 'Adresse invalide', message: "Impossible de trouver l'adresse de destination.", type: 'error' });
   };

@@ -30,6 +30,19 @@ const ALLOWED_COUNTRY_CODES = new Set([
   'MC', 'AD', 'SM', 'VA', 'LI',
 ]);
 
+// Zone de service plausible (France métropolitaine + Corse + frontaliers immédiats :
+// Belgique, Luxembourg, Genève, Monaco…). Sert à rejeter un géocodage aberrant —
+// ex. "BP 35051, Terminal 2C" (CDG) résolu par le géocodeur natif en station-service
+// "BP" à l'étranger, d'où un trajet Stade de France → CDG facturé 7229 km / 17 508 €.
+const SERVICE_AREA = { latMin: 41, latMax: 51.6, lonMin: -5.8, lonMax: 10.5 };
+
+export function isInServiceArea(latitude: number, longitude: number): boolean {
+  return (
+    latitude  >= SERVICE_AREA.latMin && latitude  <= SERVICE_AREA.latMax &&
+    longitude >= SERVICE_AREA.lonMin && longitude <= SERVICE_AREA.lonMax
+  );
+}
+
 function formatLabel(props: Record<string, any>): string {
   const line = [
     props.housenumber && props.street ? `${props.housenumber} ${props.street}` : (props.street ?? props.name),

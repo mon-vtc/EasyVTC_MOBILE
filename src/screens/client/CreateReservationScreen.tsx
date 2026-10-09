@@ -7,7 +7,7 @@
 // Affichage et sélection des forfaits disponibles (Option 1 + Option 2).
 // ══════════════════════════════════════════════════════════════════════════════
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View, Text, TextInput, ScrollView, TouchableOpacity, FlatList,
   StyleSheet, ActivityIndicator, KeyboardAvoidingView,
@@ -159,6 +159,11 @@ function Step1({
   const [destinationError, setDestinationError] = useState<string | null>(null);
   const [isGeolocating, setIsGeolocating] = useState(false);
   const [detailForfait, setDetailForfait] = useState<PricingFlatRate | null>(null);
+  // Incrémenté à chaque choix explicite d'adresse (suggestion, favori, géoloc, forfait).
+  // Toucher une suggestion fait d'abord perdre le focus au champ : le géocodage du blur
+  // part alors sur le texte partiel et répond APRÈS la sélection — sans ce garde, il
+  // écrasait les coordonnées choisies (trajet Stade de France → CDG à 7229 km).
+  const addressSelectionRef = useRef(0);
 
   // ── Suggestions d'adresses en temps réel (Photon/OpenStreetMap) ─────────────
   const { suggestions: originSuggestions, isSearching: isSearchingOrigin } =
@@ -167,6 +172,7 @@ function Step1({
     useAddressSearch(destinationInput, focusedInput === 'destination');
 
   const handleSelectAddress = useCallback((suggestion: AddressSuggestion, target: 'origin' | 'destination') => {
+    addressSelectionRef.current++;
     const point: GeoPoint = {
       address:   suggestion.label,
       latitude:  suggestion.latitude,
@@ -205,6 +211,7 @@ function Step1({
     setIsGeolocating(true);
     const point = await getCurrentLocation();
     if (point) {
+      addressSelectionRef.current++;
       setOriginInput(point.address);
       setOrigin(point);
       setOriginError(null);
@@ -224,7 +231,10 @@ function Step1({
       setOriginError(null);
       return;
     }
+    if (trimmed === booking.origin?.address) return; // déjà résolue (suggestion, favori…)
+    const selection = addressSelectionRef.current;
     const point = await geocodeAddress(trimmed);
+    if (selection !== addressSelectionRef.current) return; // une adresse a été choisie entre-temps
     if (point) {
       setOrigin({ ...point, address: trimmed });
       setOriginError(null);
@@ -233,7 +243,7 @@ function Step1({
       setOriginError('Adresse de départ invalide');
       showToast({ title: 'Adresse invalide', message: 'Impossible de trouver l\'adresse de départ. Veuillez vérifier.', type: 'error' });
     }
-  }, [originInput, geocodeAddress, setOrigin, showToast]);
+  }, [originInput, booking.origin?.address, geocodeAddress, setOrigin, showToast]);
 
   const handleDestinationBlur = useCallback(async () => {
     const trimmed = destinationInput.trim();
@@ -242,7 +252,10 @@ function Step1({
       setDestinationError(null);
       return;
     }
+    if (trimmed === booking.destination?.address) return; // déjà résolue (suggestion, favori…)
+    const selection = addressSelectionRef.current;
     const point = await geocodeAddress(trimmed);
+    if (selection !== addressSelectionRef.current) return; // une adresse a été choisie entre-temps
     if (point) {
       setDestination({ ...point, address: trimmed });
       setDestinationError(null);
@@ -251,7 +264,7 @@ function Step1({
       setDestinationError('Adresse de destination invalide');
       showToast({ title: 'Adresse invalide', message: 'Impossible de trouver l\'adresse de destination. Veuillez vérifier.', type: 'error' });
     }
-  }, [destinationInput, geocodeAddress, setDestination, showToast]);
+  }, [destinationInput, booking.destination?.address, geocodeAddress, setDestination, showToast]);
 
   // ── Forfait : ouvre la vue détail avant d'appliquer ───────────────────────
   const handleFlatRatePress = useCallback((fr: PricingFlatRate) => {
@@ -264,6 +277,7 @@ function Step1({
 
   const handleApplyForfait = useCallback(() => {
     if (detailForfait) {
+      addressSelectionRef.current++;
       setOriginInput(detailForfait.origin_label);
       setDestinationInput(detailForfait.destination_label);
       setOriginError(null); // Efface les erreurs d'adresse si un forfait est appliqué
@@ -279,6 +293,7 @@ function Step1({
       latitude: fav.lat ?? 0,
       longitude: fav.lng ?? 0,
     };
+    addressSelectionRef.current++;
     if (focusedInput === 'origin') {
       setOrigin(point);
     } else if (focusedInput === 'destination') {
