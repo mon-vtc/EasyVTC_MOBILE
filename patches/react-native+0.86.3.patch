@@ -1,0 +1,16 @@
+diff --git a/node_modules/react-native/src/private/components/virtualview/VirtualViewExperimentalNativeComponent.js b/node_modules/react-native/src/private/components/virtualview/VirtualViewExperimentalNativeComponent.js
+index c640b5a..3cc47cd 100644
+--- a/node_modules/react-native/src/private/components/virtualview/VirtualViewExperimentalNativeComponent.js
++++ b/node_modules/react-native/src/private/components/virtualview/VirtualViewExperimentalNativeComponent.js
+@@ -92,9 +92,9 @@ type VirtualViewExperimentalNativeProps = Readonly<{
+ }>;
+ 
+ // TODO: Rename to eliminate "Experimental" suffix in the name.
+-export default codegenNativeComponent<VirtualViewExperimentalNativeProps>(
++export default (codegenNativeComponent<VirtualViewExperimentalNativeProps>(
+   'VirtualViewExperimental',
+   {
+     interfaceOnly: true,
+   },
+-) as HostComponent<VirtualViewExperimentalNativeProps>;
++): HostComponent<VirtualViewExperimentalNativeProps>);
