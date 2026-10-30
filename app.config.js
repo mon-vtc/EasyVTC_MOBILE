@@ -3,7 +3,7 @@ export default {
   name: "EasyVTC",
   slug: "easyvtc",
   owner: "easyvtc",
-  version: "1.0.3",
+  version: "1.0.4",
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
@@ -20,6 +20,8 @@ export default {
       resizeMode: "contain", // "contain" ou "cover" sont supportés sur iOS
     },
     infoPlist: {
+      CFBundleDevelopmentRegion: "fr",
+      CFBundleLocalizations: ["fr"],
       NSCameraUsageDescription: "Pour photographier vos documents chauffeur et votre photo de profil.",
       NSPhotoLibraryUsageDescription: "Pour sélectionner votre photo de profil ou vos documents depuis la galerie.",
       NSLocationWhenInUseUsageDescription: "Pour indiquer votre position de prise en charge lors d'une réservation.",

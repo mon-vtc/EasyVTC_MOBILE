@@ -11,6 +11,8 @@ export interface DriverBillingSnapshot {
   phone:      string | null;
   email:      string | null;
   siret:      string | null;
+  company_name?:    string | null;
+  company_address?: string | null;
   tva_rate:   number;
 }
 

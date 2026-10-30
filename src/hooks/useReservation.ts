@@ -16,6 +16,7 @@ import { vehicleTypesApi }               from '../services/api/vehicleTypes.api'
 import { useFavorites }                   from './useFavorites';
 import { ordersApi } from '../services/api/orders.api';
 import { pricingApi }                     from '../services/api/pricing.api';
+import { isInServiceArea }                from '../services/geo/addressAutocomplete';
 import { useAuth }                        from './useAuth';
 import type {
   GeoPoint,
@@ -183,8 +184,11 @@ export function useReservation() {
   const geocodeAddress = useCallback(async (address: string): Promise<GeoPoint | null> => {
     try {
       const results = await Location.geocodeAsync(address);
-      if (!results.length) return null;
-      return { latitude: results[0].latitude, longitude: results[0].longitude, address };
+      // Premier résultat situé dans la zone de service : le géocodeur natif peut
+      // renvoyer en tête un homonyme à l'étranger (ex. "BP 35051" → station BP).
+      const match = results.find(r => isInServiceArea(r.latitude, r.longitude));
+      if (!match) return null;
+      return { latitude: match.latitude, longitude: match.longitude, address };
     } catch {
       return null;
     }

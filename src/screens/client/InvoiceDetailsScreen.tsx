@@ -192,7 +192,7 @@ export default function InvoiceDetailsScreen() {
               {client.phone ? (
                 <Text style={styles.identityDetail}>Téléphone : {client.phone}</Text>
               ) : null}
-              {client.email ? (
+              {client.email && !client.email.endsWith('@reservation.easyvtc.local') ? (
                 <Text style={styles.identityDetail}>Email : {client.email}</Text>
               ) : null}
             </View>
@@ -201,8 +201,14 @@ export default function InvoiceDetailsScreen() {
 
             {/* Chauffeur (droite) */}
             <View style={styles.identityBlock}>
-              <Text style={styles.identityLabel}>Chauffeur</Text>
-              <Text style={styles.identityName}>{driver.first_name} {driver.last_name}</Text>
+              <Text style={styles.identityLabel}>Facturé par</Text>
+              <Text style={styles.identityName}>{driver.company_name || `${driver.first_name} ${driver.last_name}`}</Text>
+              {driver.company_name ? (
+                <Text style={styles.identityDetail}>{driver.first_name} {driver.last_name}</Text>
+              ) : null}
+              {driver.company_address ? (
+                <Text style={styles.identityDetail}>{driver.company_address}</Text>
+              ) : null}
               {driver.phone ? (
                 <Text style={styles.identityDetail}>Téléphone : {driver.phone}</Text>
               ) : null}

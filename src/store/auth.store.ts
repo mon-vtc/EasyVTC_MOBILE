@@ -17,6 +17,8 @@
       driverStatus: raw.driver?.status        ?? 'pending',
       vehicle_type: raw.driver?.vehicle_type  ?? null,
       siret:        raw.driver?.siret         ?? null,
+      company_name:    raw.driver?.company_name    ?? null,
+      company_address: raw.driver?.company_address ?? null,
       iban:         raw.driver?.iban          ?? null,
       vtc_license:  raw.driver?.vtc_license   ?? null,
       tva_rate:     raw.driver?.tva_rate      ?? 0,
