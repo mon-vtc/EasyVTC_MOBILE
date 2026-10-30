@@ -117,6 +117,14 @@ export default function ClientProfileScreen({ navigation }: Props) {
   const [lastName,   setLastName]   = useState(user?.last_name  ?? ''); 
   const [phone,      setPhone]      = useState(user?.phone      ?? '');
 
+  // Resynchronise le formulaire quand le profil change (hors édition en cours)
+  React.useEffect(() => {
+    if (editMode) return;
+    setFirstName(user?.first_name ?? '');
+    setLastName(user?.last_name ?? '');
+    setPhone(user?.phone ?? '');
+  }, [editMode, user?.first_name, user?.last_name, user?.phone]);
+
   const [avatarKey, setAvatarKey] = useState(Date.now());
 
   const { showToast } = useToast();
