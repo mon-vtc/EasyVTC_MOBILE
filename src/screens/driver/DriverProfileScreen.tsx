@@ -443,7 +443,7 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const {
     user, logout, changePassword, isLoading, error, clearError, login,
     updateDriverProfile, uploadAvatar,
-    vehicle, vehicleType, iban, vtcLicense, siret,
+    vehicle, vehicleType, iban, vtcLicense, siret, companyName, companyAddress,
     createVehicle, uploadVehiclePhoto, updateVehicle, deleteVehicle,
   } = useDriver();
 
@@ -473,6 +473,8 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const [ibanVal,       setIbanVal]       = useState(iban              ?? '');
   const [vtcLicenseVal, setVtcLicense]    = useState(vtcLicense        ?? '');
   const [siretVal,      setSiretVal]      = useState(siret             ?? '');
+  const [companyNameVal,    setCompanyNameVal]    = useState(companyName    ?? '');
+  const [companyAddressVal, setCompanyAddressVal] = useState(companyAddress ?? '');
   const [vehicleTypeVal, setVehicleType]  = useState<VehicleType>(vehicleType ?? 'standard');
 
   // ── Préférences ──────────────────────────────────────────────
@@ -499,6 +501,8 @@ export default function DriverProfileScreen({ navigation }: Props) {
         if (ibanVal)       driverPayload.iban         = ibanVal;
         if (vtcLicenseVal) driverPayload.vtc_license   = vtcLicenseVal;
         if (siretVal)      driverPayload.siret         = siretVal;
+        if (companyNameVal)    driverPayload.company_name    = companyNameVal;
+        if (companyAddressVal) driverPayload.company_address = companyAddressVal;
         if (vehicleTypeVal) driverPayload.vehicle_type = vehicleTypeVal;
 
         await updateDriverProfile(
@@ -523,7 +527,7 @@ export default function DriverProfileScreen({ navigation }: Props) {
       }
     }
     setEditMode(prev => !prev);
-  }, [editMode, firstName, lastName, phone, ibanVal, vtcLicenseVal, siretVal, vehicleTypeVal, pendingImage]);
+  }, [editMode, firstName, lastName, phone, ibanVal, vtcLicenseVal, siretVal, companyNameVal, companyAddressVal, vehicleTypeVal, pendingImage]);
 
   const handleEditToggleRef = useRef(handleEditToggle);
   useEffect(() => { handleEditToggleRef.current = handleEditToggle; }, [handleEditToggle]);
@@ -615,6 +619,8 @@ export default function DriverProfileScreen({ navigation }: Props) {
         <View style={styles.section}>
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Informations chauffeur</Text>
+            <ProfileField label="Nom de la société"  value={companyNameVal}    editable={editMode} onChangeText={setCompanyNameVal} />
+            <ProfileField label="Adresse de la société" value={companyAddressVal} editable={editMode} onChangeText={setCompanyAddressVal} />
             <ProfileField label="SIRET"            value={siretVal}      editable={editMode} onChangeText={setSiretVal} />
             <ProfileField label="Type de véhicule" value={vehicleTypeVal} editable={editMode}
               onChangeText={v => setVehicleType(v as VehicleType)} />

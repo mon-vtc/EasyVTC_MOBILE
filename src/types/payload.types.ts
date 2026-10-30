@@ -47,6 +47,8 @@ export interface UpdateDriverMePayload {
   iban?:        string;   // stocké côté user
   vtc_license?: string;   // stocké côté user
   siret?:        string;
+  company_name?:    string;
+  company_address?: string;
   vehicle_type?: VehicleType;
 }
 

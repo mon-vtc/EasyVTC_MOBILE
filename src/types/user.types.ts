@@ -10,6 +10,8 @@ export interface DriverProfile {
   status:       DriverStatus;
   vehicle_type: VehicleType | null;
   siret:        string | null;
+  company_name?:    string | null;
+  company_address?: string | null;
   tva_rate:     number;
   is_online:    boolean;
   created_at:   string;
@@ -25,6 +27,8 @@ export interface DriverWithUser {
   status: DriverStatus;
   vehicle_type: VehicleType | null;
   siret: string | null;
+  company_name?: string | null;
+  company_address?: string | null;
   tva_rate: number;
   is_online: boolean;
   created_at: string;
@@ -77,6 +81,8 @@ export interface DriverUser extends AuthUser {
   vtc_license:  string | null;
   iban:         string | null;
   siret:        string | null;
+  company_name:    string | null;
+  company_address: string | null;
   tva_rate:     number;
   is_online:    boolean;
   vehicle_type: VehicleType | null;

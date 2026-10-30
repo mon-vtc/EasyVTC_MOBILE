@@ -61,6 +61,17 @@ export function useDriver() {
     if (Object.keys(userPayload).length > 0)   calls.push(auth.updateProfile(userPayload));
     if (Object.keys(driverPayload).length > 0) calls.push(driverApi.updateMe(token(), driverPayload));
     await Promise.all(calls);
+
+    // Garde le profil à jour pour que le formulaire reste rempli à sa réouverture
+    const { siret, company_name, company_address } = driverPayload;
+    useAuthStore.setState(state => ({
+      user: state.user ? ({
+        ...state.user,
+        ...(siret           ? { siret }           : {}),
+        ...(company_name    ? { company_name }    : {}),
+        ...(company_address ? { company_address } : {}),
+      } as typeof state.user) : state.user,
+    }));
   }, [accessToken]);
 
   // ── Véhicule : créer ────────────────────────────────────────
@@ -222,6 +233,8 @@ export function useDriver() {
     vtcLicense:  driver?.vtc_license  ?? null,
     iban:        driver?.iban         ?? null,
     siret:       driver?.siret        ?? null,
+    companyName:    driver?.company_name    ?? null,
+    companyAddress: driver?.company_address ?? null,
     vehicleType: driver?.vehicle_type ?? null,
     isOnline:    driver?.is_online    ?? false,
     status:      driver?.driverStatus       ?? null,

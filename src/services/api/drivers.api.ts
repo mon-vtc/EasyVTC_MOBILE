@@ -9,7 +9,7 @@ import type { UpdateDriverMePayload, ChangeDriverStatusPayload } from '../../typ
 import type { PlanningPeriod, PlanningReservation, DriverRevenuesResult, RevenuesPeriod} from '../../types';
 export const driverApi = {
 
-  /** PATCH /drivers/me — siret, vehicle_type */
+  /** PATCH /drivers/me — siret, company_name, company_address, vehicle_type */
   updateMe: (token: string, payload: UpdateDriverMePayload): Promise<ApiResponse<DriverUser>> =>
     api.patch('/drivers/me', payload, token),
 

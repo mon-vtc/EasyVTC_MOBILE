@@ -83,6 +83,8 @@ function mapDriverWithUserToAuthUser(driverWithUser: DriverWithUser | DriverWith
       status:       driverWithUser.status,
       vehicle_type: driverWithUser.vehicle_type,
       siret:        driverWithUser.siret,
+      company_name:    driverWithUser.company_name,
+      company_address: driverWithUser.company_address,
       tva_rate:     driverWithUser.tva_rate,
       is_online:    driverWithUser.is_online,
       created_at:   driverWithUser.created_at,
