@@ -477,6 +477,15 @@ export default function DriverProfileScreen({ navigation }: Props) {
   const [companyAddressVal, setCompanyAddressVal] = useState(companyAddress ?? '');
   const [vehicleTypeVal, setVehicleType]  = useState<VehicleType>(vehicleType ?? 'standard');
 
+  // Resynchronise l'identité de facturation quand le profil change (hors édition en
+  // cours) — ex. SIRET/société saisis par l'admin pour un ancien compte
+  useEffect(() => {
+    if (editMode) return;
+    setSiretVal(siret ?? '');
+    setCompanyNameVal(companyName ?? '');
+    setCompanyAddressVal(companyAddress ?? '');
+  }, [editMode, siret, companyName, companyAddress]);
+
   // ── Préférences ──────────────────────────────────────────────
   const [notifCourse, setNotifCourse] = useState(true);
   const [notifAlerte, setNotifAlerte] = useState(true);

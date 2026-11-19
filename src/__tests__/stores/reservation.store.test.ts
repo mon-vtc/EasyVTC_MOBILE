@@ -540,3 +540,55 @@ describe('useReservationStore › clearError & clearSelected', () => {
     expect(useReservationStore.getState().selected).toBeNull();
   });
 });
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// updateAddresses — changement de départ / destination
+// ══════════════════════════════════════════════════════════════════════════
+describe('useReservationStore › updateAddresses', () => {
+  beforeEach(() => { resetStore(); jest.clearAllMocks(); });
+
+  const payload = { dest_address: '10 avenue de la Défense, Puteaux', dest_lat: 48.892, dest_lng: 2.236 };
+
+  it('envoie le payload et remplace la réservation dans la liste et la sélection', async () => {
+    const updated = { ...mockReservation, ...payload, price_estimated: 30 };
+    useReservationStore.setState({ reservations: [mockReservation] as any, selected: mockReservation as any });
+    mockReservationApi.updateAddresses.mockResolvedValue({ ok: true, data: updated } as any);
+
+    let result: unknown;
+    await act(async () => {
+      result = await useReservationStore.getState().updateAddresses(TOKEN, 'resa-1', payload);
+    });
+
+    expect(mockReservationApi.updateAddresses).toHaveBeenCalledWith(TOKEN, 'resa-1', payload);
+    expect(result).toEqual(updated);
+    expect(useReservationStore.getState().reservations[0].dest_address).toBe(payload.dest_address);
+    expect(useReservationStore.getState().selected?.price_estimated).toBe(30);
+  });
+
+  it('ne modifie pas une autre réservation sélectionnée', async () => {
+    const other = { ...mockReservation, id: 'resa-2' };
+    useReservationStore.setState({ reservations: [mockReservation, other] as any, selected: other as any });
+    mockReservationApi.updateAddresses.mockResolvedValue({ ok: true, data: { ...mockReservation, ...payload } } as any);
+
+    await act(async () => {
+      await useReservationStore.getState().updateAddresses(TOKEN, 'resa-1', payload);
+    });
+
+    expect(useReservationStore.getState().selected?.id).toBe('resa-2');
+    expect(useReservationStore.getState().reservations[1].dest_address).toBe(mockReservation.dest_address);
+  });
+
+  it('propage le message d\'erreur du serveur', async () => {
+    mockReservationApi.updateAddresses.mockResolvedValue({ ok: false, message: 'La course a démarré' } as any);
+
+    await expect(useReservationStore.getState().updateAddresses(TOKEN, 'resa-1', payload))
+      .rejects.toThrow('La course a démarré');
+  });
+
+  it('refuse sans token', async () => {
+    await expect(useReservationStore.getState().updateAddresses('', 'resa-1', payload))
+      .rejects.toThrow('Non authentifié');
+    expect(mockReservationApi.updateAddresses).not.toHaveBeenCalled();
+  });
+});

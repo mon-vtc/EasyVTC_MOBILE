@@ -33,6 +33,10 @@ export const clientsApi = {
     return api.get<ClientTripsResult>(`/admin/clients/${clientId}/trips${qs ? `?${qs}` : ''}`, token);
   },
 
+  // PATCH /admin/clients/:id — correction du nom / prénom (admin)
+  updateClient: (token: string, clientId: string, payload: { first_name?: string; last_name?: string }) =>
+    api.patch<ClientWithStats>(`/admin/clients/${clientId}`, payload, token),
+
   // PUT /admin/users/:id/status — réutilise l'endpoint existant
   changeClientStatus: (token: string, clientId: string, payload: UpdateUserStatusPayload) =>
     api.put<AuthUser>(`/admin/users/${clientId}/status`, payload, token),

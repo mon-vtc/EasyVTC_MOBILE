@@ -19,6 +19,8 @@ interface ClientsState {
   fetchClientById:    (token: string, clientId: string)           => Promise<ClientWithStats | null>;
   fetchClientTrips:   (token: string, clientId: string, params?: { page?: number; limit?: number }) => Promise<{ trips: ClientTripItem[]; total: number; totalPages: number } | null>;
   changeClientStatus: (token: string, clientId: string, payload: UpdateUserStatusPayload) => Promise<void>;
+  /** Corrige le nom / prénom — reporté côté serveur sur les bons de commande et factures */
+  updateClient:       (token: string, clientId: string, payload: { first_name?: string; last_name?: string }) => Promise<ClientWithStats>;
   clearError:         () => void;
 }
 
@@ -95,6 +97,18 @@ export const useClientsStore = create<ClientsState>((set) => ({
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
       throw err;
     }
+  },
+
+  updateClient: async (token, clientId, payload) => {
+    const res = await clientsApi.updateClient(token, clientId, payload);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la mise à jour du client');
+    const updated = res.data;
+    set(state => ({
+      clients: state.clients.map(c =>
+        c.id === clientId ? { ...c, first_name: updated.first_name, last_name: updated.last_name } : c,
+      ),
+    }));
+    return updated;
   },
 
   clearError: () => set({ error: null }),

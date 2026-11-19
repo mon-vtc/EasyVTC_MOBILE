@@ -28,6 +28,8 @@ import type { ClientStackParamList } from '../../types/auth.types';
 import { Logo }                      from '../../constants/logo';
 import CancelReservationModal from '../../components/common/CancelReservationModal';
 import RatingModal            from '../../components/common/RatingModal';
+import EditAddressesModal     from '../../components/common/EditAddressesModal';
+import type { UpdateAddressesPayload } from '../../types/reservations.types';
 import { useToast }           from '../../hooks/useToast';
 import { useAlert } from '../../hooks/useAlert';
 
@@ -93,7 +95,7 @@ export default function ReservationDetailsScreen() {
   const accessToken  = useAuthStore(s => s.accessToken);
   // ✅ Lire depuis `selected` que fetchById renseigne
   
-  const { fetchById, selected, reservations, cancel } = useReservation();
+  const { fetchById, selected, reservations, cancel, updateAddresses } = useReservation();
 
   const reservation =
     selected?.id === reservationId          // vient de fetchById
@@ -112,6 +114,10 @@ export default function ReservationDetailsScreen() {
 
   // ── États du modal d'annulation ────────────────────────────────────────────
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
+
+  // ── Modification de l'itinéraire (jusqu'au départ de la course) ────────────
+  const [addressesModalVisible, setAddressesModalVisible] = useState(false);
+  const [isSavingAddresses, setIsSavingAddresses]         = useState(false);
 
   // ── États du modal de notation ─────────────────────────────────────────────
 
@@ -199,6 +205,20 @@ export default function ReservationDetailsScreen() {
       }
     } catch (error: any) {
       showToast({ title: 'Erreur', message: error?.message ?? 'Impossible d\'annuler la réservation', type: 'error' });
+    }
+  };
+
+  const handleAddressesConfirm = async (payload: UpdateAddressesPayload) => {
+    if (!reservation?.id) return;
+    setIsSavingAddresses(true);
+    try {
+      await updateAddresses(reservation.id, payload);
+      setAddressesModalVisible(false);
+      showToast({ title: 'Itinéraire modifié', message: 'Le prix estimé a été mis à jour.', type: 'success' });
+    } catch (error: any) {
+      showToast({ title: 'Erreur', message: error?.message ?? "Impossible de modifier l'itinéraire", type: 'error' });
+    } finally {
+      setIsSavingAddresses(false);
     }
   };
 
@@ -455,6 +475,18 @@ export default function ReservationDetailsScreen() {
   </>
 )}
 
+          {/* Itinéraire modifiable tant que la course n'a pas démarré */}
+          {isCancellable && (
+            <TouchableOpacity
+              style={styles.btnSecondary}
+              activeOpacity={0.85}
+              onPress={() => setAddressesModalVisible(true)}
+            >
+              <AppIcon name="navigate-outline" size={18} color={BORDEAUX} />
+              <Text style={styles.btnSecondaryText}>Modifier l'itinéraire</Text>
+            </TouchableOpacity>
+          )}
+
           {/* Réservations annulables */}
           {isCancellable && (
             <TouchableOpacity
@@ -489,6 +521,17 @@ export default function ReservationDetailsScreen() {
         onConfirm={handleCancelConfirm}
         onClose={() => setCancelModalVisible(false)}
       />
+
+      {r && (
+        <EditAddressesModal
+          visible={addressesModalVisible}
+          pickupAddress={r.pickup_address}
+          destAddress={r.dest_address}
+          isSubmitting={isSavingAddresses}
+          onConfirm={handleAddressesConfirm}
+          onClose={() => setAddressesModalVisible(false)}
+        />
+      )}
 
       {/* Modal de notation */}
       <RatingModal

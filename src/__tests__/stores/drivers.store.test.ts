@@ -181,3 +181,33 @@ describe('useDriversStore › clearError', () => {
     expect(useDriversStore.getState().error).toBeNull();
   });
 });
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// adminUpdateDriverBilling — SIRET / société / adresse saisis par l'admin
+// ══════════════════════════════════════════════════════════════════════════
+describe('useDriversStore › adminUpdateDriverBilling', () => {
+  beforeEach(() => { jest.clearAllMocks(); });
+
+  const payload = { siret: '98765432109876', company_name: 'Martin VTC', company_address: '1 rue A, Paris' };
+
+  it('appelle l\'API et renvoie le chauffeur aplati avec son identité de facturation', async () => {
+    mockDriverApi.adminUpdateDriver.mockResolvedValue({
+      ok: true,
+      data: { ...mockDriverWithUser, ...payload },
+    } as any);
+
+    const result = await useDriversStore.getState().adminUpdateDriverBilling(TOKEN, 'driver-record-1', payload);
+
+    expect(mockDriverApi.adminUpdateDriver).toHaveBeenCalledWith(TOKEN, 'driver-record-1', payload);
+    expect(result.first_name).toBe('Marc');
+    expect((result as any).driver).toMatchObject({ id: 'driver-record-1', ...payload });
+  });
+
+  it('propage le message d\'erreur du serveur', async () => {
+    mockDriverApi.adminUpdateDriver.mockResolvedValue({ ok: false, message: 'Le SIRET doit contenir exactement 14 chiffres' } as any);
+
+    await expect(useDriversStore.getState().adminUpdateDriverBilling(TOKEN, 'driver-record-1', { siret: '123' }))
+      .rejects.toThrow('14 chiffres');
+  });
+});

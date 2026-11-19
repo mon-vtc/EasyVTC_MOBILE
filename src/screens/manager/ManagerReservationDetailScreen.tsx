@@ -16,7 +16,8 @@ import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
 import { useReservation } from '../../hooks/useReservation';
 import DriverPickerModal from '../admin/DriverPickerModal';
 import  CancelReservationModal from '../../components/common/CancelReservationModal';
-import type { Reservation , AvailableDriverDto} from '../../types/reservations.types';
+import EditAddressesModal from '../../components/common/EditAddressesModal';
+import type { Reservation , AvailableDriverDto, UpdateAddressesPayload } from '../../types/reservations.types';
 import { useToast } from '../../hooks/useToast';
 import { useAlert } from '../../hooks/useAlert';
 import { AppIcon } from '../../components/common/AppIcon';
@@ -392,11 +393,13 @@ export default function ManagerReservationDetailScreen() {
 
   const route      = useRoute<ScreenRoute>();
   const navigation = useNavigation<ScreenNav>();
-  const { reservations, selected, fetchById, assign, isLoading, cancel } = useReservation();
+  const { reservations, selected, fetchById, assign, isLoading, cancel, updateAddresses } = useReservation();
 
   const [selectedTab, setSelectedTab]     = useState<TabKeys>('details');
   const [pickerVisible, setPickerVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
+  const [addressesVisible, setAddressesVisible] = useState(false);
+  const [isSavingAddresses, setIsSavingAddresses] = useState(false);
   const bottomActionsInset = useBottomInset(S.bottomActions.paddingBottom);
 
 
@@ -428,6 +431,21 @@ export default function ManagerReservationDetailScreen() {
     }
   };
 
+  /* ── Modification de l'itinéraire ── */
+  const handleAddressesConfirm = async (payload: UpdateAddressesPayload) => {
+    if (!reservation) return;
+    setIsSavingAddresses(true);
+    try {
+      await updateAddresses(reservation.id, payload);
+      setAddressesVisible(false);
+      showToast({ type: 'success', title: 'Itinéraire modifié', message: 'Le prix estimé a été recalculé et les parties prévenues.' });
+    } catch (err: any) {
+      showToast({ type: 'error', title: 'Erreur', message: err?.message || "Impossible de modifier l'itinéraire." });
+    } finally {
+      setIsSavingAddresses(false);
+    }
+  };
+
   /* ── Actions bas d'écran ── */
   const canCancel = reservation && ['pending', 'assigned'].includes(reservation.status);
 
@@ -437,6 +455,7 @@ export default function ManagerReservationDetailScreen() {
       case 'pending':
         return { label: 'Assigner un chauffeur', cb: () => setPickerVisible(true) };
       case 'assigned':
+      case 'driver_arrived':
         return { label: 'Modifier l\'assignation', cb: () => setPickerVisible(true) };
       case 'completed':
         return { label: 'Voir facture', cb: () => showToast({ type: 'info', title: 'Info', message: 'La vue détaillée de la facture sera bientôt disponible.' }) };
@@ -483,7 +502,8 @@ export default function ManagerReservationDetailScreen() {
     );
   }
 
-  const hasBottomActions = primaryAction || canCancel;
+  const canEditAddresses = ['pending', 'assigned', 'driver_arrived', 'in_progress'].includes(reservation.status);
+  const hasBottomActions = primaryAction || canCancel || canEditAddresses;
 
   const TabContent = () => {
     switch (selectedTab) {
@@ -530,7 +550,7 @@ export default function ManagerReservationDetailScreen() {
       {/* ── CONTENT ── */}
       <ScrollView
         style={S.content}
-        contentContainerStyle={{ paddingBottom: (hasBottomActions ? 140 : 24) + (hasBottomActions ? bottomActionsInset : 0) }}
+        contentContainerStyle={{ paddingBottom: (hasBottomActions ? 200 : 24) + (hasBottomActions ? bottomActionsInset : 0) }}
         showsVerticalScrollIndicator={false}
       >
         <TabContent />
@@ -545,6 +565,14 @@ export default function ManagerReservationDetailScreen() {
               onPress={primaryAction.cb}
             >
               <Text style={S.primaryBtnText}>{primaryAction.label}</Text>
+            </TouchableOpacity>
+          )}
+          {canEditAddresses && (
+            <TouchableOpacity
+              style={[S.secondaryBtn, { marginBottom: Spacing.sm }]}
+              onPress={() => setAddressesVisible(true)}
+            >
+              <Text style={S.secondaryBtnText}>Modifier l'itinéraire</Text>
             </TouchableOpacity>
           )}
           {canCancel && (
@@ -566,6 +594,17 @@ export default function ManagerReservationDetailScreen() {
         durationMin={reservation?.duration_min}
         onConfirm={handleAssignConfirm}
         onClose={() => setPickerVisible(false)}
+      />
+
+      {/* ── ITINÉRAIRE MODAL ── */}
+      <EditAddressesModal
+        visible={addressesVisible}
+        pickupAddress={reservation.pickup_address}
+        destAddress={reservation.dest_address}
+        pickupLocked={reservation.status === 'in_progress'}
+        isSubmitting={isSavingAddresses}
+        onConfirm={handleAddressesConfirm}
+        onClose={() => setAddressesVisible(false)}
       />
 
        {/* ── CANCEL MODAL ── */}
@@ -719,6 +758,11 @@ const S = StyleSheet.create({
     alignItems: 'center', backgroundColor: '#D32F2F',
   },
   cancelBtnText: { color: Colors.white, fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.md },
+  secondaryBtn: {
+    width: '100%', borderRadius: Radius.md, paddingVertical: Spacing.md,
+    alignItems: 'center', borderWidth: 1.5, borderColor: Colors.bordeaux, backgroundColor: Colors.white,
+  },
+  secondaryBtnText: { color: Colors.bordeaux, fontFamily: Fonts.bold, fontWeight: '700', fontSize: Fonts.size.md },
 
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.md },
   emptyText: { color: Colors.textMuted, fontStyle: 'italic', textAlign: 'center' },

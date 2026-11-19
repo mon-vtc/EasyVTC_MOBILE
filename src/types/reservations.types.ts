@@ -170,6 +170,16 @@ export interface ManualClientInput {
   phone:      string;
 }
 
+/** PATCH /reservations/:id/addresses — chaque adresse modifiée avec ses coordonnées */
+export interface UpdateAddressesPayload {
+  pickup_address?: string;
+  pickup_lat?:     number;
+  pickup_lng?:     number;
+  dest_address?:   string;
+  dest_lat?:       number;
+  dest_lng?:       number;
+}
+
 export interface CreateManualReservationDto extends CreateReservationDto {
   client_id?: string;
   client?:    ManualClientInput;

@@ -14,6 +14,7 @@ import type {
   CreateManualReservationDto,
   ClientSearchResult,
   AvailableDriverDto,
+  UpdateAddressesPayload,
 } from '../../types/reservations.types';
 
 export const reservationApi = {
@@ -87,6 +88,18 @@ export const reservationApi = {
     reason?: string,
   ): Promise<ApiResponse<Reservation>> =>
     api.patch(`/reservations/${id}/cancel`, { reason }, token),
+
+  /**
+   * PATCH /reservations/:id/addresses
+   * Changement du départ et/ou de la destination : client avant le départ,
+   * chauffeur assigné et personnel aussi pendant la course. Prix recalculé.
+   */
+  updateAddresses: (
+    token:   string,
+    id:      string,
+    payload: UpdateAddressesPayload,
+  ): Promise<ApiResponse<Reservation>> =>
+    api.patch(`/reservations/${id}/addresses`, payload, token),
 
   // ══════════════════════════════════════════════════════════════════════════
   // PERSONNEL : réservation créée pour un client (chauffeur, admin, gestionnaire)
@@ -196,7 +209,8 @@ export const reservationApi = {
 
   /**
    * POST /reservations/:id/assign
-   * Assigne un chauffeur à une réservation 'pending'.
+   * Assigne un chauffeur à une réservation 'pending', ou la réattribue tant que
+   * la course n'a pas démarré ('assigned' / 'driver_arrived').
    * Body : { driver_id: string } — ID du record public.drivers (pas users.id).
    */
   assign: (
