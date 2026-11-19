@@ -126,6 +126,8 @@ interface DriversState {
   fetchNextDriversPage: (token: string, params?: ListDriversParams) => Promise<void>;
   fetchDriverById:   (token: string, driverId: string)           => Promise<AuthUser | null>;
   changeDriverStatus:(token: string, driverId: string, payload: ChangeDriverStatusPayload) => Promise<AuthUser | null>;
+  /** SIRET / société / adresse — complète aussi côté serveur les factures émises sans ces mentions */
+  adminUpdateDriverBilling: (token: string, driverId: string, payload: { siret?: string; company_name?: string; company_address?: string }) => Promise<AuthUser>;
   fetchWeeklySchedule: (token: string) => Promise<void>;
   setWeeklySchedule: (token: string, dto: SetScheduleDto) => Promise<boolean>;
   fetchRevenues: (token: string, period: RevenuesPeriod, status?: RevenueStatus, page?: number) => Promise<void>;
@@ -223,6 +225,12 @@ export const useDriversStore = create<DriversState>((set, _get) => ({
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false });
       return null;
     }
+  },
+
+  adminUpdateDriverBilling: async (token, driverId, payload) => {
+    const res = await driverApi.adminUpdateDriver(token, driverId, payload);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la mise à jour du chauffeur');
+    return mapDriverWithUserToAuthUser(res.data as DriverWithUser);
   },
 
   changeDriverStatus: async (token, driverId, payload) => {

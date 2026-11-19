@@ -24,6 +24,7 @@ import type {
   BookingStep,
   Reservation,
   ReservationListFilters,
+  UpdateAddressesPayload,
 } from '../types/reservations.types';
 import type { PricingFlatRate } from '../types/pricing.types';
 
@@ -62,6 +63,7 @@ export function useReservation() {
   const _fetchDriverActive = useReservationStore(s => s.fetchDriverActive);
   const _fetchAvailableDrivers = useReservationStore(s => s.fetchAvailableDrivers);
   const _cancel            = useReservationStore(s => s.cancel);
+  const _updateAddresses   = useReservationStore(s => s.updateAddresses);
   const _arrive            = useReservationStore(s => s.arrive);
   const _start             = useReservationStore(s => s.start);
   const _complete          = useReservationStore(s => s.complete);
@@ -549,6 +551,7 @@ export function useReservation() {
 
     // Actions fournisseurs
     cancel:   useCallback((id: string, reason?: string)                                                             => _cancel(accessTokenRef.current!, id, reason), []),
+    updateAddresses: useCallback((id: string, payload: UpdateAddressesPayload) => _updateAddresses(accessTokenRef.current!, id, payload), []),
     arrive:   useCallback((id: string)                                                                               => _arrive(accessTokenRef.current!, id), []),
     start:    useCallback((id: string)                                                                               => _start(accessTokenRef.current!, id), []),
     complete: useCallback(

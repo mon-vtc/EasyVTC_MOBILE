@@ -13,6 +13,8 @@ import type { ClientWithStats, ClientTripItem, ClientsStackParamList } from '../
 import type { FavoriteAddress, FavoriteAddressType } from '../../../types/favorites.types';
 import { favoritesApi } from '../../../services/api/favorites.api';
 import { AppHeader } from '../../../components/common/AppHeader';
+import EditFieldsModal from '../../../components/common/EditFieldsModal';
+import { useToast } from '../../../hooks/useToast';
 
 type Nav = NativeStackNavigationProp<ClientsStackParamList, 'ClientDetail'>;
 
@@ -150,7 +152,11 @@ export default function AdminClientDetailScreen() {
   const insets = useSafeAreaInsets();
   const [favorites, setFavorites] = useState<FavoriteAddress[]>([]);
 
-  const { fetchClientById, fetchClientTrips } = useClientsStore();
+  const { fetchClientById, fetchClientTrips, updateClient } = useClientsStore();
+  const isAdmin = useAuthStore(s => s.user?.role === 'admin');
+  const { showToast } = useToast();
+  const [editNameVisible, setEditNameVisible] = useState(false);
+  const [isSavingName,    setIsSavingName]    = useState(false);
 
   const [client,   setClient]   = useState<ClientWithStats | null>(null);
   const [trips,    setTrips]    = useState<ClientTripItem[]>([]);
@@ -204,6 +210,20 @@ export default function AdminClientDetailScreen() {
     if (lowerLabel.includes('aéroport') || lowerLabel.includes('airport') || lowerLabel.includes('cdg') || lowerLabel.includes('orly')) return 'airport';
     if (lowerLabel.includes('gare')) return 'station';
     return 'custom';
+  };
+
+  const handleNameConfirm = async (changes: Record<string, string>) => {
+    setIsSavingName(true);
+    try {
+      const updated = await updateClient(accessToken!, clientId, changes);
+      setClient(updated);
+      setEditNameVisible(false);
+      showToast({ type: 'success', title: 'Client mis à jour', message: 'Ses bons de commande et factures portent désormais ce nom.' });
+    } catch (err: any) {
+      showToast({ type: 'error', title: 'Erreur', message: err?.message ?? 'Impossible de mettre à jour le client.' });
+    } finally {
+      setIsSavingName(false);
+    }
   };
 
   const handleTabChange = (tab: Tab) => {
@@ -270,7 +290,18 @@ export default function AdminClientDetailScreen() {
           </View>
 
           <View style={styles.nameRow}>
+            <View style={styles.nameWithAction}>
             <Text style={styles.userName}>{client.first_name} {client.last_name}</Text>
+            {isAdmin && (
+              <TouchableOpacity
+                onPress={() => setEditNameVisible(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityLabel="Modifier le nom du client"
+              >
+                <Ionicons name="create-outline" size={18} color={Colors.bordeaux} />
+              </TouchableOpacity>
+            )}
+            </View>
             <View style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}>
               <View style={[styles.statusDot, { backgroundColor: statusCfg.dot }]} />
               <Text style={[styles.statusText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
@@ -425,6 +456,22 @@ export default function AdminClientDetailScreen() {
           </View>
         )}
       </ScrollView>
+
+      <EditFieldsModal
+        visible={editNameVisible}
+        title="Modifier l'identité du client"
+        icon="person-outline"
+        note="La correction est reportée sur ses bons de commande et ses factures."
+        fields={[
+          { key: 'first_name', label: 'Prénom', value: client.first_name ?? '', maxLength: 100,
+            validate: v => v.length < 2 ? 'Prénom trop court' : null },
+          { key: 'last_name',  label: 'Nom',    value: client.last_name ?? '',  maxLength: 100,
+            validate: v => v.length < 2 ? 'Nom trop court' : null },
+        ]}
+        isSubmitting={isSavingName}
+        onConfirm={handleNameConfirm}
+        onClose={() => setEditNameVisible(false)}
+      />
     </View>
   );
 }
@@ -455,6 +502,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', marginBottom: 6,
   },
+  nameWithAction: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   userName:    { fontSize: Fonts.size.xl, fontFamily: Fonts.bold, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
   statusBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,

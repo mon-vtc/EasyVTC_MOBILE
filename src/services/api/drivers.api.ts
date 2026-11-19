@@ -34,6 +34,14 @@ export const driverApi = {
   getDriverById: (token: string, driverId: string): Promise<ApiResponse<DriverWithUser>> =>
     api.get(`/admin/drivers/${driverId}`, token),
 
+  /** PATCH /admin/drivers/:id — identité de facturation (SIRET, société, adresse) saisie par l'admin */
+  adminUpdateDriver: (
+    token: string,
+    driverId: string,
+    payload: { siret?: string; company_name?: string; company_address?: string },
+  ): Promise<ApiResponse<DriverWithUser>> =>
+    api.patch(`/admin/drivers/${driverId}`, payload, token),
+
   /** PATCH /admin/drivers/:id/status — changement de statut chauffeur */
   changeDriverStatus: (token: string, driverId: string, payload: ChangeDriverStatusPayload): Promise<ApiResponse<DriverWithUser>> =>
     api.patch(`/admin/drivers/${driverId}/status`, payload, token),

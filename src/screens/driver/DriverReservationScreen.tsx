@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useReservation } from '../../hooks/useReservation';
 import { Colors, Fonts, Spacing, Radius } from '../../theme/colors';
-import type { Reservation, ReservationStatus } from '../../types/reservations.types';
+import type { Reservation, ReservationStatus, UpdateAddressesPayload } from '../../types/reservations.types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriverNotificationsStackParamList, DriverReservationsStackParamList } from '../../types/auth.types';
 import { AppIcon } from '../../components/common/AppIcon';
@@ -24,6 +24,7 @@ import { useAlert } from '../../hooks/useAlert';
 import { useToast } from '../../hooks/useToast';
 import { useBottomInset } from '../../hooks/useSafeAreaPadding';
 import { AppHeader } from '../../components/common/AppHeader';
+import EditAddressesModal from '../../components/common/EditAddressesModal';
 
 type Props = NativeStackScreenProps<DriverReservationsStackParamList, 'DriverReservationDetails'>;
 
@@ -58,10 +59,12 @@ function formatTime(iso?: string | null): string {
 // ══════════════════════════════════════════════════════════════════
 export default function DriverReservationScreen({ navigation, route }: Props) {
   const { reservationId } = route.params;
-  const { selected, fetchById, start, complete, cancel } = useReservation();
+  const { selected, fetchById, start, complete, cancel, updateAddresses } = useReservation();
   const [isLoading, setIsLoading]       = useState(false);
   const [confirmModal, setConfirmModal] = useState(false);
   const [actualDistanceKm, setActualDistanceKm] = useState('');
+  const [addressesVisible, setAddressesVisible]   = useState(false);
+  const [isSavingAddresses, setIsSavingAddresses] = useState(false);
 
   // Map choice modal state
   const [mapChoiceModalVisible, setMapChoiceModalVisible]     = useState(false);
@@ -189,6 +192,20 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
         },
       },
     ]});
+  };
+
+  // Le passager change de destination (avant ou pendant la course)
+  const handleAddressesConfirm = async (payload: UpdateAddressesPayload) => {
+    setIsSavingAddresses(true);
+    try {
+      await updateAddresses(reservationId, payload);
+      setAddressesVisible(false);
+      showToast({ type: 'success', title: 'Itinéraire modifié', message: 'Le prix estimé a été recalculé. Le client et l’équipe sont prévenus.' });
+    } catch (err: any) {
+      showToast({ type: 'error', title: 'Erreur', message: err?.message || "Impossible de modifier l'itinéraire." });
+    } finally {
+      setIsSavingAddresses(false);
+    }
   };
 
   const handleSupport = () => {
@@ -425,6 +442,12 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
             </TouchableOpacity>
           )}
 
+          {(status === 'assigned' || status === 'driver_arrived' || status === 'in_progress') && (
+            <TouchableOpacity style={styles.secondaryBtn} onPress={() => setAddressesVisible(true)} disabled={isLoading}>
+              <Text style={styles.secondaryBtnText}>Modifier l'itinéraire</Text>
+            </TouchableOpacity>
+          )}
+
           {status !== 'completed' && status !== 'cancelled' && (
             <TouchableOpacity style={styles.secondaryBtn} onPress={handleCancel} disabled={isLoading}>
               <Text style={styles.secondaryBtnText}>Annuler la course</Text>
@@ -450,6 +473,18 @@ export default function DriverReservationScreen({ navigation, route }: Props) {
 
         <View style={{ height: 32 }} />
       </ScrollView>
+
+      {reservation && (
+        <EditAddressesModal
+          visible={addressesVisible}
+          pickupAddress={reservation.pickup_address}
+          destAddress={reservation.dest_address}
+          pickupLocked={status === 'in_progress'}
+          isSubmitting={isSavingAddresses}
+          onConfirm={handleAddressesConfirm}
+          onClose={() => setAddressesVisible(false)}
+        />
+      )}
 
       {/* ── Modal confirmation terminer ──────────────────── */}
       <Modal transparent visible={confirmModal} animationType="fade">

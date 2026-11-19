@@ -19,6 +19,7 @@ import type {
   VehicleType,
   VehicleTypeOption,
   AvailableDriverDto,
+  UpdateAddressesPayload,
 } from '../types/reservations.types';
 import { useAuthStore } from './auth.store';
 import { BOOKING_INITIAL_STATE } from '../types/reservations.types';
@@ -63,6 +64,8 @@ interface ReservationState {
   fetchDriverHomeReservations: (token: string) => Promise<void>;
   fetchHomeReservations: (token: string) => Promise<void>;
   cancel:            (token: string, id: string, reason?: string)      => Promise<void>;
+  /** Change le départ et/ou la destination (prix recalculé côté serveur). */
+  updateAddresses:   (token: string, id: string, payload: UpdateAddressesPayload) => Promise<Reservation>;
   // Dans ReservationState interface
   fetchAllPages: (token: string, filters?: ReservationListFilters) => Promise<void>;
   fetchAllDriverPages: (token: string, filters?: ReservationListFilters) => Promise<void>;
@@ -256,6 +259,17 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       set({ error: err instanceof Error ? err.message : 'Erreur inconnue', isLoading: false, isFetchingNextPage: false });
       throw err;
     }
+  },
+
+  updateAddresses: async (token, id, payload) => {
+    if (!token) throw new Error('Non authentifié');
+    const res = await reservationApi.updateAddresses(token, id, payload);
+    if (!res.ok || !res.data) throw new Error(res.message ?? 'Erreur lors de la modification des adresses');
+    set(state => ({
+      reservations: state.reservations.map(r => r.id === id ? res.data! : r),
+      selected:     state.selected?.id === id ? res.data! : state.selected,
+    }));
+    return res.data;
   },
 
   // ── Actions chauffeur ──────────────────────────────────────────────────────

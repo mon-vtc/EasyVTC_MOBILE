@@ -18,6 +18,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DriversStackParamList }  from '../../../types/auth.types';
 import { useToast } from '../../../hooks/useToast';
 import { AppHeader } from '../../../components/common/AppHeader';
+import EditFieldsModal from '../../../components/common/EditFieldsModal';
+import { useDriversStore } from '../../../store/drivers.store';
 
 type Props = NativeStackScreenProps<DriversStackParamList, 'DriverDetail'>;
 
@@ -60,7 +62,7 @@ const infoStyles = StyleSheet.create({
 });
 
 // ── Tab Informations ────────────────────────────────────────────
-function TabInformations({ driver, documents, isFetchingDocuments }: { driver: AuthUser; documents?: DriverDocument[]; isFetchingDocuments?: boolean }) {
+function TabInformations({ driver, documents, isFetchingDocuments, onEditBilling }: { driver: AuthUser; documents?: DriverDocument[]; isFetchingDocuments?: boolean; onEditBilling?: () => void }) {
   const driverUser = driver as any;
   const vehicle = driverUser.vehicle;
   const allTypes   = useVehicleTypesStore(s => s.allTypes);
@@ -105,8 +107,33 @@ function TabInformations({ driver, documents, isFetchingDocuments }: { driver: A
       doc: latestByType[docType] ?? null,
     }));
 
+  // Identité imprimée sur les factures du chauffeur (émetteur)
+  const billingRows = [
+    { label: 'SIRET',   value: driverUser.driver?.siret           || 'Non renseigné' },
+    { label: 'Société', value: driverUser.driver?.company_name    || 'Non renseignée' },
+    { label: 'Adresse', value: driverUser.driver?.company_address || 'Non renseignée' },
+  ];
+
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
+      {/* Facturation */}
+      <View style={tabStyles.card}>
+        <View style={tabStyles.cardTitleRow}>
+          <Text style={[tabStyles.cardTitle, tabStyles.cardTitleInRow]}>Facturation</Text>
+          {onEditBilling && (
+            <TouchableOpacity onPress={onEditBilling} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="create-outline" size={18} color={Colors.bordeaux} />
+            </TouchableOpacity>
+          )}
+        </View>
+        {billingRows.map(row => (
+          <View key={row.label} style={tabStyles.infoRow}>
+            <Text style={tabStyles.infoLabel}>{row.label}{'  '}</Text>
+            <Text style={[tabStyles.infoValue, tabStyles.infoValueWrap]}>{row.value}</Text>
+          </View>
+        ))}
+      </View>
+
       {/* Véhicule */}
       <View style={tabStyles.card}>
         <Text style={tabStyles.cardTitle}>Véhicule</Text>
@@ -373,6 +400,9 @@ const tabStyles = StyleSheet.create({
   infoRow:    { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.xs, borderBottomWidth: 1, borderBottomColor: Colors.border },
   infoLabel:  { fontSize: Fonts.size.sm, color: Colors.textMuted },
   infoValue:  { fontSize: Fonts.size.sm, fontFamily: Fonts.semibold, fontWeight: '600', color: Colors.textPrimary },
+  infoValueWrap: { flexShrink: 1, textAlign: 'right' },
+  cardTitleRow:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.md },
+  cardTitleInRow: { marginBottom: 0 },
   docRow: {
     paddingHorizontal: Spacing.md,
     flexDirection: 'row',
@@ -408,6 +438,10 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
   const [isFetchingLastMonth, setIsFetchingLastMonth] = useState(false);
   const [documents, setDocuments] = useState<DriverDocument[] | null>(null);
   const [isFetchingDocuments, setIsFetchingDocuments] = useState(false);
+  const [billingVisible, setBillingVisible] = useState(false);
+  const [isSavingBilling, setIsSavingBilling] = useState(false);
+  const adminUpdateDriverBilling = useDriversStore(s => s.adminUpdateDriverBilling);
+  const isAdmin = useAuthStore(s => s.user?.role === 'admin');
 
   const fetchDriverByIdRef = useRef(fetchDriverById);
   const fetchMonthlyStatsRef = useRef(fetchMonthlyStats);
@@ -463,6 +497,24 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
   const { showToast } = useToast();
 
   useEffect(() => { load(); }, [load]);
+
+  const handleBillingConfirm = async (changes: Record<string, string>) => {
+    const driverRecordId = driver?.driver?.id;
+    if (!driverRecordId) return;
+    setIsSavingBilling(true);
+    try {
+      const token = useAuthStore.getState().accessToken!;
+      const updated = await adminUpdateDriverBilling(token, driverRecordId, changes);
+      // Conserver le véhicule déjà chargé, absent de la réponse de mise à jour
+      setDriver(prev => ({ ...updated, vehicle: (prev as any)?.vehicle } as AuthUser));
+      setBillingVisible(false);
+      showToast({ type: 'success', title: 'Facturation mise à jour', message: 'Ses factures sans SIRET ni société ont été complétées.' });
+    } catch (err: any) {
+      showToast({ type: 'error', title: 'Erreur', message: err?.message ?? 'Impossible de mettre à jour le chauffeur.' });
+    } finally {
+      setIsSavingBilling(false);
+    }
+  };
 
   const handleStatusChange = () => {
     if (!driver) return;
@@ -785,7 +837,14 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
 
         {/* ── Contenu del tab ── */}
         <View style={styles.tabContent}>
-          {activeTab === 'informations' && <TabInformations driver={driver as DriverUser} documents={documents ?? undefined} isFetchingDocuments={isFetchingDocuments} />}
+          {activeTab === 'informations' && (
+            <TabInformations
+              driver={driver as DriverUser}
+              documents={documents ?? undefined}
+              isFetchingDocuments={isFetchingDocuments}
+              onEditBilling={isAdmin ? () => setBillingVisible(true) : undefined}
+            />
+          )}
           {activeTab === 'statistiques' && (
             <TabStatistiques 
               monthlyStats={driver?.driver?.id ? monthlyStats?.[driver.driver.id] : undefined}
@@ -802,6 +861,24 @@ export default function AdminDriverDetailScreen({ navigation, route }: Props) {
         </View>
 
       </ScrollView>
+
+      <EditFieldsModal
+        visible={billingVisible}
+        title="Identité de facturation"
+        icon="business-outline"
+        note="Ces mentions apparaissent sur les factures du chauffeur. Ses anciennes factures sans SIRET ni société sont complétées."
+        fields={[
+          { key: 'siret', label: 'SIRET', value: driver?.driver?.siret ?? '', keyboardType: 'number-pad', maxLength: 14,
+            validate: v => /^\d{14}$/.test(v) ? null : 'Le SIRET doit contenir exactement 14 chiffres' },
+          { key: 'company_name', label: 'Nom de la société', value: driver?.driver?.company_name ?? '', maxLength: 150,
+            validate: v => v.length < 2 ? 'Nom de société trop court' : null },
+          { key: 'company_address', label: 'Adresse de la société', value: driver?.driver?.company_address ?? '', maxLength: 300,
+            validate: v => v.length < 5 ? 'Adresse trop courte' : null },
+        ]}
+        isSubmitting={isSavingBilling}
+        onConfirm={handleBillingConfirm}
+        onClose={() => setBillingVisible(false)}
+      />
     </View>
   );
 }
