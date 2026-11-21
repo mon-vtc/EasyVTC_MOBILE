@@ -107,6 +107,9 @@ jobs:
         run: npm ci
 
       - name: EAS Build Preview (iOS)
+        env:
+          EXPO_APPLE_TEAM_ID: HJ8R665L2F
+          EXPO_APPLE_TEAM_TYPE: INDIVIDUAL
         run: eas build --platform ios --profile preview --non-interactive --no-wait
 
   # ─────────────────────────────────────────────
@@ -171,4 +174,9 @@ jobs:
         run: npm ci
 
       - name: EAS Build Production (iOS)
+        # La clé App Store Connect enregistrée sur EAS n'a pas d'équipe associée :
+        # sans ces variables, EAS demande l'Apple Team ID (impossible en CI).
+        env:
+          EXPO_APPLE_TEAM_ID: HJ8R665L2F
+          EXPO_APPLE_TEAM_TYPE: INDIVIDUAL
         run: eas build --platform ios --profile production --non-interactive --no-wait
