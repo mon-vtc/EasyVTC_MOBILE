@@ -289,6 +289,9 @@ export default function ChatScreen({navigation}: any) {
         renderItem={renderItem}
         contentContainerStyle={s.messagesList}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews
+        maxToRenderPerBatch={15}
+        windowSize={11}
         ListEmptyComponent={
           <View style={s.empty}>
             <AppIcon name="chatbubbles-outline" size={48} color={Colors.textMuted} />

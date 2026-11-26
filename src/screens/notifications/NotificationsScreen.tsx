@@ -156,6 +156,9 @@ const NotificationsScreen: React.FC = () => {
           contentContainerStyle={{ paddingBottom: Spacing.md + insets.bottom }}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
+          removeClippedSubviews
+          maxToRenderPerBatch={10}
+          windowSize={7}
           ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color={Colors.bordeaux} style={styles.loader} /> : null}
           refreshControl={
             <RefreshControl refreshing={isLoading && notifications.length > 0} onRefresh={handleRefresh} />

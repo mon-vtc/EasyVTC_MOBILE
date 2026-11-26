@@ -309,6 +309,9 @@ export default function DriverReservationsScreen({ navigation }: DriverReservati
           keyExtractor={(item) => item.id}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
+          removeClippedSubviews
+          maxToRenderPerBatch={10}
+          windowSize={7}
           contentContainerStyle={searchedReservations.length > 0 ? [styles.list, { paddingBottom: listBottomInset }] : styles.flex}
           refreshControl={<RefreshControl refreshing={refreshing && !isFetchingNextPage} onRefresh={load} colors={[Colors.bordeaux]} />}
           ListFooterComponent={isFetchingNextPage ? <ActivityIndicator style={{ marginVertical: 20 }} color={Colors.bordeaux} /> : null}

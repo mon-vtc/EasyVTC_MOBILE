@@ -322,6 +322,9 @@ export default function AdminChatScreen({ route, navigation }: AdminChatScreenPr
           inverted
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.3}
+          removeClippedSubviews
+          maxToRenderPerBatch={15}
+          windowSize={11}
           ListFooterComponent={
             loadingMore ? <ActivityIndicator size="small" color={Colors.bordeaux} style={{ marginVertical: 8 }} /> : null
           }

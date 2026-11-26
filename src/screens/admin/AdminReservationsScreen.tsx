@@ -403,6 +403,9 @@ export default function AdminReservationsScreen({ navigation }: any) {
           renderItem={renderReservation}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
+          removeClippedSubviews
+          maxToRenderPerBatch={10}
+          windowSize={7}
           refreshControl={<RefreshControl refreshing={refreshing && !isFetchingNextPage} onRefresh={() => load(true)} />}
           ListEmptyComponent={
             !isLoading && (
