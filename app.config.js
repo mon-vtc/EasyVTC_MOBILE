@@ -3,7 +3,7 @@ export default {
   name: "EasyVTC",
   slug: "easyvtc",
   owner: "easyvtc",
-  version: "1.0.4",
+  version: "1.0.5",
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
@@ -64,6 +64,25 @@ export default {
         android: {
           compileSdkVersion: 36,
           targetSdkVersion: 36,
+          enableProguardInReleaseBuilds: true,
+          enableShrinkResourcesInReleaseBuilds: true,
+          extraProguardRules: `
+-keep class com.facebook.hermes.unicode.** { *; }
+-keep class com.facebook.jni.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class okhttp3.** { *; }
+-keep class expo.modules.** { *; }
+-dontwarn expo.modules.**
+-keep class com.facebook.react.** { *; }
+-dontwarn com.facebook.react.**
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.facebook.react.turbomodule.** { *; }
+-keepclassmembers class * {
+  @com.facebook.react.bridge.ReactMethod *;
+  @com.facebook.proguard.annotations.DoNotStrip *;
+}
+          `,
         },
       },
     ],
