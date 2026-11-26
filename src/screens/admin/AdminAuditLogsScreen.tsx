@@ -196,6 +196,9 @@ export default function AdminAuditLogsScreen({ navigation }: any) {
           renderItem={renderLog}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
+          removeClippedSubviews
+          maxToRenderPerBatch={10}
+          windowSize={7}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
           ListEmptyComponent={
             !isAuditLogsLoading ? (
